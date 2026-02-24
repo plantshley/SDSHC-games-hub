@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDSHC Games Hub</title>
+    <!-- Google Fonts: 'Press Start 2P' for 8-bit retro theme -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="app-container">
+
+        <!-- STATE 0: Idle / Attract Mode -->
+        <div id="state-0" class="screen active">
+            <h1 class="bounce">SDSHC Games Hub</h1>
+            <p class="blink">Tap to Start!</p>
+        </div>
+
+        <!-- STATE 1: Grade Selection -->
+        <div id="state-1" class="screen hidden">
+            <button class="btn-back top-left">Back</button>
+            <h2>Select Your Grade</h2>
+            <div class="button-grid">
+                <button class="pixel-btn" data-level="1">
+                    <span class="title">Little Sprouts</span>
+                    <span class="subtitle">(Pre-K - 2nd)</span>
+                </button>
+                <button class="pixel-btn" data-level="2">
+                    <span class="title">Earth Explorers</span>
+                    <span class="subtitle">(3rd - 5th)</span>
+                </button>
+                <button class="pixel-btn" data-level="3">
+                    <span class="title">Agro-Heroes</span>
+                    <span class="subtitle">(Middle & High)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- STATE 2: Game Selection -->
+        <div id="state-2" class="screen hidden">
+            <button class="btn-back top-left">Back</button>
+            <h2 id="grade-title">Game Selection</h2>
+            <div class="button-grid" id="game-options">
+                <!-- Buttons injected dynamically by JS -->
+            </div>
+        </div>
+
+        <!-- STATE 3: Active Game -->
+        <div id="state-3" class="screen hidden">
+            <button class="btn-back top-left">Exit Game</button>
+            <div id="game-container">
+                <!-- Active game UI injected here -->
+                <p>Game Loading...</p>
+            </div>
+        </div>
+
+        <!-- STATE 4: Reward Screen -->
+        <div id="state-4" class="screen hidden">
+            <h2>Great Job!</h2>
+            <div class="reward-animation">🌟</div>
+            <p>Heading back to menu...</p>
+        </div>
+
+    </div>
+
+    <!-- Script loading -->
+    <script src="triviaDatabase.json" type="application/json" id="trivia-data"></script>
+    <script src="games.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

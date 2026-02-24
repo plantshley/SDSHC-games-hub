@@ -1,0 +1,245 @@
+/* 
+  SDSHC Games Hub - Stylesheet
+  Theme: Retro 8-bit Pixel Art Farming
+  Display: 23.8-inch Touchscreen (1920x1080)
+*/
+
+:root {
+    --primary-color: #4CAF50;
+    /* Farming Green */
+    --secondary-color: #8D6E63;
+    /* Soil Brown */
+    --accent-color: #FFC107;
+    /* Sun Yellow */
+    --background-color: #81D4FA;
+    /* Sky Blue */
+    --text-color: #FFFFFF;
+    --dark-text: #3E2723;
+
+    /* Pixel shadow for 8-bit effect */
+    --pixel-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+    --pixel-shadow-active: 2px 2px 0px rgba(0, 0, 0, 0.5);
+}
+
+* {
+    box-sizing: border-box;
+    /* Kiosk Safety: Prevent all text selection, callouts, and zooming */
+    user-select: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    /* No scrolling allowed */
+    background-color: var(--background-color);
+    font-family: 'Press Start 2P', cursive;
+    color: var(--text-color);
+    /* For debugging/scaling perfectly to 1920x1080 proportions */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Container locking to exactly 16:9 1920x1080 scaled appropriately */
+#app-container {
+    width: 100%;
+    height: 100%;
+    max-width: 1920px;
+    max-height: 1080px;
+    position: relative;
+    background-image: linear-gradient(to bottom, #81D4FA 0%, #81D4FA 60%, #8D6E63 60%, #5D4037 100%);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Application Screens */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+
+.screen.active {
+    opacity: 1;
+    pointer-events: auto;
+    display: flex;
+}
+
+/* Typography elements */
+h1 {
+    font-size: 5rem;
+    color: var(--accent-color);
+    text-shadow: 8px 8px 0px var(--dark-text);
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+}
+
+h2 {
+    font-size: 3.5rem;
+    color: white;
+    text-shadow: 6px 6px 0px var(--dark-text);
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+/* Custom Animations */
+.bounce {
+    animation: bounce 2s infinite ease-in-out;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-40px);
+    }
+}
+
+.blink {
+    font-size: 2.5rem;
+    color: white;
+    animation: blinker 1.5s linear infinite;
+    margin-top: 2rem;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0;
+    }
+}
+
+/* Giant Buttons for Kiosk Touch */
+.button-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 3rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 90%;
+}
+
+.pixel-btn {
+    min-width: 350px;
+    min-height: 250px;
+    background-color: var(--primary-color);
+    border: 8px solid var(--text-color);
+    box-shadow: var(--pixel-shadow);
+    color: white;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem;
+    transition: transform 0.1s, box-shadow 0.1s;
+    /* Massive touch targets rule */
+    border-radius: 0;
+    /* Strict pixel edges */
+}
+
+.pixel-btn .title {
+    font-size: 2rem;
+    line-height: 1.4;
+}
+
+.pixel-btn .subtitle {
+    font-size: 1.2rem;
+    color: var(--accent-color);
+}
+
+.pixel-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: var(--pixel-shadow-active);
+    background-color: #388E3C;
+}
+
+/* Shared UI Controls */
+.btn-back.top-left {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    min-width: 150px;
+    min-height: 80px;
+    /* Minimum 80x80px target */
+    background-color: var(--accent-color);
+    /* Yellow */
+    border: 6px solid white;
+    box-shadow: var(--pixel-shadow);
+    color: var(--dark-text);
+    /* Dark text for contrast against yellow */
+    font-size: 1.5rem;
+    font-family: inherit;
+    cursor: pointer;
+    z-index: 100;
+}
+
+.btn-back.top-left:active {
+    transform: translate(2px, 2px);
+    box-shadow: var(--pixel-shadow-active);
+    background-color: #FFB300;
+    /* Darker yellow */
+}
+
+/* Reward Screen */
+.reward-animation {
+    font-size: 10rem;
+    animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(0);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Game Container Placeholder */
+#game-container {
+    width: 90%;
+    height: 70%;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 8px solid var(--dark-text);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--dark-text);
+    font-size: 2rem;
+    margin-top: 4rem;
+    /* Give space for top buttons */
+}
