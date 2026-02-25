@@ -139,12 +139,14 @@ window.Games = {
 
         function stopDrag(pos) {
             if (!draggedItem) return;
+            const item = draggedItem;
+            draggedItem = null;
 
             // Revert styles
-            draggedItem.style.position = '';
-            draggedItem.style.zIndex = '';
-            draggedItem.style.left = '';
-            draggedItem.style.top = '';
+            item.style.position = '';
+            item.style.zIndex = '';
+            item.style.left = '';
+            item.style.top = '';
 
             // Check drop target (plate)
             const plateRect = plate.getBoundingClientRect();
@@ -154,19 +156,19 @@ window.Games = {
             );
 
             if (droppedOnPlate) {
-                const layerType = parseInt(draggedItem.getAttribute('data-layer'));
+                const layerType = parseInt(item.getAttribute('data-layer'));
                 if (layerType === expectedLayer) {
                     // Success! Added to plate.
                     const stacked = document.createElement('div');
                     stacked.className = 'stacked-layer';
-                    stacked.style.backgroundColor = draggedItem.style.backgroundColor;
-                    stacked.innerHTML = draggedItem.innerHTML;
+                    stacked.style.backgroundColor = item.style.backgroundColor;
+                    stacked.innerHTML = item.innerHTML;
 
                     // Remove initial text if it's the first
                     if (expectedLayer === 1) plate.innerHTML = '';
 
                     plate.appendChild(stacked); // appends at bottom visually due to column-reverse
-                    draggedItem.remove(); // remove it from choices
+                    item.remove(); // remove it from choices
 
                     // Ding sound
                     playDing();
@@ -181,31 +183,26 @@ window.Games = {
                     // Wrong layer! Snap back to sidebar with a shake!
                     const dx = pos.clientX - startX;
                     const dy = pos.clientY - startY;
-                    draggedItem.style.transition = 'transform 0.3s ease';
-                    draggedItem.style.transform = `translate(${-dx}px, ${-dy}px)`;
+                    item.style.transition = 'transform 0.3s ease';
+                    item.style.transform = `translate(${-dx}px, ${-dy}px)`;
 
                     setTimeout(() => {
-                        if (draggedItem) {
-                            draggedItem.style.transition = '';
-                            draggedItem.style.transform = '';
-                        }
+                        item.style.transition = '';
+                        item.style.transform = '';
                     }, 300);
                 }
             } else {
                 // Dropped outside. Snap back!
                 const dx = pos.clientX - startX;
                 const dy = pos.clientY - startY;
-                draggedItem.style.transition = 'transform 0.3s ease';
-                draggedItem.style.transform = `translate(${-dx}px, ${-dy}px)`;
+                item.style.transition = 'transform 0.3s ease';
+                item.style.transform = `translate(${-dx}px, ${-dy}px)`;
 
                 setTimeout(() => {
-                    if (draggedItem) {
-                        draggedItem.style.transition = '';
-                        draggedItem.style.transform = '';
-                    }
+                    item.style.transition = '';
+                    item.style.transform = '';
                 }, 300);
             }
-            draggedItem = null;
         }
     },
 
