@@ -113,7 +113,8 @@ const GAME_DEFINITIONS = {
     '1': {
         title: "Little Sprouts",
         games: [
-            { id: "1a", name: "Soil Cake Builder", type: "Drag & Drop" },
+            { id: "1a_optA", name: "Soil Cake (Opt A)", type: "Drag & Snap" },
+            { id: "1a_optC", name: "Soil Cake (Opt C)", type: "Conveyor Tapping" },
             { id: "1b", name: "Star Helpers", type: "Tracing" }
         ]
     },

@@ -5,20 +5,21 @@
 */
 
 :root {
-    --primary-color: #4CAF50;
-    /* Farming Green */
-    --secondary-color: #8D6E63;
-    /* Soil Brown */
-    --accent-color: #FFC107;
-    /* Sun Yellow */
-    --background-color: #81D4FA;
-    /* Sky Blue */
+    --primary-color: #5D9B66;
+    /* Sprout Lands grass green */
+    --secondary-color: #A2725B;
+    /* Sprout Lands dirt brown */
+    --accent-color: #E2B974;
+    /* Sprout Lands soft yellow */
+    --background-color: #72B7D2;
+    /* Sprout Lands sky blue */
     --text-color: #FFFFFF;
-    --dark-text: #3E2723;
+    --dark-text: #412A22;
+    /* Sprout Lands dark brown */
 
     /* Pixel shadow for 8-bit effect */
-    --pixel-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
-    --pixel-shadow-active: 2px 2px 0px rgba(0, 0, 0, 0.5);
+    --pixel-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4);
+    --pixel-shadow-active: 2px 2px 0px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -57,9 +58,25 @@ html {
     max-width: 1920px;
     max-height: 1080px;
     position: relative;
-    background-image: linear-gradient(to bottom, #81D4FA 0%, #81D4FA 60%, #8D6E63 60%, #5D4037 100%);
+    background-color: #AED6F1;
+    /* Pastel blue sky */
     display: flex;
     flex-direction: column;
+}
+
+#app-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    /* the ground */
+    background-image: url("cropped_assets/tilesets_grass/grass_main.png");
+    background-repeat: repeat;
+    background-size: 150px;
+    image-rendering: pixelated;
+    z-index: 0;
 }
 
 /* Application Screens */
@@ -75,6 +92,8 @@ html {
     align-items: center;
     padding: 2rem;
     transition: opacity 0.3s ease-in-out;
+    z-index: 1;
+    /* Stay above the grass pseudo-element */
 }
 
 .screen.hidden {

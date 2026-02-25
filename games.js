@@ -1,13 +1,16 @@
 /**
  * SDSHC Games Hub - Game Implementations
  */
-
-const Games = {
+window.Games = {
     launch: function (gameId, container) {
         container.innerHTML = ''; // Clear container
         switch (gameId) {
             case '1a':
-                this.initGame1A(container);
+            case '1a_optA':
+                this.initGame1A_OptionA(container);
+                break;
+            case '1a_optC':
+                this.initGame1A_OptionC(container);
                 break;
             case '1b':
                 this.initGame1B(container);
@@ -33,11 +36,11 @@ const Games = {
     // LEVEL 1: Little Sprouts (Pre-K to 2nd)
     // ==========================================
 
-    // Game 1A: Soil Cake Builder
-    initGame1A: function (container) {
+    // Game 1A (Option A): Drag & Drop "Snap-to-Grid"
+    initGame1A_OptionA: function (container) {
         container.innerHTML = `
             <div id="game-1a">
-                <h2>Build a Soil Cake!</h2>
+                <h2>Build a Soil Cake! (Opt A)</h2>
                 <div class="cake-area">
                     <div class="draggables">
                         <div class="layer-drag" draggable="true" data-layer="4" style="background-color: #3e2723;">O Horizon<br><small>Frosting</small></div>
@@ -175,39 +178,213 @@ const Games = {
                         setTimeout(() => window.triggerReward(), 3000);
                     }
                 } else {
-                    // Wrong layer! Maybe shake animation
-                    draggedItem.style.transform = "translateX(10px)";
-                    setTimeout(() => draggedItem.style.transform = "translateX(-10px)", 100);
-                    setTimeout(() => draggedItem.style.transform = "translateX(0)", 200);
+                    // Wrong layer! Snap back to sidebar with a shake!
+                    const dx = pos.clientX - startX;
+                    const dy = pos.clientY - startY;
+                    draggedItem.style.transition = 'transform 0.3s ease';
+                    draggedItem.style.transform = `translate(${-dx}px, ${-dy}px)`;
+
+                    setTimeout(() => {
+                        if (draggedItem) {
+                            draggedItem.style.transition = '';
+                            draggedItem.style.transform = '';
+                        }
+                    }, 300);
                 }
+            } else {
+                // Dropped outside. Snap back!
+                const dx = pos.clientX - startX;
+                const dy = pos.clientY - startY;
+                draggedItem.style.transition = 'transform 0.3s ease';
+                draggedItem.style.transform = `translate(${-dx}px, ${-dy}px)`;
+
+                setTimeout(() => {
+                    if (draggedItem) {
+                        draggedItem.style.transition = '';
+                        draggedItem.style.transform = '';
+                    }
+                }, 300);
             }
             draggedItem = null;
         }
     },
 
+    // Game 1A (Option C): "The Conveyor Belt"
+    initGame1A_OptionC: function (container) {
+        container.innerHTML = `
+            <div id="game-1a-optC">
+                <h2>Tap the Soil on the Conveyor!</h2>
+                <div id="instruction-optC">I need the <span style="color:var(--accent-color)">C Horizon (Marble)</span>!</div>
+                
+                <div class="conveyor-container">
+                    <div id="conveyor-belt"></div>
+                </div>
+
+                <div class="plate-area-optC">
+                    <div class="plate-optC" id="plate-target-optC">
+                        <!-- Items fall here -->
+                    </div>
+                </div>
+                <div id="worm-cheer-optC" class="hidden">🪱 Delicious Soil!</div>
+            </div>
+            <style>
+                #game-1a-optC { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+                #game-1a-optC h2 { color: var(--dark-text); font-size: 2.5rem; margin-bottom: 20px; text-shadow:none; }
+                #instruction-optC { font-size: 2rem; margin-bottom: 30px; text-align:center;}
+                .conveyor-container { 
+                    width: 100%; height: 150px; background-color: #424242; border: 8px solid #212121; 
+                    position: relative; overflow: hidden; margin-bottom: 50px;
+                }
+                .conveyor-container::after {
+                    content: ''; position: absolute; bottom: 0; width: 200%; height: 10px;
+                    background: repeating-linear-gradient(45deg, #000, #000 10px, #ffeb3b 10px, #ffeb3b 20px);
+                    animation: moveBelt 2s linear infinite;
+                }
+                @keyframes moveBelt { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+                .belt-item {
+                    width: 150px; height: 100px; position: absolute; top: 15px; color: white;
+                    display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    border: 4px solid var(--dark-text); cursor: pointer; text-align:center; font-size: 1.2rem;
+                    box-shadow: var(--pixel-shadow); transition: transform 0.1s;
+                }
+                .belt-item:active { transform: scale(0.9); }
+                .plate-area-optC { flex-grow: 1; display: flex; align-items: flex-end; padding-bottom: 20px;}
+                .plate-optC {
+                    width: 350px; height: 250px; border-bottom: 10px solid var(--secondary-color);
+                    display: flex; flex-direction: column-reverse; /* Stack from bottom */
+                    align-items: center; padding: 10px; gap: 5px;
+                }
+                .stacked-layer-optC { width: 100%; padding: 25px; text-align: center; color: white; border: 4px solid var(--dark-text); font-size: 1.5rem; }
+                #worm-cheer-optC { font-size: 3rem; color: var(--primary-color); margin-top: 20px; animation: bounce 1s infinite; position: absolute; bottom: 20px;}
+            </style>
+        `;
+
+        const layersDef = [
+            { id: 1, name: "C Horizon", sub: "Marble", color: "#795548" },
+            { id: 2, name: "B Horizon", sub: "Fudge", color: "#5d4037" },
+            { id: 3, name: "A Horizon", sub: "Dark Cake", color: "#4e342e" },
+            { id: 4, name: "O Horizon", sub: "Frosting", color: "#3e2723" },
+            { id: 99, name: "Old Shoe", sub: "Yuck!", color: "#607d8b" }, // Decoy
+            { id: 98, name: "Empty Can", sub: "Trash", color: "#9e9e9e" }  // Decoy
+        ];
+
+        let expectedLayer = 1;
+        let beltInterval;
+        let spawnInterval;
+        const belt = document.getElementById('conveyor-belt');
+        const plate = document.getElementById('plate-target-optC');
+        const instruction = document.getElementById('instruction-optC');
+
+        const containerWidth = document.querySelector('.conveyor-container').offsetWidth;
+
+        function updateInstruction() {
+            if (expectedLayer > 4) return;
+            const target = layersDef.find(l => l.id === expectedLayer);
+            instruction.innerHTML = `I need the <span style="color:var(--accent-color)">${target.name} (${target.sub})</span>!`;
+        }
+
+        function spawnItem() {
+            // Pick a random item, leaning toward the one we need so they don't wait forever
+            let itemDef;
+            if (Math.random() > 0.4) {
+                itemDef = layersDef.find(l => l.id === expectedLayer);
+            } else {
+                itemDef = layersDef[Math.floor(Math.random() * layersDef.length)];
+            }
+            if (!itemDef) return;
+
+            const el = document.createElement('div');
+            el.className = 'belt-item';
+            el.style.backgroundColor = itemDef.color;
+            el.innerHTML = `${itemDef.name}<br><small>${itemDef.sub}</small>`;
+            el.dataset.id = itemDef.id;
+
+            // Start on the right side
+            let posX = containerWidth;
+            el.style.left = posX + 'px';
+            belt.appendChild(el);
+
+            el.addEventListener('click', () => {
+                handleTap(parseInt(el.dataset.id), el);
+            });
+            el.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleTap(parseInt(el.dataset.id), el);
+            }, { passive: false });
+        }
+
+        function handleTap(id, domEl) {
+            if (id === expectedLayer) {
+                // Correct!
+                playDing();
+                domEl.remove();
+
+                const stacked = document.createElement('div');
+                stacked.className = 'stacked-layer-optC';
+                stacked.style.backgroundColor = domEl.style.backgroundColor;
+                stacked.innerHTML = domEl.innerHTML;
+                plate.appendChild(stacked);
+
+                expectedLayer++;
+                if (expectedLayer > 4) {
+                    clearInterval(beltInterval);
+                    clearInterval(spawnInterval);
+                    instruction.innerHTML = "You built the soil!";
+                    document.getElementById('worm-cheer-optC').classList.remove('hidden');
+                    setTimeout(() => window.triggerReward(), 3000);
+                } else {
+                    updateInstruction();
+                }
+            } else {
+                // Wrong item!
+                domEl.style.backgroundColor = "rgba(200, 50, 50, 0.8)"; // flash red
+                instruction.innerHTML = "Oops! Not that one.";
+                setTimeout(updateInstruction, 1500);
+            }
+        }
+
+        // Move items
+        beltInterval = setInterval(() => {
+            if (expectedLayer > 4) return;
+            const items = document.querySelectorAll('.belt-item');
+            items.forEach(el => {
+                let currentPos = parseFloat(el.style.left);
+                currentPos -= 3; // speed
+                if (currentPos < -200) {
+                    el.remove(); // off screen
+                } else {
+                    el.style.left = currentPos + 'px';
+                }
+            });
+        }, 16);
+
+        spawnInterval = setInterval(spawnItem, 2000);
+        updateInstruction();
+    },
+
     // Game 1B: Dot-to-Dot Constellations
     initGame1B: function (container) {
         container.innerHTML = `
-            <div id="game-1b">
+                < div id = "game-1b" >
                 <h2>Connect the Stars!</h2>
                 <div class="star-area">
                     <canvas id="star-canvas" width="800" height="400"></canvas>
                     <div id="star-message" class="hidden"></div>
                 </div>
-            </div>
-            <style>
-                #game-1b { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-                #game-1b h2 { color: var(--dark-text); font-size: 2.5rem; text-shadow: none; margin-bottom: 5px; }
-                .star-area { position: relative; }
-                #star-canvas { border: 4px solid var(--dark-text); background-color: #1a237e; border-radius: 12px; touch-action: none; cursor: crosshair; }
-                #star-message {
-                    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                    background: rgba(255,255,255,0.9); padding: 20px; border: 4px solid var(--dark-text);
-                    font-size: 2rem; border-radius: 8px; text-align: center; color: var(--dark-text);
+            </div >
+    <style>
+        #game-1b {width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #game-1b h2 {color: var(--dark-text); font-size: 2.5rem; text-shadow: none; margin-bottom: 5px; }
+        .star-area {position: relative; }
+        #star-canvas {border: 4px solid var(--dark-text); background-color: #1a237e; border-radius: 12px; touch-action: none; cursor: crosshair; }
+        #star-message {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: rgba(255,255,255,0.9); padding: 20px; border: 4px solid var(--dark-text);
+        font-size: 2rem; border-radius: 8px; text-align: center; color: var(--dark-text);
                 }
-                .dot { position: absolute; width: 30px; height: 30px; background-color: white; border-radius: 50%; text-align: center; line-height: 30px; font-weight: bold; pointer-events: none; }
-            </style>
-        `;
+        .dot {position: absolute; width: 30px; height: 30px; background-color: white; border-radius: 50%; text-align: center; line-height: 30px; font-weight: bold; pointer-events: none; }
+    </style>
+`;
 
         const canvas = document.getElementById('star-canvas');
         const ctx = canvas.getContext('2d');
@@ -378,7 +555,7 @@ const Games = {
 
     initGame2A: function (container) {
         container.innerHTML = `
-            <div id="game-2a">
+    < div id = "game-2a" >
                 <h2>The Three Sisters Garden</h2>
                 <div class="sky-area">
                     <div id="prompt-box" class="animated">Let's plant a garden together!</div>
@@ -395,28 +572,28 @@ const Games = {
                     <button class="seed-btn" data-plant="beans">Bean Bug</button>
                     <button class="seed-btn" data-plant="squash">Squash Seed</button>
                 </div>
-            </div>
-            <style>
-                #game-2a { width: 100%; height: 100%; display: flex; flex-direction: column; text-align: center; }
-                #game-2a h2 { font-size: 2rem; margin: 10px 0; color: var(--dark-text); text-shadow: none; }
-                .sky-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
-                #prompt-box { 
-                    background: white; border: 4px solid var(--primary-color); padding: 20px; 
-                    font-size: 2rem; border-radius: 10px; max-width: 80%; line-height: 1.5; color: var(--dark-text);
+            </div >
+    <style>
+        #game-2a {width: 100%; height: 100%; display: flex; flex-direction: column; text-align: center; }
+        #game-2a h2 {font - size: 2rem; margin: 10px 0; color: var(--dark-text); text-shadow: none; }
+        .sky-area {flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        #prompt-box {
+            background: white; border: 4px solid var(--primary-color); padding: 20px;
+        font-size: 2rem; border-radius: 10px; max-width: 80%; line-height: 1.5; color: var(--dark-text);
                 }
-                .farm-area { flex: 2; background-color: #8D6E63; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20px; border-top: 8px solid #5D4037; }
-                .soil-bed { width: 80%; border-bottom: 10px solid #4e342e; display: flex; justify-content: space-around; align-items: flex-end; height: 150px; }
-                .plant-slot { font-size: 4rem; animation: grow 0.5s ease-out; }
-                @keyframes grow { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-                .seeds-area { flex: 1; background-color: #eee; display: flex; justify-content: center; gap: 20px; align-items: center; border-radius: 0 0 12px 12px; }
-                .seed-btn {
-                    padding: 20px 40px; font-size: 1.5rem; font-family: inherit; cursor: pointer;
-                    background-color: var(--accent-color); border: 4px solid var(--dark-text); box-shadow: var(--pixel-shadow); flex: 1; max-width: 250px;
+        .farm-area {flex: 2; background-color: var(--secondary-color); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20px; border-top: 8px solid var(--dark-text); }
+        .soil-bed {width: 80%; border-bottom: 10px solid var(--dark-text); display: flex; justify-content: space-around; align-items: flex-end; height: 150px; }
+        .plant-slot {font - size: 4rem; animation: grow 0.5s ease-out; }
+        @keyframes grow {0 % { transform: scale(0); opacity: 0; } 100% {transform: scale(1); opacity: 1; } }
+        .seeds-area {flex: 1; background-color: #eee; display: flex; justify-content: center; gap: 20px; align-items: center; border-radius: 0 0 12px 12px; }
+        .seed-btn {
+            padding: 20px 40px; font-size: 1.5rem; font-family: inherit; cursor: pointer;
+        background-color: var(--accent-color); border: 4px solid var(--dark-text); box-shadow: var(--pixel-shadow); flex: 1; max-width: 250px;
                 }
-                .seed-btn:active { transform: translate(2px, 2px); box-shadow: var(--pixel-shadow-active); }
-                .hidden { display: none !important; }
-            </style>
-        `;
+        .seed-btn:active {transform: translate(2px, 2px); box-shadow: var(--pixel-shadow-active); }
+        .hidden {display: none !important; }
+    </style>
+`;
 
         const sequence = [
             {
@@ -455,7 +632,7 @@ const Games = {
                 const plant = e.target.getAttribute('data-plant');
                 if (step < sequence.length && plant === sequence[step].target) {
                     // Correct!
-                    document.getElementById(\`plant-\${plant}\`).classList.remove('hidden');
+                    document.getElementById(`plant-${plant}`).classList.remove('hidden');
                     playDing();
                     promptBox.innerHTML = sequence[step].success;
                     step++;
@@ -470,9 +647,12 @@ const Games = {
         setTimeout(loadStep, 2000);
     },
 
-    initGame2B: function(container) {
+    // ==========================================
+    // LEVEL 2: Earth Explorers (3rd to 5th)
+    // ==========================================
+    initGame2B: function (container) {
         container.innerHTML = `
-                        < div id = "game-2b" >
+    < div id = "game-2b" >
                 <h2>Spin the CLORPT Wheel!</h2>
                 <div class="wheel-container" id="wheel-area">
                     <div class="wheel" id="wheel-graphic">🕹️<br>SWIPE<br>TO SPIN!</div>
@@ -500,7 +680,7 @@ const Games = {
                 .ans-btn:active { background-color: #FFB300; }
                 .hidden { display: none !important; }
             </style>
-        `;
+`;
 
         const questions = [
             { segment: 'C (Climate)', q: "True or False: Soils develop fastest in cold and dry climates.", ans: ["True", "False"], correct: 1 },
@@ -518,16 +698,16 @@ const Games = {
         let rot = 0;
 
         wheelArea.addEventListener('click', spinWheel);
-        wheelArea.addEventListener('touchstart', (e) => { e.preventDefault(); spinWheel(); }, {passive: false});
+        wheelArea.addEventListener('touchstart', (e) => { e.preventDefault(); spinWheel(); }, { passive: false });
 
         function spinWheel() {
             if (isSpinning) return;
             isSpinning = true;
-            
+
             // Random spin amount over 3-5 full rotations
             const spinAdd = (360 * 3) + Math.floor(Math.random() * 360);
             rot += spinAdd;
-            wheel.style.transform = \`rotate(\${rot}deg)\`;
+            wheel.style.transform = `rotate(${rot}deg)`;
 
             setTimeout(() => {
                 // Pick a random question
@@ -539,8 +719,8 @@ const Games = {
         function askQuestion(qObj) {
             wheelArea.classList.add('hidden');
             qaContainer.classList.remove('hidden');
-            qText.innerHTML = \`<strong>\${qObj.segment}:</strong><br>\${qObj.q}\`;
-            
+            qText.innerHTML = `<strong>${qObj.segment}:</strong><br>${qObj.q}`;
+
             aButtons.innerHTML = '';
             qObj.ans.forEach((text, i) => {
                 const b = document.createElement('button');
@@ -567,9 +747,9 @@ const Games = {
     // LEVEL 3: Agro-Heroes (Middle & High)
     // ==========================================
 
-    initGame3A: function(container) {
+    initGame3A: function (container) {
         container.innerHTML = `
-                        < div id = "game-3a" >
+    < div id = "game-3a" >
                 <h2>Farm Manager Simulator</h2>
                 <div class="river-container">
                     <div id="river" class="river muddy">🌊 MUDDY RIVER 🌊</div>
@@ -584,8 +764,8 @@ const Games = {
         #game-3a h2 {font - size: 2.5rem; color: var(--dark-text); text-shadow: none; margin-bottom: 5px; }
         .river-container {width: 100%; height: 150px; overflow: hidden; border-radius: 10px; margin-bottom: 20px; border: 8px solid var(--dark-text); }
         .river {width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; transition: background-color 2s, color 2s; }
-        .river.muddy {background - color: #8D6E63; color: #4e342e; text-shadow: none; }
-        .river.clean {background - color: #03A9F4; color: white; text-shadow: 2px 2px 0 black; animation: wave 2s infinite linear; }
+        .river.muddy {background-color: var(--secondary-color); color: var(--dark-text); text-shadow: none; }
+        .river.clean {background-color: var(--background-color); color: var(--dark-text); text-shadow: none; animation: wave 2s infinite linear; }
         @keyframes wave {0 % { background- position - x: 0; } 100% {background - position - x: 100px; } }
         .scenario-panel {flex: 1; width: 90%; background: white; border: 6px solid var(--primary-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-around; }
         #sim-prompt {font - size: 2rem; color: var(--dark-text); line-height: 1.4; padding: 20px; }
@@ -631,7 +811,7 @@ const Games = {
             const data = scenarios[currentScenario];
             promptBox.innerHTML = data.q;
             optionsArea.innerHTML = '';
-            
+
             data.opts.forEach((optText, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'sim-btn';
@@ -655,7 +835,7 @@ const Games = {
         loadScenario();
     },
 
-    initGame3B: function(container) {
+    initGame3B: function (container) {
         container.innerHTML = `
     < div id = "game-3b" >
                 <div class="header">
@@ -675,10 +855,10 @@ const Games = {
         .clock {font - size: 3rem; background: var(--dark-text); color: white; padding: 15px 30px; border-radius: 12px; border: 4px solid var(--accent-color); }
         .clock.warning {color: #f44336; animation: pulse 0.5s infinite; }
         @keyframes pulse {0 % { transform: scale(1); } 50% {transform: scale(1.1); } 100% {transform: scale(1); } }
-        .trivia-panel {flex: 1; width: 90%; background: white; border: 6px solid #2196F3; border-radius: 12px; padding: 40px; display: flex; flex-direction: column; justify-content: space-around; }
+        .trivia-panel {flex: 1; width: 90%; background: white; border: 6px solid var(--background-color); border-radius: 12px; padding: 40px; display: flex; flex-direction: column; justify-content: space-around; }
         #trivia-q {font - size: 2.2rem; color: var(--dark-text); line-height: 1.5; }
         .options-grid {display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
-        .t-btn {padding: 20px 30px; font-size: 1.5rem; font-family: inherit; background-color: #2196F3; color: white; border: 4px solid var(--dark-text); cursor: pointer; border-radius: 8px; flex: 1 1 45%; min-width: 250px; }
+        .t-btn {padding: 20px 30px; font-size: 1.5rem; font-family: inherit; background-color: var(--background-color); color: var(--dark-text); border: 4px solid var(--dark-text); cursor: pointer; border-radius: 8px; flex: 1 1 45%; min-width: 250px; }
         .t-btn:active {background - color: #1565C0; transform: translate(2px, 2px); }
         .score-board {font - size: 2.5rem; margin-top: 20px; color: var(--dark-text); }
     </style>
@@ -691,7 +871,7 @@ const Games = {
 
         // Shuffle questions
         const questions = [...triviaQuestions].sort(() => Math.random() - 0.5);
-        
+
         let currentQIndex = 0;
         let score = 0;
         let timeLeft = 60;
@@ -719,11 +899,11 @@ const Games = {
                 endGame();
                 return;
             }
-            
+
             optsEle.innerHTML = '';
             const q = questions[currentQIndex];
             qEle.textContent = q.question;
-            
+
             q.options.forEach((optText, i) => {
                 const btn = document.createElement('button');
                 btn.className = 't-btn';
@@ -739,10 +919,10 @@ const Games = {
                         // Highlight correct
                         optsEle.children[q.correctIndex].style.backgroundColor = 'var(--primary-color)';
                     }
-                    
+
                     // Disable all buttons to prevent spamming
                     Array.from(optsEle.children).forEach(b => b.onclick = null);
-                    
+
                     currentQIndex++;
                     setTimeout(() => {
                         if (timeLeft > 0) loadNextQuestion();
@@ -754,7 +934,7 @@ const Games = {
 
         function endGame() {
             clearInterval(interval);
-            qEle.innerHTML = \`Game Over!<br>Your Final Score: \${score}\`;
+            qEle.innerHTML = `Game Over!<br>Your Final Score: ${score}`;
             optsEle.innerHTML = '';
             setTimeout(() => window.triggerReward(), 4000);
         }
