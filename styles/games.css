@@ -1,0 +1,881 @@
+/* === GAME-SPECIFIC STYLES === */
+
+/* ============================================
+   GAME 1: BUILD A SOIL CAKE (Drag & Drop)
+   ============================================ */
+.soil-cake-game {
+    display: flex;
+    height: 100%;
+    padding: 20px;
+    gap: 20px;
+}
+
+.cake-layers-source {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 250px;
+    padding: 16px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    overflow-y: auto;
+}
+
+.cake-drop-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+}
+
+.cake-plate {
+    width: 400px;
+    height: 40px;
+    background: linear-gradient(to bottom, #d4a574, #b8895a);
+    border-radius: 0 0 50% 50%;
+    border: 3px solid #8b6914;
+}
+
+.cake-slot {
+    width: 380px;
+    height: 60px;
+    border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.cake-slot.hover {
+    background: rgba(255,255,255,0.15);
+    border-color: var(--color-accent);
+}
+
+.cake-slot.filled {
+    border-style: solid;
+    border-color: transparent;
+}
+
+.draggable-layer {
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    cursor: grab;
+    touch-action: none;
+    transition: transform 0.1s ease;
+    text-align: center;
+}
+
+.draggable-layer:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+}
+
+.draggable-layer.dragging {
+    opacity: 0.5;
+}
+
+/* ============================================
+   GAME 2: DOT-TO-DOT (Glowing Stars)
+   ============================================ */
+.dot-to-dot-game {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #0a0a2a;
+    overflow: hidden;
+}
+
+.dot-to-dot-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.dot-star {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+    transition: transform 0.2s ease;
+}
+
+.dot-star::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,200,0.9) 0%, rgba(255,255,100,0.4) 40%, transparent 70%);
+    animation: star-pulse 2s ease-in-out infinite;
+}
+
+.dot-star .dot-number {
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-title);
+    font-size: 0.6rem;
+    color: #1a1a3a;
+    text-shadow: 0 0 2px rgba(255,255,255,0.5);
+}
+
+.dot-star.active {
+    transform: scale(1.3);
+}
+
+.dot-star.active::before {
+    background: radial-gradient(circle, rgba(100,255,100,1) 0%, rgba(100,255,100,0.4) 40%, transparent 70%);
+}
+
+.dot-star.connected {
+    transform: scale(0.8);
+    pointer-events: none;
+}
+
+.dot-star.connected::before {
+    background: radial-gradient(circle, rgba(100,200,255,0.6) 0%, rgba(100,200,255,0.2) 40%, transparent 70%);
+    animation: none;
+}
+
+@keyframes star-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.3); opacity: 1; }
+}
+
+.dot-category-label {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-title);
+    font-size: 0.8rem;
+    color: rgba(255,255,200,0.8);
+    text-align: center;
+    z-index: 10;
+}
+
+.dot-reveal-img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 60%;
+    max-height: 60%;
+    opacity: 0;
+    transition: opacity 1s ease;
+    z-index: 3;
+}
+
+.dot-reveal-img.visible {
+    opacity: 1;
+    animation: shimmer 2s ease-in-out;
+}
+
+@keyframes shimmer {
+    0% { filter: brightness(2) blur(10px); opacity: 0; }
+    50% { filter: brightness(1.5) blur(2px); opacity: 0.8; }
+    100% { filter: brightness(1) blur(0); opacity: 1; }
+}
+
+/* ============================================
+   GAME 3: SOIL LIFE MAZE
+   ============================================ */
+.maze-game {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #3d2b1f;
+}
+
+.maze-canvas {
+    border: 4px solid var(--color-wood-dark);
+    border-radius: 4px;
+    background: #2d1f14;
+}
+
+.maze-instructions {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+    background: rgba(0,0,0,0.5);
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+/* ============================================
+   GAME 4: SOIL CRITTER COLORING
+   ============================================ */
+.coloring-game {
+    display: flex;
+    height: 100%;
+}
+
+.color-palette {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background: rgba(0,0,0,0.3);
+    align-items: center;
+}
+
+.color-swatch {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.color-swatch:active {
+    transform: scale(0.9);
+}
+
+.color-swatch.selected {
+    border-color: var(--color-accent);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px var(--color-accent);
+}
+
+.coloring-canvas-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.coloring-canvas {
+    border: 3px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    background: #fff;
+    cursor: crosshair;
+}
+
+/* ============================================
+   GAME 5: THREE SISTERS GARDEN
+   ============================================ */
+.garden-game {
+    display: flex;
+    height: 100%;
+    gap: 20px;
+    padding: 20px;
+}
+
+.garden-sidebar {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+}
+
+.garden-clue {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    padding: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    border-left: 4px solid var(--color-accent);
+    line-height: 1.5;
+}
+
+.plant-option {
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.plant-option:active {
+    transform: scale(0.95);
+}
+
+.plant-option:hover {
+    border-color: var(--color-accent);
+    background: rgba(255,255,255,0.15);
+}
+
+.plant-option.correct {
+    border-color: var(--color-success);
+    background: rgba(76,175,80,0.2);
+}
+
+.plant-option.wrong {
+    border-color: var(--color-error);
+    background: rgba(231,76,60,0.2);
+}
+
+.garden-bed {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 20px;
+    background: linear-gradient(
+        to bottom,
+        var(--color-sky) 0%,
+        var(--color-sky) 50%,
+        var(--color-dirt) 50%,
+        var(--color-dirt) 100%
+    );
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.garden-plot {
+    display: flex;
+    gap: 30px;
+    align-items: flex-end;
+    margin-bottom: 40px;
+}
+
+.plant-slot {
+    width: 80px;
+    height: 120px;
+    border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+}
+
+.plant-slot.filled {
+    border-color: transparent;
+}
+
+.plant-slot img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* ============================================
+   GAME 6: SPIN THE SOIL WHEEL
+   ============================================ */
+.wheel-game {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 20px;
+}
+
+.wheel-container {
+    position: relative;
+    width: 400px;
+    height: 400px;
+}
+
+.wheel-canvas {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+
+.wheel-canvas:active {
+    cursor: grabbing;
+}
+
+.wheel-pointer {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 30px solid var(--color-accent);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    z-index: 5;
+}
+
+.wheel-question-panel {
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+}
+
+.wheel-question-text {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.5;
+    min-height: 80px;
+}
+
+.wheel-answers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wheel-answer-btn {
+    padding: 14px 20px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wheel-answer-btn:hover {
+    border-color: var(--color-accent);
+}
+
+.wheel-answer-btn:active {
+    transform: scale(0.98);
+}
+
+.wheel-answer-btn.correct {
+    border-color: var(--color-success);
+    background: rgba(76,175,80,0.3);
+}
+
+.wheel-answer-btn.wrong {
+    border-color: var(--color-error);
+    background: rgba(231,76,60,0.3);
+}
+
+.wheel-flower-progress {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.water-drop-count {
+    font-family: var(--font-title);
+    font-size: 0.6rem;
+    color: #42a5f5;
+}
+
+/* ============================================
+   GAME 7: ODD ONE OUT
+   ============================================ */
+.odd-one-out-game {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 30px;
+    padding: 20px;
+}
+
+.odd-prompt {
+    font-family: var(--font-title);
+    font-size: 0.8rem;
+    color: var(--color-accent);
+    text-align: center;
+}
+
+.odd-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 600px;
+}
+
+.odd-item {
+    padding: 24px 32px;
+    background: rgba(255,255,255,0.1);
+    border: 3px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 180px;
+}
+
+.odd-item:active {
+    transform: scale(0.95);
+}
+
+.odd-item:hover {
+    border-color: var(--color-accent);
+}
+
+.odd-item.correct {
+    border-color: var(--color-success);
+    background: rgba(76,175,80,0.3);
+    animation: correct-flash 0.5s ease;
+}
+
+.odd-item.wrong {
+    border-color: var(--color-error);
+    background: rgba(231,76,60,0.3);
+    animation: wrong-shake 0.5s ease;
+}
+
+@keyframes correct-flash {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes wrong-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-10px); }
+    80% { transform: translateX(10px); }
+}
+
+.odd-round-counter {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+/* ============================================
+   GAME 8: FARM MANAGER SIMULATOR
+   ============================================ */
+.farm-manager-game {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+    gap: 20px;
+}
+
+.scenario-panel {
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 24px;
+    border-left: 4px solid var(--color-error);
+}
+
+.scenario-text {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.practice-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    flex: 1;
+    align-content: start;
+}
+
+.practice-card {
+    padding: 20px;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.practice-card:hover {
+    border-color: var(--color-accent);
+    background: rgba(255,255,255,0.12);
+}
+
+.practice-card:active {
+    transform: scale(0.95);
+}
+
+.practice-card.correct {
+    border-color: var(--color-success);
+    background: rgba(76,175,80,0.2);
+}
+
+.practice-card.wrong {
+    border-color: var(--color-error);
+    background: rgba(231,76,60,0.2);
+}
+
+.practice-card-title {
+    font-family: var(--font-title);
+    font-size: 0.55rem;
+    color: var(--color-accent);
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.practice-card-desc {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    opacity: 0.8;
+    line-height: 1.4;
+}
+
+.farm-result {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.farm-before, .farm-after {
+    text-align: center;
+}
+
+.farm-before img, .farm-after img {
+    width: 200px;
+    height: 150px;
+    object-fit: contain;
+}
+
+/* ============================================
+   GAME 9: TRIVIA BLITZ
+   ============================================ */
+.trivia-game {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+    gap: 20px;
+}
+
+.trivia-timer-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.trivia-timer-fill {
+    height: 100%;
+    background: var(--color-accent);
+    border-radius: 4px;
+    transition: width 0.1s linear;
+}
+
+.trivia-timer-fill.warning {
+    background: var(--color-error);
+}
+
+.trivia-timer-text {
+    font-family: var(--font-title);
+    font-size: 1.5rem;
+    text-align: center;
+    color: var(--color-accent);
+}
+
+.trivia-timer-text.warning {
+    color: var(--color-error);
+    animation: timer-pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.trivia-question {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    text-align: center;
+    line-height: 1.6;
+    padding: 20px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.trivia-answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+    align-content: center;
+}
+
+.trivia-answer-btn {
+    padding: 20px;
+    background: rgba(255,255,255,0.1);
+    border: 3px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.trivia-answer-btn:hover {
+    border-color: var(--color-accent);
+}
+
+.trivia-answer-btn:active {
+    transform: scale(0.95);
+}
+
+.trivia-answer-btn.correct {
+    border-color: var(--color-success);
+    background: rgba(76,175,80,0.3);
+}
+
+.trivia-answer-btn.wrong {
+    border-color: var(--color-error);
+    background: rgba(231,76,60,0.3);
+}
+
+.trivia-score-summary {
+    text-align: center;
+    padding: 20px;
+}
+
+.trivia-score-big {
+    font-family: var(--font-title);
+    font-size: 2rem;
+    color: var(--color-accent);
+}
+
+/* ============================================
+   GAME 10: SOIL FOOD WEB BUILDER
+   ============================================ */
+.food-web-game {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.food-web-sidebar {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    background: rgba(0,0,0,0.3);
+    overflow-y: auto;
+}
+
+.organism-card {
+    padding: 12px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    text-align: center;
+    cursor: grab;
+    touch-action: none;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.organism-card:active {
+    cursor: grabbing;
+}
+
+.organism-card.placed {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.food-web-canvas {
+    flex: 1;
+    position: relative;
+}
+
+.food-web-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.web-node {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.web-node:hover {
+    transform: scale(1.1);
+}
+
+.web-node-circle {
+    fill: rgba(255,255,255,0.1);
+    stroke: rgba(255,255,255,0.3);
+    stroke-width: 2;
+}
+
+.web-node-circle.filled {
+    fill: rgba(100,200,100,0.2);
+    stroke: var(--color-success);
+}
+
+.web-node-label {
+    font-family: var(--font-body);
+    font-size: 12px;
+    fill: white;
+    text-anchor: middle;
+}
+
+.web-arrow {
+    stroke: rgba(255,255,255,0.3);
+    stroke-width: 2;
+    fill: none;
+    marker-end: url(#arrowhead);
+}
+
+.web-arrow.correct {
+    stroke: var(--color-success);
+}
+
+.food-web-instructions {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+    background: rgba(0,0,0,0.5);
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-align: center;
+}
