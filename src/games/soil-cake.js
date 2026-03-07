@@ -28,7 +28,7 @@ function createIntroScreen() {
           <span class="sc-speech-text">${INSTRUCTIONS.intro}</span>
         </div>
         <img class="sc-intro-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="Character">
-        <button class="sc-enter-btn" id="sc-enter"><span>Enter Bakery</span></button>
+        <button class="sc-enter-btn" id="sc-enter"><span>Enter Bakery ➜</span></button>
       </div>
     </div>
     <div class="sc-intro-ground"><div class="ground-strip"></div></div>
@@ -72,10 +72,10 @@ function createIntroScreen() {
 // ─── P2: GAMEPLAY ───
 
 const LAYER_ZONES = [
-  { id: 'O', top: 0, bottom: 18 },
-  { id: 'A', top: 18, bottom: 48 },
-  { id: 'B', top: 48, bottom: 75 },
-  { id: 'C', top: 75, bottom: 100 },
+  { id: 'O', top: 12, bottom: 53 },
+  { id: 'A', top: 53, bottom: 63 },
+  { id: 'B', top: 63, bottom: 82 },
+  { id: 'C', top: 82, bottom: 100 },
 ]
 
 const DECORATIONS = [
@@ -89,8 +89,11 @@ const DECORATIONS = [
   { emoji: '\u2B50', name: 'Star' },
   { emoji: '\u{1F380}', name: 'Bow' },
   { emoji: '\u{1F330}', name: 'Chestnut' },
-  { emoji: '\u{1F36B}', name: 'Chocolate' },
+  { emoji: '🍭', name: 'Candy' },
   { emoji: '\u{1F36A}', name: 'Cookie' },
+  { emoji: '🌈', name: 'Rainbow' },
+  { emoji: '🥜', name: 'Peanut' },
+  { emoji: '🌺', name: 'Hibiscus' },
 ]
 
 let selectedColor = null
@@ -102,7 +105,8 @@ function createGameplayScreen() {
   const el = document.createElement('div')
   el.className = 'screen soil-cake-game'
 
-  const colorsHtml = HORIZONS.map(h => `
+  const shuffled = [...HORIZONS].sort(() => Math.random() - 0.5)
+  const colorsHtml = shuffled.map(h => `
     <button class="sc-color-btn" data-color="${h.color}" data-id="${h.id}">
       <div class="sc-swatch" style="background:${h.color};"></div>
       <span class="sc-swatch-label">${h.cakeName}</span>
@@ -193,8 +197,8 @@ function initCake(container) {
     // Scale cake to fit canvas panel with padding for labels + overlay
     const panel = container.querySelector('.sc-canvas-panel')
     const pr = panel.getBoundingClientRect()
-    const maxW = pr.width - 120 // room for layer labels on left
-    const maxH = pr.height - 100 // room for overlay at bottom
+    const maxW = pr.width - 175 // room for layer labels on left
+    const maxH = pr.height - 150 // room for overlay at bottom
     const scale = Math.min(maxW / cw, maxH / ch)
     const fw = Math.floor(cw * scale)
     const fh = Math.floor(ch * scale)
@@ -205,7 +209,7 @@ function initCake(container) {
 
     // Remove all white, clean edges
     const fd = ctx.getImageData(0, 0, fw, fh)
-    removeWhite(fd)
+    //removeWhite(fd)
     ctx.putImageData(fd, 0, 0)
 
     // Size containers
@@ -218,8 +222,9 @@ function initCake(container) {
 
     createLayerZones(container, layersDiv)
     createLayerLabels(container, fh)
+    createPermanentFills(cakeContainerEl)
   }
-  img.src = '/assets/svg/soil cake.svg'
+  img.src = '/assets/svg/soil cake4.svg'
 }
 
 function findBounds(data, w, h) {
@@ -332,6 +337,8 @@ function createLayerLabels(container, cakeHeight) {
     labelsDiv.appendChild(label)
   }
 }
+
+
 
 function initPalette(container) {
   container.querySelectorAll('.sc-color-btn').forEach(btn => {
