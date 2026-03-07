@@ -25,10 +25,10 @@ function createIntroScreen() {
     <div class="sc-intro-body">
       <div class="sc-intro-center">
         <div class="sc-speech-bubble">
-          <span class="sc-speech-text">${INSTRUCTIONS.intro}</span>
+          <span class="sc-speech-text" id="sc-intro-typing"></span>
         </div>
         <img class="sc-intro-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="Character">
-        <button class="sc-enter-btn" id="sc-enter"><span>Enter Bakery ➜</span></button>
+        <button class="sc-enter-btn" id="sc-enter"><span>Enter Bakery <span class="sc-arrow-nudge">➜</span></span></button>
       </div>
     </div>
     <div class="sc-intro-ground"><div class="ground-strip"></div></div>
@@ -51,6 +51,18 @@ function createIntroScreen() {
     img.setAttribute('style', item.style)
     decor.appendChild(img)
   }
+
+  // Typing animation for speech bubble
+  const typingEl = el.querySelector('#sc-intro-typing')
+  const introText = INSTRUCTIONS.intro
+  let charIdx = 0
+  function typeChar() {
+    if (charIdx < introText.length) {
+      typingEl.textContent += introText[charIdx++]
+      setTimeout(typeChar, 40)
+    }
+  }
+  setTimeout(typeChar, 400)
 
   el.querySelector('#sc-intro-home').addEventListener('pointerdown', () => navigate('game-select/sprouts'))
   el.querySelector('#sc-enter').addEventListener('pointerdown', () => {
@@ -310,7 +322,7 @@ function createLayerZones(container, layersDiv) {
         div.classList.add('filled')
         filledLayers.add(zone.id)
         const el = container.querySelector('#sc-instruction-text')
-        el.textContent = `${horizon.name}: ${horizon.clue}`
+        el.textContent = `${horizon.id} Horizon: ${horizon.clue}`
         const btn = container.querySelector(`.sc-color-btn[data-id="${zone.id}"]`)
         if (btn) btn.classList.add('done')
       } else {
@@ -343,12 +355,19 @@ function createLayerLabels(container, cakeHeight) {
 function initPalette(container) {
   container.querySelectorAll('.sc-color-btn').forEach(btn => {
     btn.addEventListener('pointerdown', () => {
+      if (btn.classList.contains('selected')) {
+        btn.classList.remove('selected')
+        selectedColor = null
+        selectedId = null
+        container.querySelector('#sc-instruction-text').textContent = INSTRUCTIONS.gameplay
+        return
+      }
       container.querySelectorAll('.sc-color-btn').forEach(b => b.classList.remove('selected'))
       btn.classList.add('selected')
       selectedColor = btn.dataset.color
       selectedId = btn.dataset.id
       const h = HORIZONS.find(h => h.id === btn.dataset.id)
-      if (h) container.querySelector('#sc-instruction-text').textContent = `${h.name}: ${h.clue}`
+      if (h) container.querySelector('#sc-instruction-text').textContent = `? Horizon: ${h.clue}`
     })
   })
 }
@@ -397,8 +416,45 @@ function initDecorations(container) {
         em.style.left = (e.clientX - cr.left) + 'px'
         em.style.top = (e.clientY - cr.top) + 'px'
         dropped.appendChild(em)
+        makePlacedDecoDraggable(em)
       }
     })
+  })
+}
+
+function makePlacedDecoDraggable(el) {
+  let dragging = false, startX = 0, startY = 0, origX = 0, origY = 0
+
+  el.addEventListener('pointerdown', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragging = true
+    startX = e.clientX
+    startY = e.clientY
+    origX = parseFloat(el.style.left)
+    origY = parseFloat(el.style.top)
+    el.setPointerCapture(e.pointerId)
+    el.style.zIndex = '10'
+    el.style.transform = 'translate(-50%, -50%) scale(1.2)'
+  })
+
+  el.addEventListener('pointermove', (e) => {
+    if (!dragging) return
+    el.style.left = (origX + e.clientX - startX) + 'px'
+    el.style.top = (origY + e.clientY - startY) + 'px'
+  })
+
+  el.addEventListener('pointerup', (e) => {
+    if (!dragging) return
+    dragging = false
+    el.style.zIndex = ''
+    el.style.transform = 'translate(-50%, -50%) scale(1)'
+    // If dragged outside the cake, remove it
+    if (!cakeContainerEl) return
+    const cr = cakeContainerEl.getBoundingClientRect()
+    if (e.clientX < cr.left || e.clientX > cr.right || e.clientY < cr.top || e.clientY > cr.bottom) {
+      el.remove()
+    }
   })
 }
 
