@@ -9,6 +9,7 @@ import { createSplashScreen } from './screens/splash.js'
 import { createGradeSelectScreen } from './screens/grade-select.js'
 import { createGameSelectScreen } from './screens/game-select.js'
 import { getGameById } from './data/game-registry.js'
+import { createSoilCakeGame } from './games/soil-cake.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -55,6 +56,14 @@ function handleRoute(route) {
       break
     case 'game': {
       const game = getGameById(route.gameId)
+
+      // Route to implemented games
+      if (route.gameId === 'soil-cake') {
+        switchScreen(createSoilCakeGame())
+        break
+      }
+
+      // Placeholder for unimplemented games
       const placeholder = document.createElement('div')
       placeholder.className = 'screen game-placeholder'
       placeholder.innerHTML = `

@@ -7,7 +7,6 @@
   flex-direction: column;
 }
 
-/* Top bar */
 .game-topbar {
   display: flex;
   align-items: center;
@@ -17,17 +16,8 @@
   z-index: 10;
 }
 
-.game-topbar-home {
-  width: 44px;
-  height: 44px;
-  padding: 4px;
-}
-
-.game-topbar-home img {
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
-}
+.game-topbar-home { width: 44px; height: 44px; padding: 4px; }
+.game-topbar-home img { width: 100%; height: 100%; image-rendering: pixelated; }
 
 .game-topbar-title {
   flex: 1;
@@ -44,43 +34,505 @@
   color: var(--color-cream);
 }
 
-/* Game content area */
-.game-content {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
+.game-content { flex: 1; position: relative; overflow: hidden; }
+
+.level-complete-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+  background: rgba(26, 26, 46, 0.8); z-index: 20; opacity: 0; pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+.level-complete-overlay.visible { opacity: 1; pointer-events: auto; }
+.level-complete-star { width: 96px; height: 96px; image-rendering: pixelated; }
+.level-complete-text { font-family: var(--font-title); font-size: 40px; color: var(--color-white); text-shadow: 0 3px 0 var(--color-brown-dark); }
+
+/* ═══════════════════════════════════════════════
+   SOIL CAKE GAME
+   ═══════════════════════════════════════════════ */
+
+/* ─── P1: INTRO SCREEN ─── */
+
+.soil-cake-intro {
+  justify-content: flex-start;
 }
 
-/* Level complete overlay */
-.level-complete-overlay {
+.sc-intro-bg {
   position: absolute;
   inset: 0;
+  background: url('/assets/gifs/pixel-house2.gif') center / cover no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sc-intro-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.sc-intro-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 32px;
+  width: 100%;
+  position: relative;
+  z-index: 3;
+}
+
+.sc-intro-title {
+  font-family: var(--font-title);
+  font-size: 36px;
+  color: var(--color-white);
+  text-shadow: 0 3px 0 var(--color-sprouts-dark), 0 0 20px rgba(166, 194, 100, 0.3);
+}
+
+.sc-intro-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.sc-intro-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.sc-speech-bubble {
+  max-width: 340px;
+  padding: 20px 24px;
+  background: var(--color-white);
+  border: 4px solid var(--color-sprouts);
+  border-radius: 16px;
+  position: relative;
+}
+
+.sc-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 40%;
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 14px solid var(--color-sprouts);
+}
+
+.sc-speech-text {
+  font-family: var(--font-header);
+  font-size: 18px;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.sc-intro-character {
+  height: 120px;
+  width: auto;
+  image-rendering: pixelated;
+  filter: saturate(1.3) brightness(1.05);
+  animation: cornerFloat 2.5s ease-in-out infinite;
+}
+
+.sc-enter-btn {
+  padding: 18px 44px;
+  background: var(--color-sprouts-pastel);
+  border: none;
+  border-bottom: 5px solid var(--color-sprouts);
+  border-right: 3px solid var(--color-sprouts);
+  border-radius: 24px;
+  transition: transform var(--transition-fast);
+}
+
+.sc-enter-btn span {
+  font-family: var(--font-header);
+  font-size: 22px;
+  color: var(--color-text);
+}
+
+.sc-enter-btn:active {
+  transform: translateY(4px) scale(0.97);
+}
+
+.sc-intro-ground {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  z-index: 1;
+}
+
+.sc-intro-ground .ground-strip { z-index: 0; }
+
+.sc-intro-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.sc-intro-decor img {
+  position: absolute;
+  image-rendering: pixelated;
+  object-fit: contain;
+  filter: saturate(1.25) brightness(1.05);
+}
+
+/* ─── P2: GAMEPLAY SCREEN ─── */
+
+.soil-cake-game {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.sc-game-bg {
+  position: absolute;
+  inset: 0;
+  background: url('/assets/gifs/h02-bg-cake.gif');
+  background-size: 200px 200px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sc-game-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 28px;
+  width: 100%;
+  position: relative;
+  z-index: 3;
+}
+
+.sc-game-title {
+  font-family: var(--font-title);
+  font-size: 28px;
+  color: var(--color-white);
+  text-shadow: 0 3px 0 var(--color-sprouts-dark), 0 0 20px rgba(166, 194, 100, 0.3);
+}
+
+/* Main 2-section layout: narrow panel + large canvas */
+.sc-game-body {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  padding: 0 16px 12px;
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+}
+
+/* Single left panel: colors on top, divider, decorations on bottom */
+.sc-panel {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: rgba(253, 246, 227, 0.92);
+  border-radius: 14px;
+  border: 3px solid var(--color-sprouts);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.sc-panel-heading {
+  font-family: var(--font-header);
+  font-size: 12px;
+  color: var(--color-text-light);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.sc-panel-colors {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sc-color-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  background: var(--color-white);
+  border: 3px solid transparent;
+  border-radius: 10px;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+  cursor: pointer;
+}
+
+.sc-color-btn:active { transform: scale(0.96); }
+
+.sc-color-btn.selected {
+  border-color: var(--color-sprouts);
+  background: var(--color-sprouts-pastel);
+}
+
+.sc-color-btn.done {
+  opacity: 0.5;
+}
+
+.sc-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+}
+
+.sc-swatch-label {
+  font-family: var(--font-header);
+  font-size: 13px;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.sc-panel-divider {
+  height: 2px;
+  background: var(--color-sprouts);
+  opacity: 0.4;
+  margin: 8px 0;
+  border-radius: 1px;
+}
+
+.sc-panel-decos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+}
+
+.sc-deco-item {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-white);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.sc-deco-emoji {
+  font-size: 24px;
+  pointer-events: none;
+}
+
+.sc-drag-clone {
+  position: fixed;
+  font-size: 36px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.85;
+  transform: translate(-50%, -50%);
+}
+
+/* Canvas panel — takes all remaining width */
+.sc-canvas-panel {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
-  background: rgba(26, 26, 46, 0.8);
-  z-index: 20;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-normal);
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  background: rgba(253, 246, 227, 0.85);
+  border-radius: 14px;
+  border: 3px solid var(--color-sprouts);
+  padding: 16px;
 }
 
-.level-complete-overlay.visible {
-  opacity: 1;
+/* Cake wrapper: labels + cake side by side */
+.sc-cake-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* Layer labels to the left of cake */
+.sc-layer-labels {
+  position: relative;
+  width: 50px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.sc-label-item {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transform: translateY(-50%);
+  transition: opacity 0.3s ease;
+}
+
+.sc-label-item.filled { opacity: 0.3; }
+
+.sc-label-text {
+  font-family: var(--font-header);
+  font-size: 16px;
+  color: var(--color-text);
+  background: rgba(253, 246, 227, 0.9);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.sc-label-arrow {
+  font-size: 12px;
+  color: var(--color-sprouts-dark);
+}
+
+/* Cake container — layers behind + line art canvas on top */
+.sc-cake-container {
+  position: relative;
+}
+
+.sc-cake-layers {
+  position: absolute;
+  top: 0; left: 0;
+  overflow: hidden;
+}
+
+.sc-layer-zone {
+  transition: background-color 0.4s ease;
+  border-radius: 8px;
+}
+
+.sc-layer-zone:hover {
+  outline: 3px dashed rgba(166, 194, 100, 0.5);
+  outline-offset: -3px;
+}
+
+.sc-layer-zone.filled:hover { outline: none; }
+
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.sc-layer-zone.sc-wrong {
+  animation: wrongShake 0.3s ease;
+  outline: 3px solid #e55;
+  outline-offset: -3px;
+}
+
+#sc-canvas {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  image-rendering: auto;
+  display: block;
+}
+
+/* Dropped decorations overlay */
+.sc-dropped-decos {
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sc-placed-deco {
+  position: absolute;
+  font-size: 28px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: decoPlop 0.3s ease;
+}
+
+@keyframes decoPlop {
+  0% { transform: translate(-50%, -50%) scale(0); }
+  60% { transform: translate(-50%, -50%) scale(1.3); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Overlay at bottom of canvas panel: instructions + character */
+.sc-overlay-bottom {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.sc-instructions {
+  padding: 12px 14px;
+  background: rgba(253, 246, 227, 0.92);
+  border-radius: 14px;
+  border: 3px solid var(--color-sprouts);
+  max-width: 280px;
   pointer-events: auto;
 }
 
-.level-complete-star {
-  width: 96px;
-  height: 96px;
-  image-rendering: pixelated;
+.sc-instructions p {
+  font-family: var(--font-header);
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.5;
 }
 
-.level-complete-text {
-  font-family: var(--font-title);
-  font-size: 40px;
-  color: var(--color-white);
-  text-shadow: 0 3px 0 var(--color-brown-dark);
+.sc-game-character {
+  height: 80px;
+  width: auto;
+  image-rendering: pixelated;
+  filter: saturate(1.3) brightness(1.05);
+  animation: cornerFloat 2.5s ease-in-out infinite;
+  pointer-events: none;
 }
+
+/* Completion overlay */
+.sc-completion-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(26, 26, 46, 0.85);
+  z-index: 20; opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.sc-completion-overlay.sc-show { opacity: 1; }
+
+.sc-completion-content {
+  display: flex; flex-direction: column; align-items: center; gap: 32px;
+}
+
+.sc-completion-title {
+  font-family: var(--font-title);
+  font-size: 48px;
+  color: var(--color-white);
+  text-shadow: 0 4px 0 var(--color-sprouts-dark);
+  text-align: center;
+}
+
+.sc-completion-worm {
+  width: 80px; height: 80px;
+  image-rendering: pixelated;
+  animation: cornerFloat 1.5s ease-in-out infinite;
+}
+
+.sc-completion-btn {
+  padding: 16px 40px;
+  background: var(--color-sprouts);
+  border: none;
+  border-bottom: 5px solid var(--color-sprouts-dark);
+  border-right: 3px solid var(--color-sprouts-dark);
+  border-radius: 16px;
+  font-family: var(--font-header);
+  font-size: 22px;
+  color: var(--color-white);
+  text-shadow: 0 2px 0 var(--color-sprouts-dark);
+  transition: transform var(--transition-fast);
+}
+.sc-completion-btn:active { transform: translateY(4px) scale(0.97); }
