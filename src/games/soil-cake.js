@@ -84,15 +84,15 @@ const DECORATIONS = [
   { emoji: '\u{1F338}', name: 'Blossom' },
   { emoji: '\u{1F365}', name: 'Narutomaki' },
   { emoji: '\u{1F497}', name: 'Heart' },
-  { emoji: '\u{1F7E2}', name: 'Green' },
+  { emoji: '🍃', name: 'Leaf' },
   { emoji: '\u{1F90D}', name: 'White Heart' },
   { emoji: '\u2B50', name: 'Star' },
   { emoji: '\u{1F380}', name: 'Bow' },
   { emoji: '\u{1F330}', name: 'Chestnut' },
-  { emoji: '🍭', name: 'Candy' },
+  { emoji: '🥜', name: 'Peanut' },
   { emoji: '\u{1F36A}', name: 'Cookie' },
   { emoji: '🌈', name: 'Rainbow' },
-  { emoji: '🥜', name: 'Peanut' },
+  { emoji: '🍭', name: 'Candy' },
   { emoji: '🌺', name: 'Hibiscus' },
 ]
 
