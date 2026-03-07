@@ -1,8 +1,6 @@
 /* === SCREEN TRANSITIONS === */
 
-/* Fade + subtle scale for screen enter/exit handled in base.css */
-
-/* Additional decorative transitions */
+/* Slide-up variants for overlays and modals */
 .slide-up-enter {
   animation: slideUpIn var(--transition-normal) ease forwards;
 }
@@ -33,30 +31,6 @@
   }
 }
 
-/* Staggered children animation for cards, buttons */
-.stagger-children > * {
-  opacity: 0;
-  animation: staggerFadeIn var(--transition-normal) ease forwards;
-}
-
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 80ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 160ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 240ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 320ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 400ms; }
-
-@keyframes staggerFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
 /* Celebration burst (used on level/game complete) */
 @keyframes celebrationPop {
   0% { transform: scale(0); opacity: 1; }
@@ -66,4 +40,10 @@
 
 .celebration-pop {
   animation: celebrationPop 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Gentle bounce for interactive elements */
+@keyframes gentleBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }

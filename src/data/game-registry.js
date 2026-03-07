@@ -28,7 +28,7 @@ export const GAMES = [
     title: 'Build a Soil Cake',
     tier: 'sprouts',
     levelCount: 1,
-    icon: '/assets/gifs/h02-bg-cake.gif',
+    icon: '/assets/gifs/cake-gif.gif',
     description: 'Fill in the soil layers with the right colors!',
   },
   {

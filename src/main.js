@@ -53,31 +53,28 @@ function handleRoute(route) {
     case 'game-select':
       switchScreen(createGameSelectScreen(route.tier))
       break
-    case 'game':
-      // Placeholder: will load game modules later
+    case 'game': {
+      const game = getGameById(route.gameId)
       const placeholder = document.createElement('div')
-      placeholder.className = 'screen'
-      placeholder.style.cssText = 'background:var(--color-cream);'
+      placeholder.className = 'screen game-placeholder'
       placeholder.innerHTML = `
-        <div class="game-topbar">
-          <button class="game-topbar-home" id="game-back">
+        <div class="game-placeholder-topbar">
+          <button class="home-btn" id="game-back">
             <img src="/assets/sprites/ui_board-home.png" alt="Back">
           </button>
-          <span class="game-topbar-title">${route.gameId}</span>
-          <span class="game-topbar-level">Level ${route.level + 1}</span>
+          <span class="game-placeholder-title">${game ? game.title : route.gameId}</span>
+          <span class="game-placeholder-level">Level ${route.level + 1}</span>
         </div>
-        <div class="game-content" style="display:flex;align-items:center;justify-content:center;">
-          <p style="font-family:var(--font-header);font-size:24px;color:var(--color-text);">
-            Game coming soon!
-          </p>
+        <div class="game-placeholder-body">
+          <p>Game coming soon!</p>
         </div>
       `
       placeholder.querySelector('#game-back').addEventListener('pointerdown', () => {
-        const game = getGameById(route.gameId)
         navigate(`game-select/${game ? game.tier : 'sprouts'}`)
       })
       switchScreen(placeholder)
       break
+    }
   }
 }
 
