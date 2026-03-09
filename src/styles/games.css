@@ -519,7 +519,7 @@
 .sc-completion-overlay {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(26, 26, 46, 0.85);
+  background: rgba(26, 26, 46, 0.5);
   z-index: 20; opacity: 0;
   transition: opacity 0.5s ease;
 }
@@ -557,3 +557,878 @@
   transition: transform var(--transition-fast);
 }
 .sc-completion-btn:active { transform: translateY(4px) scale(0.97); }
+
+/* ═══════════════════════════════════════════════
+   PLANTING SIMULATION GAME
+   ═══════════════════════════════════════════════ */
+
+/* ─── P1: INTRO / LEVEL SELECT ─── */
+
+.ps-intro {
+  justify-content: flex-start;
+}
+
+.ps-intro-bg {
+  position: absolute;
+  inset: 0;
+  background: url('/assets/gifs/pixel-garden4.gif') center / cover no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ps-intro-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.ps-intro-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 32px;
+  width: 100%;
+  position: relative;
+  z-index: 3;
+}
+
+.ps-intro-title {
+  font-family: var(--font-title);
+  font-size: 36px;
+  color: var(--color-white);
+  text-shadow: 0 3px 0 var(--color-meadow-dark), 0 0 20px rgba(228, 150, 215, 0.3);
+}
+
+.ps-intro-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  padding: 0 60px;
+  position: relative;
+  z-index: 2;
+}
+
+.ps-intro-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.ps-intro-right {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+.ps-speech-bubble {
+  width: 280px;
+  min-height: 70px;
+  padding: 20px 24px;
+  background: var(--color-white);
+  border: 4px solid var(--color-white);
+  border-radius: 16px;
+  position: relative;
+}
+
+.ps-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 40%;
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 14px solid var(--color-white);
+}
+
+.ps-speech-text {
+  font-family: var(--font-header);
+  font-size: 20px;
+  color: var(--color-text);
+  line-height: 1.5;
+  text-align: center;
+  display: block;
+}
+
+.ps-intro-character {
+  height: 160px;
+  width: auto;
+  image-rendering: pixelated;
+  filter: saturate(1.3) brightness(1.05);
+  animation: cornerFloat 2.5s ease-in-out infinite;
+  margin-top: 15px;
+}
+
+.ps-level-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 32px;
+  min-width: 320px;
+  background: var(--color-meadow-pastel);
+  border: none;
+  border-bottom: 5px solid var(--color-meadow);
+  border-right: 3px solid var(--color-meadow);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.ps-level-card:active {
+  transform: translateY(4px) scale(0.97);
+}
+
+.ps-level-card-icon {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.ps-level-card-title {
+  font-family: var(--font-header);
+  font-size: 22px;
+  color: var(--color-text);
+}
+
+/* ─── P2: SHARED GAMEPLAY LAYOUT ─── */
+
+.ps-game {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.ps-game-bg {
+  position: absolute;
+  inset: 0;
+  background-size: 200px 200px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ps-game-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 28px;
+  width: 100%;
+  position: relative;
+  z-index: 3;
+}
+
+.ps-game-title {
+  font-family: var(--font-title);
+  font-size: 28px;
+  color: var(--color-white);
+  text-shadow: 0 3px 0 var(--color-meadow-dark), 0 0 20px rgba(228, 150, 215, 0.3);
+}
+
+.ps-game-body {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  padding: 0 25px 25px;
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+}
+
+.ps-panel {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: rgba(253, 246, 227, 0.92);
+  border-radius: 14px;
+  border: 5px solid var(--color-meadow);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.ps-panel-heading {
+  font-family: var(--font-header);
+  font-size: 18px;
+  color: var(--color-text-light);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.ps-panel-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ps-panel-items-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.ps-panel-divider {
+  height: 2px;
+  background: var(--color-meadow);
+  opacity: 0.4;
+  margin: 10px 0;
+  border-radius: 1px;
+}
+
+.ps-panel-instructions {
+  flex: 1;
+}
+
+.ps-panel-instructions-text {
+  font-family: var(--font-header);
+  font-size: 16px;
+  color: var(--color-text-light);
+  line-height: 1.6;
+}
+
+/* ─── PLANT ITEMS (L1 & L3) ─── */
+
+.ps-plant-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--color-white);
+  border: 3px solid transparent;
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: none;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.ps-plant-item:active { transform: scale(0.96); }
+
+.ps-plant-item.done {
+  opacity: 0.5;
+  cursor: default;
+  border-color: var(--color-meadow);
+  background: var(--color-meadow-pastel);
+}
+
+.ps-plant-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.ps-plant-label {
+  font-family: var(--font-header);
+  font-size: 15px;
+  color: var(--color-text);
+}
+
+/* ─── THREE SISTERS overrides ─── */
+
+.ps-ts-bg {
+  background: url('/assets/sprites/grass_main.png') repeat !important;
+  background-size: 64px 64px !important;
+}
+
+.ps-ts-canvas {
+  background: url('/assets/gifs/pixel-farm-scene8.gif') center / cover no-repeat !important;
+}
+.ps-ts-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 0;
+}
+
+.ps-ts-plant-item {
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  gap: 6px;
+}
+
+.ps-ts-plant-img {
+  width: 80px;
+  height: 80px;
+}
+
+.ps-ts-plant-label {
+  font-size: 18px;
+  text-align: center;
+}
+
+/* ─── DECO ITEMS (L2 — pollinator) ─── */
+
+.ps-deco-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  background: var(--color-white);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.ps-deco-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.ps-deco-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-light);
+  text-align: center;
+}
+
+.ps-puddle-icon {
+  width: 36px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7ec8e3, #4a9cc4);
+  pointer-events: none;
+}
+
+/* ─── FLOWER SWATCH (L3 — year in bloom) ─── */
+
+.ps-flower-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+.ps-flower-item {
+  flex-direction: row;
+}
+
+/* ─── DRAG CLONES ─── */
+
+.ps-drag-clone {
+  position: fixed;
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.85;
+  transform: translate(-50%, -50%);
+}
+
+.ps-drag-clone-box {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.85;
+  transform: translate(-50%, -50%);
+}
+
+.ps-drag-clone-box img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.ps-drag-clone-swatch {
+  position: fixed;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.85;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+/* ─── CANVAS PANEL ─── */
+
+.ps-canvas-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  background: rgba(253, 246, 227, 1);
+  border-radius: 14px;
+  border: 5px solid var(--color-meadow);
+  padding: 16px;
+}
+
+/* ─── THREE SISTERS DIAGRAM (L1) ─── */
+
+.ps-diagram-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.ps-diagram-img {
+  max-width: 150%;
+  max-height: 125%;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+}
+
+.ps-placed-plants {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ps-snapped-wrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.ps-snapped-wrapper .ps-foliage {
+  z-index: -1;
+}
+
+.ps-snapped-plant {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  animation: plantLand 0.5s ease;
+}
+
+@keyframes plantLand {
+  0% { transform: scale(0) translateY(-30px); opacity: 0; }
+  50% { transform: scale(1.2) translateY(5px); opacity: 1; }
+  70% { transform: scale(0.95) translateY(-2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.ps-squash-bob {
+  animation: plantLand 0.5s ease, squashBob 2s ease-in-out 0.5s infinite;
+}
+
+@keyframes squashBob {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.03) rotate(-2deg); }
+  75% { transform: scale(1.03) rotate(2deg); }
+}
+
+/* Foliage emoji decorations that bloom around placed plants */
+.ps-foliage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 40px;
+  opacity: 0;
+  pointer-events: none;
+  animation: foliageBloom 0.6s ease forwards;
+}
+
+@keyframes foliageBloom {
+  0% { transform: translate(0, 0) scale(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translate(var(--ox), var(--oy)) scale(1); opacity: 1; }
+}
+
+/* ─── POLLINATOR GARDEN (L2) ─── */
+
+.ps-garden-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ps-drop-zone {
+  position: absolute;
+  border: 3px dashed rgba(228, 150, 215, 0.5);
+  background-color: rgba(255, 255, 255, 0.75);
+  border-radius: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+  overflow: hidden;
+}
+
+.ps-drop-zone:hover {
+  border-color: var(--color-meadow);
+  background: rgba(228, 150, 215, 0.08);
+}
+
+.ps-drop-zone.ps-zone-complete {
+  border-color: var(--color-meadow);
+  border-style: none;
+  background: rgba(228, 150, 215, 0);
+}
+
+.ps-drop-zone.ps-zone-complete .ps-zone-label,
+.ps-drop-zone.ps-zone-complete .ps-zone-count {
+  display: none;
+}
+
+.ps-zone-label {
+  font-family: var(--font-header);
+  font-size: 16px;
+  color: var(--color-text-light);
+  text-align: center;
+  pointer-events: none;
+  white-space: pre-line;
+}
+
+.ps-zone-count {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-meadow-dark);
+  pointer-events: none;
+  text-align: center;
+}
+
+.ps-zone-placed-item {
+  position: absolute;
+  pointer-events: none;
+  animation: decoPlop 0.3s ease;
+}
+
+.ps-zone-placed-item img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+
+/* ─── TIMELINE (L3) ─── */
+
+.ps-timeline {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 70%;
+  padding: 0 20px;
+}
+
+.ps-timeline-slot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 140px;
+}
+
+.ps-month-label {
+  font-family: var(--font-header);
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+.ps-slot-drop {
+  width: 100%;
+  height: 120px;
+  border: 3px dashed rgba(228, 150, 215, 0.5);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ps-slot-drop:hover {
+  border-color: var(--color-meadow);
+  background: rgba(228, 150, 215, 0.08);
+}
+
+.ps-slot-filled .ps-slot-drop {
+  border-style: solid;
+  border-color: var(--color-meadow);
+}
+
+.ps-bloom {
+  width: 100%;
+  height: 100%;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: bloomGrow 0.5s ease;
+}
+
+.ps-bloom-name {
+  font-family: var(--font-header);
+  font-size: 13px;
+  color: var(--color-white);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  padding: 4px;
+}
+
+@keyframes bloomGrow {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* ─── POLLINATOR GARDEN overrides ─── */
+
+.ps-poll-bg {
+  background: url('/assets/sprites/grass_main.png') repeat !important;
+  background-size: 64px 64px !important;
+}
+
+.ps-poll-canvas {
+  background: url('/assets/gifs/pixel-garden3.gif') center / cover no-repeat !important;
+}
+
+.ps-poll-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ps-poll-canvas .ps-garden-container {
+  z-index: 1;
+}
+
+.ps-poll-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 280px;
+  flex-shrink: 0;
+}
+
+.ps-poll-left .ps-panel {
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* Standalone overlay (not inheriting from ps-overlay-bottom) */
+.ps-poll-overlay {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(253, 246, 227, 0.92);
+  border-radius: 14px;
+  border: 4px solid var(--color-meadow);
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+
+.ps-poll-overlay .ps-instructions {
+  flex: 1;
+  padding: 4px 6px;
+  background: transparent;
+  border: none;
+  max-width: none;
+  margin-right: 0;
+}
+
+.ps-poll-overlay .ps-game-character {
+  height: 65px;
+  flex-shrink: 0;
+}
+
+/* Panel icons for pollinator — compact to fit 10 items + creature */
+.ps-pollinator .ps-deco-item {
+  padding: 5px;
+}
+
+.ps-pollinator .ps-deco-img {
+  width: 60px;
+  height: 60px;
+}
+
+/* Placed items freely on the garden canvas */
+.ps-poll-placed-item {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  cursor: grab;
+  touch-action: none;
+}
+
+.ps-poll-placed-item img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  animation: plantLand 0.4s ease;
+  pointer-events: none;
+  display: block;
+}
+
+/* Tall native grass placed much larger — higher specificity to override base */
+.ps-poll-placed-item.ps-poll-tall-grass img {
+  width: auto;
+  height: 180px;
+}
+/* Stone smaller */
+.ps-poll-placed-item.ps-poll-stone img {
+  width: auto;
+  height: 80px;
+}
+
+/* Puddle placed larger — higher specificity to override base */
+.ps-poll-placed-item.ps-poll-puddle img {
+  width: 130px;
+  height: auto;
+  filter: saturate(1) brightness(1.25);
+}
+
+/* Pollinator foliage — identical to ps-foliage but stays within garden */
+.ps-poll-foliage {
+  position: absolute;
+  transform-origin: center;
+}
+
+/* ─── OVERLAY BOTTOM (shared) ─── */
+
+.ps-overlay-bottom {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 15px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ps-instructions {
+  padding: 12px 14px;
+  background: rgba(253, 246, 227, 0.92);
+  border-radius: 14px;
+  border: 3px solid var(--color-meadow);
+  max-width: 250px;
+  pointer-events: auto;
+  margin-right: 20px;
+}
+
+.ps-instructions p {
+  font-family: var(--font-header);
+  font-size: 18px;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.ps-game-character {
+  height: 80px;
+  width: auto;
+  image-rendering: pixelated;
+  filter: saturate(1.3) brightness(1.05);
+  animation: cornerFloat 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ─── WRONG SHAKE ─── */
+
+.ps-wrong {
+  animation: wrongShake 0.3s ease;
+  outline: 3px solid #e55;
+  outline-offset: -3px;
+}
+
+/* ─── COMPLETION OVERLAY ─── */
+
+.ps-completion-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(26, 26, 46, 0.45);
+  z-index: 20; opacity: 0;
+  transition: opacity 0.5s ease;
+  border-radius: 14px;
+}
+.ps-completion-overlay.ps-show { opacity: 1; }
+
+.ps-completion-content {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+
+.ps-completion-bubble {
+  max-width: 360px;
+  padding: 24px 28px;
+  background: var(--color-white);
+  border: 4px solid var(--color-white);
+  border-radius: 16px;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+}
+
+.ps-completion-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 14px solid var(--color-white);
+  
+}
+
+.ps-completion-text {
+  font-family: var(--font-header);
+  font-size: 20px;
+  color: var(--color-text);
+  line-height: 1.5;
+  text-align: center;
+  display: block;
+}
+
+.ps-completion-worm {
+  width: 100px; height: 100px;
+  image-rendering: pixelated;
+  filter: saturate(1.3) brightness(1.05);
+  animation: cornerFloat 2.5s ease-in-out infinite;
+  margin-top: 15px;
+}
+
+.ps-completion-btn {
+  padding: 14px 36px;
+  background: var(--color-meadow-pastel);
+  border: none;
+  border-bottom: 5px solid var(--color-meadow);
+  border-right: 3px solid var(--color-meadow);
+  border-radius: 24px;
+  font-family: var(--font-header);
+  font-size: 20px;
+  color: var(--color-text);
+  text-align: center;
+  transition: transform var(--transition-fast);
+  cursor: pointer;
+  margin-top: 4px;
+}
+.ps-completion-btn:active { transform: translateY(4px) scale(0.97); }

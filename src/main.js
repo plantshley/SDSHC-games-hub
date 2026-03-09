@@ -10,6 +10,7 @@ import { createGradeSelectScreen } from './screens/grade-select.js'
 import { createGameSelectScreen } from './screens/game-select.js'
 import { getGameById } from './data/game-registry.js'
 import { createSoilCakeGame } from './games/soil-cake.js'
+import { createPlantingSimGame } from './games/planting-sim.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -60,6 +61,10 @@ function handleRoute(route) {
       // Route to implemented games
       if (route.gameId === 'soil-cake') {
         switchScreen(createSoilCakeGame())
+        break
+      }
+      if (route.gameId === 'planting-sim') {
+        switchScreen(createPlantingSimGame())
         break
       }
 
