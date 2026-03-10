@@ -11,6 +11,7 @@ import { createGameSelectScreen } from './screens/game-select.js'
 import { getGameById } from './data/game-registry.js'
 import { createSoilCakeGame } from './games/soil-cake.js'
 import { createPlantingSimGame } from './games/planting-sim.js'
+import { createTriviaBlitzGame } from './games/trivia-blitz.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -65,6 +66,10 @@ function handleRoute(route) {
       }
       if (route.gameId === 'planting-sim') {
         switchScreen(createPlantingSimGame())
+        break
+      }
+      if (route.gameId === 'trivia-blitz') {
+        switchScreen(createTriviaBlitzGame())
         break
       }
 

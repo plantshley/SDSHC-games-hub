@@ -58,7 +58,7 @@
 
 `Glowing dots ref: https://codesandbox.io/p/sandbox/web-dev-ref-glowing-dots-animation-in-css-2toeq?file=%2Findex.html` 
 
-`Cosmic Flow shown on  https://aistudio.google.com/apps?source=showcase&showcaseTag=gemini-3` 
+`(stretch goal) Cosmic Flow shown on  https://aistudio.google.com/apps?source=showcase&showcaseTag=gemini-3` 
 
 | `Level` | `Content Source` | `Description` | `Assets to trace (add glowing dots to the number-labeled dots on these svgs)` |
 | :---- | :---- | :---- | :---- |

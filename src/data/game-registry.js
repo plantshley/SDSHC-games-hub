@@ -70,7 +70,7 @@ export const GAMES = [
     title: 'Spin the Soil Wheel',
     tier: 'meadow',
     levelCount: 7,
-    icon: '/assets/sprites/Basic_Grass_Biom_things_flower1.png',
+    icon: '/assets/sprites/Free_Chicken_Sprites_6.png',
     description: 'Spin the wheel and answer soil trivia!',
   },
   {
@@ -86,7 +86,7 @@ export const GAMES = [
     title: 'Drag & Drop Match',
     tier: 'meadow',
     levelCount: 5,
-    icon: '/assets/gifs/h03-icon-strawberry.gif',
+    icon: '/assets/sprites/Basic_Grass_Biom_things_flower1.png',
     description: 'Drag words to the right spot!',
   },
 
