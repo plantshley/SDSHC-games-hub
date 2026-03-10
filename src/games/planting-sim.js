@@ -5,8 +5,8 @@ import { LEVELS, INSTRUCTIONS } from '../data/content/planting-sim.js'
  * Planting Simulation Game
  * Intro: level select (3 levels)
  * L1: Three Sisters — drag plants to correct snap positions on SVG
- * L2: Pollinator Garden — drag items into matching zones (unlimited re-drags)
- * L3: Year in Bloom — drag flowers to correct month slots on timeline
+ * L2: Year in Bloom — drag flowers to correct month slots on timeline
+ * L3: Pollinator Garden — drag items into matching zones (unlimited re-drags)
  */
 
 const LEVEL_ICONS = [
@@ -102,16 +102,16 @@ function createGameplayScreen(levelIdx) {
   const level = LEVELS[levelIdx]
 
   switch (level.id) {
-    case 'three-sisters': return createThreeSisters(level)
-    case 'pollinator-garden': return createPollinatorGarden(level)
-    case 'year-in-bloom': return createYearInBloom(level)
-    default: return createThreeSisters(LEVELS[0])
+    case 'three-sisters': return createThreeSisters(level, levelIdx)
+    case 'year-in-bloom': return createYearInBloom(level, levelIdx)
+    case 'pollinator-garden': return createPollinatorGarden(level, levelIdx)
+    default: return createThreeSisters(LEVELS[0], 0)
   }
 }
 
 // ─── LEVEL 1: THREE SISTERS ───
 
-function createThreeSisters(level) {
+function createThreeSisters(level, levelIdx) {
   const el = document.createElement('div')
   el.className = 'screen ps-game ps-three-sisters'
 
@@ -248,7 +248,7 @@ function createThreeSisters(level) {
             const overlay = el.querySelector('.ps-overlay-bottom')
             if (overlay) overlay.style.display = 'none'
             // Delay completion screen
-            setTimeout(() => showCompletion(el, INSTRUCTIONS.threeSisters.complete), 1800)
+            setTimeout(() => showCompletion(el, INSTRUCTIONS.threeSisters.complete, levelIdx), 1800)
           } else {
             showNextClue()
           }
@@ -295,7 +295,7 @@ function spawnFoliage(wrapper) {
 
 // ─── LEVEL 2: POLLINATOR GARDEN ───
 
-function createPollinatorGarden(level) {
+function createPollinatorGarden(level, levelIdx) {
   const el = document.createElement('div')
   el.className = 'screen ps-game ps-pollinator'
 
@@ -498,7 +498,7 @@ function createPollinatorGarden(level) {
         const allDone = level.zones.every(z => zoneCounts[z.id] >= z.required)
         if (allDone) {
           el.querySelector('.ps-poll-overlay').style.display = 'none'
-          setTimeout(() => showCompletion(el, INSTRUCTIONS.pollinator.complete), 1800)
+          setTimeout(() => showCompletion(el, INSTRUCTIONS.pollinator.complete, levelIdx), 1800)
         }
       } else {
         targetZone.classList.add('ps-wrong')
@@ -599,7 +599,7 @@ function createBloomElement(fillColor) {
   return wrap
 }
 
-function createYearInBloom(level) {
+function createYearInBloom(level, levelIdx) {
   const el = document.createElement('div')
   el.className = 'screen ps-game ps-year-in-bloom'
 
@@ -755,8 +755,8 @@ function createYearInBloom(level) {
       const monthData = level.months.find(m => m.id === monthId)
       const comboKey = `${monthId}:${flowerId}`
 
-      // Check if this flower belongs in this month and isn't already placed
-      if (monthData.accepts.includes(flowerId) && !doneCombos.has(comboKey)) {
+      // Must match the current clue exactly (right flower + right month)
+      if (currentClue && flowerId === currentClue.flowerId && monthId === currentClue.monthId && !doneCombos.has(comboKey)) {
         doneCombos.add(comboKey)
         monthPlacements[monthId].add(flowerId)
 
@@ -796,15 +796,20 @@ function createYearInBloom(level) {
         if (allDone) {
           el.querySelector('.ps-yib-overlay').style.display = 'none'
           el.querySelector('.ps-yib-instr-bar').style.display = 'none'
-          setTimeout(() => showCompletion(el, INSTRUCTIONS.yearInBloom.complete), 1800)
+          setTimeout(() => showCompletion(el, INSTRUCTIONS.yearInBloom.complete, levelIdx), 5500)
         } else {
           showNextClue()
         }
       } else {
-        // Wrong match — shake then re-show clue
+        // Wrong match — shake then re-show clue with specific feedback
         targetSlot.classList.add('ps-wrong')
         setTimeout(() => targetSlot.classList.remove('ps-wrong'), 400)
-        clueEl.textContent = 'Not quite! Try a different month.'
+        const rightFlower = currentClue && flowerId === currentClue.flowerId
+        const rightMonth = currentClue && monthId === currentClue.monthId
+        const errMsg = rightFlower ? 'Right flower! Try a different month.'
+          : rightMonth ? 'Right month! Try a different flower.'
+          : 'Not quite! Read the clue again.'
+        clueEl.textContent = errMsg
         setTimeout(() => {
           if (currentClue && !doneCombos.has(`${currentClue.monthId}:${currentClue.flowerId}`)) {
             clueEl.textContent = level.clues[currentClue.flowerId]
@@ -822,7 +827,10 @@ function createYearInBloom(level) {
 
 // ─── SHARED UTILITIES ───
 
-function showCompletion(container, message) {
+function showCompletion(container, message, levelIdx) {
+  const isLastLevel = levelIdx >= LEVELS.length - 1
+  const rightBtnLabel = isLastLevel ? 'Back to Levels' : 'Next Level'
+
   const overlay = document.createElement('div')
   overlay.className = 'ps-completion-overlay'
   overlay.innerHTML = `
@@ -831,15 +839,39 @@ function showCompletion(container, message) {
         <span class="ps-completion-text">${message || 'Great job!'}</span>
       </div>
       <img class="ps-completion-worm" src="/assets/sprites/Basic_Charakter_plain.png" alt="">
-      <button class="ps-completion-btn" id="ps-back-btn">Back to Levels</button>
+      <div class="ps-completion-buttons">
+        <button class="ps-completion-btn" id="ps-replay-btn">Play Again</button>
+        <button class="ps-completion-btn ps-completion-btn-primary" id="ps-next-btn">${rightBtnLabel}</button>
+      </div>
     </div>
   `
   container.querySelector('.ps-canvas-panel').appendChild(overlay)
   requestAnimationFrame(() => overlay.classList.add('ps-show'))
 
-  overlay.querySelector('#ps-back-btn').addEventListener('pointerdown', () => {
-    backToIntro(container)
+  overlay.querySelector('#ps-replay-btn').addEventListener('pointerdown', () => {
+    goToLevel(container, levelIdx)
   })
+
+  overlay.querySelector('#ps-next-btn').addEventListener('pointerdown', () => {
+    if (isLastLevel) {
+      backToIntro(container)
+    } else {
+      goToLevel(container, levelIdx + 1)
+    }
+  })
+}
+
+function goToLevel(currentEl, levelIdx) {
+  const parent = currentEl.parentNode
+  const gameplay = createGameplayScreen(levelIdx)
+  currentEl.classList.remove('active')
+  currentEl.classList.add('exiting')
+  currentEl.addEventListener('animationend', () => currentEl.remove(), { once: true })
+  setTimeout(() => { if (currentEl.parentNode) currentEl.remove() }, 400)
+  parent.appendChild(gameplay)
+  gameplay.offsetHeight
+  gameplay.classList.add('active', 'entering')
+  gameplay.addEventListener('animationend', () => gameplay.classList.remove('entering'), { once: true })
 }
 
 function backToIntro(currentEl) {

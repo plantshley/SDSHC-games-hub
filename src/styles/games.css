@@ -1857,3 +1857,17 @@
   margin-top: 4px;
 }
 .ps-completion-btn:active { transform: translateY(4px) scale(0.97); }
+
+.ps-completion-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.ps-completion-btn-primary {
+  background: var(--color-meadow);
+  border-bottom-color: var(--color-meadow-dark);
+  border-right-color: var(--color-meadow-dark);
+  color: #fff;
+}

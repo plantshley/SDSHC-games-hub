@@ -195,7 +195,7 @@
 
 #### *`Game 10: "Soil Health Trivia Blitz" (Timed Trivia)`*
 
-`Base mechanic: 60-second timed rounds. Multiple choice. Score tracked. Optional 2-player side-by-side mode.`
+`Base mechanic: 60-second timed rounds. Multiple choice. Score tracked.`
 
 | `Level` | `Content Source` | `# Questions` | `Assets` |
 | :---- | :---- | :---- | :---- |

@@ -1,6 +1,6 @@
 /**
  * Planting Simulation game content
- * 3 levels: Three Sisters, Pollinator Garden, Year in Bloom
+ * 3 levels: Three Sisters, Year in Bloom, Pollinator Garden
  */
 
 export const LEVELS = [
@@ -43,6 +43,39 @@ export const LEVELS = [
     ],
   },
   {
+    id: 'year-in-bloom',
+    title: 'Year in Bloom',
+    background: '/assets/gifs/pixel-garden2.gif',
+    // 6 unique draggable flowers (unlimited re-drags like pollinator)
+    flowers: [
+      { id: 'golden-alexander',   name: 'Golden Alexander',   asset: '/assets/svg/medium-native-yellow-april-may_golden-alexander.svg',   fillColor: '#f0c040' },
+      { id: 'scarlet-globemallow', name: 'Scarlet Globemallow', asset: '/assets/svg/short-native-red-may-june_scarlet-globemallow.svg',   fillColor: '#d04030' },
+      { id: 'prairie-rose',       name: 'Prairie Rose',        asset: '/assets/svg/medium-native-pink-june_prairie-rose.svg',              fillColor: '#c060a0' },
+      { id: 'butterfly-milkweed', name: 'Butterfly Milkweed',  asset: '/assets/svg/short-native-orange-june-july_butterfly-milkweed.svg',  fillColor: '#e08030' },
+      { id: 'stiff-sunflower',    name: 'Stiff Sunflower',     asset: '/assets/svg/tall-native-yellow-aug-sep_stiff-sunflower.svg',        fillColor: '#e0b020' },
+      { id: 'new-england-aster',  name: 'New England Aster',   asset: '/assets/svg/medium-native-blue-sep-oct_new-england-aster.svg',      fillColor: '#4050a0' },
+    ],
+    // Each month lists which flower IDs it accepts; some months have multiple, some flowers span months
+    months: [
+      { id: 'april',     month: 'April',     accepts: ['golden-alexander'],                                         required: 1 },
+      { id: 'may',       month: 'May',       accepts: ['golden-alexander', 'scarlet-globemallow'],                   required: 2 },
+      { id: 'june',      month: 'June',      accepts: ['scarlet-globemallow', 'prairie-rose', 'butterfly-milkweed'], required: 3 },
+      { id: 'july',      month: 'July',      accepts: ['butterfly-milkweed'],                                        required: 1 },
+      { id: 'august',    month: 'August',    accepts: ['stiff-sunflower'],                                           required: 1 },
+      { id: 'september', month: 'September', accepts: ['stiff-sunflower', 'new-england-aster'],                      required: 2 },
+      { id: 'october',   month: 'October',   accepts: ['new-england-aster'],                                         required: 1 },
+    ],
+    // Clues per flower (shown when player needs to place this flower somewhere)
+    clues: {
+      'golden-alexander':   'First to bloom in spring, with clusters of tiny yellow flowers that attract early pollinators',
+      'scarlet-globemallow': 'Bright red-orange flowers that bloom as the weather warms up in late spring',
+      'prairie-rose':       'Soft pink petals that open wide during the longest days of the year',
+      'butterfly-milkweed': 'Orange flowers that monarch butterflies love to visit in the heat of summer',
+      'stiff-sunflower':    'Tall yellow blooms that stand stiff and strong as summer turns to fall',
+      'new-england-aster':  'Deep purple-blue flowers that are one of the last to bloom before winter',
+    },
+  },
+  {
     id: 'pollinator-garden',
     title: 'Pollinator Garden',
     background: '/assets/gifs/pixel-garden3.gif',
@@ -83,39 +116,6 @@ export const LEVELS = [
       { id: 'butterfly-milkweed', name: 'Butterfly Milkweed',    zoneType: 'short-flower',  asset: '/assets/svg/short-native-orange-june-july_butterfly-milkweed.svg',       assetType: 'svg' },
       { id: 'puddle-item',        name: 'Puddle',                zoneType: 'puddle',        asset: '/assets/sprites/puddle.png',                                             assetType: 'sprite' },
     ],
-  },
-  {
-    id: 'year-in-bloom',
-    title: 'Year in Bloom',
-    background: '/assets/gifs/pixel-garden2.gif',
-    // 6 unique draggable flowers (unlimited re-drags like pollinator)
-    flowers: [
-      { id: 'golden-alexander',   name: 'Golden Alexander',   asset: '/assets/svg/medium-native-yellow-april-may_golden-alexander.svg',   fillColor: '#f0c040' },
-      { id: 'scarlet-globemallow', name: 'Scarlet Globemallow', asset: '/assets/svg/short-native-red-may-june_scarlet-globemallow.svg',   fillColor: '#d04030' },
-      { id: 'prairie-rose',       name: 'Prairie Rose',        asset: '/assets/svg/medium-native-pink-june_prairie-rose.svg',              fillColor: '#c060a0' },
-      { id: 'butterfly-milkweed', name: 'Butterfly Milkweed',  asset: '/assets/svg/short-native-orange-june-july_butterfly-milkweed.svg',  fillColor: '#e08030' },
-      { id: 'stiff-sunflower',    name: 'Stiff Sunflower',     asset: '/assets/svg/tall-native-yellow-aug-sep_stiff-sunflower.svg',        fillColor: '#e0b020' },
-      { id: 'new-england-aster',  name: 'New England Aster',   asset: '/assets/svg/medium-native-blue-sep-oct_new-england-aster.svg',      fillColor: '#4050a0' },
-    ],
-    // Each month lists which flower IDs it accepts; some months have multiple, some flowers span months
-    months: [
-      { id: 'april',     month: 'April',     accepts: ['golden-alexander'],                                         required: 1 },
-      { id: 'may',       month: 'May',       accepts: ['golden-alexander', 'scarlet-globemallow'],                   required: 2 },
-      { id: 'june',      month: 'June',      accepts: ['scarlet-globemallow', 'prairie-rose', 'butterfly-milkweed'], required: 3 },
-      { id: 'july',      month: 'July',      accepts: ['butterfly-milkweed'],                                        required: 1 },
-      { id: 'august',    month: 'August',    accepts: ['stiff-sunflower'],                                           required: 1 },
-      { id: 'september', month: 'September', accepts: ['stiff-sunflower', 'new-england-aster'],                      required: 2 },
-      { id: 'october',   month: 'October',   accepts: ['new-england-aster'],                                         required: 1 },
-    ],
-    // Clues per flower (shown when player needs to place this flower somewhere)
-    clues: {
-      'golden-alexander':   'First to bloom in spring, with clusters of tiny yellow flowers that attract early pollinators',
-      'scarlet-globemallow': 'Bright red-orange flowers that bloom as the weather warms up in late spring',
-      'prairie-rose':       'Soft pink petals that open wide during the longest days of the year',
-      'butterfly-milkweed': 'Orange flowers that monarch butterflies love to visit in the heat of summer',
-      'stiff-sunflower':    'Tall yellow blooms that stand stiff and strong as summer turns to fall',
-      'new-england-aster':  'Deep purple-blue flowers that are one of the last to bloom before winter',
-    },
   },
 ]
 

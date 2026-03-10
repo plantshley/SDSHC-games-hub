@@ -58,6 +58,8 @@ function createDecorations() {
     { src: '/assets/sprites/Basic_Grass_Biom_things_mushroom2.png', style: 'right:600px;bottom:8px;height:40px;transform:scaleX(-1);' },
     { src: '/assets/sprites/Basic_Grass_Biom_things_mushroom3.png', style: 'left:700px;bottom:8px;height:32px;' },
     { src: '/assets/sprites/Basic_Grass_Biom_things_sprout.png', style: 'left:650px;bottom:10px;height:28px;transform:scaleX(-1);' },
+    { src: '/assets/gifs/h03-icon-strawberry.gif', style: 'left:500px;bottom:8px;height:36px;' },
+    { src: '/assets/gifs/h07-icon-strawberry.gif', style: 'right:500px;bottom:8px;height:36px;' },
   ]
 
   for (const item of items) {
@@ -78,15 +80,27 @@ function createDecorations() {
   return container
 }
 
+const TWINKLE_GIFS = [
+  '/assets/gifs/d16-icon-twinkle.gif',
+  '/assets/gifs/d17-icon-twinkle.gif',
+  '/assets/gifs/d18-icon-twinkle.gif',
+  '/assets/gifs/e21-icon-twinkle.gif',
+  '/assets/gifs/f09-icon-twinkle.gif',
+  '/assets/gifs/g04-icon-twinkle.gif',
+  '/assets/gifs/g05-icon-twinkle.gif',
+]
+
 function addSparkles(el, count = 20) {
   for (let i = 0; i < count; i++) {
-    const sparkle = document.createElement('div')
+    const sparkle = document.createElement('img')
     sparkle.className = 'sparkle'
+    sparkle.src = TWINKLE_GIFS[Math.floor(Math.random() * TWINKLE_GIFS.length)]
+    sparkle.alt = ''
     sparkle.style.left = `${5 + Math.random() * 90}%`
     sparkle.style.top = `${5 + Math.random() * 85}%`
     sparkle.style.animationDelay = `${Math.random() * 3}s`
     sparkle.style.animationDuration = `${1.5 + Math.random() * 2}s`
-    const size = 4 + Math.random() * 6
+    const size = 20 + Math.random() * 20
     sparkle.style.width = `${size}px`
     sparkle.style.height = `${size}px`
     el.appendChild(sparkle)

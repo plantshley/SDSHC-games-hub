@@ -41,6 +41,8 @@ const FOLIAGE = [
   { src: '/assets/sprites/Basic_Grass_Biom_things_mushroom2.png', style: 'right:600px;bottom:54px;height:40px;transform:scaleX(-1);' },
   { src: '/assets/gifs/flowers-gif.gif', style: 'left:600px;bottom:55px;height:72px;transform:scaleX(-1);' },
   { src: '/assets/sprites/Basic_Grass_Biom_things_tree1.png', style: 'left:800px;bottom:58px;height:140px;' },
+  { src: '/assets/gifs/h03-icon-strawberry.gif', style: 'left:470px;bottom:54px;height:36px;' },
+  { src: '/assets/gifs/h07-icon-strawberry.gif', style: 'right:420px;bottom:54px;height:36px;' },
 ]
 
 function createFoliage() {
@@ -58,15 +60,27 @@ function createFoliage() {
   return container
 }
 
+const TWINKLE_GIFS = [
+  '/assets/gifs/d16-icon-twinkle.gif',
+  '/assets/gifs/d17-icon-twinkle.gif',
+  '/assets/gifs/d18-icon-twinkle.gif',
+  '/assets/gifs/e21-icon-twinkle.gif',
+  '/assets/gifs/f09-icon-twinkle.gif',
+  '/assets/gifs/g04-icon-twinkle.gif',
+  '/assets/gifs/g05-icon-twinkle.gif',
+]
+
 function addSparkles(el, count = 14) {
   for (let i = 0; i < count; i++) {
-    const sparkle = document.createElement('div')
+    const sparkle = document.createElement('img')
     sparkle.className = 'sparkle'
+    sparkle.src = TWINKLE_GIFS[Math.floor(Math.random() * TWINKLE_GIFS.length)]
+    sparkle.alt = ''
     sparkle.style.left = `${Math.random() * 100}%`
     sparkle.style.top = `${Math.random() * 60}%`
     sparkle.style.animationDelay = `${Math.random() * 3}s`
     sparkle.style.animationDuration = `${1.5 + Math.random() * 2}s`
-    const size = 4 + Math.random() * 6
+    const size = 20 + Math.random() * 20
     sparkle.style.width = `${size}px`
     sparkle.style.height = `${size}px`
     el.appendChild(sparkle)
@@ -108,7 +122,7 @@ export function createGradeSelectScreen() {
     </div>
   `
 
-  el.appendChild(createFoliage())
+  el.querySelector('.character-area').appendChild(createFoliage())
   addSparkles(el)
 
   el.querySelectorAll('.tier-btn').forEach(btn => {
