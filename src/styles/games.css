@@ -621,7 +621,8 @@
 .ps-intro-right {
   display: flex;
   flex-direction: column;
-  gap: 60px;
+  gap: 40px;
+  margin-bottom: 80px;
 }
 
 .ps-speech-bubble {
@@ -667,7 +668,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 20px 32px;
+  padding: 20px 25px;
   min-width: 320px;
   background: var(--color-meadow-pastel);
   border: none;
@@ -706,6 +707,7 @@
 .ps-game-bg {
   position: absolute;
   inset: 0;
+  background-color: #ccee9e;
   background-size: 200px 200px;
   image-rendering: pixelated;
   pointer-events: none;
@@ -1119,16 +1121,121 @@
 }
 
 
-/* ─── TIMELINE (L3) ─── */
+/* ─── YEAR IN BLOOM (L3) ─── */
 
+.ps-yib-bg {
+  background: #5a8a32 url('/assets/sprites/grass_main.png') repeat !important;
+  background-size: 64px 64px !important;
+}
+
+.ps-yib-canvas {
+  background: url('/assets/gifs/pixel-garden2.gif') center / cover no-repeat !important;
+  position: relative;
+}
+
+.ps-yib-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(56, 56, 56, 0.5);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ps-yib-canvas .ps-timeline {
+  z-index: 1;
+  position: relative;
+}
+
+/* Instruction bar above the canvas — centered with canvas (offset by panel width) */
+.ps-yib-instr-bar {
+  padding: 6px 20px 6px 260px;
+  text-align: center;
+  z-index: 2;
+}
+
+.ps-yib-instr-bar p {
+  font-family: var(--font-header);
+  font-size: 18px;
+  color: var(--color-text);
+  display: inline;
+}
+
+/* Left column: panel + overlay */
+.ps-yib-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 280px;
+  flex-shrink: 0;
+}
+
+.ps-yib-left .ps-panel {
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* Overlay: clue text on top, creature floating below */
+.ps-yib-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(253, 246, 227, 0.92);
+  border-radius: 14px;
+  border: 4px solid var(--color-meadow);
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+
+.ps-yib-overlay .ps-instructions {
+  padding: 4px 6px;
+  background: transparent;
+  border: none;
+  max-width: none;
+  margin-right: 0;
+  width: 100%;
+}
+
+.ps-yib-overlay .ps-game-character {
+  height: 55px;
+  flex-shrink: 0;
+}
+
+/* Panel flower items with name labels */
+.ps-year-in-bloom .ps-deco-item {
+  padding: 5px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.ps-year-in-bloom .ps-deco-img {
+  width: 55px;
+  height: 55px;
+}
+
+.ps-yib-item-label {
+  font-family: var(--font-header);
+  font-size: 12px;
+  color: var(--color-text);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 90px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Timeline layout */
 .ps-timeline {
   display: flex;
-  gap: 12px;
+  gap: 6px;
   align-items: flex-end;
   justify-content: center;
   width: 100%;
-  height: 70%;
-  padding: 0 20px;
+  height: 95%;
+  padding: 0 8px;
 }
 
 .ps-timeline-slot {
@@ -1136,56 +1243,87 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  max-width: 140px;
+  gap: 4px;
+  max-width: 150px;
 }
 
+/* Month label BELOW the box */
 .ps-month-label {
   font-family: var(--font-header);
-  font-size: 16px;
-  color: var(--color-text);
+  font-size: 20px;
+  color: white;
+  text-shadow: 0 1px 5px rgba(255,255,255,0.9);
+}
+
+/* Blooms container above each slot - side by side */
+.ps-yib-blooms {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: 10px;
+  overflow: visible;
 }
 
 .ps-slot-drop {
   width: 100%;
-  height: 120px;
+  min-height: 60px;
   border: 3px dashed rgba(228, 150, 215, 0.5);
   border-radius: 12px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   transition: border-color 0.3s ease, background-color 0.3s ease;
   position: relative;
-  overflow: hidden;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 6px 4px;
+}
+
+.ps-slot-count {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text);
+  pointer-events: none;
 }
 
 .ps-slot-drop:hover {
   border-color: var(--color-meadow);
-  background: rgba(228, 150, 215, 0.08);
+  background: rgba(228, 150, 215, 0.12);
 }
 
 .ps-slot-filled .ps-slot-drop {
-  border-style: solid;
+  border-style: none;
   border-color: var(--color-meadow);
+  background: rgba(228, 150, 215, 0.0);
 }
 
-.ps-bloom {
-  width: 100%;
-  height: 100%;
-  border-radius: 9px;
+/* --- CODEPEN BLOOM FLOWER EFFECT (adapted) --- */
+/* Original: https://codepen.io/theArtsy07/pen/oNPOVqB */
+/* Colors driven by --fl-c (main), --fl-d (dark), --fl-l (light) */
+
+/* Placed flower SVG + name inside the slot box */
+.ps-yib-placed-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 2px;
   animation: bloomGrow 0.5s ease;
 }
 
-.ps-bloom-name {
+.ps-yib-placed-item img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.ps-yib-placed-name {
   font-family: var(--font-header);
-  font-size: 13px;
-  color: var(--color-white);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  font-size: 0px;
+  color: var(--color-text);
   text-align: center;
-  padding: 4px;
+  line-height: 1.1;
 }
 
 @keyframes bloomGrow {
@@ -1194,10 +1332,297 @@
   100% { transform: scale(1); }
 }
 
+.ps-yib-bloom-item {
+  width: 80px;
+  height: 340px;
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.yib-fl {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform-origin: bottom center;
+  transform: translateX(-50%) scale(0.35);
+  z-index: 10;
+  animation: yib-fl-sway 4s linear infinite;
+}
+
+/* Flower head (petals) */
+.yib-fl-head {
+  position: relative;
+  animation: yib-fl-bloom 2s 1.1s backwards;
+}
+
+.yib-fl-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+  width: 8vmin;
+  height: 8vmin;
+  background-color: var(--fl-l);
+  filter: blur(10vmin);
+}
+
+.yib-fl-petal {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 8vmin;
+  height: 11vmin;
+  border-radius: 51% 49% 47% 53% / 44% 45% 55% 69%;
+  background-color: var(--fl-c);
+  background-image: linear-gradient(to top, var(--fl-d), var(--fl-l));
+  transform-origin: bottom center;
+  opacity: 0.9;
+  box-shadow: inset 0 0 2vmin rgba(255, 255, 255, 0.5);
+}
+
+.yib-fl-petal--1 { transform: translate(-10%, 1%) rotateY(40deg) rotateX(-50deg); }
+.yib-fl-petal--2 { transform: translate(-50%, -4%) rotateX(40deg); }
+.yib-fl-petal--3 { transform: translate(-90%, 0%) rotateY(45deg) rotateX(50deg); }
+.yib-fl-petal--4 {
+  width: 8vmin;
+  height: 8vmin;
+  transform-origin: bottom left;
+  border-radius: 4vmin 10vmin 4vmin 4vmin;
+  transform: translate(0%, 18%) rotateX(70deg) rotate(-43deg);
+  background-image: linear-gradient(to top, var(--fl-c), var(--fl-l));
+  z-index: 1;
+  opacity: 0.8;
+}
+
+/* White circle center */
+.yib-fl-center {
+  position: absolute;
+  left: -3.5vmin;
+  top: -3vmin;
+  width: 9vmin;
+  height: 4vmin;
+  border-radius: 50%;
+  background-color: #fff;
+}
+
+.yib-fl-center::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  width: 60%;
+  height: 60%;
+  border-radius: inherit;
+  background-image: linear-gradient(90deg, #ffeb12, #ffce00);
+}
+
+/* Light particles */
+.yib-fl-spark {
+  position: absolute;
+  bottom: 0vmin;
+  width: 1.5vmin;
+  height: 1.5vmin;
+  background-color: #fffb00;
+  border-radius: 50%;
+  filter: blur(0.15vmin);
+  box-shadow: 0 0 3vmin 1vmin rgba(255, 251, 0, 0.6);
+  animation: yib-fl-light 4s linear infinite backwards;
+}
+
+.yib-fl-spark:nth-child(odd) { background-color: #fff; box-shadow: 0 0 3vmin 1vmin rgba(255, 255, 255, 0.5); }
+.yib-fl-spark--1 { left: -2vmin; animation-delay: 1s; }
+.yib-fl-spark--2 { left: 3vmin; animation-delay: 0.5s; }
+.yib-fl-spark--3 { left: -6vmin; animation-delay: 0.3s; }
+.yib-fl-spark--4 { left: 6vmin; animation-delay: 0.9s; }
+.yib-fl-spark--5 { left: -1vmin; animation-delay: 1.5s; }
+.yib-fl-spark--6 { left: -4vmin; animation-delay: 3s; }
+.yib-fl-spark--7 { left: 3vmin; animation-delay: 2s; }
+.yib-fl-spark--8 { left: -6vmin; animation-delay: 3.5s; }
+
+/* Stem */
+.yib-fl-stem {
+  height: 70vmin;
+  width: 1.5vmin;
+  background-image:
+    linear-gradient(to left, rgba(0,0,0,0.2), transparent, rgba(255,255,255,0.2)),
+    linear-gradient(to top, transparent 10%, var(--fl-c), var(--fl-l));
+  box-shadow: inset 0 0 2px rgba(0,0,0,0.5);
+  animation: yib-fl-grow-stem 4s 0.3s backwards;
+  position: relative;
+}
+
+/* Stem leaves */
+.yib-fl-stem-leaf {
+  --w: 7vmin;
+  --h: calc(var(--w) + 2vmin);
+  position: absolute;
+  top: 20%;
+  left: 90%;
+  width: var(--w);
+  height: var(--h);
+  border-top-right-radius: var(--h);
+  border-bottom-left-radius: var(--h);
+  background-image: linear-gradient(to top, transparent, var(--fl-l));
+}
+
+.yib-fl-stem-leaf--1 {
+  transform: rotate(70deg) rotateY(30deg);
+  animation: yib-fl-leaf-right 0.8s 1.6s backwards;
+}
+.yib-fl-stem-leaf--2 {
+  top: 45%;
+  transform: rotate(70deg) rotateY(30deg);
+  animation: yib-fl-leaf-right 0.8s 1.4s backwards;
+}
+.yib-fl-stem-leaf--3 {
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: var(--h);
+  border-bottom-right-radius: var(--h);
+  left: -460%;
+  top: 12%;
+  transform: rotate(-70deg) rotateY(30deg);
+  animation: yib-fl-leaf-left 0.8s 1.2s backwards;
+}
+.yib-fl-stem-leaf--4 {
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: var(--h);
+  border-bottom-right-radius: var(--h);
+  left: -460%;
+  top: 40%;
+  transform: rotate(-70deg) rotateY(30deg);
+  animation: yib-fl-leaf-left 0.8s 1s backwards;
+}
+.yib-fl-stem-leaf--5 {
+  top: 0;
+  transform-origin: left;
+  transform: rotate(70deg) rotateY(30deg) scale(0.6);
+  animation: yib-fl-leaf-right 0.8s 1.8s backwards;
+}
+.yib-fl-stem-leaf--6 {
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: var(--h);
+  border-bottom-right-radius: var(--h);
+  top: -2%;
+  left: -450%;
+  transform-origin: right;
+  transform: rotate(-70deg) rotateY(30deg) scale(0.6);
+  animation: yib-fl-leaf-left 0.8s 2s backwards;
+}
+
+/* Grass foliage around the flower base */
+.yib-fl-grass {
+  --gc: var(--fl-c);
+  --line-w: 1.5vmin;
+  position: absolute;
+  bottom: 12vmin;
+  left: -7vmin;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 20;
+  transform-origin: bottom center;
+  transform: rotate(-48deg) rotateY(40deg);
+  animation: yib-fl-grass-sway 2s linear infinite;
+}
+
+.yib-fl-grass--2 {
+  left: 2vmin;
+  bottom: 12vmin;
+  transform: rotate(75deg) rotateX(10deg) rotateY(-200deg);
+  opacity: 0.9;
+  z-index: 0;
+  animation: yib-fl-grass-sway-2 1.5s linear infinite;
+}
+
+.yib-fl-grass-top {
+  width: 7vmin;
+  height: 10vmin;
+  border-top-right-radius: 100%;
+  border-right: var(--line-w) solid var(--gc);
+  transform-origin: bottom center;
+  transform: rotate(-2deg);
+}
+
+.yib-fl-grass-bottom {
+  margin-top: -2px;
+  width: var(--line-w);
+  height: 25vmin;
+  background-image: linear-gradient(to top, transparent, var(--gc));
+}
+
+.yib-fl-grass-leaf {
+  --size: 10vmin;
+  position: absolute;
+  width: calc(var(--size) * 2.1);
+  height: var(--size);
+  border-top-left-radius: var(--size);
+  border-top-right-radius: var(--size);
+  background-image: linear-gradient(to top, transparent, transparent 30%, var(--fl-l));
+  z-index: 100;
+}
+
+.yib-fl-grass-leaf--1 { top: -6%; left: 30%; --size: 6vmin; transform: rotate(-20deg); animation: yib-fl-grass-grow 2s 2.6s backwards; }
+.yib-fl-grass-leaf--2 { top: -5%; left: -110%; --size: 6vmin; transform: rotate(10deg); animation: yib-fl-grass-grow 2s 2.4s backwards; }
+.yib-fl-grass-leaf--3 { top: 5%; left: 60%; --size: 8vmin; transform: rotate(-18deg) rotateX(-20deg); animation: yib-fl-grass-grow 2s 2.2s backwards; }
+.yib-fl-grass-leaf--4 { top: 6%; left: -135%; --size: 8vmin; transform: rotate(2deg); animation: yib-fl-grass-grow 2s 2s backwards; }
+.yib-fl-grass-leaf--5 { top: 20%; left: 60%; --size: 10vmin; transform: rotate(-24deg) rotateX(-20deg); animation: yib-fl-grass-grow 2s 1.8s backwards; }
+.yib-fl-grass-leaf--6 { top: 22%; left: -180%; --size: 10vmin; transform: rotate(10deg); animation: yib-fl-grass-grow 2s 1.6s backwards; }
+
+/* --- Bloom keyframes --- */
+
+@keyframes yib-fl-sway {
+  0%, 100% { transform: translateX(-50%) scale(0.35) rotate(2deg); }
+  50% { transform: translateX(-50%) scale(0.35) rotate(-2deg); }
+}
+
+@keyframes yib-fl-bloom {
+  0% { transform: scale(0); }
+}
+
+@keyframes yib-fl-grow-stem {
+  0% { height: 0; border-radius: 1vmin; }
+}
+
+@keyframes yib-fl-leaf-right {
+  0% { transform-origin: left; transform: rotate(70deg) rotateY(30deg) scale(0); }
+}
+
+@keyframes yib-fl-leaf-left {
+  0% { transform-origin: right; transform: rotate(-70deg) rotateY(30deg) scale(0); }
+}
+
+@keyframes yib-fl-light {
+  0% { opacity: 0; transform: translateY(0vmin); }
+  25% { opacity: 1; transform: translateY(-5vmin) translateX(-2vmin); }
+  50% { opacity: 1; transform: translateY(-15vmin) translateX(2vmin); filter: blur(0.2vmin); }
+  75% { transform: translateY(-20vmin) translateX(-2vmin); filter: blur(0.2vmin); }
+  100% { transform: translateY(-30vmin); opacity: 0; filter: blur(1vmin); }
+}
+
+@keyframes yib-fl-grass-sway {
+  0%, 100% { transform: rotate(-48deg) rotateY(40deg); }
+  50% { transform: rotate(-50deg) rotateY(40deg); }
+}
+
+@keyframes yib-fl-grass-sway-2 {
+  0%, 100% { transform: rotate(75deg) rotateX(10deg) rotateY(-200deg); }
+  50% { transform: rotate(79deg) rotateX(10deg) rotateY(-200deg); }
+}
+
+@keyframes yib-fl-grass-grow {
+  0% { transform: scale(0); }
+}
+
 /* ─── POLLINATOR GARDEN overrides ─── */
 
 .ps-poll-bg {
-  background: url('/assets/sprites/grass_main.png') repeat !important;
+  background: #5a8a32 url('/assets/sprites/grass_main.png') repeat !important;
   background-size: 64px 64px !important;
 }
 

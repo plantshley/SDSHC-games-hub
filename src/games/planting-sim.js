@@ -10,9 +10,9 @@ import { LEVELS, INSTRUCTIONS } from '../data/content/planting-sim.js'
  */
 
 const LEVEL_ICONS = [
-  '/assets/sprites/Basic_Plants_wheat-grow4.png',
-  '/assets/sprites/Basic_Grass_Biom_things_flower1.png',
-  '/assets/sprites/Basic_Plants_fruit-grow3.png',
+  '/assets/sprites/Basic_Plants_wheat-grow1.png',
+  '/assets/sprites/Basic_Plants_wheat-grow2.png',
+  '/assets/sprites/Basic_Plants_wheat-grow3.png',
 ]
 
 // Foliage decorations that bloom around placed plants (Three Sisters)
@@ -534,77 +534,187 @@ function spawnPollinatorFoliage(garden, clientX, clientY, emojis) {
 
 // ─── LEVEL 3: YEAR IN BLOOM ───
 
+// Color helpers for bloom effect
+function darkenColor(hex, factor = 0.7) {
+  const r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16)
+  return `rgb(${Math.round(r*factor)},${Math.round(g*factor)},${Math.round(b*factor)})`
+}
+function lightenColor(hex, factor = 1.4) {
+  const r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16)
+  return `rgb(${Math.min(255,Math.round(r*factor))},${Math.min(255,Math.round(g*factor))},${Math.min(255,Math.round(b*factor))})`
+}
+
+// Generate the full CodePen bloom flower HTML with custom colors
+function createBloomElement(fillColor) {
+  const c = fillColor
+  const d = darkenColor(c, 0.5)
+  const l = lightenColor(c, 1.4)
+  const wrap = document.createElement('div')
+  wrap.className = 'ps-yib-bloom-item'
+  wrap.innerHTML = `
+    <div class="yib-fl" style="--fl-c:${c};--fl-d:${d};--fl-l:${l}">
+      <div class="yib-fl-head">
+        <div class="yib-fl-petal yib-fl-petal--1"></div>
+        <div class="yib-fl-petal yib-fl-petal--2"></div>
+        <div class="yib-fl-petal yib-fl-petal--3"></div>
+        <div class="yib-fl-petal yib-fl-petal--4"></div>
+        <div class="yib-fl-center"></div>
+        <div class="yib-fl-spark yib-fl-spark--1"></div>
+        <div class="yib-fl-spark yib-fl-spark--2"></div>
+        <div class="yib-fl-spark yib-fl-spark--3"></div>
+        <div class="yib-fl-spark yib-fl-spark--4"></div>
+        <div class="yib-fl-spark yib-fl-spark--5"></div>
+        <div class="yib-fl-spark yib-fl-spark--6"></div>
+        <div class="yib-fl-spark yib-fl-spark--7"></div>
+        <div class="yib-fl-spark yib-fl-spark--8"></div>
+      </div>
+      <div class="yib-fl-stem">
+        <div class="yib-fl-stem-leaf yib-fl-stem-leaf--1"></div>
+        <div class="yib-fl-stem-leaf yib-fl-stem-leaf--2"></div>
+        <div class="yib-fl-stem-leaf yib-fl-stem-leaf--3"></div>
+        <div class="yib-fl-stem-leaf yib-fl-stem-leaf--4"></div>
+        <div class="yib-fl-stem-leaf yib-fl-stem-leaf--5"></div>
+        <div class="yib-fl-stem-leaf yib-fl-stem-leaf--6"></div>
+      </div>
+      <div class="yib-fl-grass yib-fl-grass--1">
+        <div class="yib-fl-grass-top"></div>
+        <div class="yib-fl-grass-bottom"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--1"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--2"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--3"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--4"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--5"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--6"></div>
+      </div>
+      <div class="yib-fl-grass yib-fl-grass--2">
+        <div class="yib-fl-grass-top"></div>
+        <div class="yib-fl-grass-bottom"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--1"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--2"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--3"></div>
+        <div class="yib-fl-grass-leaf yib-fl-grass-leaf--4"></div>
+      </div>
+    </div>
+  `
+  return wrap
+}
+
 function createYearInBloom(level) {
   const el = document.createElement('div')
-  el.className = 'screen ps-game'
+  el.className = 'screen ps-game ps-year-in-bloom'
 
-  const shuffled = [...level.months].sort(() => Math.random() - 0.5)
-  const flowersHtml = shuffled.map(m => `
-    <div class="ps-plant-item ps-flower-item" data-month-id="${m.id}" draggable="false">
-      <div class="ps-flower-swatch" style="background:${m.fillColor};"></div>
-      <span class="ps-plant-label">${m.flower}</span>
+  // Panel flowers with name labels
+  const shuffled = [...level.flowers].sort(() => Math.random() - 0.5)
+  const flowersHtml = shuffled.map(f => `
+    <div class="ps-deco-item ps-yib-flower-item" data-flower-id="${f.id}" title="${f.name}">
+      <img src="${f.asset}" alt="${f.name}" class="ps-deco-img" draggable="false">
+      <span class="ps-yib-item-label">${f.name}</span>
     </div>
   `).join('')
 
+  // Timeline: blooms container + slot + month label BELOW
   const timelineHtml = level.months.map(m => `
     <div class="ps-timeline-slot" data-month-id="${m.id}">
+      <div class="ps-yib-blooms" id="yib-blooms-${m.id}"></div>
+      <div class="ps-slot-drop" data-month-id="${m.id}" data-required="${m.required}">
+        <span class="ps-slot-count">0/${m.required}</span>
+      </div>
       <span class="ps-month-label">${m.month}</span>
-      <div class="ps-slot-drop" data-month-id="${m.id}"></div>
     </div>
   `).join('')
 
   el.innerHTML = `
-    <div class="ps-game-bg" style="background-image:url('${level.background}');"></div>
+    <div class="ps-game-bg ps-yib-bg"></div>
     <div class="ps-game-header">
       <button class="home-btn" id="ps-home">
         <img src="/assets/sprites/ui_board-home.png" alt="Home">
       </button>
       <h2 class="ps-game-title">${level.title}</h2>
     </div>
+    <div class="ps-yib-instr-bar">
+      <p id="ps-yib-instr"></p>
+    </div>
     <div class="ps-game-body">
-      <div class="ps-panel">
-        <span class="ps-panel-heading">Flowers</span>
-        <div class="ps-panel-items">
-          ${flowersHtml}
+      <div class="ps-yib-left">
+        <div class="ps-panel">
+          <span class="ps-panel-heading">Flowers</span>
+          <div class="ps-panel-items ps-panel-items-grid">
+            ${flowersHtml}
+          </div>
         </div>
-      </div>
-      <div class="ps-canvas-panel">
-        <div class="ps-timeline" id="ps-timeline">
-          ${timelineHtml}
-        </div>
-        <div class="ps-overlay-bottom">
+        <div class="ps-yib-overlay">
           <div class="ps-instructions">
-            <p id="ps-instruction-text">${INSTRUCTIONS.yearInBloom.gameplay}</p>
+            <p id="ps-yib-clue"></p>
           </div>
           <img class="ps-game-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="">
+        </div>
+      </div>
+      <div class="ps-canvas-panel ps-yib-canvas">
+        <div class="ps-timeline" id="ps-timeline">
+          ${timelineHtml}
         </div>
       </div>
     </div>
   `
 
-  const placed = new Set()
+  // Type instruction at the top bar
+  const instrEl = el.querySelector('#ps-yib-instr')
+  const instrText = INSTRUCTIONS.yearInBloom.gameplay
+  instrEl.textContent = ''
+  let instrIdx = 0
+  function typeInstr() {
+    if (instrIdx < instrText.length && el.parentNode) {
+      instrEl.textContent += instrText[instrIdx++]
+      setTimeout(typeInstr, 35)
+    }
+  }
+  setTimeout(typeInstr, 400)
 
-  // Show a clue for a random unplaced flower
+  // Clue element (separate from instruction bar)
+  const clueEl = el.querySelector('#ps-yib-clue')
+
+  // Track placements: monthId → Set of flower IDs placed there
+  const monthPlacements = {}
+  level.months.forEach(m => { monthPlacements[m.id] = new Set() })
+
+  // Build a list of all needed placements (flower-month combos)
+  const allPlacements = []
+  level.months.forEach(m => {
+    m.accepts.forEach(fId => {
+      allPlacements.push({ monthId: m.id, flowerId: fId })
+    })
+  })
+
+  // Track which combos are done
+  const doneCombos = new Set()
+
+  // Show a clue for a random unplaced flower-month combo (no month name)
+  let currentClue = null
   function showNextClue() {
-    const unplaced = level.months.filter(m => !placed.has(m.id))
-    if (unplaced.length === 0) return
-    const m = unplaced[Math.floor(Math.random() * unplaced.length)]
-    el.querySelector('#ps-instruction-text').textContent = `? : ${m.clue}`
+    const remaining = allPlacements.filter(p => !doneCombos.has(`${p.monthId}:${p.flowerId}`))
+    if (remaining.length === 0) return
+    const pick = remaining[Math.floor(Math.random() * remaining.length)]
+    currentClue = pick
+    clueEl.textContent = level.clues[pick.flowerId]
   }
 
   requestAnimationFrame(() => showNextClue())
 
-  // Free-order: accept any correct flower-to-month match
-  el.querySelectorAll('.ps-flower-item').forEach(item => {
+  // Drag flowers from panel (unlimited re-drags like pollinator)
+  el.querySelectorAll('.ps-yib-flower-item').forEach(item => {
     let dragging = false, clone = null
 
     item.addEventListener('pointerdown', (e) => {
-      if (item.classList.contains('done')) return
       e.preventDefault()
       dragging = true
+      const flowerData = level.flowers.find(f => f.id === item.dataset.flowerId)
+
       clone = document.createElement('div')
-      clone.className = 'ps-drag-clone-swatch'
-      clone.style.background = item.querySelector('.ps-flower-swatch').style.background
+      clone.className = 'ps-drag-clone-box'
+      const img = document.createElement('img')
+      img.src = flowerData.asset
+      img.draggable = false
+      clone.appendChild(img)
       clone.style.left = e.clientX + 'px'
       clone.style.top = e.clientY + 'px'
       document.body.appendChild(clone)
@@ -623,48 +733,85 @@ function createYearInBloom(level) {
       clone.remove()
       clone = null
 
-      const monthId = item.dataset.monthId
+      const flowerId = item.dataset.flowerId
+      const flowerData = level.flowers.find(f => f.id === flowerId)
 
-      // Find which slot the drop lands on
-      const slots = el.querySelectorAll('.ps-slot-drop')
+      // Find which slot the drop lands on — check the whole timeline-slot column
+      const slots = el.querySelectorAll('.ps-timeline-slot')
       let targetSlot = null
+      let targetMonthId = null
       for (const slot of slots) {
         const sr = slot.getBoundingClientRect()
         if (e.clientX >= sr.left && e.clientX <= sr.right && e.clientY >= sr.top && e.clientY <= sr.bottom) {
-          targetSlot = slot
+          targetSlot = slot.querySelector('.ps-slot-drop')
+          targetMonthId = slot.dataset.monthId
           break
         }
       }
 
-      if (!targetSlot) return
+      if (!targetSlot || !targetMonthId) return
 
-      const slotMonthId = targetSlot.dataset.monthId
+      const monthId = targetMonthId
+      const monthData = level.months.find(m => m.id === monthId)
+      const comboKey = `${monthId}:${flowerId}`
 
-      // Correct if flower matches slot's month
-      if (monthId === slotMonthId && !placed.has(monthId)) {
-        const monthData = level.months.find(m => m.id === monthId)
-        const bloom = document.createElement('div')
-        bloom.className = 'ps-bloom'
-        bloom.style.background = monthData.fillColor
-        bloom.innerHTML = `<span class="ps-bloom-name">${monthData.flower}</span>`
-        targetSlot.appendChild(bloom)
+      // Check if this flower belongs in this month and isn't already placed
+      if (monthData.accepts.includes(flowerId) && !doneCombos.has(comboKey)) {
+        doneCombos.add(comboKey)
+        monthPlacements[monthId].add(flowerId)
 
-        placed.add(monthId)
-        item.classList.add('done')
-        targetSlot.parentElement.classList.add('ps-slot-filled')
+        // Update slot count
+        const placed = monthPlacements[monthId].size
+        const required = monthData.required
+        const countEl = targetSlot.querySelector('.ps-slot-count')
+        if (countEl) countEl.textContent = `${placed}/${required}`
 
-        if (placed.size >= level.months.length) {
-          const overlay = el.querySelector('.ps-overlay-bottom')
-          if (overlay) overlay.style.display = 'none'
+        // Add CodePen bloom flower above the slot
+        const bloomsContainer = el.querySelector(`#yib-blooms-${monthId}`)
+        const bloom = createBloomElement(flowerData.fillColor)
+        bloomsContainer.appendChild(bloom)
+
+        // Add flower SVG + name inside the slot box
+        const placedItem = document.createElement('div')
+        placedItem.className = 'ps-yib-placed-item'
+        const placedImg = document.createElement('img')
+        placedImg.src = flowerData.asset
+        placedImg.alt = flowerData.name
+        placedImg.draggable = false
+        const placedName = document.createElement('span')
+        placedName.className = 'ps-yib-placed-name'
+        placedName.textContent = flowerData.name
+        placedItem.appendChild(placedImg)
+        placedItem.appendChild(placedName)
+        targetSlot.appendChild(placedItem)
+
+        // Mark month slot complete if all flowers placed
+        if (placed >= required) {
+          targetSlot.parentElement.classList.add('ps-slot-filled')
+          if (countEl) countEl.style.display = 'none'
+        }
+
+        // Check all months complete
+        const allDone = level.months.every(m => monthPlacements[m.id].size >= m.required)
+        if (allDone) {
+          el.querySelector('.ps-yib-overlay').style.display = 'none'
+          el.querySelector('.ps-yib-instr-bar').style.display = 'none'
           setTimeout(() => showCompletion(el, INSTRUCTIONS.yearInBloom.complete), 1800)
         } else {
           showNextClue()
         }
       } else {
-        // Wrong match — shake the item
-        item.classList.add('ps-wrong')
-        setTimeout(() => item.classList.remove('ps-wrong'), 400)
-        el.querySelector('#ps-instruction-text').textContent = 'Not quite! Try a different month.'
+        // Wrong match — shake then re-show clue
+        targetSlot.classList.add('ps-wrong')
+        setTimeout(() => targetSlot.classList.remove('ps-wrong'), 400)
+        clueEl.textContent = 'Not quite! Try a different month.'
+        setTimeout(() => {
+          if (currentClue && !doneCombos.has(`${currentClue.monthId}:${currentClue.flowerId}`)) {
+            clueEl.textContent = level.clues[currentClue.flowerId]
+          } else {
+            showNextClue()
+          }
+        }, 1500)
       }
     })
   })

@@ -98,7 +98,7 @@ export function createGradeSelectScreen() {
     </div>
     <div class="character-area">
       <div class="speech-bubble">
-        <span class="speech-bubble-text">Choose a level!</span>
+        <span class="speech-bubble-text">Choose a grade!</span>
       </div>
       <img class="character-wave" src="/assets/sprites/Basic_Charakter_wave.png" alt="Farmer waving">
       <div class="ground-strip"></div>

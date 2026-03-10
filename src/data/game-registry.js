@@ -62,7 +62,7 @@ export const GAMES = [
     title: 'Planting Simulation',
     tier: 'meadow',
     levelCount: 3,
-    icon: '/assets/sprites/Basic_Plants_fruit-grow4.png',
+    icon: '/assets/sprites/Basic_Plants_fruit-grow3.png',
     description: 'Plant the right crops in the right spots!',
   },
   {
@@ -86,7 +86,7 @@ export const GAMES = [
     title: 'Drag & Drop Match',
     tier: 'meadow',
     levelCount: 5,
-    icon: '/assets/sprites/Basic_tools_watering_can.png',
+    icon: '/assets/gifs/h03-icon-strawberry.gif',
     description: 'Drag words to the right spot!',
   },
 
