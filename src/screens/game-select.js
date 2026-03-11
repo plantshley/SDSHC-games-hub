@@ -50,16 +50,17 @@ function createDecorations() {
     { src: '/assets/sprites/Basic_Grass_Biom_things_flower2.png', style: 'right:480px;bottom:10px;height:52px;transform:scaleX(-1);' },
     { src: '/assets/sprites/Basic_Grass_Biom_things_flower3.png', style: 'left:560px;bottom:10px;height:52px;transform:scaleX(-1);' },
     { src: '/assets/sprites/Basic_Grass_Biom_things_flower3.png', style: 'right:560px;bottom:10px;height:52px;' },
-    { src: '/assets/sprites/Basic_Grass_Biom_things_rock-sm.png', style: 'left:360px;bottom:8px;height:28px;' },
+    { src: '/assets/sprites/Basic_Grass_Biom_things_rock-sm.png', style: 'left:360px;bottom:8px;height:0px;' },
     { src: '/assets/sprites/Basic_Grass_Biom_things_rock.png', style: 'right:260px;bottom:6px;height:36px;' },
-    { src: '/assets/sprites/Basic_Grass_Biom_things_rock-sm.png', style: 'right:440px;bottom:8px;height:24px;' },
+    { src: '/assets/sprites/Basic_Grass_Biom_things_rock-sm.png', style: 'right:440px;bottom:8px;height:0px;' },
     { src: '/assets/sprites/Basic_Grass_Biom_things_mushroom.png', style: 'left:420px;bottom:8px;height:36px;' },
-    { src: '/assets/sprites/Basic_Grass_Biom_things_sprout.png', style: 'right:420px;bottom:10px;height:32px;' },
+    { src: '/assets/sprites/Basic_Grass_Biom_things_sprout.png', style: 'right:420px;bottom:10px;height:0px;' },
     { src: '/assets/sprites/Basic_Grass_Biom_things_mushroom2.png', style: 'right:600px;bottom:8px;height:40px;transform:scaleX(-1);' },
     { src: '/assets/sprites/Basic_Grass_Biom_things_mushroom3.png', style: 'left:700px;bottom:8px;height:32px;' },
-    { src: '/assets/sprites/Basic_Grass_Biom_things_sprout.png', style: 'left:650px;bottom:10px;height:28px;transform:scaleX(-1);' },
-    { src: '/assets/gifs/h03-icon-strawberry.gif', style: 'left:500px;bottom:8px;height:36px;' },
-    { src: '/assets/gifs/h07-icon-strawberry.gif', style: 'right:500px;bottom:8px;height:36px;' },
+    { src: '/assets/sprites/Basic_Grass_Biom_things_sprout.png', style: 'left:650px;bottom:10px;height:10px;transform:scaleX(-1);' },
+    { src: '/assets/gifs/frog.gif', style: 'left:520px;bottom:30px;height:60px;' },
+    { src: '/assets/gifs/bee-gif2.gif', style: 'right:430px;bottom:50px;height:50px;' },
+    { src: '/assets/gifs/butterflies-gif.gif', style: 'left:100px;bottom:60px;height:100px;' },
   ]
 
   for (const item of items) {

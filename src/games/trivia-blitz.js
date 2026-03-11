@@ -100,6 +100,8 @@ function createGameplayScreen(mode) {
     endlessPool: [],
     endlessIdx: 0,
     endlessAnswered: 0,
+    endlessCorrect: 0,
+    endlessWrong: 0,
   }
 
   if (mode === 'endless') {
@@ -123,7 +125,10 @@ function createGameplayScreen(mode) {
         `).join('')}
       </div>
       <div class="tb-panel-divider"></div>
-      <button class="tb-skip-btn" id="tb-skip">Skip Round ▸</button>
+      <div class="tb-panel-btn-row">
+        <button class="tb-skip-btn tb-skip-half" id="tb-quit-topic">Quit ✕</button>
+        <button class="tb-skip-btn tb-skip-half" id="tb-skip">Skip ▸</button>
+      </div>
       <div class="tb-panel-divider"></div>
       <div class="tb-panel-score">
         <span class="tb-panel-score-label">Score</span>
@@ -131,17 +136,34 @@ function createGameplayScreen(mode) {
       </div>
     `
     : `
-      <span class="tb-panel-heading">Endless Mode</span>
+      <span class="tb-panel-heading">Endless Shuffle</span>
       <div class="tb-endless-stats">
         <div class="tb-endless-stat">
-          <span class="tb-endless-stat-label">Answered</span>
-          <span class="tb-endless-stat-value" id="tb-endless-answered">0</span>
+          <span class="tb-endless-stat-label">Correct</span>
+          <span class="tb-endless-stat-value tb-stat-correct" id="tb-endless-correct">0</span>
+        </div>
+        <div class="tb-endless-stat">
+          <span class="tb-endless-stat-label">Wrong</span>
+          <span class="tb-endless-stat-value tb-stat-wrong" id="tb-endless-wrong">0</span>
         </div>
         <div class="tb-panel-divider"></div>
         <div class="tb-endless-stat">
           <span class="tb-endless-stat-label">Score</span>
           <span class="tb-panel-score-value" id="tb-score">0</span>
         </div>
+        <div class="tb-panel-divider"></div>
+        <div class="tb-endless-progress">
+          <span class="tb-endless-stat-label">Progress</span>
+          <div class="tb-endless-progress-bar">
+            <div class="tb-endless-progress-fill" id="tb-endless-progress"></div>
+          </div>
+          <span class="tb-endless-progress-text" id="tb-endless-progress-text">0/${state.endlessPool.length}</span>
+        </div>
+      </div>
+      <div class="tb-panel-divider"></div>
+      <button class="tb-skip-btn" id="tb-quit">Quit ✕</button>
+      <div class="tb-panel-creature">
+        <img src="/assets/gifs/flowers-gif.gif" alt="" class="tb-panel-creature-img">
       </div>
     `
 
@@ -152,7 +174,7 @@ function createGameplayScreen(mode) {
         <img src="/assets/sprites/ui_board-home.png" alt="Home">
       </button>
       <h2 class="tb-game-title">Soil Health Trivia Blitz</h2>
-      <span class="tb-mode-label">${mode === 'topic' ? 'Topic Mode' : 'Endless Mode'}</span>
+      <button class="tb-mode-toggle" id="tb-mode-toggle">${mode === 'topic' ? 'Topic Mode ⇄ Endless Shuffle' : 'Endless Shuffle ⇄ Topic Mode'}</button>
     </div>
     <div class="tb-game-body">
       <div class="tb-panel">
@@ -234,6 +256,17 @@ function createGameplayScreen(mode) {
     setTimeout(() => scoreEl.classList.remove('tb-score-pop'), 300)
   }
 
+  // ── Asset Preloading ──
+
+  function preloadUpcoming() {
+    const questions = state.mode === 'endless' ? state.endlessPool : state.roundQuestions
+    const startIdx = state.mode === 'endless' ? state.endlessIdx : state.questionIdx
+    for (let i = startIdx; i < Math.min(startIdx + 5, questions.length); i++) {
+      const q = questions[i]
+      if (q && q.asset) processAssetSVG(q.asset, null)
+    }
+  }
+
   // ── Question Display ──
 
   function getCurrentQuestion() {
@@ -247,6 +280,7 @@ function createGameplayScreen(mode) {
 
     state.answering = false
     state.questionStart = Date.now()
+    preloadUpcoming()
 
     choiceButtons.forEach(btn => {
       btn.classList.remove('tb-correct', 'tb-wrong')
@@ -334,14 +368,16 @@ function createGameplayScreen(mode) {
     const delay = isCorrect ? 600 : 1000
     setTimeout(() => {
       if (state.mode === 'endless') {
-        if (!isCorrect) { stopTimer(); showGameOver(); return }
         state.endlessAnswered++
+        if (isCorrect) state.endlessCorrect++
+        else state.endlessWrong++
         state.endlessIdx++
-        if (state.endlessIdx >= state.endlessPool.length) {
-          shuffleArray(state.endlessPool)
-          state.endlessIdx = 0
-        }
         updateEndlessStats()
+        if (state.endlessIdx >= state.endlessPool.length) {
+          stopTimer()
+          showGameOver()
+          return
+        }
         showQuestion()
       } else {
         state.questionIdx++
@@ -355,8 +391,17 @@ function createGameplayScreen(mode) {
   }
 
   function updateEndlessStats() {
-    const answeredEl = el.querySelector('#tb-endless-answered')
-    if (answeredEl) answeredEl.textContent = state.endlessAnswered
+    const correctEl = el.querySelector('#tb-endless-correct')
+    const wrongEl = el.querySelector('#tb-endless-wrong')
+    const progressFill = el.querySelector('#tb-endless-progress')
+    const progressText = el.querySelector('#tb-endless-progress-text')
+    if (correctEl) correctEl.textContent = state.endlessCorrect
+    if (wrongEl) wrongEl.textContent = state.endlessWrong
+    if (progressFill) {
+      const pct = (state.endlessIdx / state.endlessPool.length) * 100
+      progressFill.style.width = `${pct}%`
+    }
+    if (progressText) progressText.textContent = `${state.endlessIdx}/${state.endlessPool.length}`
   }
 
   // ── Round management ──
@@ -460,8 +505,8 @@ function createGameplayScreen(mode) {
       <div class="tb-completion-content">
         <div class="tb-completion-bubble">
           <span class="tb-completion-text">
-            Game Over!<br><br>
-            ${state.endlessAnswered} Questions Answered<br>
+            All Done!<br><br>
+            ${state.endlessCorrect}/${state.endlessAnswered} Correct<br>
             Final Score: ${state.score}
           </span>
         </div>
@@ -483,6 +528,8 @@ function createGameplayScreen(mode) {
       setTimeout(() => overlay.remove(), 300)
       state.score = 0
       state.endlessAnswered = 0
+      state.endlessCorrect = 0
+      state.endlessWrong = 0
       state.endlessIdx = 0
       shuffleArray(state.endlessPool)
       scoreEl.textContent = '0'
@@ -494,15 +541,21 @@ function createGameplayScreen(mode) {
     overlay.querySelector('#tb-go-home').addEventListener('pointerdown', () => {
       stopTimer()
       clearSVGCache()
-      navigate('game-select/guardians')
+      transitionTo(el, createIntroScreen())
     })
   }
 
   // ── Completion (Topic) ──
 
-  function showCompletion() {
+  function showCompletion(fromQuit = false) {
     const totalCorrect = state.roundScores.reduce((sum, rs) => sum + (rs ? rs.correct : 0), 0)
     const totalQs = state.roundScores.reduce((sum, rs) => sum + (rs ? rs.total : 0), 0)
+    const roundsPlayed = state.roundScores.filter(rs => rs !== null).length
+
+    const heading = fromQuit ? '✨ Results ✨' : 'Trivia Champion!🌟'
+    const detail = fromQuit
+      ? `${roundsPlayed}/${LEVELS.length} Rounds Attempted<br>`
+      : `${INSTRUCTIONS.completion}<br><br>`
 
     const overlay = document.createElement('div')
     overlay.className = 'tb-completion-overlay'
@@ -510,8 +563,8 @@ function createGameplayScreen(mode) {
       <div class="tb-completion-content">
         <div class="tb-completion-bubble">
           <span class="tb-completion-text">
-            Trivia Champion!<br><br>
-            ${INSTRUCTIONS.completion}<br><br>
+            ${heading}<br><br>
+            ${detail}
             ${totalCorrect}/${totalQs} Total Correct<br>
             Final Score: ${state.score}
           </span>
@@ -538,7 +591,7 @@ function createGameplayScreen(mode) {
     overlay.querySelector('#tb-go-home2').addEventListener('pointerdown', () => {
       stopTimer()
       clearSVGCache()
-      navigate('game-select/guardians')
+      transitionTo(el, createIntroScreen())
     })
   }
 
@@ -554,13 +607,40 @@ function createGameplayScreen(mode) {
     btn.addEventListener('pointerdown', () => handleAnswer(i))
   })
 
+  el.querySelector('#tb-mode-toggle').addEventListener('pointerdown', () => {
+    stopTimer()
+    clearSVGCache()
+    const newMode = mode === 'topic' ? 'endless' : 'topic'
+    transitionTo(el, createGameplayScreen(newMode))
+  })
+
   if (mode === 'topic') {
     el.querySelector('#tb-skip').addEventListener('pointerdown', handleSkip)
+    el.querySelector('#tb-quit-topic').addEventListener('pointerdown', () => {
+      stopTimer()
+      showCompletion(true)
+    })
     el.querySelectorAll('.tb-round-item').forEach(item => {
       item.addEventListener('pointerdown', () => {
         handleRoundClick(parseInt(item.dataset.round))
       })
     })
+  } else {
+    el.querySelector('#tb-quit').addEventListener('pointerdown', () => {
+      stopTimer()
+      showGameOver()
+    })
+  }
+
+  // Preload first batch of assets immediately (before transition finishes)
+  if (mode === 'topic') {
+    const firstRoundQs = [...LEVELS[0].questions]
+    firstRoundQs.forEach(q => { if (q.asset) processAssetSVG(q.asset, null) })
+  } else {
+    for (let i = 0; i < Math.min(5, state.endlessPool.length); i++) {
+      const q = state.endlessPool[i]
+      if (q && q.asset) processAssetSVG(q.asset, null)
+    }
   }
 
   // Start after transition

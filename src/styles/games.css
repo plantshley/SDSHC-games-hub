@@ -2000,11 +2000,18 @@
   text-shadow: 0 3px 0 var(--color-guardians-dark), 0 0 20px rgba(56, 206, 188, 0.3);
 }
 
-.tb-mode-label {
-  flex: 1; text-align: right;
-  font-family: var(--font-header); font-size: 14px;
-  color: var(--color-guardians);
-  letter-spacing: 1px;
+.tb-mode-toggle {
+  margin-left: auto;
+  font-family: var(--font-header); font-size: 13px;
+  color: var(--color-text);
+  letter-spacing: 0.5px;
+  background: rgba(56, 206, 188, 0.25); border: none; cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.tb-mode-toggle:hover, .tb-mode-toggle:active {
+  background: rgba(56, 206, 188, 0.35);
 }
 
 /* Body — matches ps-game-body */
@@ -2110,8 +2117,18 @@
   color: var(--color-text);
   cursor: pointer; min-height: 44px;
   transition: transform var(--transition-fast);
+  
 }
 .tb-skip-btn:active { transform: translateY(3px) scale(0.97); }
+
+.tb-panel-btn-row {
+  display: flex; gap: 8px;
+}
+.tb-skip-half {
+  flex: 1; min-width: 0;
+  text-align: center;
+  padding: 10px 8px;
+}
 
 /* Score in panel */
 .tb-panel-score {
@@ -2151,6 +2168,38 @@
 .tb-endless-stat-value {
   font-family: var(--font-header); font-size: 24px;
   color: var(--color-guardians);
+}
+.tb-stat-correct { color: #4caf50; }
+.tb-stat-wrong { color: #e57373; }
+
+.tb-endless-progress {
+  display: flex; flex-direction: column; gap: 6px; padding: 4px 0;
+}
+.tb-endless-progress-bar {
+  height: 12px; border-radius: 6px;
+  background: rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.tb-endless-progress-fill {
+  height: 100%; width: 0%;
+  background: var(--color-guardians);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+.tb-endless-progress-text {
+  font-family: var(--font-body); font-size: 13px;
+  color: var(--color-text-light);
+  text-align: center;
+}
+
+.tb-panel-creature {
+  flex: 1; display: flex;
+  align-items: flex-end; justify-content: center;
+  padding-bottom: 20px;
+}
+.tb-panel-creature-img {
+  width: 180px; height: auto;
+  image-rendering: pixelated;
 }
 
 /* ── Canvas panel — matches ps-canvas-panel ── */

@@ -36,13 +36,13 @@ const FOLIAGE = [
   { src: '/assets/sprites/Basic_Grass_Biom_things_flower2.png', style: 'right:480px;bottom:58px;height:50px;' },
   { src: '/assets/sprites/Basic_Grass_Biom_things_flower3.png', style: 'right:540px;bottom:56px;height:50px;transform:scaleX(-1);' },
   { src: '/assets/sprites/Basic_Grass_Biom_things_rock-sm.png', style: 'left:440px;bottom:52px;height:28px;' },
-  { src: '/assets/sprites/Basic_Grass_Biom_things_sprout.png', style: 'left:280px;bottom:56px;height:36px;' },
+  { src: '/assets/sprites/Basic_Grass_Biom_things_sprout.png', style: 'left:280px;bottom:56px;height:0px;' },
   { src: '/assets/sprites/Basic_Grass_Biom_things_mushroom3.png', style: 'left:700px;bottom:54px;height:36px;' },
   { src: '/assets/sprites/Basic_Grass_Biom_things_mushroom2.png', style: 'right:600px;bottom:54px;height:40px;transform:scaleX(-1);' },
   { src: '/assets/gifs/flowers-gif.gif', style: 'left:600px;bottom:55px;height:72px;transform:scaleX(-1);' },
   { src: '/assets/sprites/Basic_Grass_Biom_things_tree1.png', style: 'left:800px;bottom:58px;height:140px;' },
-  { src: '/assets/gifs/h03-icon-strawberry.gif', style: 'left:470px;bottom:54px;height:36px;' },
-  { src: '/assets/gifs/h07-icon-strawberry.gif', style: 'right:420px;bottom:54px;height:36px;' },
+  { src: '/assets/gifs/frog.gif', style: 'left:470px;bottom:60px;height:60px;' },
+  { src: '/assets/gifs/bee-gif2.gif', style: 'right:420px;bottom:70px;height:50px;' },
 ]
 
 function createFoliage() {
