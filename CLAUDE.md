@@ -173,6 +173,9 @@ npm run preview  # preview production build
 - `Youth Activities PDFs/Clues & Answers.md` — all educational content mapped to assets
 - Design inspiration: Cupnooble's Sprout Lands (https://cupnooble.itch.io/sprout-lands-asset-pack)
 
+## Other notes
+- Always ask the user clarifying questions when needed or helpful
+
 # Agent Instructions
 
 ## Subagents

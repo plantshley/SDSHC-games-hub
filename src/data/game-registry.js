@@ -51,7 +51,7 @@ export const GAMES = [
     id: 'coloring',
     title: 'Soil Critter Coloring',
     tier: 'sprouts',
-    levelCount: 7,
+    levelCount: 9,
     icon: '/assets/sprites/Basic_Grass_Biom_things_flower3.png',
     description: 'Pick colors and paint soil critters!',
   },
