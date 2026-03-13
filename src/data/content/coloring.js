@@ -28,7 +28,7 @@ export const PALETTE = [
   { name: 'Blue', hex: '#2980b9' },
   { name: 'Sky Blue', hex: '#87ceeb' },
   { name: 'Purple', hex: '#8e44ad' },
-  { name: 'Pink', hex: '#e496d7' },
+  { name: 'Pink', hex: '#f99ad1' },
   { name: 'Dark Brown', hex: '#5c3a1e' },
   { name: 'Tan', hex: '#c4a882' },
   { name: 'Black', hex: '#2c2c2c' },
