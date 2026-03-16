@@ -19,6 +19,12 @@ export const PAGES = [
 ]
 
 export const PALETTE = [
+  { name: 'Peach', hex: '#ff9bb7' },
+  { name: 'Pastel Orange', hex: '#ffc089' },
+  { name: 'Lime Yellow', hex: '#f3ff46' },
+  { name: 'Neon Green', hex: '#62ffa4' },
+  { name: 'Periwinkle', hex: '#dd98ff' },
+
   { name: 'Red', hex: '#e74c3c' },
   { name: 'Orange', hex: '#f39c12' },
   { name: 'Yellow', hex: '#f1c40f' },
@@ -34,7 +40,7 @@ export const PALETTE = [
   { name: 'Black', hex: '#2c2c2c' },
   { name: 'White', hex: '#ffffff' },
   { name: 'Eraser', hex: '#fdf6e3eb' },
-
+  
 ]
 
 export const DECORATIONS = [
@@ -50,9 +56,9 @@ export const DECORATIONS = [
   { emoji: '\u{1F343}', name: 'Leaf' },
   { emoji: '\u2B50', name: 'Star' },
   { emoji: '\u{1F308}', name: 'Rainbow' },
-  { emoji: '\u{1F33F}', name: 'Herb' },
-  { emoji: '\u{1F332}', name: 'Tree' },
-  { emoji: '\u{1F330}', name: 'Chestnut' },
+  { emoji: '🌙', name: 'Moon' },
+  { emoji: '☮️', name: 'Peace' },
+  { emoji: '🎀', name: 'Bow' },
   { emoji: '💗', name: 'Heart' },
 ]
 

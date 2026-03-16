@@ -129,7 +129,7 @@ Base mechanic: Swipe to spin a wheel. It lands on a category. Answer a T/F or mu
 | 6 | Soil Regions | "Which soil region is not fertile due to having soil that breaks down organic material and minerals quickly?" (Tropical). 6 questions. | See Soil Regions in Clues & Answers |
 | 7 | Soil Art & Culture | "Ochre is used as a natural ___?" (Pigment/Dye). 6 questions. | soil and culture-mudcloth, code, ochre, pottery, makeup |
 
-~41 questions total across 7 levels. Each level unlocks after completing the previous.
+~41 questions total across 7 categories
 
 #### *Game 7: "Odd One Out" (Classification)*
 

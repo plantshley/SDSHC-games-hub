@@ -13,6 +13,7 @@ import { createSoilCakeGame } from './games/soil-cake.js'
 import { createPlantingSimGame } from './games/planting-sim.js'
 import { createTriviaBlitzGame } from './games/trivia-blitz.js'
 import { createColoringGame } from './games/coloring.js'
+import { createSpinWheelGame } from './games/spin-wheel.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -75,6 +76,10 @@ function handleRoute(route) {
       }
       if (route.gameId === 'coloring') {
         switchScreen(createColoringGame())
+        break
+      }
+      if (route.gameId === 'spin-wheel') {
+        switchScreen(createSpinWheelGame())
         break
       }
 

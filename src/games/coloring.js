@@ -198,13 +198,10 @@ function createGameplayScreen() {
         <span class="cc-panel-heading">Colors</span>
         <div class="cc-palette">${paletteHtml}</div>
         <div class="cc-panel-divider"></div>
-        <div class="cc-mode-btns">
-          <button class="cc-mode-btn active" id="cc-fill-btn">🎨 Fill</button>
-          <button class="cc-mode-btn" id="cc-paint-btn">✏️ Paint</button>
-        </div>
-        <div class="cc-brush-size" id="cc-brush-size">
-          <span class="cc-brush-size-label">Brush Size</span>
-          <div class="cc-brush-sizes">${brushHtml}</div>
+        <div class="cc-mode-row" id="cc-mode-row">
+          <button class="cc-mode-btn active" id="cc-fill-btn"><span class="cc-mode-emoji">🎨</span><span class="cc-mode-label"> Fill</span></button>
+          <button class="cc-mode-btn" id="cc-paint-btn"><span class="cc-mode-emoji">✏️</span><span class="cc-mode-label"> Paint</span></button>
+          <div class="cc-brush-sizes" id="cc-brush-size">${brushHtml}</div>
         </div>
         <div class="cc-panel-divider"></div>
         <span class="cc-panel-heading">Stickers</span>
@@ -481,9 +478,11 @@ function pushUndo(container) {
   const drawCanvas = container.querySelector('#cc-draw-canvas')
   const ctx = canvas.getContext('2d', { willReadFrequently: true })
   const dCtx = drawCanvas.getContext('2d', { willReadFrequently: true })
+  const dropped = container.querySelector('#cc-dropped')
   undoStack.push({
     main: ctx.getImageData(0, 0, canvas.width, canvas.height),
     draw: dCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height),
+    decos: dropped.innerHTML,
   })
   if (undoStack.length > 20) undoStack.shift()
   updateUndoBtn(container)
@@ -504,6 +503,9 @@ function initCanvasActions(container) {
     const dCtx = drawCanvas.getContext('2d', { willReadFrequently: true })
     ctx.putImageData(prev.main, 0, 0)
     dCtx.putImageData(prev.draw, 0, 0)
+    const dropped = container.querySelector('#cc-dropped')
+    dropped.innerHTML = prev.decos || ''
+    dropped.querySelectorAll('.cc-placed-deco').forEach(makePlacedDecoDraggable)
     updateUndoBtn(container)
   })
 
@@ -516,6 +518,7 @@ function initCanvasActions(container) {
     const dCtx = drawCanvas.getContext('2d', { willReadFrequently: true })
     ctx.putImageData(originalImageData, 0, 0)
     dCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height)
+    container.querySelector('#cc-dropped').innerHTML = ''
   })
 }
 
@@ -728,9 +731,11 @@ function initPaintMode(container) {
       // Push pre-stroke state as undo point (main canvas unchanged, draw canvas saved)
       const mainCanvas = container.querySelector('#cc-canvas')
       const mCtx = mainCanvas.getContext('2d', { willReadFrequently: true })
+      const dropped = container.querySelector('#cc-dropped')
       undoStack.push({
         main: mCtx.getImageData(0, 0, mainCanvas.width, mainCanvas.height),
         draw: preStrokeData,
+        decos: dropped.innerHTML,
       })
       if (undoStack.length > 20) undoStack.shift()
       updateUndoBtn(container)
@@ -781,17 +786,13 @@ function initModeButtons(container) {
   const paintBtn = container.querySelector('#cc-paint-btn')
   const drawCanvas = container.querySelector('#cc-draw-canvas')
   const mainCanvas = container.querySelector('#cc-canvas')
-  const brushPanel = container.querySelector('#cc-brush-size')
-
+  const modeRow = container.querySelector('#cc-mode-row')
   const wrapper = container.querySelector('#cc-wrapper')
 
   function updateMode() {
     fillBtn.classList.toggle('active', !paintMode)
     paintBtn.classList.toggle('active', paintMode)
-    brushPanel.classList.toggle('visible', paintMode)
-    // Draw canvas always stays at z-index 1 (behind wrapper) so strokes
-    // render behind outlines. In paint mode, set wrapper to pointer-events:none
-    // so touches pass through to the draw canvas underneath.
+    modeRow.classList.toggle('paint-active', paintMode)
     if (paintMode) {
       drawCanvas.style.pointerEvents = 'auto'
       wrapper.style.pointerEvents = 'none'
@@ -864,6 +865,7 @@ function initDecorations(container) {
       if (!canvasPanelEl) return
       const cr = canvasPanelEl.getBoundingClientRect()
       if (e.clientX >= cr.left && e.clientX <= cr.right && e.clientY >= cr.top && e.clientY <= cr.bottom) {
+        pushUndo(container)
         const em = document.createElement('span')
         em.className = 'cc-placed-deco'
         em.textContent = item.dataset.emoji
