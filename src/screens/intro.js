@@ -121,6 +121,7 @@ export function createIntroScreen() {
   screen.className = 'screen intro-screen'
 
   screen.innerHTML = `
+    <img class="intro-logo" src="/assets/sdshc-logo.png" alt="" />
     <div class="intro-gradient-bg">
       <div class="intro-sphere intro-sphere-1"></div>
       <div class="intro-sphere intro-sphere-2"></div>
