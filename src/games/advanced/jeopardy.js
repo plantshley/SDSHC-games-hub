@@ -333,8 +333,10 @@ function createGameplayScreen(players) {
       if (isMultiplayer) {
         state.currentPlayer = (state.currentPlayer + 1) % state.players.length
         updateTurnDisplay()
+        showTurnPopup(() => { state.phase = 'board' })
+      } else {
+        state.phase = 'board'
       }
-      state.phase = 'board'
     }, isCorrect ? 800 : 1200)
   }
 
@@ -366,6 +368,24 @@ function createGameplayScreen(players) {
     el.querySelectorAll('.adv-jp-score-chip').forEach((chip, i) => {
       chip.classList.toggle('adv-jp-chip-active', i === state.currentPlayer)
     })
+  }
+
+  function showTurnPopup(onDone, text) {
+    const p = state.players[state.currentPlayer]
+    const popup = document.createElement('div')
+    popup.className = 'adv-sw-turn-popup'
+    popup.innerHTML = `
+      <div class="adv-sw-turn-content">
+        <span class="adv-sw-turn-popup-dot" style="background: ${p.color}"></span>
+        <span>${text || `${p.name}'s Turn`}</span>
+      </div>
+    `
+    el.querySelector('.adv-jp-body').appendChild(popup)
+    requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
+    setTimeout(() => {
+      popup.classList.remove('adv-sw-popup-show')
+      setTimeout(() => { popup.remove(); onDone() }, 300)
+    }, 1500)
   }
 
   // ── Impact Overlay ──
@@ -517,6 +537,12 @@ function createGameplayScreen(players) {
 
   updateTurnDisplay()
   updateScores()
+
+  if (isMultiplayer) {
+    state.phase = 'waiting'
+    const firstName = state.players[state.currentPlayer].name
+    setTimeout(() => showTurnPopup(() => { state.phase = 'board' }, `${firstName} goes first!`), 400)
+  }
 
   return el
 }

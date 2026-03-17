@@ -289,6 +289,20 @@ function createGameplayScreen(players, mode) {
     timerText.textContent = `${seconds}s`
     timerFill.style.width = `${pct}%`
 
+    // Color: semi-transparent player color in multiplayer, time-based in solo
+    if (isMultiplayer) {
+      const pColor = state.players[state.currentPlayer].color
+      // Convert hex to rgba with 0.3 opacity
+      const r = parseInt(pColor.slice(1, 3), 16)
+      const g = parseInt(pColor.slice(3, 5), 16)
+      const b = parseInt(pColor.slice(5, 7), 16)
+      timerFill.style.background = remaining > 10 ? `rgba(${r},${g},${b},0.3)` : 'rgba(255,97,147,0.6)'
+    } else {
+      if (remaining > 30) timerFill.style.background = '#38cebc'
+      else if (remaining > 10) timerFill.style.background = '#b8e84a'
+      else timerFill.style.background = '#ff6193'
+    }
+
     timerBar.classList.remove('adv-tb-timer-green', 'adv-tb-timer-yellow', 'adv-tb-timer-red')
     if (remaining > 30) timerBar.classList.add('adv-tb-timer-green')
     else if (remaining > 10) timerBar.classList.add('adv-tb-timer-yellow')
@@ -334,6 +348,24 @@ function createGameplayScreen(players, mode) {
     el.querySelectorAll('.adv-sw-player-row').forEach((row, i) => {
       row.classList.toggle('adv-sw-player-active', i === state.currentPlayer)
     })
+  }
+
+  function showTurnPopup(text, duration = 1500) {
+    const p = state.players[state.currentPlayer]
+    const popup = document.createElement('div')
+    popup.className = 'adv-sw-turn-popup'
+    popup.innerHTML = `
+      <div class="adv-sw-turn-content">
+        <span class="adv-sw-turn-popup-dot" style="background: ${p.color}"></span>
+        <span>${text || `${p.name}'s Turn`}</span>
+      </div>
+    `
+    mainPanel.appendChild(popup)
+    requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
+    setTimeout(() => {
+      popup.classList.remove('adv-sw-popup-show')
+      setTimeout(() => popup.remove(), 300)
+    }, duration)
   }
 
   // ── Question Display ──
@@ -485,15 +517,15 @@ function createGameplayScreen(players, mode) {
       // In endless multiplayer, switch to next player
       if (isMultiplayer) {
         advancePlayer()
-        flashMessage(`Time's up! ${state.players[state.currentPlayer].name}'s turn`, '#b8e84a')
+        flashMessage(`Time's up! ${state.players[state.currentPlayer].name}'s turn`, '#b8e84a', 2500)
       } else {
-        flashMessage("Time's up!", '#ff6193')
+        flashMessage("Time's up!", '#ff6193', 2500)
       }
-      startTimer()
       setTimeout(() => {
+        startTimer()
         state.answering = false
         showQuestion()
-      }, 1200)
+      }, 2500)
       return
     }
     flashMessage("Time's up! Round over", '#ff6193')
@@ -628,7 +660,7 @@ function createGameplayScreen(players, mode) {
     overlay.innerHTML = `
       <div class="adv-sw-completion-content">
         <h2 class="adv-sw-completion-heading">${heading}</h2>
-        <p class="adv-sw-completion-detail">${fromQuit ? detail : INSTRUCTIONS.completion}<br><br>${detail}</p>
+        <p class="adv-sw-completion-detail">${fromQuit ? detail : `${INSTRUCTIONS.completion}<br><br>${detail}`}</p>
         <div class="adv-sw-completion-scores">
           ${state.players.map(p => `
             <div class="adv-sw-completion-row">
@@ -727,10 +759,16 @@ function createGameplayScreen(players, mode) {
 
   updateTurnDisplay()
 
+  if (isMultiplayer) {
+    const firstName = state.players[state.currentPlayer].name
+    showTurnPopup(`${firstName} goes first!`, 1800)
+  }
+
+  const initDelay = isMultiplayer ? 2200 : 350
   if (mode === 'topic') {
-    setTimeout(() => startRound(0), 350)
+    setTimeout(() => startRound(0), initDelay)
   } else {
-    setTimeout(() => { startTimer(); showQuestion() }, 350)
+    setTimeout(() => { startTimer(); showQuestion() }, initDelay)
   }
 
   return el

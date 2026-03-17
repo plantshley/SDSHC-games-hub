@@ -47,6 +47,26 @@ export const ROUNDS = [
         choices: ['Plant diversity', 'Livestock integration', 'Minimal disturbance', 'Soil cover'],
         correct: 2,
       },
+      {
+        text: 'The concept of "armor on the soil" in soil health management refers to:',
+        choices: ['Plastic mulch films applied before planting', 'Maintaining a layer of crop residue or cover on the soil surface to protect against raindrop impact and erosion', 'Applying lime to form a hard protective crust', 'Deep-rooted perennials forming a dense mat underground'],
+        correct: 1,
+      },
+      {
+        text: 'Which soil health principle is most directly linked to building cation exchange capacity and improving nutrient retention over time?',
+        choices: ['Livestock integration', 'Minimal disturbance', 'Increasing soil organic matter through diverse plant inputs', 'Reducing irrigation frequency'],
+        correct: 2,
+      },
+      {
+        text: 'Soil health management systems aim to reduce reliance on external inputs. Which metric most directly measures progress toward this goal?',
+        choices: ['Acres farmed per year', 'Fertilizer nitrogen use efficiency and pest control costs over time', 'The number of different crop varieties planted', 'Tractor hours per growing season'],
+        correct: 1,
+      },
+      {
+        text: 'In healthy, undisturbed soil, which organism type creates macropores that dramatically improve water infiltration and aeration?',
+        choices: ['Nematodes', 'Protozoa', 'Earthworms', 'Rhizobia'],
+        correct: 2,
+      },
     ],
   },
 
@@ -83,6 +103,26 @@ export const ROUNDS = [
       {
         text: 'Which principle shared by most indigenous farming systems is now central to modern regenerative agriculture?',
         choices: ['Maximum tillage for weed control', 'Monoculture for yield optimization', 'Polyculture and mimicking natural ecosystem diversity', 'Chemical-intensive pest management'],
+        correct: 2,
+      },
+      {
+        text: 'Milpa agriculture, practiced throughout Mesoamerica, is distinguished from simple Three Sisters gardening by:',
+        choices: ['Using only one crop species per plot', 'A slash-and-burn rotation that rests land for several years to restore fertility before re-planting', 'Irrigation from constructed canal systems only', 'Exclusive cultivation of domesticated animals'],
+        correct: 1,
+      },
+      {
+        text: 'Southeast Asian floating rice cultivation in flooded paddies provides a nitrogen benefit because:',
+        choices: ['Rice roots fix atmospheric nitrogen directly', 'Cyanobacteria and azolla ferns in flooded fields perform biological nitrogen fixation', 'Flood water carries dissolved synthetic nitrogen from upstream', 'Anaerobic conditions concentrate nitrogen from decomposing fish'],
+        correct: 1,
+      },
+      {
+        text: 'Dry stone walling terraces in Mediterranean farming regions primarily reduced which soil degradation process on hillside vineyards and orchards?',
+        choices: ['Salinization from sea spray', 'Compaction from livestock grazing', 'Water erosion and soil loss from steep slopes', 'Frost heaving of roots in winter'],
+        correct: 2,
+      },
+      {
+        text: 'Amazonian polyculture and agroforestry systems were more ecologically stable than monocultures because they:',
+        choices: ['Used only native animal species as labor', 'Concentrated all production in a single season to minimize risk', 'Mimicked the structure and diversity of natural forest layers, cycling nutrients and reducing pest pressure', 'Relied on annual river flooding as the sole nutrient source'],
         correct: 2,
       },
     ],
@@ -123,6 +163,26 @@ export const ROUNDS = [
         choices: ['0.8 g/cm³', '1.0 g/cm³', '1.6 g/cm³', '2.5 g/cm³'],
         correct: 2,
       },
+      {
+        text: 'Why is wet soil significantly more susceptible to compaction than dry soil?',
+        choices: ['Wet soil has higher organic matter content', 'Water films between particles act as a lubricant, allowing particles to rearrange and pack more tightly under load', 'Dry soil is already fully compacted', 'Wet soil contains more clay, which is harder to compress'],
+        correct: 1,
+      },
+      {
+        text: 'A penetrometer measures soil resistance to a probe. Resistance above which threshold (in MPa) is commonly considered to restrict root elongation?',
+        choices: ['0.5 MPa', '2.0 MPa', '5.0 MPa', '10.0 MPa'],
+        correct: 1,
+      },
+      {
+        text: 'Controlled traffic farming (CTF) reduces compaction by:',
+        choices: ['Eliminating all field equipment from the farm', 'Restricting all field traffic to permanent, fixed wheel tracks, leaving the rest of the field undisturbed', 'Reducing planting density to lower equipment passes', 'Using only hand tools for soil management'],
+        correct: 1,
+      },
+      {
+        text: 'Subsoil compaction is particularly problematic because, unlike topsoil compaction:',
+        choices: ['It is easily reversed by a single tillage pass', 'It does not affect crop roots', 'It can persist for decades because normal tillage equipment does not reach subsoil depths', 'It only occurs in sandy soils'],
+        correct: 2,
+      },
     ],
   },
 
@@ -161,6 +221,26 @@ export const ROUNDS = [
         choices: ['Gravity and soil weight', 'Organic matter, fungal hyphae, root exudates, and microbial products', 'Chemical bonds between sand grains', 'Water tension exclusively'],
         correct: 1,
       },
+      {
+        text: 'Silt particles are intermediate in size between sand and clay. What property makes silt-dominated soils highly susceptible to surface crusting?',
+        choices: ['Silt particles are too large to form aggregates and collapse under raindrop impact', 'Silt has very high organic matter content that seals the surface', 'Silt carries a strong positive charge that repels water', 'Silt particles are magnetically attracted to each other and form an impermeable layer'],
+        correct: 0,
+      },
+      {
+        text: 'Prismatic soil structure is most commonly found in subsoil horizons. What does this structure indicate about water and root movement?',
+        choices: ['Excellent lateral and vertical movement due to abundant pore space', 'Limited lateral movement — water and roots move primarily along the vertical faces between prisms', 'No restriction to root or water movement in any direction', 'Exclusively horizontal water movement through the profile'],
+        correct: 1,
+      },
+      {
+        text: 'The slake test evaluates soil aggregate stability. An aggregate that quickly disintegrates in water indicates:',
+        choices: ['High organic matter and stable biological binding agents', 'Poor aggregate stability, suggesting low organic matter and susceptibility to erosion', 'Optimal soil moisture content for tillage', 'The presence of beneficial mycorrhizal fungi'],
+        correct: 1,
+      },
+      {
+        text: 'Soil texture is a permanent physical characteristic, while soil structure can change. Which management action most rapidly degrades soil structure?',
+        choices: ['Planting a diverse cover crop mix', 'Applying composted manure', 'Tillage of wet, vulnerable soils that breaks apart aggregates formed by biological activity', 'Reducing synthetic fertilizer applications'],
+        correct: 2,
+      },
     ],
   },
 
@@ -197,6 +277,26 @@ export const ROUNDS = [
       {
         text: 'Cover crops reduce nitrogen leaching primarily by:',
         choices: ['Releasing nitrogen into the atmosphere through their leaves', 'Absorbing residual soil nitrate into plant biomass during the off-season', 'Increasing denitrification rates in the root zone', 'Physically blocking water movement through the soil profile'],
+        correct: 1,
+      },
+      {
+        text: 'Mineralization converts organic nitrogen to ammonium. Which factor most accelerates this process?',
+        choices: ['Low soil temperature and high moisture', 'Warm soil temperatures, adequate moisture, and diverse microbial communities', 'High soil pH above 8.5', 'Absence of oxygen in the soil'],
+        correct: 1,
+      },
+      {
+        text: 'The C:N ratio of organic residues influences whether nitrogen is mineralized or immobilized. Residues with a C:N ratio above approximately 25:1 tend to:',
+        choices: ['Release nitrogen immediately, boosting crop growth', 'Cause immobilization, with microbes consuming inorganic nitrogen from the soil to decompose the residue', 'Have no effect on soil nitrogen levels', 'Increase denitrification rates regardless of conditions'],
+        correct: 1,
+      },
+      {
+        text: 'Nitrous oxide (N₂O) is an important greenhouse gas. Which soil nitrogen process is the primary source of agricultural N₂O emissions?',
+        choices: ['Nitrogen fixation by legumes', 'Nitrification and denitrification occurring simultaneously in microsites with variable oxygen', 'Ammonia volatilization from urea', 'Plant uptake of nitrate from the soil solution'],
+        correct: 1,
+      },
+      {
+        text: 'Which soil management practice most directly reduces the risk of nitrate leaching to groundwater?',
+        choices: ['Moldboard plowing in fall to prepare a seedbed', 'Split nitrogen applications timed to match crop demand throughout the growing season', 'Applying all fertilizer nitrogen in a single pre-season pass', 'Increasing soil compaction to slow water movement'],
         correct: 1,
       },
     ],
@@ -237,6 +337,26 @@ export const ROUNDS = [
         choices: ['Livestock compact the soil more evenly', 'Rest periods allow grass recovery, root regrowth, and soil biology restoration', 'Animals eat only the weeds during rotation', 'Manure distribution is concentrated in fewer areas'],
         correct: 1,
       },
+      {
+        text: 'Drainage water management (DWM) uses control structures on tile drainage systems to:',
+        choices: ['Eliminate all tile drainage from a field permanently', 'Raise the water table during the growing season to increase crop-accessible moisture and reduce nutrient loss', 'Accelerate drainage after heavy rain events only', 'Pump water from deeper aquifers to irrigate crops'],
+        correct: 1,
+      },
+      {
+        text: 'Bioreactors placed at tile drainage outlets use woodchip media to remove nitrate from drainage water through which process?',
+        choices: ['Physical filtration blocking nitrate ions', 'Denitrification by microbes in the anoxic woodchip bed converting nitrate to nitrogen gas', 'Adsorption of nitrate onto woodchip cellulose', 'Precipitation of nitrate as a solid mineral compound'],
+        correct: 1,
+      },
+      {
+        text: 'Saturated buffers direct tile water through the soil profile of a vegetated buffer. The primary benefit over a conventional tile outlet is:',
+        choices: ['Faster drainage to waterways', 'Denitrification and plant uptake remove nitrate as tile water moves through the buffer soil', 'Prevention of all phosphorus loss from the field', 'Elimination of the need for riparian vegetation'],
+        correct: 1,
+      },
+      {
+        text: 'Wetland restoration on agricultural land provides multiple ecosystem services. Which benefit is most relevant to downstream water quality?',
+        choices: ['Wetlands release stored sediment into streams during flood events', 'Wetlands intercept and process nutrient-laden runoff through biological uptake, sedimentation, and denitrification', 'Wetlands increase stream flow velocity to dilute pollutants', 'Wetlands attract wildlife that consumes excess algae in waterways'],
+        correct: 1,
+      },
     ],
   },
 
@@ -273,6 +393,26 @@ export const ROUNDS = [
       {
         text: 'In western South Dakota, soils tend to be more alkaline (pH > 7.5) due to:',
         choices: ['High rainfall leaching bases from the soil', 'Low rainfall and accumulation of calcium carbonate from calcareous parent material', 'Volcanic ash deposits', 'Intensive irrigation with acidic water'],
+        correct: 1,
+      },
+      {
+        text: 'Soil acidification in intensively cropped fields is commonly caused by which combination of factors?',
+        choices: ['High rainfall leaching calcium and magnesium, and H⁺ ions released during nitrification of ammonium-based fertilizers', 'Excessive lime application over many years', 'Planting deep-rooted cover crops that release alkaline compounds', 'Reduced irrigation frequency in arid climates'],
+        correct: 0,
+      },
+      {
+        text: 'Sulfur is sometimes applied to reduce soil pH for crops like blueberries. How does elemental sulfur lower pH?',
+        choices: ['It directly dissolves carbonate minerals in the soil', 'Soil bacteria oxidize elemental sulfur to sulfuric acid, releasing H⁺ ions', 'It physically displaces calcium from exchange sites', 'Sulfur absorbs water from the soil, concentrating acids already present'],
+        correct: 1,
+      },
+      {
+        text: 'Buffer pH is used by soil labs in addition to water pH. Why is buffer pH useful for lime recommendations?',
+        choices: ['It is easier to measure than water pH', 'Buffer pH reflects the soil\'s capacity to resist pH change — soils with high buffering capacity require more lime to raise pH', 'Buffer pH measures salinity, not acidity', 'Buffer pH is identical to water pH in all soil types'],
+        correct: 1,
+      },
+      {
+        text: 'Iron and manganese become more soluble at low pH. For most crops, excess soluble manganese causes:',
+        choices: ['Improved photosynthesis efficiency', 'Toxicity symptoms including leaf spots, interveinal chlorosis, and stunted growth', 'Enhanced nitrogen fixation in legumes', 'Increased root branching and depth'],
         correct: 1,
       },
     ],
@@ -313,6 +453,26 @@ export const ROUNDS = [
         choices: ['Water becomes too clear for fish', 'Algal blooms deplete dissolved oxygen, causing fish kills and dead zones', 'Phosphorus crystallizes and blocks stream flow', 'Water pH drops to lethal levels immediately'],
         correct: 1,
       },
+      {
+        text: 'Phosphorus "fixation" in acidic soils occurs primarily because phosphate ions react with:',
+        choices: ['Calcium carbonate, forming insoluble precipitates', 'Iron and aluminum oxides on soil particle surfaces, forming insoluble compounds', 'Organic matter, permanently binding phosphorus in humus', 'Potassium ions, forming potassium phosphate crystals'],
+        correct: 1,
+      },
+      {
+        text: 'In alkaline soils, phosphorus availability decreases because phosphate reacts with:',
+        choices: ['Organic matter and is immobilized by microbes', 'Calcium to form sparingly soluble calcium phosphate compounds', 'Potassium and sodium to form soluble but toxic salts', 'Clay minerals and is locked into the crystal lattice permanently'],
+        correct: 1,
+      },
+      {
+        text: 'The 4R Nutrient Stewardship framework for phosphorus management stands for the right source, right rate, right time, and:',
+        choices: ['Right rotation', 'Right place', 'Right rainfall', 'Right residue management'],
+        correct: 1,
+      },
+      {
+        text: 'Stratification of phosphorus at the soil surface is a common challenge in no-till systems because:',
+        choices: ['Surface phosphorus is immediately lost to volatilization in warm weather', 'Crops can only access phosphorus concentrated at the surface during early growth, leaving subsoil deficient and increasing runoff risk', 'Surface phosphorus prevents earthworms from surfacing after rain', 'Phosphorus in the topsoil inhibits mycorrhizal fungal development'],
+        correct: 1,
+      },
     ],
   },
 
@@ -349,6 +509,26 @@ export const ROUNDS = [
       {
         text: 'Adobe construction in the American Southwest uses sun-dried bricks made from clay soil mixed with straw. The straw serves as:',
         choices: ['Decoration only', 'Tensile reinforcement that prevents cracking as the brick dries and shrinks', 'A food source for beneficial bacteria in the wall', 'Waterproofing material'],
+        correct: 1,
+      },
+      {
+        text: 'Geosmin, a compound produced by Streptomyces bacteria in soil, is responsible for which well-known sensory experience?',
+        choices: ['The visual dark color of rich prairie soils', 'The earthy smell of rain on dry soil, celebrated in literature, poetry, and fragrance globally', 'The red color of iron-rich tropical soils', 'The gritty texture of sandy soils used in pottery'],
+        correct: 1,
+      },
+      {
+        text: 'Traditional Korean onggi pottery relies on specific local clays. The porous microstructure of onggi vessels is intentional because:',
+        choices: ['It makes the pottery lighter for transport', 'Micro-pores allow controlled gas exchange that ferments foods like kimchi while preventing spoilage organisms from entering', 'It creates a decorative crackled glaze effect', 'Porous walls allow water to seep out and cool stored beverages'],
+        correct: 1,
+      },
+      {
+        text: 'Ancient Egyptian kohl eyeliner, made partly from lead-based minerals and galena, is an example of:',
+        choices: ['Purely cosmetic use of soil minerals with no functional benefit', 'Cultural use of soil-derived minerals where modern research suggests it may have had antibacterial properties despite lead toxicity', 'Volcanic ash applied to prevent sun damage', 'Clay-based pigment sourced exclusively from the Nile floodplain'],
+        correct: 1,
+      },
+      {
+        text: 'The Nazca Lines in Peru, some of the world\'s largest geoglyphs, were created by:',
+        choices: ['Carving deep trenches into bedrock', 'Removing the reddish-brown surface layer to expose the lighter-colored soil beneath', 'Piling soil into raised mound formations visible from the air', 'Using plant pigments to paint large areas of desert pavement'],
         correct: 1,
       },
     ],
@@ -389,6 +569,26 @@ export const ROUNDS = [
         choices: ['Only historical record-keeping with no practical application', 'Planting date recommendations, crop insurance programs, and adaptation strategies', 'Marketing campaigns for seed companies', 'International diplomatic negotiations exclusively'],
         correct: 1,
       },
+      {
+        text: 'A forest soil scientist differs from a traditional agronomist primarily in that they focus on:',
+        choices: ['Maximizing short-term crop yields through synthetic inputs', 'Analyzing how soil properties support long-term forest ecosystem function, timber productivity, and watershed health', 'Designing irrigation systems for row crops only', 'Marketing timber products to international buyers'],
+        correct: 1,
+      },
+      {
+        text: 'A seed analyst\'s core responsibilities include evaluating seed lots for:',
+        choices: ['Market price fluctuations and commodity trading', 'Purity, germination rate, viability, and freedom from weed seed or disease contamination', 'Genetic modification status and patent compliance', 'Soil compatibility and nutrient content of seeds'],
+        correct: 1,
+      },
+      {
+        text: 'What distinguishes modern farm management from traditional approaches?',
+        choices: ['Modern farm managers ignore soil data in favor of market data', 'Integration of precision agriculture tools, data analytics, and long-term stewardship planning alongside production goals', 'Modern farm managers outsource all agronomic decisions to chemical company representatives', 'Traditional and modern farm management are identical in practice'],
+        correct: 1,
+      },
+      {
+        text: 'A biological engineer working in agriculture might design:',
+        choices: ['Financial models for commodity futures markets', 'Systems such as constructed wetlands, anaerobic digesters, or composting facilities that use biological processes to manage waste', 'Social media campaigns for agricultural advocacy groups', 'Satellite tracking systems for farm equipment only'],
+        correct: 1,
+      },
     ],
   },
 
@@ -425,6 +625,26 @@ export const ROUNDS = [
       {
         text: 'Gypsum (CaSO₄) is applied to sodic soils to:',
         choices: ['Increase soil sodium levels', 'Displace sodium from exchange sites with calcium, improving soil structure', 'Raise soil pH above 9.0', 'Add nitrogen for crop growth'],
+        correct: 1,
+      },
+      {
+        text: 'Soil salinity primarily damages crops by:',
+        choices: ['Directly poisoning plant cells with sodium ions only', 'Creating osmotic stress that reduces water uptake even when soil appears moist — plants experience "physiological drought"', 'Blocking sunlight absorption in leaves', 'Destroying mycorrhizal fungi exclusively, with no direct plant effects'],
+        correct: 1,
+      },
+      {
+        text: 'The sodium adsorption ratio (SAR) is calculated from sodium, calcium, and magnesium concentrations. A high SAR combined with low EC indicates:',
+        choices: ['An ideal growing environment for salt-tolerant crops', 'A sodic soil condition where sodium damages structure without excessive total salt concentration', 'Soil that requires no management intervention', 'Very high organic matter content'],
+        correct: 1,
+      },
+      {
+        text: 'Which crop category generally shows the greatest sensitivity to soil salinity?',
+        choices: ['Salt marsh grasses and halophytes', 'Vegetables and strawberries, which show yield loss at EC above 1-2 dS/m', 'Cotton and barley, which tolerate EC above 7 dS/m', 'Wheat and sugar beets, which are highly salt-tolerant'],
+        correct: 1,
+      },
+      {
+        text: 'In precision agriculture, apparent soil EC (ECa) measurements are useful for delineating management zones because ECa correlates with:',
+        choices: ['Crop yield only, with no relationship to soil properties', 'Multiple soil properties simultaneously including texture, organic matter, moisture, and salinity', 'Atmospheric humidity and temperature above the field', 'The depth of the water table measured from the surface'],
         correct: 1,
       },
     ],
@@ -465,6 +685,26 @@ export const ROUNDS = [
         choices: ['Degraded, compacted soil', 'Healthy soil with good structure, biological activity, and organic matter', 'Excessive salinity problems', 'Soil that is too sandy for agriculture'],
         correct: 1,
       },
+      {
+        text: 'Hydrophobic (water-repellent) soils resist infiltration even when dry. This condition is most commonly caused by:',
+        choices: ['High clay content that forms an impermeable surface', 'Organic compounds from decomposing plant residues or fungal activity coating soil particles', 'Excessive lime application raising pH above 9', 'Compaction from heavy equipment at depth'],
+        correct: 1,
+      },
+      {
+        text: 'An aggregate that holds together in water for over 10 minutes during a slake test indicates:',
+        choices: ['High salinity and sodium saturation', 'Strong biological binding agents and good organic matter, associated with stable infiltration capacity', 'Very high sand content with no fine particles', 'Soil that has been recently tilled and compacted'],
+        correct: 1,
+      },
+      {
+        text: 'Preferential flow through macropores can be both beneficial and problematic because:',
+        choices: ['It always increases drought resilience by recharging deep aquifers quickly', 'While it increases infiltration and reduces runoff, it can bypass the topsoil\'s filtering capacity and transport pollutants to groundwater', 'Macropore flow is only observed in sandy soils with no clay', 'It eliminates surface runoff completely in all soil types'],
+        correct: 1,
+      },
+      {
+        text: 'Soil water potential describes water availability to plants. When soil water potential drops below approximately -1.5 MPa, most crops experience:',
+        choices: ['Optimal water uptake and maximum photosynthesis', 'The permanent wilting point — soil moisture is too tightly held by soil particles for roots to extract', 'Waterlogging that limits gas exchange', 'Enhanced nutrient uptake due to concentrated soil solution'],
+        correct: 1,
+      },
     ],
   },
 ]
@@ -474,7 +714,7 @@ export const ROUND_TIME = 60 // seconds per round in topic mode
 export { PLAYER_COLORS } from './shared.js'
 
 export const INSTRUCTIONS = {
-  intro: 'Test your soil science knowledge across 12 advanced categories. Answer quickly for bonus points!',
+  intro: 'Test your soil science knowledge across 12 rounds of 10 questions each. Answer quickly for bonus points!',
   topicMode: 'Answer questions in each round. You have 60 seconds per round.',
   endlessMode: 'Random questions from all categories. 60 seconds per player.',
   completion: 'Outstanding! You\'ve demonstrated expert-level knowledge across all soil science categories.',

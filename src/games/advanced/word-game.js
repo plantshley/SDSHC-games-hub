@@ -759,6 +759,24 @@ function createGameplayScreen(players, totalRounds) {
   updateHealth()
   renderWord()
 
+  if (isMultiplayer) {
+    const firstName = state.players[state.currentPlayer].name
+    const popup = document.createElement('div')
+    popup.className = 'adv-sw-turn-popup'
+    popup.innerHTML = `
+      <div class="adv-sw-turn-content">
+        <span class="adv-sw-turn-popup-dot" style="background: ${state.players[state.currentPlayer].color}"></span>
+        <span>${firstName} goes first!</span>
+      </div>
+    `
+    el.querySelector('#adv-wg-main').appendChild(popup)
+    requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
+    setTimeout(() => {
+      popup.classList.remove('adv-sw-popup-show')
+      setTimeout(() => popup.remove(), 300)
+    }, 1500)
+  }
+
   return el
 }
 

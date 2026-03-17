@@ -517,7 +517,7 @@ function createGameplayScreen(players) {
     const delay = isCorrect ? (specialMsg ? 2200 : 800) : 2000
     state.feedbackTimeout = setTimeout(() => {
       if (isMultiplayer && state.players[state.currentPlayer].score >= WIN_THRESHOLD) {
-        showCompletion()
+        showCompletion(false, true)
         return
       }
       if (allQuestionsAnswered()) {
@@ -644,14 +644,14 @@ function createGameplayScreen(players) {
     }
   }
 
-  function showTurnPopup(onDone) {
+  function showTurnPopup(onDone, text) {
     const p = state.players[state.currentPlayer]
     const popup = document.createElement('div')
     popup.className = 'adv-sw-turn-popup'
     popup.innerHTML = `
       <div class="adv-sw-turn-content">
         <span class="adv-sw-turn-popup-dot" style="background: ${p.color}"></span>
-        <span>${p.name}'s Turn</span>
+        <span>${text || `${p.name}'s Turn`}</span>
       </div>
     `
     mainPanel.appendChild(popup)
@@ -725,13 +725,13 @@ function createGameplayScreen(players) {
 
   // ── Completion ──
 
-  function showCompletion(fromQuit = false) {
+  function showCompletion(fromQuit = false, skipImpact = false) {
     cancelAnimationFrame(state.spinFrame)
     clearTimeout(state.feedbackTimeout)
     state.phase = 'complete'
 
-    // Quit skips impact overlay, goes right to results
-    if (fromQuit) {
+    // Quit and win-by-threshold skip impact overlay
+    if (fromQuit || skipImpact) {
       showCompletionScreen(fromQuit)
     } else {
       showImpactOverlay(() => showCompletionScreen(fromQuit))
@@ -873,7 +873,8 @@ function createGameplayScreen(players) {
   drawWheel()
 
   if (isMultiplayer) {
-    setTimeout(() => showTurnPopup(() => { state.phase = 'ready' }), 400)
+    const firstName = state.players[state.currentPlayer].name
+    setTimeout(() => showTurnPopup(() => { state.phase = 'ready' }, `${firstName} goes first!`), 400)
   }
 
   return el
