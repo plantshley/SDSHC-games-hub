@@ -124,7 +124,7 @@ function createGameplayScreen(players) {
 
   const state = {
     players: players.map(p => ({ ...p, score: 0 })),
-    currentPlayer: 0,
+    currentPlayer: Math.floor(Math.random() * players.length),
     phase: 'ready', // ready | spinning | choosing | answering | feedback | choosing-for-opponent | complete
     spunValue: null,
     forcedCategory: null,
@@ -136,6 +136,7 @@ function createGameplayScreen(players) {
     feedbackTimeout: null,
     currentCatId: null,
     currentQuestion: null,
+    missedQuestions: [],
   }
 
   CATEGORIES.forEach(cat => {
@@ -244,10 +245,10 @@ function createGameplayScreen(players) {
   function getSliceColors() {
     const isLight = document.getElementById('app')?.dataset.theme === 'light'
     return WHEEL_SLICES.map(s => {
-      if (s === 'steal') return '#ff6193'
-      if (s === 'wild') return '#4ae4cf'
+      if (s === 'steal') return '#ff61ff8f'
+      if (s === 'wild') return '#4ae4cfb4'
       if (isLight) {
-        return s <= 100 ? '#b0d4f1' : s <= 200 ? '#a8dcd6' : s <= 300 ? '#b5ddb5' : s <= 400 ? '#cde89a' : '#e0f080'
+        return s <= 100 ? '#b0f1ea' : s <= 200 ? '#a8dcd6' : s <= 300 ? '#b5ddb5' : s <= 400 ? '#cde89a' : '#dff080d7'
       }
       return s <= 100 ? '#1e3a5f' : s <= 200 ? '#1a4a4a' : s <= 300 ? '#2a4a3a' : s <= 400 ? '#3a5a2a' : '#4a6a1a'
     })
@@ -274,9 +275,10 @@ function createGameplayScreen(players) {
         const gx = cx + Math.cos(midAngle) * r * 0.5
         const gy = cy + Math.sin(midAngle) * r * 0.5
         const grad = ctx.createLinearGradient(cx, cy, gx * 2 - cx, gy * 2 - cy)
-        grad.addColorStop(0, '#38cebc')
-        grad.addColorStop(0.5, '#b8e84a')
-        grad.addColorStop(1, '#38cebc')
+        grad.addColorStop(0, '#38cebda5')
+        grad.addColorStop(0.33, '#f0e4629c') 
+        grad.addColorStop(0.66, '#ffa528a2')
+        grad.addColorStop(1, '#ff61ff8f')
         ctx.fillStyle = grad
       } else {
         ctx.fillStyle = sliceColors[i]
@@ -318,11 +320,11 @@ function createGameplayScreen(players) {
     state.phase = 'spinning'
     spinBtn.style.display = 'none'
     spunValueEl.textContent = ''
-    state.angVel = 0.25 + Math.random() * 0.2
+    state.angVel = 0.3 + Math.random() * 0.15
 
     function frame() {
       state.ang += state.angVel
-      state.angVel *= 0.991
+      state.angVel *= 0.982
       drawWheel()
 
       if (state.angVel < 0.002) {
@@ -401,10 +403,23 @@ function createGameplayScreen(players) {
     })
   }
 
+  function highlightCategory(catId) {
+    el.querySelectorAll('.adv-sw-cat-btn').forEach(btn => {
+      btn.classList.toggle('adv-sw-cat-active', btn.dataset.cat === catId)
+    })
+  }
+
+  function clearCategoryHighlight() {
+    el.querySelectorAll('.adv-sw-cat-btn').forEach(btn => {
+      btn.classList.remove('adv-sw-cat-active')
+    })
+  }
+
   function pickCategory(catId) {
     state.phase = 'answering'
     state.currentCatId = catId
     disableCategories()
+    highlightCategory(catId)
 
     const queue = state.categoryQueues[catId]
     state.currentQuestion = queue.shift()
@@ -466,6 +481,14 @@ function createGameplayScreen(players) {
     } else {
       buttons[btnIdx].classList.add('adv-sw-wrong')
       buttons[correctBtn].classList.add('adv-sw-correct')
+      const q = state.currentQuestion
+      if (q) {
+        state.missedQuestions.push({
+          question: q.text,
+          correctAnswer: q.choices[q.correct],
+          category: CATEGORIES.find(c => c.id === state.currentCatId)?.title || '',
+        })
+      }
     }
 
     state.categoryProgress[state.currentCatId].answered++
@@ -474,30 +497,24 @@ function createGameplayScreen(players) {
     // Special popup for steal/wild
     let specialMsg = null
     if (isCorrect && state.spunValue === 'steal') {
+      // Steal popup message — actual steal target is chosen via picker after this
       if (isMultiplayer) {
-        let target = null, maxScore = -1
-        state.players.forEach((op, i) => {
-          if (i !== state.currentPlayer && op.score > maxScore) { maxScore = op.score; target = i }
-        })
-        if (target !== null && maxScore >= 50) {
-          specialMsg = `Stole 50 pts from ${state.players[target].name}!`
-        } else {
-          specialMsg = '+100 pts — no one to steal from!'
-        }
+        specialMsg = 'STEAL! Choose a player to steal 100 pts from!'
       } else {
         specialMsg = 'Steal bonus! +150 pts!'
       }
     } else if (isCorrect && state.spunValue === 'wild') {
+      const doubled = state.players[state.currentPlayer].score
       if (isMultiplayer) {
-        specialMsg = '+350 pts — now pick a category for the next player!'
+        specialMsg = `Score doubled to ${doubled}! Pick a category for the next player!`
       } else {
-        specialMsg = 'Wild Card bonus! +350 pts!'
+        specialMsg = `Wild Card! Score doubled to ${doubled}!`
       }
     }
 
     if (specialMsg) showSpecialPopup(specialMsg, state.spunValue)
 
-    const delay = isCorrect ? (specialMsg ? 2200 : 800) : 1200
+    const delay = isCorrect ? (specialMsg ? 2200 : 800) : 2000
     state.feedbackTimeout = setTimeout(() => {
       if (isMultiplayer && state.players[state.currentPlayer].score >= WIN_THRESHOLD) {
         showCompletion()
@@ -507,6 +524,12 @@ function createGameplayScreen(players) {
         showCompletion()
         return
       }
+      // Steal: let player choose who to steal from
+      if (isCorrect && state.spunValue === 'steal' && isMultiplayer) {
+        showStealPicker()
+        return
+      }
+      // Wild: pick category for next player
       if (isCorrect && state.spunValue === 'wild' && isMultiplayer) {
         state.phase = 'choosing-for-opponent'
         showWheelView()
@@ -522,21 +545,13 @@ function createGameplayScreen(players) {
   function applyScore() {
     const p = state.players[state.currentPlayer]
     if (state.spunValue === 'steal') {
-      p.score += 100
-      if (isMultiplayer) {
-        let target = null, maxScore = -1
-        state.players.forEach((op, i) => {
-          if (i !== state.currentPlayer && op.score > maxScore) { maxScore = op.score; target = i }
-        })
-        if (target !== null && state.players[target].score >= 50) {
-          state.players[target].score -= 50
-          p.score += 50
-        }
-      } else {
-        p.score += 50
+      // Points applied after steal target is chosen (or immediately in solo)
+      if (!isMultiplayer) {
+        p.score += 150
       }
+      // In multiplayer, score transfer happens in showStealPicker
     } else if (state.spunValue === 'wild') {
-      p.score += 350
+      p.score = p.score * 2
     } else {
       p.score += state.spunValue
     }
@@ -560,6 +575,49 @@ function createGameplayScreen(players) {
     }, 1800)
   }
 
+  function showStealPicker() {
+    state.phase = 'stealing'
+    const opponents = state.players
+      .map((p, i) => ({ ...p, idx: i }))
+      .filter(p => p.idx !== state.currentPlayer)
+
+    const popup = document.createElement('div')
+    popup.className = 'adv-sw-special-popup'
+    popup.innerHTML = `
+      <div class="adv-sw-special-content" style="border-color: #ff6193; color: #ff6193; flex-direction: column; gap: 16px;">
+        <span style="font-size: 1.1rem;">Steal 100 pts from...</span>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+          ${opponents.map(op => `
+            <button class="adv-sw-steal-target" data-idx="${op.idx}" style="
+              padding: 12px 24px; border: 2px solid ${op.color}; border-radius: 10px;
+              background: transparent; color: ${op.color}; font-family: var(--font-body), monospace;
+              font-size: 1rem; cursor: pointer; min-width: 120px;
+            ">${op.name} (${op.score} pts)</button>
+          `).join('')}
+        </div>
+      </div>
+    `
+    mainPanel.appendChild(popup)
+    requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
+
+    popup.querySelectorAll('.adv-sw-steal-target').forEach(btn => {
+      btn.addEventListener('pointerdown', () => {
+        const targetIdx = parseInt(btn.dataset.idx)
+        const stolen = Math.min(100, state.players[targetIdx].score)
+        state.players[targetIdx].score -= stolen
+        state.players[state.currentPlayer].score += stolen
+        updateAllScores()
+
+        popup.classList.remove('adv-sw-popup-show')
+        setTimeout(() => {
+          popup.remove()
+          showSpecialPopup(`Stole ${stolen} pts from ${state.players[targetIdx].name}!`, 'steal')
+          setTimeout(() => advanceTurn(), 1800)
+        }, 300)
+      })
+    })
+  }
+
   // ── Scores ──
 
   function updateAllScores() {
@@ -572,6 +630,7 @@ function createGameplayScreen(players) {
   // ── Turn Management ──
 
   function advanceTurn() {
+    clearCategoryHighlight()
     if (isMultiplayer) {
       state.currentPlayer = (state.currentPlayer + 1) % state.players.length
     }
@@ -600,7 +659,7 @@ function createGameplayScreen(players) {
     setTimeout(() => {
       popup.classList.remove('adv-sw-popup-show')
       setTimeout(() => { popup.remove(); onDone() }, 300)
-    }, 1200)
+    }, 1500)
   }
 
   function updateTurnDisplay() {
@@ -649,10 +708,13 @@ function createGameplayScreen(players) {
         <span class="adv-sw-impact-dismiss">Tap to continue</span>
       </div>
     `
-    mainPanel.appendChild(overlay)
+    el.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('adv-sw-impact-show'))
 
+    let dismissed = false
     const dismiss = () => {
+      if (dismissed) return
+      dismissed = true
       overlay.classList.remove('adv-sw-impact-show')
       setTimeout(() => { overlay.remove(); onDone() }, 300)
     }
@@ -668,17 +730,25 @@ function createGameplayScreen(players) {
     clearTimeout(state.feedbackTimeout)
     state.phase = 'complete'
 
-    // Show impact overlay first, then completion
-    showImpactOverlay(() => showCompletionScreen(fromQuit))
+    // Quit skips impact overlay, goes right to results
+    if (fromQuit) {
+      showCompletionScreen(fromQuit)
+    } else {
+      showImpactOverlay(() => showCompletionScreen(fromQuit))
+    }
   }
 
   function showCompletionScreen(fromQuit) {
     let heading
-    if (fromQuit) {
+    if (isMultiplayer) {
+      const sorted = [...state.players].sort((a, b) => b.score - a.score)
+      if (sorted[0].score === sorted[1]?.score) {
+        heading = 'Tie Game!'
+      } else {
+        heading = `${sorted[0].name} Wins!`
+      }
+    } else if (fromQuit) {
       heading = 'Results'
-    } else if (isMultiplayer) {
-      const winner = [...state.players].sort((a, b) => b.score - a.score)[0]
-      heading = `${winner.name} Wins!`
     } else {
       heading = 'Great Job!'
     }
@@ -686,6 +756,7 @@ function createGameplayScreen(players) {
     const totalAnswered = Object.values(state.categoryProgress)
       .reduce((sum, cp) => sum + cp.answered, 0)
 
+    const hasMissed = state.missedQuestions.length > 0
     const overlay = document.createElement('div')
     overlay.className = 'adv-sw-completion-overlay'
     overlay.innerHTML = `
@@ -702,15 +773,21 @@ function createGameplayScreen(players) {
           `).join('')}
         </div>
         <div class="adv-sw-completion-btns">
+          ${hasMissed ? '<button class="adv-sw-comp-btn" id="adv-sw-review">\u2716 Review Missed</button>' : ''}
           <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-sw-again">Play Again</button>
           <button class="adv-sw-comp-btn" id="adv-sw-home2">Back to Games</button>
         </div>
       </div>
     `
 
-    mainPanel.appendChild(overlay)
+    el.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('adv-sw-popup-show'))
 
+    if (hasMissed) {
+      overlay.querySelector('#adv-sw-review').addEventListener('pointerdown', () => {
+        showReviewOverlay(overlay)
+      })
+    }
     overlay.querySelector('#adv-sw-again').addEventListener('pointerdown', () => {
       cancelAnimationFrame(state.spinFrame)
       transitionTo(el, createIntroScreen())
@@ -718,6 +795,37 @@ function createGameplayScreen(players) {
     overlay.querySelector('#adv-sw-home2').addEventListener('pointerdown', () => {
       cancelAnimationFrame(state.spinFrame)
       navigate('game-select')
+    })
+  }
+
+  function showReviewOverlay(parentOverlay) {
+    const reviewEl = document.createElement('div')
+    reviewEl.className = 'adv-sw-completion-overlay'
+    reviewEl.innerHTML = `
+      <div class="adv-sw-completion-content adv-review-content">
+        <h2 class="adv-sw-completion-heading">Missed Questions</h2>
+        <div class="adv-review-list">
+          ${state.missedQuestions.map(q => `
+            <div class="adv-review-item">
+              <span class="adv-review-cat">${q.category}</span>
+              <span class="adv-review-question">${q.question}</span>
+              <span class="adv-review-answer">\u2714 ${q.correctAnswer}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="adv-sw-completion-btns">
+          <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-sw-review-back">\u2190 Back</button>
+        </div>
+      </div>
+    `
+
+    parentOverlay.style.display = 'none'
+    el.appendChild(reviewEl)
+    requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
+
+    reviewEl.querySelector('#adv-sw-review-back').addEventListener('pointerdown', () => {
+      reviewEl.remove()
+      parentOverlay.style.display = ''
     })
   }
 

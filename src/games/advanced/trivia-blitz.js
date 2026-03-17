@@ -1,7 +1,7 @@
 /**
  * Advanced Trivia Blitz
  * Dark-themed, no pixel art, multiplayer (1-4 players).
- * Topic mode (12 rounds, 90s each) or Endless mode.
+ * Topic mode (12 rounds, 60s each) or Endless mode.
  */
 
 import { navigate } from '../../router.js'
@@ -140,7 +140,7 @@ function createGameplayScreen(players, mode) {
   const state = {
     mode,
     players: players.map(p => ({ ...p, score: 0 })),
-    currentPlayer: 0,
+    currentPlayer: Math.floor(Math.random() * players.length),
     currentRound: 0,
     questionIdx: 0,
     roundQuestions: [],
@@ -149,6 +149,7 @@ function createGameplayScreen(players, mode) {
     timerInterval: null,
     questionStart: 0,
     answering: false,
+    missedQuestions: [],
     // Endless mode
     endlessPool: [],
     endlessIdx: 0,
@@ -394,6 +395,13 @@ function createGameplayScreen(players, mode) {
     } else {
       buttons[btnIdx].classList.add('adv-sw-wrong')
       buttons[correctBtn].classList.add('adv-sw-correct')
+      const q = getCurrentQuestion()
+      if (q) {
+        state.missedQuestions.push({
+          question: q.text,
+          correctAnswer: q.choices[q.correct],
+        })
+      }
     }
 
     if (state.mode === 'topic') {
@@ -406,7 +414,8 @@ function createGameplayScreen(players, mode) {
 
     const delay = isCorrect ? 600 : 1000
     setTimeout(() => {
-      advancePlayer()
+      // In topic mode, rotate turns per question. In endless, turns rotate on timer expiry.
+      if (state.mode === 'topic') advancePlayer()
 
       if (state.mode === 'endless') {
         state.endlessAnswered++
@@ -457,9 +466,38 @@ function createGameplayScreen(players, mode) {
     }
   }
 
+  function flashMessage(text, color, duration = 1500) {
+    const msg = document.createElement('div')
+    msg.className = 'adv-wg-flash'
+    msg.textContent = text
+    msg.style.color = color
+    mainPanel.appendChild(msg)
+    requestAnimationFrame(() => msg.classList.add('adv-wg-flash-show'))
+    setTimeout(() => {
+      msg.classList.remove('adv-wg-flash-show')
+      setTimeout(() => msg.remove(), 300)
+    }, duration)
+  }
+
   function onRoundTimeUp() {
-    if (state.mode === 'endless') { startTimer(); return }
-    onRoundComplete()
+    state.answering = true // block further answers
+    if (state.mode === 'endless') {
+      // In endless multiplayer, switch to next player
+      if (isMultiplayer) {
+        advancePlayer()
+        flashMessage(`Time's up! ${state.players[state.currentPlayer].name}'s turn`, '#b8e84a')
+      } else {
+        flashMessage("Time's up!", '#ff6193')
+      }
+      startTimer()
+      setTimeout(() => {
+        state.answering = false
+        showQuestion()
+      }, 1200)
+      return
+    }
+    flashMessage("Time's up! Round over", '#ff6193')
+    setTimeout(() => onRoundComplete(), 1500)
   }
 
   function showRoundComplete() {
@@ -483,7 +521,7 @@ function createGameplayScreen(players, mode) {
       </div>
     `
 
-    mainPanel.appendChild(overlay)
+    el.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('adv-sw-popup-show'))
 
     overlay.querySelector('#adv-tb-round-next').addEventListener('pointerdown', () => {
@@ -530,10 +568,13 @@ function createGameplayScreen(players, mode) {
         <span class="adv-sw-impact-dismiss">Tap to continue</span>
       </div>
     `
-    mainPanel.appendChild(overlay)
+    el.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('adv-sw-impact-show'))
 
+    let dismissed = false
     const dismiss = () => {
+      if (dismissed) return
+      dismissed = true
       overlay.classList.remove('adv-sw-impact-show')
       setTimeout(() => { overlay.remove(); onDone() }, 300)
     }
@@ -545,17 +586,26 @@ function createGameplayScreen(players, mode) {
 
   function showCompletion(fromQuit = false) {
     stopTimer()
+    state.answering = true // block further answers
 
-    showImpactOverlay(() => showCompletionScreen(fromQuit))
+    if (fromQuit) {
+      showCompletionScreen(fromQuit)
+    } else {
+      showImpactOverlay(() => showCompletionScreen(fromQuit))
+    }
   }
 
   function showCompletionScreen(fromQuit) {
     let heading
-    if (fromQuit) {
+    if (isMultiplayer) {
+      const sorted = [...state.players].sort((a, b) => b.score - a.score)
+      if (sorted[0].score === sorted[1]?.score) {
+        heading = 'Tie Game!'
+      } else {
+        heading = `${sorted[0].name} Wins!`
+      }
+    } else if (fromQuit) {
       heading = 'Results'
-    } else if (isMultiplayer) {
-      const winner = [...state.players].sort((a, b) => b.score - a.score)[0]
-      heading = `${winner.name} Wins!`
     } else {
       heading = 'Great Job!'
     }
@@ -572,6 +622,7 @@ function createGameplayScreen(players, mode) {
       detail = `${state.endlessCorrect}/${state.endlessAnswered} correct`
     }
 
+    const hasMissed = state.missedQuestions.length > 0
     const overlay = document.createElement('div')
     overlay.className = 'adv-sw-completion-overlay'
     overlay.innerHTML = `
@@ -588,20 +639,56 @@ function createGameplayScreen(players, mode) {
           `).join('')}
         </div>
         <div class="adv-sw-completion-btns">
+          ${hasMissed ? '<button class="adv-sw-comp-btn" id="adv-tb-review">\u2716 Review Missed</button>' : ''}
           <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-tb-again">Play Again</button>
           <button class="adv-sw-comp-btn" id="adv-tb-home2">Back to Games</button>
         </div>
       </div>
     `
 
-    mainPanel.appendChild(overlay)
+    el.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('adv-sw-popup-show'))
 
+    if (hasMissed) {
+      overlay.querySelector('#adv-tb-review').addEventListener('pointerdown', () => {
+        showReviewOverlay(overlay)
+      })
+    }
     overlay.querySelector('#adv-tb-again').addEventListener('pointerdown', () => {
       transitionTo(el, createIntroScreen())
     })
     overlay.querySelector('#adv-tb-home2').addEventListener('pointerdown', () => {
       navigate('game-select')
+    })
+  }
+
+  function showReviewOverlay(parentOverlay) {
+    const reviewEl = document.createElement('div')
+    reviewEl.className = 'adv-sw-completion-overlay'
+    reviewEl.innerHTML = `
+      <div class="adv-sw-completion-content adv-review-content">
+        <h2 class="adv-sw-completion-heading">Missed Questions</h2>
+        <div class="adv-review-list">
+          ${state.missedQuestions.map(q => `
+            <div class="adv-review-item">
+              <span class="adv-review-question">${q.question}</span>
+              <span class="adv-review-answer">\u2714 ${q.correctAnswer}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="adv-sw-completion-btns">
+          <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-tb-review-back">\u2190 Back</button>
+        </div>
+      </div>
+    `
+
+    parentOverlay.style.display = 'none'
+    el.appendChild(reviewEl)
+    requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
+
+    reviewEl.querySelector('#adv-tb-review-back').addEventListener('pointerdown', () => {
+      reviewEl.remove()
+      parentOverlay.style.display = ''
     })
   }
 

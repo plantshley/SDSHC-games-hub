@@ -149,6 +149,8 @@ function createGameplayScreen(players, totalRounds) {
     wordsCompleted: 0,
     wordsTotal: Math.min(wordPool.length, totalRounds),
     totalRounds,
+    isLastChance: false,
+    missedWords: [],  // track words players got wrong or ran out of guesses on
   }
 
   function currentWord() {
@@ -187,7 +189,7 @@ function createGameplayScreen(players, totalRounds) {
         <div class="adv-wg-blanks" id="adv-wg-blanks"></div>
 
         <div class="adv-wg-actions">
-          <button class="adv-wg-solve-btn" id="adv-wg-solve">\Solve</button>
+          <button class="adv-wg-solve-btn" id="adv-wg-solve">Solve</button>
           <button class="adv-wg-quit-btn" id="adv-wg-quit">Quit</button>
         </div>
 
@@ -354,11 +356,16 @@ function createGameplayScreen(players, totalRounds) {
       if (guess === answer) {
         // Correct solve!
         state.phase = 'revealed'
+        state.isLastChance = false
         state.players[state.currentPlayer].score += PTS_SOLVE
         updateScores()
         renderWord()
-        flashMessage('\Solved! +' + PTS_SOLVE + ' pts', '#4ade80')
+        flashMessage('Solved! +' + PTS_SOLVE + ' pts', '#4ade80')
         setTimeout(() => advanceRound(), 3000)
+      } else if (state.isLastChance) {
+        // Wrong solve on last chance — reveal the answer
+        state.isLastChance = false
+        revealAnswer()
       } else {
         // Wrong solve — penalty + turn passes
         state.phase = 'playing'
@@ -380,12 +387,17 @@ function createGameplayScreen(players, totalRounds) {
       solveUI.remove()
       keyboard.style.display = ''
       solveBtn.style.display = ''
-      state.phase = 'playing'
-      renderWord()
+      if (state.isLastChance) {
+        state.isLastChance = false
+        revealAnswer()
+      } else {
+        state.phase = 'playing'
+        renderWord()
+      }
     })
   }
 
-  function flashMessage(text, color) {
+  function flashMessage(text, color, duration = 1200) {
     const msg = document.createElement('div')
     msg.className = 'adv-wg-flash'
     msg.textContent = text
@@ -395,7 +407,7 @@ function createGameplayScreen(players, totalRounds) {
     setTimeout(() => {
       msg.classList.remove('adv-wg-flash-show')
       setTimeout(() => msg.remove(), 300)
-    }, 1200)
+    }, duration)
   }
 
   // ── Guess Handling ──
@@ -445,11 +457,61 @@ function createGameplayScreen(players, totalRounds) {
       flashMessage('\u2714 Complete! +' + PTS_COMPLETE + ' pts', '#4ade80')
       setTimeout(() => advanceRound(), 1800)
     } else if (state.wrongCount >= MAX_WRONG) {
-      state.phase = 'revealed'
-      renderWord()
-      flashMessage('Out of guesses!', '#ff6193')
-      setTimeout(() => advanceRound(), 2000)
+      // Offer one last chance to solve before revealing
+      offerLastSolve()
     }
+  }
+
+  function offerLastSolve() {
+    state.phase = 'lastChance'
+    flashMessage('Out of guesses! Try to solve?', '#b8e84a', 2500)
+
+    // Show solve/pass prompt after flash
+    setTimeout(() => {
+      if (state.phase !== 'lastChance') return
+      const promptEl = document.createElement('div')
+      promptEl.className = 'adv-wg-last-chance'
+      promptEl.innerHTML = `
+        <button class="adv-wg-solve-btn" id="adv-wg-lc-solve">Solve</button>
+        <button class="adv-wg-quit-btn" id="adv-wg-lc-pass">Pass</button>
+      `
+      el.querySelector('.adv-wg-actions').appendChild(promptEl)
+      // Hide existing solve/quit during this prompt
+      solveBtn.style.display = 'none'
+      el.querySelector('#adv-wg-quit').style.display = 'none'
+
+      promptEl.querySelector('#adv-wg-lc-solve').addEventListener('pointerdown', () => {
+        promptEl.remove()
+        solveBtn.style.display = ''
+        el.querySelector('#adv-wg-quit').style.display = ''
+        enterSolveModeLastChance()
+      })
+      promptEl.querySelector('#adv-wg-lc-pass').addEventListener('pointerdown', () => {
+        promptEl.remove()
+        solveBtn.style.display = ''
+        el.querySelector('#adv-wg-quit').style.display = ''
+        revealAnswer()
+      })
+    }, 800)
+  }
+
+  function enterSolveModeLastChance() {
+    // Temporarily set playing so enterSolveMode accepts it
+    state.phase = 'playing'
+    state.isLastChance = true
+    enterSolveMode()
+  }
+
+  function revealAnswer() {
+    state.phase = 'revealed'
+    renderWord()
+    state.missedWords.push({
+      term: currentWord().term,
+      category: currentWord().category,
+      hint: currentWord().hint,
+    })
+    flashMessage(`The answer was: ${currentWord().term}`, '#ff6193', 4500)
+    setTimeout(() => advanceRound(), 5000)
   }
 
   function advanceRound() {
@@ -575,7 +637,10 @@ function createGameplayScreen(players, totalRounds) {
     el.appendChild(impactEl)
     requestAnimationFrame(() => impactEl.classList.add('adv-sw-impact-show'))
 
+    let dismissed = false
     const dismiss = () => {
+      if (dismissed) return
+      dismissed = true
       impactEl.classList.remove('adv-sw-impact-show')
       setTimeout(() => { impactEl.remove(); onDone() }, 300)
     }
@@ -588,7 +653,7 @@ function createGameplayScreen(players, totalRounds) {
   function showCompletion(fromQuit = false) {
     state.phase = 'complete'
 
-    showImpactOverlay(() => {
+    const afterImpact = () => {
       let heading
       if (fromQuit) {
         heading = 'Results'
@@ -599,6 +664,7 @@ function createGameplayScreen(players, totalRounds) {
         heading = 'Great Job!'
       }
 
+      const hasMissed = state.missedWords.length > 0
       const completionEl = document.createElement('div')
       completionEl.className = 'adv-sw-completion-overlay'
       completionEl.innerHTML = `
@@ -615,6 +681,7 @@ function createGameplayScreen(players, totalRounds) {
             `).join('')}
           </div>
           <div class="adv-sw-completion-btns">
+            ${hasMissed ? '<button class="adv-sw-comp-btn" id="adv-wg-review">\u2716 Review Missed Words</button>' : ''}
             <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-wg-again">Play Again</button>
             <button class="adv-sw-comp-btn" id="adv-wg-home2">Back to Games</button>
           </div>
@@ -624,12 +691,55 @@ function createGameplayScreen(players, totalRounds) {
       el.appendChild(completionEl)
       requestAnimationFrame(() => completionEl.classList.add('adv-sw-popup-show'))
 
+      if (hasMissed) {
+        completionEl.querySelector('#adv-wg-review').addEventListener('pointerdown', () => {
+          showReviewOverlay(completionEl)
+        })
+      }
       completionEl.querySelector('#adv-wg-again').addEventListener('pointerdown', () => {
         transitionTo(el, createIntroScreen())
       })
       completionEl.querySelector('#adv-wg-home2').addEventListener('pointerdown', () => {
         navigate('game-select')
       })
+    }
+
+    // Quit skips impact overlay, goes right to results
+    if (fromQuit) {
+      afterImpact()
+    } else {
+      showImpactOverlay(afterImpact)
+    }
+  }
+
+  function showReviewOverlay(parentOverlay) {
+    const reviewEl = document.createElement('div')
+    reviewEl.className = 'adv-sw-completion-overlay'
+    reviewEl.innerHTML = `
+      <div class="adv-sw-completion-content adv-review-content">
+        <h2 class="adv-sw-completion-heading">Missed Words</h2>
+        <div class="adv-review-list">
+          ${state.missedWords.map(w => `
+            <div class="adv-review-item">
+              <span class="adv-review-term">${w.term}</span>
+              <span class="adv-review-cat">${w.category}</span>
+              <span class="adv-review-hint">${w.hint}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="adv-sw-completion-btns">
+          <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-wg-review-back">\u2190 Back</button>
+        </div>
+      </div>
+    `
+
+    parentOverlay.style.display = 'none'
+    el.appendChild(reviewEl)
+    requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
+
+    reviewEl.querySelector('#adv-wg-review-back').addEventListener('pointerdown', () => {
+      reviewEl.remove()
+      parentOverlay.style.display = ''
     })
   }
 

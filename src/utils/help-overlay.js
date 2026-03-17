@@ -15,7 +15,7 @@ export function createHelpButton(title, rules) {
   btn.textContent = '?'
   btn.title = 'How to play'
 
-  btn.addEventListener('pointerdown', (e) => {
+  btn.addEventListener('click', (e) => {
     e.stopPropagation()
     showHelpOverlay(title, rules)
   })
@@ -30,6 +30,13 @@ function showHelpOverlay(title, rules) {
 
   const overlay = document.createElement('div')
   overlay.className = 'adv-help-overlay'
+  // Copy mode/theme attributes so CSS custom properties resolve correctly
+  // (overlay is appended to body, outside the [data-mode] scope)
+  const app = document.getElementById('app')
+  if (app) {
+    overlay.dataset.mode = app.dataset.mode || 'advanced'
+    if (app.dataset.theme) overlay.dataset.theme = app.dataset.theme
+  }
   overlay.innerHTML = `
     <div class="adv-help-card">
       <h3 class="adv-help-title">How to Play: ${title}</h3>
@@ -40,16 +47,24 @@ function showHelpOverlay(title, rules) {
     </div>
   `
 
-  document.getElementById('app').appendChild(overlay)
+  // Append to body (outside #app) to avoid interfering with game DOM/stacking
+  document.body.appendChild(overlay)
   requestAnimationFrame(() => overlay.classList.add('adv-help-show'))
 
+  let dismissed = false
   const dismiss = () => {
+    if (dismissed) return
+    dismissed = true
     overlay.classList.remove('adv-help-show')
+    // Remove immediately — no need to wait for fade since pointer-events: none kicks in
     setTimeout(() => overlay.remove(), 250)
   }
 
-  overlay.querySelector('.adv-help-dismiss').addEventListener('pointerdown', dismiss)
-  overlay.addEventListener('pointerdown', (e) => {
+  overlay.querySelector('.adv-help-dismiss').addEventListener('click', (e) => {
+    e.stopPropagation()
+    dismiss()
+  })
+  overlay.addEventListener('click', (e) => {
     if (e.target === overlay) dismiss()
   })
 }

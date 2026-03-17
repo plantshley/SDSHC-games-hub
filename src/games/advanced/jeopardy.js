@@ -129,13 +129,14 @@ function createGameplayScreen(players) {
 
   const state = {
     players: players.map(p => ({ ...p, score: 0 })),
-    currentPlayer: 0,
+    currentPlayer: Math.floor(Math.random() * players.length),
     phase: 'board', // board | question | daily-double | feedback | complete
     questionsRemaining: allCells.length,
     currentQuestion: null,
     currentCatIdx: null,
     currentQIdx: null,
     ddWager: 0,
+    missedQuestions: [],
   }
 
   const totalCells = allCells.length
@@ -304,6 +305,13 @@ function createGameplayScreen(players) {
       if (state.currentQuestion.dailyDouble) {
         state.players[state.currentPlayer].score -= state.ddWager
       }
+      const q = state.currentQuestion
+      state.missedQuestions.push({
+        question: q.text,
+        correctAnswer: q.choices[q.correct],
+        category: board[state.currentCatIdx].title,
+        points: q.points,
+      })
     }
 
     // Mark answered
@@ -383,7 +391,10 @@ function createGameplayScreen(players) {
     el.appendChild(impactEl)
     requestAnimationFrame(() => impactEl.classList.add('adv-sw-impact-show'))
 
+    let dismissed = false
     const dismiss = () => {
+      if (dismissed) return
+      dismissed = true
       impactEl.classList.remove('adv-sw-impact-show')
       setTimeout(() => { impactEl.remove(); onDone() }, 300)
     }
@@ -396,19 +407,24 @@ function createGameplayScreen(players) {
   function showCompletion(fromQuit = false) {
     state.phase = 'complete'
 
-    showImpactOverlay(() => {
+    const afterImpact = () => {
       let heading
-      if (fromQuit) {
+      if (isMultiplayer) {
+        const sorted = [...state.players].sort((a, b) => b.score - a.score)
+        if (sorted[0].score === sorted[1]?.score) {
+          heading = 'Tie Game!'
+        } else {
+          heading = `${sorted[0].name} Wins!`
+        }
+      } else if (fromQuit) {
         heading = 'Results'
-      } else if (isMultiplayer) {
-        const winner = [...state.players].sort((a, b) => b.score - a.score)[0]
-        heading = `${winner.name} Wins!`
       } else {
         heading = 'Great Job!'
       }
 
       const answered = totalCells - state.questionsRemaining
 
+      const hasMissed = state.missedQuestions.length > 0
       const completionEl = document.createElement('div')
       completionEl.className = 'adv-sw-completion-overlay'
       completionEl.innerHTML = `
@@ -416,7 +432,7 @@ function createGameplayScreen(players) {
           <h2 class="adv-sw-completion-heading">${heading}</h2>
           <p class="adv-sw-completion-detail">${fromQuit ? `${answered}/${totalCells} answered` : INSTRUCTIONS.completion}</p>
           <div class="adv-sw-completion-scores">
-            ${state.players.map(p => `
+            ${[...state.players].sort((a, b) => b.score - a.score).map(p => `
               <div class="adv-sw-completion-row">
                 <span class="adv-sw-completion-dot" style="background: ${p.color}"></span>
                 <span class="adv-sw-completion-name">${p.name}</span>
@@ -425,6 +441,7 @@ function createGameplayScreen(players) {
             `).join('')}
           </div>
           <div class="adv-sw-completion-btns">
+            ${hasMissed ? '<button class="adv-sw-comp-btn" id="adv-jp-review">\u2716 Review Missed</button>' : ''}
             <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-jp-again">Play Again</button>
             <button class="adv-sw-comp-btn" id="adv-jp-home2">Back to Games</button>
           </div>
@@ -434,18 +451,67 @@ function createGameplayScreen(players) {
       el.appendChild(completionEl)
       requestAnimationFrame(() => completionEl.classList.add('adv-sw-popup-show'))
 
+      if (hasMissed) {
+        completionEl.querySelector('#adv-jp-review').addEventListener('pointerdown', () => {
+          showReviewOverlay(completionEl)
+        })
+      }
       completionEl.querySelector('#adv-jp-again').addEventListener('pointerdown', () => {
         transitionTo(el, createIntroScreen())
       })
       completionEl.querySelector('#adv-jp-home2').addEventListener('pointerdown', () => {
         navigate('game-select')
       })
+    }
+
+    if (fromQuit) {
+      afterImpact()
+    } else {
+      showImpactOverlay(afterImpact)
+    }
+  }
+
+  function showReviewOverlay(parentOverlay) {
+    const reviewEl = document.createElement('div')
+    reviewEl.className = 'adv-sw-completion-overlay'
+    reviewEl.innerHTML = `
+      <div class="adv-sw-completion-content adv-review-content">
+        <h2 class="adv-sw-completion-heading">Missed Questions</h2>
+        <div class="adv-review-list">
+          ${state.missedQuestions.map(q => `
+            <div class="adv-review-item">
+              <span class="adv-review-cat">${q.category} \u2014 ${q.points} pts</span>
+              <span class="adv-review-question">${q.question}</span>
+              <span class="adv-review-answer">\u2714 ${q.correctAnswer}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="adv-sw-completion-btns">
+          <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-jp-review-back">\u2190 Back</button>
+        </div>
+      </div>
+    `
+
+    parentOverlay.style.display = 'none'
+    el.appendChild(reviewEl)
+    requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
+
+    reviewEl.querySelector('#adv-jp-review-back').addEventListener('pointerdown', () => {
+      reviewEl.remove()
+      parentOverlay.style.display = ''
     })
   }
 
   // ── Event Bindings ──
 
   el.querySelector('#adv-jp-home').addEventListener('pointerdown', () => navigate('game-select'))
+
+  // Quit button in lower right corner
+  const quitBtn = document.createElement('button')
+  quitBtn.className = 'adv-sw-quit-btn adv-jp-quit-btn'
+  quitBtn.textContent = 'Quit'
+  el.querySelector('.adv-jp-body').appendChild(quitBtn)
+  quitBtn.addEventListener('pointerdown', () => showCompletion(true))
 
   // ── Initialize ──
 

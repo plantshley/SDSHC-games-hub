@@ -22,8 +22,8 @@ function spawnBurstParticles(container, x, y) {
     const dy = Math.sin(angle) * dist
     particle.style.setProperty('--dx', dx + 'px')
     particle.style.setProperty('--dy', dy + 'px')
-    const hue = Math.round(Math.random() * 359)
-    particle.style.backgroundColor = `hsl(${hue} 100% 70%)`
+    const BURST_COLORS = ['#ff71ce', '#01cdfe', '#05ffa1', '#b967ff', '#fffb96']
+    particle.style.backgroundColor = BURST_COLORS[i % BURST_COLORS.length]
     particle.style.left = x + 'px'
     particle.style.top = y + 'px'
     container.appendChild(particle)
@@ -178,7 +178,7 @@ export function createIntroScreen() {
         } else {
           navigateRaw('advanced/game-select')
         }
-      }, 300)
+      }, 800)
     })
   })
 

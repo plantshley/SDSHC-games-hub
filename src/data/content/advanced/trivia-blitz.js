@@ -469,24 +469,24 @@ export const ROUNDS = [
   },
 ]
 
-export const ROUND_TIME = 90 // seconds per round in topic mode
+export const ROUND_TIME = 60 // seconds per round in topic mode
 
 export { PLAYER_COLORS } from './shared.js'
 
 export const INSTRUCTIONS = {
   intro: 'Test your soil science knowledge across 12 advanced categories. Answer quickly for bonus points!',
-  topicMode: 'Answer questions in each round. You have 90 seconds per round.',
-  endlessMode: 'Random questions from all categories. How many can you answer correctly?',
+  topicMode: 'Answer questions in each round. You have 60 seconds per round.',
+  endlessMode: 'Random questions from all categories. 60 seconds per player.',
   completion: 'Outstanding! You\'ve demonstrated expert-level knowledge across all soil science categories.',
 }
 
 export const RULES = [
-  'Choose Topic Mode (12 rounds, 90s each) or Endless Mode (random, no time limit per round).',
+  'Choose Topic Mode (12 rounds, 60s each) or Endless Shuffle (random, no time limit per round).',
   'Each question is multiple choice with 4 options.',
   'Base score: 100 points per correct answer.',
   'Speed bonus: +50 pts if answered in under 5 seconds, +25 pts if under 10 seconds.',
   'In multiplayer, turns rotate after each question.',
-  'Topic Mode ends after 12 rounds. Endless Mode continues until you quit.',
+  'Topic Mode ends after 12 rounds. Endless Shuffle continues until you quit.',
   'Highest score at the end wins!',
 ]
 

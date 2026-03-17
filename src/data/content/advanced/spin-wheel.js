@@ -479,7 +479,7 @@ export const WIN_THRESHOLD = 1500
 export { PLAYER_COLORS } from './shared.js'
 
 export const INSTRUCTIONS = {
-  intro: 'Welcome to the Advanced Spin the Wheel! Spin, choose a category, and test your soil science knowledge. First to reach the target score wins!',
+  intro: 'Tap to spin, choose a category, and test your soil science knowledge. First to reach 1500 points wins!',
   completion: 'Outstanding work! You\'ve demonstrated expert-level soil science knowledge.',
 }
 
@@ -487,10 +487,10 @@ export const RULES = [
   'Spin the wheel to land on a point value (or special slice).',
   'Choose a category, then answer a multiple-choice question.',
   'Correct answers earn the points shown on the wheel.',
-  'WILD lets you pick any category for double points.',
-  'STEAL lets you take points from another player (multiplayer).',
-  'First player to reach the target score wins!',
+  'WILD doubles your score, then you pick a category for the next player.',
+  'STEAL lets you choose a player and steal 100 pts from them (multiplayer).',
   'Wrong answers pass the turn with no penalty.',
+  'First player to reach 1500 points wins!',
 ]
 
 export const IMPACT_MESSAGES = {

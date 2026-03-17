@@ -31,7 +31,7 @@ export const ADVANCED_GAMES = [
   },
   {
     id: 'adv-word-game',
-    title: 'Word Game',
+    title: 'Word or Worm?',
     description: 'Guess soil science terms letter by letter. How many can you solve?',
     icon: '\u2135', // ℵ (alef — abstract letter symbol)
     players: '1-4 players',

@@ -3,7 +3,7 @@
  * @param {HTMLElement} el - The element containing the text to animate
  * @param {number} speed - Milliseconds per character (default 25)
  */
-export function typewriter(el, speed = 60) {
+export function typewriter(el, speed = 40) {
   const fullText = el.textContent
   el.textContent = ''
 
@@ -22,7 +22,7 @@ export function typewriter(el, speed = 60) {
     } else {
       clearInterval(interval)
       // Remove cursor after a brief pause
-      setTimeout(() => cursor.remove(), 1500)
+      setTimeout(() => cursor.remove(), 0)
     }
   }, speed)
 }
