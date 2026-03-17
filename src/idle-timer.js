@@ -1,16 +1,18 @@
 /**
- * Idle timer: 120s of no interaction → reset to splash.
- * Shows warning overlay at 110s (10s before reset).
+ * Idle timer: configurable timeout with no-interaction reset.
+ * Shows warning overlay 10s before reset.
+ * Kid Mode: 120s timeout. Advanced Mode: 300s timeout.
  */
 
-const IDLE_TIMEOUT = 120_000
-const WARNING_AT = 110_000
+let idleTimeout = 120_000
+let warningBuffer = 10_000
 
 let timerId = null
 let warningTimerId = null
 let countdownInterval = null
 let overlay = null
 let onReset = null
+let enabled = true
 
 function createOverlay() {
   overlay = document.createElement('div')
@@ -28,9 +30,9 @@ function createOverlay() {
 }
 
 function showWarning() {
-  if (!overlay) return
+  if (!overlay || !enabled) return
   overlay.classList.add('visible')
-  let seconds = Math.ceil((IDLE_TIMEOUT - WARNING_AT) / 1000)
+  let seconds = Math.ceil(warningBuffer / 1000)
   const countdownEl = overlay.querySelector('.idle-overlay-countdown')
   countdownEl.textContent = `Resetting in ${seconds}s...`
 
@@ -59,20 +61,53 @@ function resetTimer() {
   clearTimeout(warningTimerId)
   hideWarning()
 
+  if (!enabled) return
+
+  const warningAt = idleTimeout - warningBuffer
+
   warningTimerId = setTimeout(() => {
     showWarning()
-  }, WARNING_AT)
+  }, warningAt)
 
   timerId = setTimeout(() => {
     hideWarning()
     if (onReset) onReset()
-  }, IDLE_TIMEOUT)
+  }, idleTimeout)
 }
 
 function onActivity() {
+  if (!enabled) return
   if (overlay && overlay.classList.contains('visible')) {
     hideWarning()
   }
+  resetTimer()
+}
+
+/**
+ * Set the idle timeout duration in milliseconds.
+ * Call this when switching between modes.
+ */
+export function setIdleTimeout(ms) {
+  idleTimeout = ms
+  warningBuffer = Math.min(10_000, ms / 2)
+  if (enabled) resetTimer()
+}
+
+/**
+ * Disable the idle timer (clears all timers, hides overlay).
+ */
+export function disableIdleTimer() {
+  enabled = false
+  clearTimeout(timerId)
+  clearTimeout(warningTimerId)
+  hideWarning()
+}
+
+/**
+ * Enable the idle timer and start tracking.
+ */
+export function enableIdleTimer() {
+  enabled = true
   resetTimer()
 }
 

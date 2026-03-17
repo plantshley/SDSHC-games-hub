@@ -1,0 +1,352 @@
+/* ─── Intro Screen ─── */
+
+.intro-screen {
+  overflow: hidden;
+  background-color: #050508;
+}
+
+/* ─── Gradient Spheres ─── */
+
+.intro-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.intro-sphere {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+}
+
+.intro-sphere-1 {
+  width: 40vw;
+  height: 40vw;
+  background: linear-gradient(40deg, rgba(0, 180, 160, 0.8), rgba(56, 206, 188, 0.4));
+  top: -10%;
+  left: -10%;
+  animation: introFloat1 15s ease-in-out infinite alternate;
+}
+
+.intro-sphere-2 {
+  width: 45vw;
+  height: 45vw;
+  background: linear-gradient(240deg, rgba(0, 100, 80, 0.8), rgba(56, 206, 188, 0.4));
+  bottom: -20%;
+  right: -10%;
+  animation: introFloat2 18s ease-in-out infinite alternate;
+}
+
+.intro-sphere-3 {
+  width: 30vw;
+  height: 30vw;
+  background: linear-gradient(120deg, rgba(100, 180, 60, 0.5), rgba(184, 232, 74, 0.3));
+  top: 60%;
+  left: 20%;
+  animation: introFloat3 20s ease-in-out infinite alternate;
+}
+
+@keyframes introFloat1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(10%, 10%) scale(1.1); }
+}
+
+@keyframes introFloat2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-10%, -5%) scale(1.15); }
+}
+
+@keyframes introFloat3 {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+  100% { transform: translate(-5%, 10%) scale(1.05); opacity: 0.6; }
+}
+
+/* ─── Grid Overlay ─── */
+
+.intro-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  z-index: 2;
+}
+
+/* ─── Noise Overlay ─── */
+
+.intro-noise {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.05;
+  z-index: 3;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* ─── Center Glow ─── */
+
+.intro-glow {
+  position: absolute;
+  width: 40vw;
+  height: 40vh;
+  background: radial-gradient(circle, rgba(0, 100, 80, 0.15), transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  animation: introGlowPulse 8s infinite alternate;
+  filter: blur(30px);
+}
+
+@keyframes introGlowPulse {
+  0% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.9); }
+  100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* ─── Particles Container ─── */
+
+.intro-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.intro-ambient-particle {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ─── Content ─── */
+
+.intro-content {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.intro-title {
+  font-family: var(--font-title), sans-serif;
+  font-size: 4rem;
+  font-weight: 400;
+  color: #fff;
+  text-shadow:
+    0 0 20px rgba(56, 206, 188, 0.3),
+    0 0 40px rgba(56, 206, 188, 0.15),
+    0 0 80px rgba(56, 206, 188, 0.08);
+  letter-spacing: 2px;
+  line-height: 1.2;
+}
+
+.intro-subtitle {
+  font-family: var(--font-title), monospace;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: -20px;
+  font-style: italic;
+}
+
+/* ─── Mode Buttons ─── */
+
+.intro-buttons {
+  display: flex;
+  gap: 60px;
+  margin-top: 20px;
+}
+
+.intro-mode-btn {
+  position: relative;
+  min-width: 320px;
+  min-height: 120px;
+  padding: 40px 50px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  transition: transform 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.intro-mode-btn:hover,
+.intro-mode-btn:active,
+.intro-mode-btn.tapped {
+  transform: scale(1.03);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ─── Continuous Ripple Effect ─── */
+/* Adapted from Temani Afif's pure-CSS ripple pattern. */
+/* 3 staggered waves per button via element + ::before + ::after. */
+
+.intro-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.intro-ripple,
+.intro-ripple::before,
+.intro-ripple::after {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 var(--ripple-color);
+  animation: introRipple 4s linear infinite var(--ripple-delay, 0s);
+}
+
+.intro-ripple::before { --ripple-delay: 1.333s; }
+.intro-ripple::after  { --ripple-delay: 2.666s; }
+
+@keyframes introRipple {
+  to { box-shadow: 0 0 0 5rem #0000; }
+}
+
+/* Kid Mode — 3 waves each a different rainbow color */
+.intro-btn-kid .intro-ripple {
+  animation: introRippleKid1 4s linear infinite 0s;
+}
+.intro-btn-kid .intro-ripple::before {
+  animation: introRippleKid2 4s linear infinite 1.333s;
+}
+.intro-btn-kid .intro-ripple::after {
+  animation: introRippleKid3 4s linear infinite 2.666s;
+}
+
+@keyframes introRippleKid1 {
+  0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.25); }
+  100% { box-shadow: 0 0 0 5rem rgba(107, 181, 255, 0); }
+}
+@keyframes introRippleKid2 {
+  0% { box-shadow: 0 0 0 0 rgba(255, 217, 61, 0.25); }
+  100% { box-shadow: 0 0 0 5rem rgba(163, 107, 255, 0); }
+}
+@keyframes introRippleKid3 {
+  0% { box-shadow: 0 0 0 0 rgba(107, 207, 127, 0.25); }
+  100% { box-shadow: 0 0 0 5rem rgba(255, 107, 107, 0); }
+}
+
+/* Advanced Mode — teal ripple */
+.intro-btn-advanced .intro-ripple,
+.intro-btn-advanced .intro-ripple::before,
+.intro-btn-advanced .intro-ripple::after {
+  --ripple-color: rgba(56, 206, 188, 0.2);
+}
+
+/* Kid Mode button */
+.intro-btn-kid .intro-btn-label {
+  font-family: var(--font-title), sans-serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  background: linear-gradient(
+    90deg,
+    #ff6b6b, #ffa36b, #ffd93d, #6bcf7f, #6bb5ff, #a36bff, #ff6b6b
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: introRainbow 4s linear infinite;
+}
+
+@keyframes introRainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+.intro-btn-kid .intro-btn-desc {
+  font-family: var(--font-text), monospace;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  display: none;
+}
+
+.intro-btn-kid:hover,
+.intro-btn-kid:active,
+.intro-btn-kid.tapped {
+  border-color: rgba(255, 107, 107, 0.4);
+  box-shadow: 0 0 30px rgba(255, 107, 107, 0.15);
+}
+
+/* Advanced Mode button */
+.intro-btn-advanced .intro-btn-label {
+  font-family: var(--font-title), sans-serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  background: linear-gradient(90deg, #38cebc, #b8e84a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.intro-btn-advanced .intro-btn-desc {
+  font-family: var(--font-text), monospace;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  display: none;
+}
+
+.intro-btn-advanced:hover,
+.intro-btn-advanced:active,
+.intro-btn-advanced.tapped {
+  border-color: rgba(56, 206, 188, 0.4);
+  box-shadow: 0 0 30px rgba(56, 206, 188, 0.15);
+}
+
+/* ─── Particle Burst (on tap) ─── */
+
+.intro-burst-particle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 20;
+  animation: introBurst 1.2s ease-out forwards;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes introBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    filter: hue-rotate(0deg);
+  }
+  60% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.15);
+    opacity: 0;
+    filter: hue-rotate(360deg);
+  }
+}

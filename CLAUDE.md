@@ -2,16 +2,21 @@
 
 ## Project Overview
 
-Educational game hub for South Dakota Soil Health Coalition (SDSHC) youth events. Runs on a 23.8" Dell OptiPlex 7410 touchscreen (1920x1080). Fully offline capable, deployed via GitHub Pages. Content sourced from 4 Youth Activities PDFs covering Pre-K through Middle School.
+Educational game hub for South Dakota Soil Health Coalition (SDSHC) events. Runs on a 23.8" Dell OptiPlex 7410 touchscreen (1920x1080). Fully offline capable, deployed via GitHub Pages.
+
+**Dual-mode architecture:**
+- **Kid Mode** — pixel-art game hub for Pre-K through Middle School. Content sourced from 4 Youth Activities PDFs.
+- **Advanced Mode** — sleek, modern game hub for high school and college students. Content sourced from USDA "Full Set Soil Health Lesson Plans" PDF + upgraded kid content + credible web sources (USDA, NRCS, peer-reviewed journals).
 
 ## Constraints
 
 - **No sound** — silent operation only
 - **No external API calls** — everything runs offline
 - **All assets local** — fonts bundled as woff2, no CDN
-- **Touch-first** — no hover-only interactions, all targets minimum 44px
+- **Touch-first** — no hover-only interactions, all targets minimum 44px. Glow/hover effects must also trigger on tap.
 - **Target display** — 1920x1080, no scrolling, no overflow
-- **Auto-reset** — 120s idle returns to splash screen, 10s warning at 110s
+- **Kid Mode auto-reset** — 120s idle returns to intro screen, 10s warning at 110s
+- **Advanced Mode auto-reset** — 300s (5 min) idle returns to intro screen
 - **Progress resets on idle timeout** — each kiosk user starts fresh
 
 ## Tech Stack
@@ -20,39 +25,84 @@ Educational game hub for South Dakota Soil Health Coalition (SDSHC) youth events
 - **Vanilla JavaScript** — ES modules, no framework
 - **CSS** — custom properties for theming, no preprocessor
 
+## Screen Flow
+
+```
+Intro Screen (mode select)
+  ├── Kid Mode → Grade Select → Game Select → Game → back to Game Select
+  └── Advanced Mode → Game Select → Game → back to Game Select
+```
+
+## Route Patterns
+
+Hash-based SPA router with mode-aware prefixes:
+```
+#intro                          → Intro / mode select (default)
+#kid/splash                     → Kid splash screen
+#kid/grade-select               → Kid tier selection
+#kid/game-select/{tier}         → Kid game grid per tier
+#kid/game/{gameId}/{level}      → Kid in-game
+#advanced/game-select           → Advanced game grid
+#advanced/game/{gameId}/{level} → Advanced in-game
+```
+
+`navigate(path)` auto-prepends current mode. Use `navigateRaw(hash)` for cross-mode navigation (intro, idle reset).
+
 ## File Structure
 
 ```
 public/
   assets/
-    sprites/        # pixel-art PNGs (Sprout Lands pack)
-    svg/            # SVG diagrams and game assets
-    gifs/           # animated GIFs (farm scenes, animals, plants)
-    backgrounds/    # pixel-background*.jpg
+    sprites/        # pixel-art PNGs (Sprout Lands pack) — Kid Mode only
+    svg/            # SVG diagrams and game assets — Kid Mode only
+    gifs/           # animated GIFs (farm scenes, animals, plants) — Kid Mode only
+    backgrounds/    # pixel-background*.jpg — Kid Mode only
     fonts/          # silkscreen.woff2, 04b03.woff2, jetbrains-mono.woff2
 src/
-  main.js           # entry point
-  router.js         # hash-based SPA router
-  idle-timer.js     # idle detection and auto-reset
+  main.js           # entry point, mode-aware route handling
+  router.js         # hash-based SPA router with mode prefixes
+  idle-timer.js     # idle detection with configurable timeout per mode
   styles/
     base.css        # reset, @font-face, CSS custom properties
-    hub.css         # splash, grade select, game select screens
-    games.css       # shared in-game UI components
-    transitions.css # screen transition animations
+    hub.css         # kid mode: splash, grade select, game select
+    games.css       # kid mode: shared in-game UI components
+    transitions.css # screen transition animations (shared)
+    intro.css       # intro screen: gradient spheres, particles, glow effects
+    theme.css       # advanced mode: dark/light CSS custom properties
+    advanced.css    # advanced mode: all advanced UI styles
   screens/
-    splash.js       # title screen with "Tap to Start"
-    grade-select.js # character + tier selection
-    game-select.js  # game card grid per tier
+    intro.js        # mode select screen (Kid Mode / Advanced Mode)
+    splash.js       # kid mode: title screen
+    grade-select.js # kid mode: character + tier selection
+    game-select.js  # kid mode: game card grid per tier
+    advanced-game-select.js  # advanced mode: game card grid
   games/
-    _base.js        # GameBase class (mount/unmount/progress)
-    [game].js       # one module per game (11 total)
+    soil-cake.js    # Kid game modules (standalone, export createXxxGame())
+    coloring.js
+    planting-sim.js
+    spin-wheel.js
+    trivia-blitz.js
+    advanced/
+      spin-wheel.js       # Advanced: converted from kid, dark theme, multiplayer
+      trivia-blitz.js     # Advanced: converted from kid, dark theme, multiplayer
+      jeopardy.js         # Advanced: new, category grid, multiplayer
+      word-game.js        # Advanced: new, Wheel of Fortune style, multiplayer
   data/
-    game-registry.js # metadata for all games
-    content/         # per-game content (questions, levels, configs)
+    game-registry.js      # kid mode game metadata
+    advanced-game-registry.js  # advanced mode game metadata (flat, no tiers)
+    content/
+      soil-cake.js        # kid content files
+      coloring.js
+      planting-sim.js
+      spin-wheel.js
+      trivia-blitz.js
+      advanced/
+        spin-wheel.js     # advanced content: PDF + upgraded kid categories
+        trivia-blitz.js
+        jeopardy.js
+        word-game.js
   utils/
-    dom.js          # DOM helper utilities
-    animation.js    # shared animation helpers
-    touch.js        # touch/drag interaction helpers
+    svg-recolor.js  # SVG preprocessing for coloring game
 ```
 
 ## Fonts
@@ -61,15 +111,23 @@ Three bundled pixel fonts. Never use Google Fonts CDN.
 
 | Font | CSS Variable | Usage |
 |------|-------------|-------|
-| Silkscreen | `--font-title` | Main titles, hub name |
-| 04b03 | `--font-header` | Section headers, game titles |
-| JetBrains Mono | `--font-body` | Body text, questions, descriptions |
+| Silkscreen | `--font-title` | Main titles, hub name (both modes) |
+| 04b03 | `--font-header` | Section headers, game titles (Kid Mode only) |
+| JetBrains Mono | `--font-body` | Body text, questions (both modes) |
 
-Font stack example: `font-family: var(--font-title), sans-serif;`
+## Intro Screen
 
-## Colors
+The entry point for the hub. Choosing a mode navigates into that mode's flow.
 
-Tier accent colors (define pastel variants for backgrounds/hover states):
+- **Background:** Animated gradient spheres (teal/green palette), grid overlay, noise texture, ambient floating particles, touch-interactive particles
+- **Title:** "SDSHC Games Hub" in Silkscreen with teal glow effect
+- **Kid Mode button:** Rainbow animated gradient text → navigates to `#kid/grade-select`
+- **Advanced Mode button:** Teal→yellow-green gradient text → navigates to `#advanced/game-select`
+- Buttons have idle pulse animation and particle burst on tap
+
+## Kid Mode
+
+### Colors
 
 | Tier | Color | Hex |
 |------|-------|-----|
@@ -79,52 +137,15 @@ Tier accent colors (define pastel variants for backgrounds/hover states):
 
 Base palette: earthy greens, warm browns, sky blues, cream/parchment backgrounds. Inspired by Cupnooble's Sprout Lands asset pack.
 
-## Visual Design Rules
+### Visual Design Rules (Kid Mode)
 
-- **Nature-centered** — fill dead space with foliage sprites (bushes, trees, flowers, mushrooms) and creature GIFs
-- **Pixel art aesthetic** — all UI elements should feel consistent with the Sprout Lands style
-- **Smooth transitions** — screen changes use CSS transitions (slide/fade, ~300ms). No jarring cuts.
-- **No wooden signboard assets for buttons** — use CSS-styled card buttons with tier accent colors and pixel-art borders
-- **Backgrounds per screen:**
-  - Splash: `pixel-farm-scene.gif`
-  - Grade select: `pixel-farm-scene3.gif` + `Hills_topsoil_H.png` repeated bottom
-  - Game select: `grass_main.png` tiled
-  - In-game: per-game as specified in REDO.md
+- **Nature-centered** — fill dead space with foliage sprites and creature GIFs
+- **Pixel art aesthetic** — all UI elements consistent with Sprout Lands style
+- **Smooth transitions** — CSS transitions (slide/fade, ~300ms)
+- **No wooden signboard assets for buttons** — CSS-styled card buttons with tier accent colors
+- Uses image assets: sprites, SVGs, GIFs, backgrounds
 
-## Game Module Pattern
-
-Every game extends `GameBase` from `src/games/_base.js`:
-
-```js
-class GameBase {
-  constructor(container, gameData) {}
-  mount()    // create DOM, bind events
-  unmount()  // cleanup DOM, unbind events
-  onLevelComplete(levelIndex)
-  onGameComplete()
-}
-```
-
-Games register via `src/data/game-registry.js` with metadata:
-```js
-{ id, title, tier, levelCount, icon, description, module: () => import('./games/X.js') }
-```
-
-Games are lazy-loaded via dynamic import. Each game has a corresponding content file in `src/data/content/`.
-
-## Content Data Format
-
-Each content file in `src/data/content/` exports structured data for its game. Keep content separate from game logic. All educational content must come from the Youth Activities PDFs and Clues & Answers document — do not invent educational facts.
-
-## Screen Flow
-
-```
-Splash → Grade Select → Game Select → Game (with levels) → back to Game Select
-```
-
-Progress (completed games/levels) stored in localStorage during active use. All progress clears on idle timeout.
-
-## Grade Tiers
+### Grade Tiers
 
 | Tier | Name | Grades | Games |
 |------|------|--------|-------|
@@ -132,7 +153,7 @@ Progress (completed games/levels) stored in localStorage during active use. All 
 | 2 | Meadow Makers | 3rd - 5th | Games 5-8 (matching, trivia, cause-and-effect) |
 | 3 | Harvest Guardians | Middle & High | Games 9-11 (systems, strategy, challenging trivia) |
 
-## Games (11 total)
+### Kid Games (11 total)
 
 1. Build a Soil Cake — fill soil layers with colors
 2. Dot-to-Dot — starfield aesthetic, glowing numbered dots
@@ -146,13 +167,77 @@ Progress (completed games/levels) stored in localStorage during active use. All 
 10. Soil Health Trivia Blitz — timed multiple choice
 11. Soil Food Web Builder — drag organisms + draw feeding arrows
 
+## Advanced Mode
+
+### Design Rules (Advanced Mode)
+
+- **NO image assets** — everything is CSS-only, Unicode symbols, inline SVG at most
+- **Clean, sleek, modern UI** — no pixel art, no sprites, no decorative images
+- **Dark/light mode toggle** — dark default, light option. Persisted in `localStorage`
+- **Silkscreen** for titles, **JetBrains Mono** for body text
+- **All games support multiplayer** — up to 4 players, turn-based
+- **End-of-game impact overlays** — brief conservation/soil health takeaway messages where applicable
+
+### Colors (Advanced Mode)
+
+CSS custom properties scoped under `[data-mode="advanced"]`:
+```
+--adv-bg: #0a0a14           (dark background)
+--adv-surface: #1a1a2e      (card/panel surfaces)
+--adv-text: #e0e0e0          (primary text)
+--adv-accent: #38cebc        (teal — primary accent)
+--adv-accent-secondary: #b8e84a  (yellow-green — secondary accent)
+--adv-border: #2a2a3e        (subtle borders)
+```
+
+Light theme overrides under `[data-mode="advanced"][data-theme="light"]`.
+
+### Advanced Games (4 total)
+
+1. **Spin the Wheel** — converted from kid version, harder questions, dark theme, multiplayer
+2. **Trivia Blitz** — converted from kid version, college-level questions, dark theme, multiplayer
+3. **Soil Jeopardy** — category grid (5-6 categories x 5 point values), daily doubles, multiplayer
+4. **Word Game** — Wheel of Fortune style, guess soil science terms letter by letter, depleting progress bar for wrong guesses, multiplayer
+
+### Advanced Game Registry
+
+Flat array (no tiers). Each entry:
+```js
+{ id, title, description, icon (Unicode symbol, swappable later), module: () => import(...) }
+```
+
+### Content Strategy (Advanced Mode)
+
+**Sources (priority order):**
+1. USDA "Full Set Soil Health Lesson Plans" PDF (18 lessons, 113 pages)
+2. Existing kid content upgraded with harder vocabulary and trickier answer choices
+3. Credible web sources: USDA website, NRCS, peer-reviewed research journals
+
+**Topics from USDA PDF:** Soil Components, Texture & Structure, Organic Matter, Textural Triangle, Soil Moisture, Erosion, Bulk Density, Soil Respiration, EC, pH, Nitrogen Cycle, Phosphorus, Infiltration
+
+**Topics upgraded from kid content:** Soil Art & Culture (history/culture focus), Indigenous Farming (practices, history, regions), Agronomy Careers (types, goals), Conservation Practices (practice types, uses, relationships to soil/farming/climate/wildlife), Climate Change, Carbon Cycle
+
+**Rules:**
+- NO calculation-style questions — all conceptual
+- Do not invent educational facts — all content sourced from PDF, kid content, or credible web sources
+- End-of-game impact overlays: 1-2 sentence conservation impact messages, auto-dismiss after ~8s, only where topically natural
+
+## Game Module Pattern
+
+Each game is a standalone module exporting a `createXxxGame()` function that returns a DOM element. No GameBase class — games manage their own state, DOM, and events.
+
+Games register via their respective registry (`game-registry.js` for kid, `advanced-game-registry.js` for advanced).
+
+Content is separated into data files in `src/data/content/` (kid) and `src/data/content/advanced/` (advanced).
+
 ## Asset References
 
-- Sprites: `use-these-assets/sprites/` (83 PNGs)
-- SVGs: `use-these-assets/svg files/` (104 SVGs)
-- GIFs: `use-these-assets/*.gif` (27 animations)
-- Backgrounds: `use-these-assets/pixel-background*.jpg` (9 images)
-- Source content: `Youth Activities PDFs/Clues & Answers.md`
+- Sprites: `use-these-assets/sprites/` (83 PNGs) — Kid Mode only
+- SVGs: `use-these-assets/svg files/` (104 SVGs) — Kid Mode only
+- GIFs: `use-these-assets/*.gif` (27 animations) — Kid Mode only
+- Backgrounds: `use-these-assets/pixel-background*.jpg` (9 images) — Kid Mode only
+- Kid content: `Youth Activities PDFs/Clues & Answers.md`
+- Advanced content: `Full-Set-Soil-Health-Lesson-Plans.pdf`
 
 ## Development
 
@@ -169,8 +254,9 @@ npm run preview  # preview production build
 
 ## Key References
 
-- `REDO.md` — detailed game descriptions, asset mappings, UX flow
-- `Youth Activities PDFs/Clues & Answers.md` — all educational content mapped to assets
+- `REDO.md` — detailed kid game descriptions, asset mappings, UX flow
+- `Youth Activities PDFs/Clues & Answers.md` — all kid educational content mapped to assets
+- `Full-Set-Soil-Health-Lesson-Plans.pdf` — USDA soil science curriculum for advanced content
 - Design inspiration: Cupnooble's Sprout Lands (https://cupnooble.itch.io/sprout-lands-asset-pack)
 
 ## Other notes

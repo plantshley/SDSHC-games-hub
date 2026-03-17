@@ -1,0 +1,46 @@
+/* ─── Advanced Mode Theme Variables ─── */
+
+/* Dark theme (default) */
+[data-mode="advanced"] {
+  --adv-bg: #0a0a14;
+  --adv-surface: #1a1a2e;
+  --adv-surface-hover: #222240;
+  --adv-text: #e0e0e0;
+  --adv-text-muted: rgba(255, 255, 255, 0.5);
+  --adv-accent: #38cebc;
+  --adv-accent-dim: rgba(56, 206, 188, 0.15);
+  --adv-accent-secondary: #b8e84a;
+  --adv-accent-secondary-dim: rgba(184, 232, 74, 0.15);
+  --adv-border: #2a2a3e;
+  --adv-border-hover: rgba(56, 206, 188, 0.4);
+  --adv-glow: rgba(56, 206, 188, 0.15);
+  --adv-danger: #ff5252;
+  --adv-success: #4caf50;
+  --adv-card-radius: 16px;
+  --adv-glass: rgba(10, 10, 20, 0.6);
+  --adv-glass-heavy: rgba(10, 10, 20, 0.85);
+  --adv-sphere-opacity: 1;
+  --adv-particle-color: white;
+}
+
+/* Light theme */
+[data-mode="advanced"][data-theme="light"] {
+  --adv-bg: #e8edf3;
+  --adv-surface: rgba(255, 255, 255, 0.85);
+  --adv-surface-hover: #dfe4ea;
+  --adv-text: #1a1a2e;
+  --adv-text-muted: rgba(0, 0, 0, 0.55);
+  --adv-accent: #1a9e8f;
+  --adv-accent-dim: rgba(26, 158, 143, 0.15);
+  --adv-accent-secondary: #5a9a18;
+  --adv-accent-secondary-dim: rgba(90, 154, 24, 0.15);
+  --adv-border: #c0c8d2;
+  --adv-border-hover: rgba(26, 158, 143, 0.5);
+  --adv-glow: rgba(26, 158, 143, 0.2);
+  --adv-danger: #d32f2f;
+  --adv-success: #388e3c;
+  --adv-glass: rgba(255, 255, 255, 0.5);
+  --adv-glass-heavy: rgba(255, 255, 255, 0.75);
+  --adv-sphere-opacity: 0.7;
+  --adv-particle-color: rgba(0, 80, 70, 0.6);
+}
