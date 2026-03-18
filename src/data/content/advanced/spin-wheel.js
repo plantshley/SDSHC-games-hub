@@ -77,7 +77,7 @@ export const CATEGORIES = [
       },
       {
         text: 'What role do predatory nematodes play in the soil food web?',
-        choices: ['They decompose plant litter directly', 'They regulate bacterial and fungal populations by feeding on them', 'They fix atmospheric nitrogen', 'They transport water between soil layers'],
+        choices: ['They decompose plant litter directly', 'They regulate populations of other nematodes and small invertebrates by preying on them', 'They fix atmospheric nitrogen', 'They transport water between soil layers'],
         correct: 1,
       },
       {
@@ -137,8 +137,8 @@ export const CATEGORIES = [
         correct: 1,
       },
       {
-        text: 'Wetland soils (Histosols) are important carbon sinks. Approximately what percentage of the world\'s soil carbon do wetlands store?',
-        choices: ['About 5%', 'About 12-20%', 'About 50%', 'About 75%'],
+        text: 'Peatlands (Histosols) are important carbon sinks. Approximately what percentage of the world\'s soil carbon do peatlands store, despite covering only about 3% of Earth\'s land?',
+        choices: ['About 5%', 'About 20-30%', 'About 60%', 'About 75%'],
         correct: 1,
       },
       {
@@ -183,8 +183,8 @@ export const CATEGORIES = [
         correct: 1,
       },
       {
-        text: 'Which country has a national soil map that is used as a teaching tool in schools, linking regional soils to local food culture and traditions?',
-        choices: ['United States', 'Japan', 'Brazil', 'India'],
+        text: 'Japan\'s 2005 Shokuiku (food education) law is unique for requiring schools to teach the connection between food production, soil, and cultural traditions. What does Shokuiku emphasize alongside nutrition?',
+        choices: ['Maximizing agricultural exports', 'Gratitude toward nature, local food culture, and the link between production and sustainability', 'Eliminating traditional farming in favor of modern methods', 'Reducing school lunch programs to cut costs'],
         correct: 1,
       },
       {

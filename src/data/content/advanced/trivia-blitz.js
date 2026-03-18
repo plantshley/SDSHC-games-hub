@@ -223,7 +223,7 @@ export const ROUNDS = [
       },
       {
         text: 'Silt particles are intermediate in size between sand and clay. What property makes silt-dominated soils highly susceptible to surface crusting?',
-        choices: ['Silt particles are too large to form aggregates and collapse under raindrop impact', 'Silt has very high organic matter content that seals the surface', 'Silt carries a strong positive charge that repels water', 'Silt particles are magnetically attracted to each other and form an impermeable layer'],
+        choices: ['Silt forms weak aggregates that easily break under raindrop impact, and released particles clog surface pores', 'Silt has very high organic matter content that seals the surface', 'Silt carries a strong positive charge that repels water', 'Silt particles are magnetically attracted to each other and form an impermeable layer'],
         correct: 0,
       },
       {
