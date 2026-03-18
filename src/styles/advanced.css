@@ -7,6 +7,33 @@
   image-rendering: auto;
 }
 
+/* ─── Burst Particles (game select cards, spin button) ─── */
+
+.adv-burst-particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 50;
+  animation: advBurst 0.9s ease-out forwards;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes advBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.1);
+    opacity: 0;
+  }
+}
+
 /* ─── Animated Gradient Background (shared across all advanced screens) ─── */
 
 .adv-gradient-bg {
@@ -108,7 +135,7 @@
 }
 
 /* Ensure screen content sits above the gradient bg */
-[data-mode="advanced"] .screen > *:not(.adv-gradient-bg) {
+[data-mode="advanced"] .screen > *:not(.adv-gradient-bg):not(.adv-burst-particle) {
   position: relative;
   z-index: 1;
 }
@@ -1245,9 +1272,55 @@
 /* ─── Review Overlay ─── */
 
 .adv-review-content {
-  max-width: 600px;
-  max-height: 70vh;
+  max-width: 750px;
+  width: 90%;
+  max-height: 80vh;
   overflow-y: auto;
+}
+
+.adv-review-category-group {
+  margin-bottom: 8px;
+}
+
+.adv-review-cat-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--adv-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--adv-accent);
+  font-family: var(--font-title), sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.adv-review-cat-toggle:hover,
+.adv-review-cat-toggle:active {
+  background: rgba(56, 206, 188, 0.08);
+}
+
+.adv-review-cat-toggle .adv-review-arrow {
+  transition: transform 0.2s;
+}
+
+.adv-review-cat-toggle.adv-review-open .adv-review-arrow {
+  transform: rotate(90deg);
+}
+
+.adv-review-cat-items {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0 0 16px;
+}
+
+.adv-review-cat-items.adv-review-items-open {
+  display: flex;
 }
 
 .adv-review-list {
@@ -1578,6 +1651,7 @@
   z-index: 5;
   background: var(--adv-glass);
   padding-top: 8px;
+  margin-right: 12px;
 }
 
 /* ─── Board ─── */
@@ -1828,6 +1902,7 @@
   flex: 1;
   display: flex;
   overflow: hidden;
+  position: relative;
 }
 
 .adv-wg-main {

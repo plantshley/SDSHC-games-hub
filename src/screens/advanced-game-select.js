@@ -9,6 +9,25 @@ import { getAllAdvancedGames } from '../data/advanced-game-registry.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { getTheme, setTheme, createThemeToggle } from '../utils/theme-toggle.js'
 
+const BURST_COLORS = ['#38cebc', '#b8e84a', '#ff71ce', '#01cdfe', '#b967ff']
+
+function spawnBurstParticles(container, x, y) {
+  const count = 14
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div')
+    p.className = 'adv-burst-particle'
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.6
+    const dist = 50 + Math.random() * 80
+    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px')
+    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px')
+    p.style.backgroundColor = BURST_COLORS[i % BURST_COLORS.length]
+    p.style.left = x + 'px'
+    p.style.top = y + 'px'
+    container.appendChild(p)
+    p.addEventListener('animationend', () => p.remove())
+  }
+}
+
 export function createAdvancedGameSelectScreen() {
   const screen = document.createElement('div')
   screen.className = 'screen adv-game-select'
@@ -55,12 +74,17 @@ export function createAdvancedGameSelectScreen() {
   // Game cards
   const cards = screen.querySelectorAll('.adv-game-card')
   cards.forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    card.style.touchAction = 'manipulation'
+    card.addEventListener('pointerdown', (e) => {
+      e.preventDefault()
       card.classList.add('tapped')
+      const rect = card.getBoundingClientRect()
+      const screenRect = screen.getBoundingClientRect()
+      spawnBurstParticles(screen, rect.left - screenRect.left + rect.width / 2, rect.top - screenRect.top + rect.height / 2)
       const gameId = card.dataset.game
       setTimeout(() => {
         navigate(`game/${gameId}/0`)
-      }, 150)
+      }, 250)
     })
   })
 

@@ -26,6 +26,24 @@ function shuffleArray(arr) {
   return arr
 }
 
+const BURST_COLORS = ['#38cebc', '#b8e84a', '#ff71ce', '#01cdfe', '#b967ff']
+
+function spawnBurstParticles(container, x, y, count = 12) {
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div')
+    p.className = 'adv-burst-particle'
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.6
+    const dist = 40 + Math.random() * 70
+    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px')
+    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px')
+    p.style.backgroundColor = BURST_COLORS[i % BURST_COLORS.length]
+    p.style.left = x + 'px'
+    p.style.top = y + 'px'
+    container.appendChild(p)
+    p.addEventListener('animationend', () => p.remove())
+  }
+}
+
 function transitionTo(currentEl, newEl) {
   const parent = currentEl.parentNode
   currentEl.classList.remove('active')
@@ -320,11 +338,11 @@ function createGameplayScreen(players) {
     state.phase = 'spinning'
     spinBtn.style.display = 'none'
     spunValueEl.textContent = ''
-    state.angVel = 0.3 + Math.random() * 0.15
+    state.angVel = 0.35 + Math.random() * 0.15
 
     function frame() {
       state.ang += state.angVel
-      state.angVel *= 0.982
+      state.angVel *= 0.975
       drawWheel()
 
       if (state.angVel < 0.002) {
@@ -494,6 +512,10 @@ function createGameplayScreen(players) {
     state.categoryProgress[state.currentCatId].answered++
     updateCategoryDisplay()
 
+    // Check if this category was just completed
+    const catJustCompleted = state.categoryProgress[state.currentCatId].answered >= state.categoryProgress[state.currentCatId].total
+    const completedCatId = state.currentCatId
+
     // Special popup for steal/wild
     let specialMsg = null
     if (isCorrect && state.spunValue === 'steal') {
@@ -514,7 +536,7 @@ function createGameplayScreen(players) {
 
     if (specialMsg) showSpecialPopup(specialMsg, state.spunValue)
 
-    const delay = isCorrect ? (specialMsg ? 2200 : 800) : 2000
+    const delay = isCorrect ? (specialMsg ? 2800 : 2000) : 2800
     state.feedbackTimeout = setTimeout(() => {
       if (isMultiplayer && state.players[state.currentPlayer].score >= WIN_THRESHOLD) {
         showCompletion(false, true)
@@ -534,11 +556,16 @@ function createGameplayScreen(players) {
         state.phase = 'choosing-for-opponent'
         showWheelView()
         spunValueEl.textContent = "Pick next player's category!"
-        spunValueEl.style.color = '#b8e84a'
+        spunValueEl.style.color = '#e84ae5'
         enableCategories()
         return
       }
-      advanceTurn()
+      // Show impact if category just completed
+      if (catJustCompleted && IMPACT_MESSAGES[completedCatId]) {
+        showCategoryImpact(completedCatId, () => advanceTurn())
+      } else {
+        advanceTurn()
+      }
     }, delay)
   }
 
@@ -561,7 +588,7 @@ function createGameplayScreen(players) {
   function showSpecialPopup(msg, type) {
     const popup = document.createElement('div')
     popup.className = 'adv-sw-special-popup'
-    const color = type === 'steal' ? '#ff6193' : '#b8e84a'
+    const color = type === 'steal' ? '#e84ae5' : '#e84ae5'
     popup.innerHTML = `
       <div class="adv-sw-special-content" style="border-color: ${color}; color: ${color}">
         ${msg}
@@ -584,14 +611,14 @@ function createGameplayScreen(players) {
     const popup = document.createElement('div')
     popup.className = 'adv-sw-special-popup'
     popup.innerHTML = `
-      <div class="adv-sw-special-content" style="border-color: #ff6193; color: #ff6193; flex-direction: column; gap: 16px;">
-        <span style="font-size: 1.1rem;">Steal 100 pts from...</span>
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+      <div class="adv-sw-special-content" style="border-color: #e84ae5; color: #e84ae5; flex-direction: column; gap: 24px;">
+        <span style="font-size: 1.2rem; font-weight: bold;">Steal 100 pts from...</span>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 8px;">
           ${opponents.map(op => `
             <button class="adv-sw-steal-target" data-idx="${op.idx}" style="
-              padding: 12px 24px; border: 2px solid ${op.color}; border-radius: 10px;
-              background: transparent; color: ${op.color}; font-family: var(--font-body), monospace;
-              font-size: 1rem; cursor: pointer; min-width: 120px;
+              padding: 14px 28px; border: 2px solid ${op.color}; border-radius: 10px;
+              background: rgba(0,0,0,0.4); color: ${op.color}; font-family: var(--font-body), monospace;
+              font-size: 1rem; cursor: pointer; min-width: 130px; text-shadow: 0 0 8px ${op.color};
             ">${op.name} (${op.score} pts)</button>
           `).join('')}
         </div>
@@ -683,6 +710,35 @@ function createGameplayScreen(players) {
   }
 
   // ── Impact Overlay ──
+
+  function showCategoryImpact(catId, onDone) {
+    const msg = IMPACT_MESSAGES[catId]
+    if (!msg) { onDone(); return }
+    const catTitle = CATEGORIES.find(c => c.id === catId)?.title || ''
+
+    const overlay = document.createElement('div')
+    overlay.className = 'adv-sw-impact-overlay'
+    overlay.innerHTML = `
+      <div class="adv-sw-impact-content">
+        <span class="adv-sw-impact-label">Did You Know?</span>
+        <span class="adv-sw-impact-cat">${catTitle}</span>
+        <p class="adv-sw-impact-msg">${msg}</p>
+        <span class="adv-sw-impact-dismiss">Tap to continue</span>
+      </div>
+    `
+    el.appendChild(overlay)
+    requestAnimationFrame(() => overlay.classList.add('adv-sw-impact-show'))
+
+    let dismissed = false
+    const dismiss = () => {
+      if (dismissed) return
+      dismissed = true
+      overlay.classList.remove('adv-sw-impact-show')
+      setTimeout(() => { overlay.remove(); onDone() }, 300)
+    }
+    overlay.addEventListener('pointerdown', dismiss)
+    setTimeout(dismiss, 8000)
+  }
 
   function showImpactOverlay(onDone) {
     // Gather categories that were played and have impact messages
@@ -799,17 +855,33 @@ function createGameplayScreen(players) {
   }
 
   function showReviewOverlay(parentOverlay) {
+    // Group missed questions by category
+    const grouped = {}
+    state.missedQuestions.forEach(q => {
+      if (!grouped[q.category]) grouped[q.category] = []
+      grouped[q.category].push(q)
+    })
+
     const reviewEl = document.createElement('div')
     reviewEl.className = 'adv-sw-completion-overlay'
     reviewEl.innerHTML = `
       <div class="adv-sw-completion-content adv-review-content">
         <h2 class="adv-sw-completion-heading">Missed Questions</h2>
         <div class="adv-review-list">
-          ${state.missedQuestions.map(q => `
-            <div class="adv-review-item">
-              <span class="adv-review-cat">${q.category}</span>
-              <span class="adv-review-question">${q.question}</span>
-              <span class="adv-review-answer">\u2714 ${q.correctAnswer}</span>
+          ${Object.entries(grouped).map(([cat, qs]) => `
+            <div class="adv-review-category-group">
+              <button class="adv-review-cat-toggle">
+                <span class="adv-review-arrow">\u25B6</span>
+                ${cat} (${qs.length})
+              </button>
+              <div class="adv-review-cat-items">
+                ${qs.map(q => `
+                  <div class="adv-review-item">
+                    <span class="adv-review-question">${q.question}</span>
+                    <span class="adv-review-answer">\u2714 ${q.correctAnswer}</span>
+                  </div>
+                `).join('')}
+              </div>
             </div>
           `).join('')}
         </div>
@@ -822,6 +894,14 @@ function createGameplayScreen(players) {
     parentOverlay.style.display = 'none'
     el.appendChild(reviewEl)
     requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
+
+    // Toggle category dropdowns
+    reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
+      btn.addEventListener('pointerdown', () => {
+        btn.classList.toggle('adv-review-open')
+        btn.nextElementSibling.classList.toggle('adv-review-items-open')
+      })
+    })
 
     reviewEl.querySelector('#adv-sw-review-back').addEventListener('pointerdown', () => {
       reviewEl.remove()
@@ -837,8 +917,12 @@ function createGameplayScreen(players) {
     navigate('game-select')
   })
 
-  spinBtn.addEventListener('pointerdown', () => {
+  spinBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault()
     if (state.phase !== 'ready') return
+    const rect = el.querySelector('.adv-sw-wheel-wrap').getBoundingClientRect()
+    const elRect = el.getBoundingClientRect()
+    spawnBurstParticles(el, rect.left - elRect.left + rect.width / 2, rect.top - elRect.top + rect.height / 2)
     spinWheel()
   })
 

@@ -233,7 +233,7 @@ function createGameplayScreen(players) {
       state.currentQIdx = qi
       state.currentQuestion = q
 
-      if (q.dailyDouble) {
+      if (q.dailyDouble && state.players[state.currentPlayer].score > 0) {
         showDailyDouble()
       } else {
         showQuestion(q.points)
@@ -320,6 +320,10 @@ function createGameplayScreen(players) {
     updateScores()
     markCellAnswered(state.currentCatIdx, state.currentQIdx)
 
+    // Check if this category is now fully answered
+    const catComplete = board[state.currentCatIdx].questions.every(q => q.answered)
+    const catId = board[state.currentCatIdx].id
+
     setTimeout(() => {
       overlay.style.display = 'none'
       state.ddWager = 0
@@ -329,15 +333,23 @@ function createGameplayScreen(players) {
         return
       }
 
-      // Advance turn
-      if (isMultiplayer) {
-        state.currentPlayer = (state.currentPlayer + 1) % state.players.length
-        updateTurnDisplay()
-        showTurnPopup(() => { state.phase = 'board' })
-      } else {
-        state.phase = 'board'
+      const afterImpact = () => {
+        if (isMultiplayer) {
+          state.currentPlayer = (state.currentPlayer + 1) % state.players.length
+          updateTurnDisplay()
+          showTurnPopup(() => { state.phase = 'board' })
+        } else {
+          state.phase = 'board'
+        }
       }
-    }, isCorrect ? 800 : 1200)
+
+      // Show impact message when a category is completed (if available)
+      if (catComplete && IMPACT_MESSAGES[catId]) {
+        showCategoryImpact(catId, afterImpact)
+      } else {
+        afterImpact()
+      }
+    }, isCorrect ? 2000 : 2800)
   }
 
   function markCellAnswered(ci, qi) {
@@ -389,6 +401,35 @@ function createGameplayScreen(players) {
   }
 
   // ── Impact Overlay ──
+
+  function showCategoryImpact(catId, onDone) {
+    const msg = IMPACT_MESSAGES[catId]
+    if (!msg) { onDone(); return }
+    const cat = CATEGORIES.find(c => c.id === catId)
+
+    const impactEl = document.createElement('div')
+    impactEl.className = 'adv-sw-impact-overlay'
+    impactEl.innerHTML = `
+      <div class="adv-sw-impact-content">
+        <span class="adv-sw-impact-label">Did You Know?</span>
+        <span class="adv-sw-impact-cat">${cat?.title || ''}</span>
+        <p class="adv-sw-impact-msg">${msg}</p>
+        <span class="adv-sw-impact-dismiss">Tap to continue</span>
+      </div>
+    `
+    el.appendChild(impactEl)
+    requestAnimationFrame(() => impactEl.classList.add('adv-sw-impact-show'))
+
+    let dismissed = false
+    const dismiss = () => {
+      if (dismissed) return
+      dismissed = true
+      impactEl.classList.remove('adv-sw-impact-show')
+      setTimeout(() => { impactEl.remove(); onDone() }, 300)
+    }
+    impactEl.addEventListener('pointerdown', dismiss)
+    setTimeout(dismiss, 8000)
+  }
 
   function showImpactOverlay(onDone) {
     const available = Object.keys(IMPACT_MESSAGES)
@@ -492,17 +533,34 @@ function createGameplayScreen(players) {
   }
 
   function showReviewOverlay(parentOverlay) {
+    // Group missed questions by category
+    const grouped = {}
+    state.missedQuestions.forEach(q => {
+      if (!grouped[q.category]) grouped[q.category] = []
+      grouped[q.category].push(q)
+    })
+
     const reviewEl = document.createElement('div')
     reviewEl.className = 'adv-sw-completion-overlay'
     reviewEl.innerHTML = `
       <div class="adv-sw-completion-content adv-review-content">
         <h2 class="adv-sw-completion-heading">Missed Questions</h2>
         <div class="adv-review-list">
-          ${state.missedQuestions.map(q => `
-            <div class="adv-review-item">
-              <span class="adv-review-cat">${q.category} \u2014 ${q.points} pts</span>
-              <span class="adv-review-question">${q.question}</span>
-              <span class="adv-review-answer">\u2714 ${q.correctAnswer}</span>
+          ${Object.entries(grouped).map(([cat, qs]) => `
+            <div class="adv-review-category-group">
+              <button class="adv-review-cat-toggle">
+                <span class="adv-review-arrow">\u25B6</span>
+                ${cat} (${qs.length})
+              </button>
+              <div class="adv-review-cat-items">
+                ${qs.map(q => `
+                  <div class="adv-review-item">
+                    <span class="adv-review-cat">${q.points} pts</span>
+                    <span class="adv-review-question">${q.question}</span>
+                    <span class="adv-review-answer">\u2714 ${q.correctAnswer}</span>
+                  </div>
+                `).join('')}
+              </div>
             </div>
           `).join('')}
         </div>
@@ -515,6 +573,14 @@ function createGameplayScreen(players) {
     parentOverlay.style.display = 'none'
     el.appendChild(reviewEl)
     requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
+
+    // Toggle category dropdowns
+    reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
+      btn.addEventListener('pointerdown', () => {
+        btn.classList.toggle('adv-review-open')
+        btn.nextElementSibling.classList.toggle('adv-review-items-open')
+      })
+    })
 
     reviewEl.querySelector('#adv-jp-review-back').addEventListener('pointerdown', () => {
       reviewEl.remove()

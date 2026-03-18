@@ -432,6 +432,7 @@ function createGameplayScreen(players, mode) {
         state.missedQuestions.push({
           question: q.text,
           correctAnswer: q.choices[q.correct],
+          round: ROUNDS[state.currentRound].title,
         })
       }
     }
@@ -444,7 +445,7 @@ function createGameplayScreen(players, mode) {
       if (isCorrect) state.roundScores[state.currentRound].correct++
     }
 
-    const delay = isCorrect ? 600 : 1000
+    const delay = isCorrect ? 2000 : 2800
     setTimeout(() => {
       // In topic mode, rotate turns per question. In endless, turns rotate on timer expiry.
       if (state.mode === 'topic') advancePlayer()
@@ -494,8 +495,41 @@ function createGameplayScreen(players, mode) {
   function onRoundComplete() {
     stopTimer()
     if (state.mode === 'topic') {
-      showRoundComplete()
+      const roundId = ROUNDS[state.currentRound].id
+      if (IMPACT_MESSAGES[roundId]) {
+        showRoundImpact(roundId, () => showRoundComplete())
+      } else {
+        showRoundComplete()
+      }
     }
+  }
+
+  function showRoundImpact(roundId, onDone) {
+    const msg = IMPACT_MESSAGES[roundId]
+    const title = ROUNDS.find(r => r.id === roundId)?.title || ''
+
+    const overlay = document.createElement('div')
+    overlay.className = 'adv-sw-impact-overlay'
+    overlay.innerHTML = `
+      <div class="adv-sw-impact-content">
+        <span class="adv-sw-impact-label">Did You Know?</span>
+        <span class="adv-sw-impact-cat">${title}</span>
+        <p class="adv-sw-impact-msg">${msg}</p>
+        <span class="adv-sw-impact-dismiss">Tap to continue</span>
+      </div>
+    `
+    el.appendChild(overlay)
+    requestAnimationFrame(() => overlay.classList.add('adv-sw-impact-show'))
+
+    let dismissed = false
+    const dismiss = () => {
+      if (dismissed) return
+      dismissed = true
+      overlay.classList.remove('adv-sw-impact-show')
+      setTimeout(() => { overlay.remove(); onDone() }, 300)
+    }
+    overlay.addEventListener('pointerdown', dismiss)
+    setTimeout(dismiss, 8000)
   }
 
   function flashMessage(text, color, duration = 1500) {
@@ -695,16 +729,34 @@ function createGameplayScreen(players, mode) {
   }
 
   function showReviewOverlay(parentOverlay) {
+    // Group missed questions by round name
+    const grouped = {}
+    state.missedQuestions.forEach(q => {
+      const roundName = q.round || 'Unknown'
+      if (!grouped[roundName]) grouped[roundName] = []
+      grouped[roundName].push(q)
+    })
+
     const reviewEl = document.createElement('div')
     reviewEl.className = 'adv-sw-completion-overlay'
     reviewEl.innerHTML = `
       <div class="adv-sw-completion-content adv-review-content">
         <h2 class="adv-sw-completion-heading">Missed Questions</h2>
         <div class="adv-review-list">
-          ${state.missedQuestions.map(q => `
-            <div class="adv-review-item">
-              <span class="adv-review-question">${q.question}</span>
-              <span class="adv-review-answer">\u2714 ${q.correctAnswer}</span>
+          ${Object.entries(grouped).map(([round, qs]) => `
+            <div class="adv-review-category-group">
+              <button class="adv-review-cat-toggle">
+                <span class="adv-review-arrow">\u25B6</span>
+                ${round} (${qs.length})
+              </button>
+              <div class="adv-review-cat-items">
+                ${qs.map(q => `
+                  <div class="adv-review-item">
+                    <span class="adv-review-question">${q.question}</span>
+                    <span class="adv-review-answer">\u2714 ${q.correctAnswer}</span>
+                  </div>
+                `).join('')}
+              </div>
             </div>
           `).join('')}
         </div>
@@ -717,6 +769,14 @@ function createGameplayScreen(players, mode) {
     parentOverlay.style.display = 'none'
     el.appendChild(reviewEl)
     requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
+
+    // Toggle category dropdowns
+    reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
+      btn.addEventListener('pointerdown', () => {
+        btn.classList.toggle('adv-review-open')
+        btn.nextElementSibling.classList.toggle('adv-review-items-open')
+      })
+    })
 
     reviewEl.querySelector('#adv-tb-review-back').addEventListener('pointerdown', () => {
       reviewEl.remove()

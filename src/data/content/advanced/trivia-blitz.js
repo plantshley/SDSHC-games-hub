@@ -714,7 +714,7 @@ export const ROUND_TIME = 60 // seconds per round in topic mode
 export { PLAYER_COLORS } from './shared.js'
 
 export const INSTRUCTIONS = {
-  intro: 'Test your soil science knowledge across 12 rounds of 10 questions each. Answer quickly for bonus points!',
+  intro: 'Test your soil science knowledge across 12 rounds of up to 10 questions each. Answer quickly for bonus points!',
   topicMode: 'Answer questions in each round. You have 60 seconds per round.',
   endlessMode: 'Random questions from all categories. 60 seconds per player.',
   completion: 'Outstanding! You\'ve demonstrated expert-level knowledge across all soil science categories.',

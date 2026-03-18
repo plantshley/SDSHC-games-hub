@@ -190,7 +190,6 @@ function createGameplayScreen(players, totalRounds) {
 
         <div class="adv-wg-actions">
           <button class="adv-wg-solve-btn" id="adv-wg-solve">Solve</button>
-          <button class="adv-wg-quit-btn" id="adv-wg-quit">Quit</button>
         </div>
 
         <div class="adv-wg-keyboard" id="adv-wg-keyboard">
@@ -476,20 +475,16 @@ function createGameplayScreen(players, totalRounds) {
         <button class="adv-wg-quit-btn" id="adv-wg-lc-pass">Pass</button>
       `
       el.querySelector('.adv-wg-actions').appendChild(promptEl)
-      // Hide existing solve/quit during this prompt
       solveBtn.style.display = 'none'
-      el.querySelector('#adv-wg-quit').style.display = 'none'
 
       promptEl.querySelector('#adv-wg-lc-solve').addEventListener('pointerdown', () => {
         promptEl.remove()
         solveBtn.style.display = ''
-        el.querySelector('#adv-wg-quit').style.display = ''
         enterSolveModeLastChance()
       })
       promptEl.querySelector('#adv-wg-lc-pass').addEventListener('pointerdown', () => {
         promptEl.remove()
         solveBtn.style.display = ''
-        el.querySelector('#adv-wg-quit').style.display = ''
         revealAnswer()
       })
     }, 800)
@@ -545,14 +540,23 @@ function createGameplayScreen(players, totalRounds) {
   function showRoundEndPrompt() {
     state.phase = 'roundEnd'
 
+    let heading = `${state.wordsTotal} Rounds Complete!`
+    if (isMultiplayer) {
+      const sorted = [...state.players].sort((a, b) => b.score - a.score)
+      if (sorted[0].score !== sorted[1]?.score) {
+        heading = `${sorted[0].name} Wins! (${state.wordsTotal} Rounds)`
+      }
+    }
+
     const canContinue = state.wordIdx < wordPool.length - 1
+    const hasMissed = state.missedWords.length > 0
     const prompt = document.createElement('div')
     prompt.className = 'adv-sw-completion-overlay'
     prompt.innerHTML = `
       <div class="adv-sw-completion-content">
-        <h2 class="adv-sw-completion-heading">${state.wordsTotal} Rounds Complete!</h2>
+        <h2 class="adv-sw-completion-heading">${heading}</h2>
         <div class="adv-sw-completion-scores">
-          ${state.players.map(p => `
+          ${[...state.players].sort((a, b) => b.score - a.score).map(p => `
             <div class="adv-sw-completion-row">
               <span class="adv-sw-completion-dot" style="background: ${p.color}"></span>
               <span class="adv-sw-completion-name">${p.name}</span>
@@ -561,6 +565,7 @@ function createGameplayScreen(players, totalRounds) {
           `).join('')}
         </div>
         <div class="adv-sw-completion-btns">
+          ${hasMissed ? '<button class="adv-sw-comp-btn" id="adv-wg-rep-review">\u2716 Review Missed</button>' : ''}
           ${canContinue ? `<button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-wg-more">Play More Rounds</button>` : ''}
           <button class="adv-sw-comp-btn ${canContinue ? '' : 'adv-sw-comp-primary'}" id="adv-wg-finish">End Game</button>
         </div>
@@ -568,6 +573,12 @@ function createGameplayScreen(players, totalRounds) {
     `
     el.appendChild(prompt)
     requestAnimationFrame(() => prompt.classList.add('adv-sw-popup-show'))
+
+    if (hasMissed) {
+      prompt.querySelector('#adv-wg-rep-review').addEventListener('pointerdown', () => {
+        showReviewOverlay(prompt)
+      })
+    }
 
     if (canContinue) {
       prompt.querySelector('#adv-wg-more').addEventListener('pointerdown', () => {
@@ -655,11 +666,11 @@ function createGameplayScreen(players, totalRounds) {
 
     const afterImpact = () => {
       let heading
-      if (fromQuit) {
-        heading = 'Results'
-      } else if (isMultiplayer) {
+      if (isMultiplayer) {
         const sorted = [...state.players].sort((a, b) => b.score - a.score)
         heading = sorted[0].score === sorted[1]?.score ? 'Tie Game!' : `${sorted[0].name} Wins!`
+      } else if (fromQuit) {
+        heading = 'Results'
       } else {
         heading = 'Great Job!'
       }
@@ -713,17 +724,33 @@ function createGameplayScreen(players, totalRounds) {
   }
 
   function showReviewOverlay(parentOverlay) {
+    // Group missed words by category
+    const grouped = {}
+    state.missedWords.forEach(w => {
+      if (!grouped[w.category]) grouped[w.category] = []
+      grouped[w.category].push(w)
+    })
+
     const reviewEl = document.createElement('div')
     reviewEl.className = 'adv-sw-completion-overlay'
     reviewEl.innerHTML = `
       <div class="adv-sw-completion-content adv-review-content">
         <h2 class="adv-sw-completion-heading">Missed Words</h2>
         <div class="adv-review-list">
-          ${state.missedWords.map(w => `
-            <div class="adv-review-item">
-              <span class="adv-review-term">${w.term}</span>
-              <span class="adv-review-cat">${w.category}</span>
-              <span class="adv-review-hint">${w.hint}</span>
+          ${Object.entries(grouped).map(([cat, words]) => `
+            <div class="adv-review-category-group">
+              <button class="adv-review-cat-toggle">
+                <span class="adv-review-arrow">\u25B6</span>
+                ${cat} (${words.length})
+              </button>
+              <div class="adv-review-cat-items">
+                ${words.map(w => `
+                  <div class="adv-review-item">
+                    <span class="adv-review-term">${w.term}</span>
+                    <span class="adv-review-hint">${w.hint}</span>
+                  </div>
+                `).join('')}
+              </div>
             </div>
           `).join('')}
         </div>
@@ -737,6 +764,14 @@ function createGameplayScreen(players, totalRounds) {
     el.appendChild(reviewEl)
     requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
 
+    // Toggle category dropdowns
+    reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
+      btn.addEventListener('pointerdown', () => {
+        btn.classList.toggle('adv-review-open')
+        btn.nextElementSibling.classList.toggle('adv-review-items-open')
+      })
+    })
+
     reviewEl.querySelector('#adv-wg-review-back').addEventListener('pointerdown', () => {
       reviewEl.remove()
       parentOverlay.style.display = ''
@@ -746,8 +781,14 @@ function createGameplayScreen(players, totalRounds) {
   // ── Event Bindings ──
 
   el.querySelector('#adv-wg-home').addEventListener('pointerdown', () => navigate('game-select'))
-  el.querySelector('#adv-wg-quit').addEventListener('pointerdown', () => showCompletion(true))
   solveBtn.addEventListener('pointerdown', () => enterSolveMode())
+
+  // Quit button in lower right corner (like jeopardy)
+  const quitBtn = document.createElement('button')
+  quitBtn.className = 'adv-sw-quit-btn adv-jp-quit-btn'
+  quitBtn.textContent = 'Quit'
+  el.querySelector('.adv-wg-body').appendChild(quitBtn)
+  quitBtn.addEventListener('pointerdown', () => showCompletion(true))
 
   keyboard.querySelectorAll('.adv-wg-key').forEach(key => {
     key.addEventListener('pointerdown', () => handleGuess(key.dataset.letter))
