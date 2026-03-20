@@ -44,6 +44,14 @@ const VARIANTS = {
     pos2: 'bottom: -20%; right: 5%;',
     pos3: 'top: 70%; left: 40%;',
   },
+  'field-guide': {
+    sphere1: 'linear-gradient(70deg, rgba(56, 206, 188, 0.5), rgba(0, 120, 60, 0.4))',
+    sphere2: 'linear-gradient(240deg, rgba(120, 200, 80, 0.5), rgba(56, 206, 188, 0.2))',
+    sphere3: 'linear-gradient(150deg, rgba(0, 100, 80, 0.4), rgba(184, 232, 74, 0.3))',
+    pos1: 'top: -15%; right: -10%;',
+    pos2: 'bottom: -15%; left: -15%;',
+    pos3: 'top: 45%; left: -5%;',
+  },
 }
 
 const PARTICLE_COUNT = 60

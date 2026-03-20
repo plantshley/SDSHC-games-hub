@@ -222,20 +222,26 @@
 /* ─── Game Card Grid ─── */
 
 .adv-game-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 30px;
   width: 100%;
-  max-width: 1400px;
+  max-width: 900px;
+  margin-bottom: 20px;
 }
 
 .adv-game-card {
+  width: 270px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 40px 30px;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 20px;
   background: var(--adv-surface);
   border: 2px solid var(--adv-border);
   border-radius: var(--adv-card-radius);
@@ -516,7 +522,8 @@
 
 /* ─── Intro Screen ─── */
 
-.adv-sw-intro {
+.adv-sw-intro,
+.adv-fg-intro {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -530,6 +537,16 @@
   max-width: 600px;
   width: 100%;
   padding-top: 60px;
+}
+
+.adv-fg-intro .adv-sw-intro-inner {
+  gap: 20px;
+  padding-bottom: 20px;
+}
+
+.adv-fg-intro .adv-sw-player-setup {
+  padding: 16px 30px;
+  gap: 12px;
 }
 
 .adv-sw-intro-topbar {
@@ -2226,4 +2243,326 @@
   display: flex;
   gap: 16px;
   justify-content: center;
+}
+
+/* ═══════════════════════════════════════════════ */
+/* ─── Field Guide Game ─── */
+/* ═══════════════════════════════════════════════ */
+
+/* Intro: category picker label */
+.adv-fg-cat-label {
+  font-family: var(--font-body), monospace;
+  font-size: 1rem;
+  color: var(--adv-text);
+  min-width: 220px;
+  text-align: center;
+}
+
+.adv-fg-game {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* Main panel — two rows: top-row (photo + clues) and answer row */
+.adv-fg-main {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 56px 32px 20px;
+  overflow: hidden;
+  background: var(--adv-glass);
+}
+
+/* Top row: photo left, clues/controls right */
+.adv-fg-top-row {
+  display: flex;
+  gap: 28px;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+
+/* Round counter in topbar */
+.adv-fg-round-counter {
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+  color: var(--adv-accent);
+  opacity: 0.8;
+}
+
+/* Photo container — fixed width, fills height of top-row */
+.adv-fg-photo-container {
+  width: 620px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--adv-border);
+  background: var(--adv-surface);
+  position: relative;
+  box-shadow: 0 0 20px var(--adv-glow, rgba(56, 206, 188, 0.1));
+}
+
+[data-theme="light"] .adv-fg-photo-container {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.adv-fg-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Placeholder when image not found */
+.adv-fg-photo-placeholder {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  color: var(--adv-accent);
+  opacity: 0.4;
+  font-family: var(--font-title), monospace;
+  background: linear-gradient(135deg, rgba(56, 206, 188, 0.1), rgba(184, 232, 74, 0.1));
+}
+
+.adv-fg-photo-placeholder.adv-fg-show {
+  display: flex;
+}
+
+/* Right panel: clues + controls, stacked vertically */
+.adv-fg-right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Clue area — fills right panel */
+.adv-fg-clue-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.adv-fg-clue-text {
+  font-family: var(--font-body), monospace;
+  font-size: 1rem;
+  color: var(--adv-text);
+  font-style: italic;
+  margin: 0 0 14px;
+  line-height: 1.6;
+  opacity: 0.9;
+  transition: opacity 0.3s, max-height 0.3s;
+}
+
+.adv-fg-clue-hidden {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* Significance text (inside clue area, shown after answer) */
+.adv-fg-significance {
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  color: var(--adv-accent-secondary);
+  font-style: italic;
+  line-height: 1.5;
+  display: none;
+  opacity: 0.85;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--adv-border);
+}
+
+/* Controls row — bottom of right panel */
+.adv-fg-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.adv-fg-more-clues-btn {
+  background: var(--adv-surface);
+  border: 1px solid var(--adv-border);
+  color: var(--adv-accent);
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.adv-fg-more-clues-btn:hover,
+.adv-fg-more-clues-btn:active {
+  background: rgba(56, 206, 188, 0.1);
+  border-color: var(--adv-accent);
+}
+
+.adv-fg-pts-available {
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  color: var(--adv-accent-secondary);
+  opacity: 0.9;
+}
+
+/* Answer row — full width, single horizontal row */
+.adv-fg-answers {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.adv-fg-answer-btn {
+  flex: 1;
+  background: var(--adv-surface);
+  border: 2px solid var(--adv-border);
+  color: var(--adv-text);
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+  padding: 20px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+  text-align: center;
+  min-height: 66px;
+}
+
+.adv-fg-answer-btn:hover,
+.adv-fg-answer-btn:active {
+  border-color: var(--adv-accent);
+  background: rgba(56, 206, 188, 0.08);
+}
+
+.adv-fg-answer-btn.adv-fg-correct {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.adv-fg-answer-btn.adv-fg-wrong {
+  border-color: #f44336;
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+}
+
+/* Review: thumbnail + info layout */
+.adv-fg-review-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.adv-fg-review-thumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--adv-border);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+
+.adv-fg-review-thumb:active {
+  border-color: var(--adv-accent);
+}
+
+.adv-fg-review-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+/* Full-screen image overlay */
+.adv-fg-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.adv-fg-fullscreen-overlay.adv-fg-fullscreen-show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.adv-fg-fullscreen-img {
+  max-width: 80vw;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 0 40px rgba(56, 206, 188, 0.2);
+}
+
+.adv-fg-fullscreen-label {
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.2rem;
+  color: var(--adv-accent);
+}
+
+.adv-fg-fullscreen-dismiss {
+  font-family: var(--font-body), monospace;
+  font-size: 0.8rem;
+  color: var(--adv-text-muted);
+  opacity: 0.6;
+}
+
+/* Floating points flash animation */
+.adv-fg-pts-flash {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  font-family: var(--font-title), sans-serif;
+  font-size: 2rem;
+  color: var(--adv-accent);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 20;
+  text-shadow: 0 0 20px currentColor;
+}
+
+.adv-fg-pts-flash.adv-fg-pts-show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.adv-fg-pts-flash.adv-fg-pts-fade {
+  opacity: 0;
+  transform: translate(-50%, -70%) scale(1.1);
+  transition: opacity 0.8s, transform 0.8s;
+}
+
+/* Choosing phase prompt text */
+.adv-fg-choose-prompt {
+  font-family: var(--font-body), monospace;
+  font-size: 1.1rem;
+  color: var(--adv-accent);
+  text-align: center;
+  opacity: 0.9;
 }
