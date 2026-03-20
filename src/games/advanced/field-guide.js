@@ -160,48 +160,49 @@ function createGameplayScreen(players, selectedCategory) {
   const el = document.createElement('div')
   el.className = 'screen adv-fg-game'
 
-  // Build category queues instead of flat items array
-  const categoryQueues = {}
+  // Build flat items array (sequential play order)
+  let items = []
   const categoryOrder = []
-  let totalItems = 0
 
   if (selectedCategory === 'all') {
+    // 4 random items per category, grouped by category
     CATEGORIES.forEach(cat => {
       const shuffled = shuffleArray([...cat.items])
       const picked = shuffled.slice(0, 4)
-      categoryQueues[cat.id] = picked.map(item => ({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
-      totalItems += picked.length
+      picked.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
       categoryOrder.push(cat.id)
     })
   } else {
     const cat = CATEGORIES.find(c => c.id === selectedCategory)
     if (!cat) { navigate('game-select'); return document.createElement('div') }
     const shuffled = shuffleArray([...cat.items])
-    categoryQueues[cat.id] = shuffled.map(item => ({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
-    totalItems += shuffled.length
+    shuffled.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
     categoryOrder.push(cat.id)
   }
 
+  const totalRounds = items.length
   const isMultiplayer = players.length > 1
   let cancelled = false
 
   // Category progress tracking
   const categoryProgress = {}
-  Object.entries(categoryQueues).forEach(([catId, queue]) => {
-    categoryProgress[catId] = { answered: 0, total: queue.length }
-  })
+  if (selectedCategory === 'all') {
+    CATEGORIES.forEach(cat => { categoryProgress[cat.id] = { answered: 0, total: 4 } })
+  } else {
+    const cat = CATEGORIES.find(c => c.id === selectedCategory)
+    if (cat) categoryProgress[cat.id] = { answered: 0, total: cat.items.length }
+  }
 
   const state = {
     players: players.map(p => ({ ...p, score: 0 })),
     currentPlayer: Math.floor(Math.random() * players.length),
-    phase: 'choosing', // choosing | viewing | feedback | complete
-    totalAnswered: 0,
-    currentCatId: null,
-    currentItem: null,
+    phase: 'init', // init | viewing | feedback | complete
+    round: 0,
     cluesRevealed: 1,
     choices: [],
     correctIdx: -1,
     missedItems: [],
+    answeredIds: new Set(),
     playedCategories: new Set(),
     shownImpactIds: new Set(),
   }
@@ -217,7 +218,7 @@ function createGameplayScreen(players, selectedCategory) {
     <div class="adv-sw-topbar">
       <button class="adv-game-topbar-btn" id="adv-fg-home">\u2190 Back</button>
       <h2 class="adv-sw-game-title">Field Guide</h2>
-      <span class="adv-fg-round-counter" id="adv-fg-round-counter">0/${totalItems}</span>
+      <span class="adv-fg-round-counter" id="adv-fg-round-counter"></span>
       ${isMultiplayer ? `
         <div class="adv-sw-turn-indicator" id="adv-fg-turn">
           <span class="adv-sw-turn-dot" id="adv-fg-turn-dot"></span>
@@ -233,7 +234,7 @@ function createGameplayScreen(players, selectedCategory) {
           ${visibleCategories.map(cat => {
             const prog = categoryProgress[cat.id]
             return `
-              <div class="adv-sw-cat-btn" data-cat="${cat.id}">
+              <div class="adv-sw-cat-btn adv-sw-cat-choosable" data-cat="${cat.id}">
                 <span class="adv-sw-cat-title">${cat.title}</span>
                 <span class="adv-sw-cat-count" id="adv-fg-cat-${cat.id}">${prog ? `0/${prog.total}` : ''}</span>
               </div>
@@ -271,12 +272,12 @@ function createGameplayScreen(players, selectedCategory) {
 
           <div class="adv-fg-right-panel">
             <div class="adv-fg-clue-area" id="adv-fg-clue-area">
-              <p class="adv-fg-clue-text" id="adv-fg-clue-1"></p>
+              <p class="adv-fg-clue-text adv-fg-clue-hidden" id="adv-fg-clue-1"></p>
               <p class="adv-fg-clue-text adv-fg-clue-hidden" id="adv-fg-clue-2"></p>
               <p class="adv-fg-clue-text adv-fg-clue-hidden" id="adv-fg-clue-3"></p>
               <div class="adv-fg-significance" id="adv-fg-significance"></div>
             </div>
-            <div class="adv-fg-controls">
+            <div class="adv-fg-controls" id="adv-fg-controls" style="display: none">
               <button class="adv-fg-more-clues-btn" id="adv-fg-more-clues">More Clues (\u2212100 pts)</button>
               <span class="adv-fg-pts-available" id="adv-fg-pts">300 pts available</span>
             </div>
@@ -309,6 +310,7 @@ function createGameplayScreen(players, selectedCategory) {
   ]
   const moreCluesBtn = el.querySelector('#adv-fg-more-clues')
   const ptsEl = el.querySelector('#adv-fg-pts')
+  const controlsEl = el.querySelector('#adv-fg-controls')
   const answersEl = el.querySelector('#adv-fg-answers')
   const significanceEl = el.querySelector('#adv-fg-significance')
   const mainEl = el.querySelector('#adv-fg-main')
@@ -340,54 +342,30 @@ function createGameplayScreen(players, selectedCategory) {
     })
   }
 
-  // ── Category Selection (choosable pattern) ──
+  // ── Jump to Category ──
+  // User can tap a sidebar category to skip ahead to items from that category.
+  // Reorders the remaining items so that category's unplayed items come next.
 
-  function enableCategories() {
-    el.querySelectorAll('.adv-sw-cat-btn').forEach(btn => {
-      const catId = btn.dataset.cat
-      const prog = categoryProgress[catId]
-      if (prog && prog.answered < prog.total) {
-        btn.classList.add('adv-sw-cat-choosable')
-      }
-    })
-  }
-
-  function disableCategories() {
-    el.querySelectorAll('.adv-sw-cat-btn').forEach(btn => {
-      btn.classList.remove('adv-sw-cat-choosable')
-    })
-  }
-
-  function selectCategory(catId) {
+  function jumpToCategory(catId) {
+    if (state.phase !== 'viewing' && state.phase !== 'feedback') return
     const prog = categoryProgress[catId]
     if (!prog || prog.answered >= prog.total) return
-    state.currentCatId = catId
-    disableCategories()
-    highlightCategory(catId)
-    showRound()
-  }
 
-  function showChoosingView() {
-    photoEl.style.display = 'none'
-    placeholderEl.classList.add('adv-fg-show')
-    placeholderEl.textContent = '?'
-    clueEls.forEach(c => { c.textContent = ''; c.classList.add('adv-fg-clue-hidden') })
-    significanceEl.style.display = 'none'
-    moreCluesBtn.style.display = 'none'
-    ptsEl.textContent = 'Pick a category'
-    ptsEl.style.display = ''
-    answersEl.querySelectorAll('.adv-fg-answer-btn').forEach(btn => {
-      btn.textContent = ''
-      btn.style.pointerEvents = 'none'
-      btn.className = 'adv-fg-answer-btn'
-    })
-  }
+    // Find the first unplayed item from this category in the remaining queue
+    const remaining = items.slice(state.round)
+    const fromCat = remaining.filter(it => it.categoryId === catId)
+    const notFromCat = remaining.filter(it => it.categoryId !== catId)
 
-  function enterChoosingPhase() {
-    state.phase = 'choosing'
-    showChoosingView()
-    enableCategories()
-    updateTurnDisplay()
+    if (fromCat.length === 0) return
+
+    // Reorder: put this category's items first, then the rest
+    items = [...items.slice(0, state.round), ...fromCat, ...notFromCat]
+
+    // If currently in feedback (waiting for Next), just let them tap Next
+    // to see the newly-reordered items. If viewing, load the new round.
+    if (state.phase === 'viewing') {
+      showRound()
+    }
   }
 
   // ── Turn Display ──
@@ -410,8 +388,10 @@ function createGameplayScreen(players, selectedCategory) {
     if (!isCorrect) flash.style.color = '#f44336'
     mainEl.appendChild(flash)
     requestAnimationFrame(() => {
+      if (!mainEl.isConnected) return
       flash.classList.add('adv-fg-pts-show')
       setTimeout(() => {
+        if (!mainEl.isConnected) { flash.remove(); return }
         flash.classList.add('adv-fg-pts-fade')
         setTimeout(() => flash.remove(), 800)
       }, 1200)
@@ -421,42 +401,40 @@ function createGameplayScreen(players, selectedCategory) {
   // ── Advance Turn ──
 
   function advanceTurn() {
+    // Hide controls before any popup shows (prevents ghost behind overlay)
+    controlsEl.style.display = 'none'
+
     if (isMultiplayer) {
       state.currentPlayer = (state.currentPlayer + 1) % state.players.length
     }
+    state.round++
 
-    // Check if category just completed -> show impact
-    const catProg = state.currentCatId ? categoryProgress[state.currentCatId] : null
-    const catJustCompleted = catProg && catProg.answered >= catProg.total
+    if (state.round >= totalRounds) {
+      showCompletion()
+      return
+    }
 
-    function afterCatImpact() {
-      if (state.totalAnswered >= totalItems) {
-        showCompletion()
+    // Check if we crossed a category boundary -> show impact
+    const prevItem = items[state.round - 1]
+    const nextItem = items[state.round]
+    if (selectedCategory === 'all' && prevItem.categoryId !== nextItem.categoryId) {
+      if (IMPACT_MESSAGES[prevItem.categoryId] && !state.shownImpactIds.has(prevItem.categoryId)) {
+        state.shownImpactIds.add(prevItem.categoryId)
+        showCategoryImpact(prevItem.categoryId, () => {
+          if (isMultiplayer) {
+            showTurnPopup(() => showRound())
+          } else {
+            showRound()
+          }
+        })
         return
-      }
-
-      if (selectedCategory === 'all') {
-        // All mode: enter choosing phase
-        if (isMultiplayer) {
-          showTurnPopup(() => enterChoosingPhase())
-        } else {
-          enterChoosingPhase()
-        }
-      } else {
-        // Single category: auto-advance
-        if (isMultiplayer) {
-          showTurnPopup(() => showRound())
-        } else {
-          showRound()
-        }
       }
     }
 
-    if (catJustCompleted && IMPACT_MESSAGES[state.currentCatId] && !state.shownImpactIds.has(state.currentCatId)) {
-      state.shownImpactIds.add(state.currentCatId)
-      showCategoryImpact(state.currentCatId, afterCatImpact)
+    if (isMultiplayer) {
+      showTurnPopup(() => showRound())
     } else {
-      afterCatImpact()
+      showRound()
     }
   }
 
@@ -464,13 +442,13 @@ function createGameplayScreen(players, selectedCategory) {
 
   function showTurnPopup(onDone, text) {
     const p = state.players[state.currentPlayer]
-    const label = text || `${esc(p.name)}'s Turn`
+    const label = text || `${p.name}'s Turn`
     const popup = document.createElement('div')
     popup.className = 'adv-sw-turn-popup'
     popup.innerHTML = `
       <div class="adv-sw-turn-content">
         <span class="adv-sw-turn-popup-dot" style="background: ${p.color}"></span>
-        <span>${label}</span>
+        <span>${esc(label)}</span>
       </div>
     `
     el.appendChild(popup)
@@ -486,7 +464,12 @@ function createGameplayScreen(players, selectedCategory) {
   function generateChoices(currentItem) {
     const cat = CATEGORIES.find(c => c.id === currentItem.categoryId)
     if (!cat) return { options: [currentItem.name], correctIdx: 0 }
-    const others = cat.items.filter(it => it.id !== currentItem.id)
+    // Exclude previously answered items from distractors to make choices trickier
+    let others = cat.items.filter(it => it.id !== currentItem.id && !state.answeredIds.has(it.id))
+    // If not enough distractors after filtering, fall back to full pool
+    if (others.length < 3) {
+      others = cat.items.filter(it => it.id !== currentItem.id)
+    }
     shuffleArray(others)
     const distractors = others.slice(0, 3)
     const choices = [currentItem, ...distractors]
@@ -503,25 +486,12 @@ function createGameplayScreen(players, selectedCategory) {
     state.phase = 'viewing'
     state.cluesRevealed = 1
     updateTurnDisplay()
-    disableCategories()
 
-    // Pull next item from current category queue
-    const queue = categoryQueues[state.currentCatId]
-    if (!queue || queue.length === 0) {
-      // Category exhausted — enter choosing or complete
-      if (selectedCategory === 'all') {
-        enterChoosingPhase()
-      } else {
-        showCompletion()
-      }
-      return
-    }
-    const item = queue.shift()
-    state.currentItem = item
+    const item = items[state.round]
     state.playedCategories.add(item.categoryId)
 
     // Update topbar + sidebar
-    el.querySelector('#adv-fg-round-counter').textContent = `${state.totalAnswered + 1}/${totalItems}`
+    el.querySelector('#adv-fg-round-counter').textContent = `Q${state.round + 1} of ${totalRounds}`
     highlightCategory(item.categoryId)
 
     // Generate choices
@@ -540,24 +510,26 @@ function createGameplayScreen(players, selectedCategory) {
       placeholderEl.textContent = '?'
     }
 
-    // Preload next image from same category
-    const nextInQueue = queue[0]
-    if (nextInQueue) {
-      preloadImage(nextInQueue.image)
+    // Preload next image
+    if (state.round + 1 < totalRounds) {
+      preloadImage(items[state.round + 1].image)
     }
 
-    // Set clues
+    // Set clues — first clue fades in after a brief delay
     clueEls[0].textContent = item.clues[0]
-    clueEls[0].classList.remove('adv-fg-clue-hidden')
+    clueEls[0].classList.add('adv-fg-clue-hidden')
     clueEls[1].textContent = item.clues[1]
     clueEls[1].classList.add('adv-fg-clue-hidden')
     clueEls[2].textContent = item.clues[2]
     clueEls[2].classList.add('adv-fg-clue-hidden')
+    // Fade in first clue after photo loads
+    setTimeout(() => clueEls[0].classList.remove('adv-fg-clue-hidden'), 300)
 
-    // Points
+    // Controls
+    controlsEl.style.display = ''
     const initialPts = (4 - state.cluesRevealed) * 100
-    ptsEl.textContent = `${initialPts} pts available`
     ptsEl.style.display = ''
+    ptsEl.textContent = `${initialPts} pts available`
     moreCluesBtn.style.display = ''
     moreCluesBtn.textContent = 'More Clues (\u2212100 pts)'
 
@@ -603,11 +575,9 @@ function createGameplayScreen(players, selectedCategory) {
     if (state.phase !== 'viewing') return
     state.phase = 'feedback'
 
-    const item = state.currentItem
+    const item = items[state.round]
     const isCorrect = btnIdx === state.correctIdx
     const buttons = answersEl.querySelectorAll('.adv-fg-answer-btn')
-
-    state.totalAnswered++
 
     // Update category progress
     if (categoryProgress[item.categoryId]) {
@@ -615,10 +585,11 @@ function createGameplayScreen(players, selectedCategory) {
       updateCategoryProgress()
     }
 
-    // Disable all buttons + hide controls
+    // Disable all answer buttons
     buttons.forEach(btn => { btn.style.pointerEvents = 'none' })
-    moreCluesBtn.style.display = 'none'
-    ptsEl.style.display = 'none'
+
+    // Track this item as answered (correct or not) so it won't appear as a distractor
+    state.answeredIds.add(item.id)
 
     if (isCorrect) {
       buttons[btnIdx].classList.add('adv-fg-correct')
@@ -644,15 +615,24 @@ function createGameplayScreen(players, selectedCategory) {
     significanceEl.textContent = item.significance
     significanceEl.style.display = ''
 
-    // Reveal all clues
-    clueEls.forEach(c => c.classList.remove('adv-fg-clue-hidden'))
+    // Reveal remaining clues with staggered fade-in
+    const hiddenClues = clueEls.filter(c => c.classList.contains('adv-fg-clue-hidden'))
+    hiddenClues.forEach((c, i) => setTimeout(() => c.classList.remove('adv-fg-clue-hidden'), (i + 1) * 200))
 
-    const delay = isCorrect ? 3500 : 4500
-    setTimeout(() => {
+    // Replace controls with Next/Finish button (reuse More Clues button styling)
+    ptsEl.style.display = 'none'
+    moreCluesBtn.textContent = state.round + 1 >= totalRounds ? 'Finish' : 'Next \u2192'
+    moreCluesBtn.style.display = ''
+    moreCluesBtn.classList.add('adv-fg-next-mode')
+
+    // Swap handler: remove old revealClue, add advance
+    const nextHandler = () => {
       if (cancelled || state.phase === 'complete') return
+      moreCluesBtn.removeEventListener('pointerdown', nextHandler)
+      moreCluesBtn.classList.remove('adv-fg-next-mode')
 
-      // Single-category: check if last item
-      if (state.totalAnswered >= totalItems && selectedCategory !== 'all') {
+      // Check if this is the last item in a single-category game
+      if (state.round + 1 >= totalRounds && selectedCategory !== 'all') {
         const catId = item.categoryId
         if (IMPACT_MESSAGES[catId] && !state.shownImpactIds.has(catId)) {
           state.shownImpactIds.add(catId)
@@ -664,7 +644,8 @@ function createGameplayScreen(players, selectedCategory) {
       }
 
       advanceTurn()
-    }, delay)
+    }
+    moreCluesBtn.addEventListener('pointerdown', nextHandler)
   }
 
   // ── Category Impact ──
@@ -717,7 +698,7 @@ function createGameplayScreen(players, selectedCategory) {
         heading = 'Great Job!'
       }
 
-      const maxPts = totalItems * 300
+      const maxPts = totalRounds * 300
       const detail = isMultiplayer
         ? ''
         : `You scored ${winner.score} out of ${maxPts} possible points.`
@@ -774,7 +755,7 @@ function createGameplayScreen(players, selectedCategory) {
 
   function showImpactOverlay(onDone) {
     const available = [...state.playedCategories].filter(id => IMPACT_MESSAGES[id] && !state.shownImpactIds.has(id))
-    if (available.length === 0 || (selectedCategory !== 'all' && available.length <= 1)) {
+    if (available.length === 0) {
       onDone()
       return
     }
@@ -903,21 +884,20 @@ function createGameplayScreen(players, selectedCategory) {
     })
   })
 
-  // Category click handlers (choosable pattern)
+  // Category click handlers — tap to jump to that category's items
   el.querySelectorAll('.adv-sw-cat-btn').forEach(btn => {
     btn.addEventListener('pointerdown', () => {
-      if (state.phase !== 'choosing') return
-      if (!btn.classList.contains('adv-sw-cat-choosable')) return
-      selectCategory(btn.dataset.cat)
+      if (state.phase !== 'viewing') return
+      jumpToCategory(btn.dataset.cat)
     })
   })
 
   // Quit button in sidebar
   const quitBtn = document.createElement('button')
-  quitBtn.className = 'adv-sw-quit-btn adv-jp-quit-btn'
+  quitBtn.className = 'adv-fg-quit-btn'
   quitBtn.textContent = 'Quit'
   el.querySelector('.adv-sw-sidebar').appendChild(quitBtn)
-  quitBtn.addEventListener('pointerdown', () => showCompletion(true))
+  quitBtn.addEventListener('pointerdown', () => { cancelled = true; showCompletion(true) })
 
   // ── Initialize ──
 
@@ -925,25 +905,11 @@ function createGameplayScreen(players, selectedCategory) {
   updateScores()
   updateCategoryProgress()
 
-  if (selectedCategory !== 'all') {
-    // Single category — start directly
-    state.currentCatId = categoryOrder[0]
-    if (isMultiplayer) {
-      const firstName = esc(state.players[state.currentPlayer].name)
-      setTimeout(() => showTurnPopup(() => showRound(), `${firstName} goes first!`), 400)
-    } else {
-      showRound()
-    }
+  if (isMultiplayer) {
+    const firstName = state.players[state.currentPlayer].name
+    setTimeout(() => showTurnPopup(() => showRound(), `${firstName} goes first!`), 400)
   } else {
-    // All categories — enter choosing phase
-    if (isMultiplayer) {
-      const firstName = esc(state.players[state.currentPlayer].name)
-      setTimeout(() => showTurnPopup(() => {
-        enterChoosingPhase()
-      }, `${firstName} goes first!`), 400)
-    } else {
-      enterChoosingPhase()
-    }
+    showRound()
   }
 
   return el

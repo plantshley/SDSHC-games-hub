@@ -464,12 +464,12 @@ export const INSTRUCTIONS = {
 
 export const RULES = [
   'A photo is shown with a clue. Identify what\'s in the photo.',
-  'You start with 3 points available per question.',
-  'Tap "More Clues" to reveal additional hints (\u22121 pt each).',
+  'You start with 300 points available per question.',
+  'Tap "More Clues" to reveal additional hints (\u2212100 pts each).',
   'Tap one of four answer choices to guess.',
-  'Correct answers earn points based on clues used (3 / 2 / 1).',
+  'Correct answers earn points based on clues used (300 pts / 200 pts / 100 pts).',
   'Wrong answers earn 0 points. The correct answer is shown.',
-  'After each answer, a brief soil health fact is revealed.',
+  'After completing a category, a brief soil health fact is revealed.',
   'Player with the most points wins!',
 ]
 

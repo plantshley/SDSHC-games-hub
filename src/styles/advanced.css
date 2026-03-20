@@ -2296,7 +2296,9 @@
 
 /* Photo container — fixed width, fills height of top-row */
 .adv-fg-photo-container {
-  width: 620px;
+  width: 750px;
+  margin-right: 10px;
+  margin-bottom: 10px;
   flex-shrink: 0;
   border-radius: 12px;
   overflow: hidden;
@@ -2343,6 +2345,7 @@
   justify-content: center;
   gap: 16px;
   min-width: 0;
+  margin-bottom: 10px;
 }
 
 /* Clue area — fills right panel */
@@ -2360,10 +2363,11 @@
   font-size: 1rem;
   color: var(--adv-text);
   font-style: italic;
-  margin: 0 0 14px;
+  margin: 0 0 30px;
   line-height: 1.6;
   opacity: 0.9;
-  transition: opacity 0.3s, max-height 0.3s;
+  transform: translateY(0);
+  transition: opacity 0.6s ease-out, max-height 0.5s ease-out, margin 0.5s ease-out, transform 0.6s ease-out;
 }
 
 .adv-fg-clue-hidden {
@@ -2371,6 +2375,7 @@
   max-height: 0;
   overflow: hidden;
   margin: 0;
+  transform: translateY(0px);
 }
 
 /* Significance text (inside clue area, shown after answer) */
@@ -2420,6 +2425,15 @@
   opacity: 0.9;
 }
 
+.adv-fg-more-clues-btn.adv-fg-next-mode {
+  font-family: var(--font-title), sans-serif;
+  letter-spacing: 1px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transform: translateY(0);
+  transition: opacity 0.6s ease-out, max-height 0.5s ease-out, margin 0.5s ease-out, transform 0.6s ease-out;
+}
+
 /* Answer row — full width, single horizontal row */
 .adv-fg-answers {
   display: flex;
@@ -2433,13 +2447,14 @@
   border: 2px solid var(--adv-border);
   color: var(--adv-text);
   font-family: var(--font-body), monospace;
-  font-size: 0.9rem;
-  padding: 20px 12px;
+  font-size: 1.1rem;
+  padding: 22px 14px;
   border-radius: 10px;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s, transform 0.1s;
   text-align: center;
-  min-height: 66px;
+  min-height: 72px;
+  margin-bottom: 4px;
 }
 
 .adv-fg-answer-btn:hover,
@@ -2460,11 +2475,11 @@
   color: #f44336;
 }
 
-/* Review: thumbnail + info layout */
-.adv-fg-review-item {
-  display: flex;
+/* Review: thumbnail + info layout — row overrides base .adv-review-item column */
+.adv-review-item.adv-fg-review-item {
+  flex-direction: row;
   gap: 12px;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .adv-fg-review-thumb {
@@ -2531,38 +2546,46 @@
   opacity: 0.6;
 }
 
-/* Floating points flash animation */
+/* Floating points flash — matches word game style */
 .adv-fg-pts-flash {
   position: absolute;
   top: 40%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(0.5);
+  transform: translate(-50%, -50%) scale(0.8);
   font-family: var(--font-title), sans-serif;
-  font-size: 2rem;
-  color: var(--adv-accent);
+  font-size: 1.8rem;
   pointer-events: none;
   opacity: 0;
   z-index: 20;
+  background: var(--adv-glass-heavy);
+  backdrop-filter: blur(8px);
+  padding: 16px 32px;
+  border-radius: 12px;
   text-shadow: 0 0 20px currentColor;
+  color: var(--adv-accent);
 }
 
 .adv-fg-pts-flash.adv-fg-pts-show {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
-  transition: opacity 0.2s, transform 0.2s;
+  transition: opacity 0.15s, transform 0.15s;
 }
 
 .adv-fg-pts-flash.adv-fg-pts-fade {
   opacity: 0;
-  transform: translate(-50%, -70%) scale(1.1);
-  transition: opacity 0.8s, transform 0.8s;
+  transform: translate(-50%, -60%) scale(1);
+  transition: opacity 0.6s, transform 0.6s;
 }
-
-/* Choosing phase prompt text */
-.adv-fg-choose-prompt {
+.adv-fg-quit-btn {
+  margin-top: auto;
+  margin-bottom: 10px;
+  padding: 8px 16px;
+  border: 2px solid var(--adv-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--adv-text-muted);
   font-family: var(--font-body), monospace;
-  font-size: 1.1rem;
-  color: var(--adv-accent);
-  text-align: center;
-  opacity: 0.9;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
 }
