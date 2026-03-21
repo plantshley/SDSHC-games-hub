@@ -6,7 +6,7 @@
 
 import { navigate } from '../../router.js'
 import {
-  CATEGORIES, PLAYER_COLORS, INSTRUCTIONS, RULES, IMPACT_MESSAGES,
+  CATEGORIES, PLAYER_COLORS, INSTRUCTIONS, RULES, IMPACT_MESSAGES, EXTRA_DISTRACTORS,
 } from '../../data/content/advanced/field-guide.js'
 import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
@@ -401,9 +401,6 @@ function createGameplayScreen(players, selectedCategory) {
   // ── Advance Turn ──
 
   function advanceTurn() {
-    // Hide controls before any popup shows (prevents ghost behind overlay)
-    controlsEl.style.display = 'none'
-
     if (isMultiplayer) {
       state.currentPlayer = (state.currentPlayer + 1) % state.players.length
     }
@@ -462,21 +459,48 @@ function createGameplayScreen(players, selectedCategory) {
   // ── Generate Choices ──
 
   function generateChoices(currentItem) {
-    const cat = CATEGORIES.find(c => c.id === currentItem.categoryId)
-    if (!cat) return { options: [currentItem.name], correctIdx: 0 }
-    // Exclude previously answered items from distractors to make choices trickier
-    let others = cat.items.filter(it => it.id !== currentItem.id && !state.answeredIds.has(it.id))
-    // If not enough distractors after filtering, fall back to full pool
-    if (others.length < 3) {
-      others = cat.items.filter(it => it.id !== currentItem.id)
+    const catId = currentItem.categoryId
+    const subtype = currentItem.subtype
+    const catExtras = EXTRA_DISTRACTORS[catId] || {}
+
+    // Extra distractors: prefer same subtype, then other subtypes in this category
+    const sameTypeExtras = (catExtras[subtype] || []).slice()
+    const otherTypeExtras = Object.entries(catExtras)
+      .filter(([st]) => st !== subtype)
+      .flatMap(([, names]) => names)
+
+    shuffleArray(sameTypeExtras)
+    shuffleArray(otherTypeExtras)
+
+    const distractorNames = []
+    // Fill from same-subtype extras first (most tricky)
+    for (const name of sameTypeExtras) {
+      if (distractorNames.length >= 3) break
+      distractorNames.push(name)
     }
-    shuffleArray(others)
-    const distractors = others.slice(0, 3)
-    const choices = [currentItem, ...distractors]
-    shuffleArray(choices)
+    // Then other-subtype extras from the same category
+    for (const name of otherTypeExtras) {
+      if (distractorNames.length >= 3) break
+      distractorNames.push(name)
+    }
+    // Fallback: unanswered in-game items from same category
+    if (distractorNames.length < 3) {
+      const cat = CATEGORIES.find(c => c.id === catId)
+      if (cat) {
+        const inGame = cat.items.filter(it => it.id !== currentItem.id && !state.answeredIds.has(it.id))
+        shuffleArray(inGame)
+        for (const it of inGame) {
+          if (distractorNames.length >= 3) break
+          distractorNames.push(it.name)
+        }
+      }
+    }
+
+    const options = [currentItem.name, ...distractorNames]
+    shuffleArray(options)
     return {
-      options: choices.map(c => c.name),
-      correctIdx: choices.indexOf(currentItem),
+      options,
+      correctIdx: options.indexOf(currentItem.name),
     }
   }
 
@@ -484,7 +508,7 @@ function createGameplayScreen(players, selectedCategory) {
 
   function showRound() {
     state.phase = 'viewing'
-    state.cluesRevealed = 1
+    state.cluesRevealed = 0
     updateTurnDisplay()
 
     const item = items[state.round]
@@ -515,26 +539,23 @@ function createGameplayScreen(players, selectedCategory) {
       preloadImage(items[state.round + 1].image)
     }
 
-    // Set clues — first clue fades in after a brief delay
+    // Set clues — all start hidden, player taps "Show Clue" to reveal first
     clueEls[0].textContent = item.clues[0]
     clueEls[0].classList.add('adv-fg-clue-hidden')
     clueEls[1].textContent = item.clues[1]
     clueEls[1].classList.add('adv-fg-clue-hidden')
     clueEls[2].textContent = item.clues[2]
     clueEls[2].classList.add('adv-fg-clue-hidden')
-    // Fade in first clue after photo loads
-    setTimeout(() => clueEls[0].classList.remove('adv-fg-clue-hidden'), 300)
 
-    // Controls
+    // Controls — start at 400 pts with "Show Clue" button
     controlsEl.style.display = ''
-    const initialPts = (4 - state.cluesRevealed) * 100
     ptsEl.style.display = ''
-    ptsEl.textContent = `${initialPts} pts available`
+    ptsEl.textContent = '400 pts available'
     moreCluesBtn.style.display = ''
-    moreCluesBtn.textContent = 'More Clues (\u2212100 pts)'
+    moreCluesBtn.textContent = 'Show Clue (\u2212100 pts)'
 
     // Hide significance
-    significanceEl.style.display = 'none'
+    significanceEl.classList.add('adv-fg-clue-hidden')
     significanceEl.textContent = ''
 
     // Set answer buttons
@@ -566,6 +587,8 @@ function createGameplayScreen(players, selectedCategory) {
 
     if (state.cluesRevealed >= 3) {
       moreCluesBtn.style.display = 'none'
+    } else {
+      moreCluesBtn.textContent = 'More Clues (\u2212100 pts)'
     }
   }
 
@@ -611,13 +634,14 @@ function createGameplayScreen(players, selectedCategory) {
       })
     }
 
-    // Show significance
-    significanceEl.textContent = item.significance
-    significanceEl.style.display = ''
-
-    // Reveal remaining clues with staggered fade-in
+    // Reveal remaining clues with staggered fade-in, then significance
     const hiddenClues = clueEls.filter(c => c.classList.contains('adv-fg-clue-hidden'))
-    hiddenClues.forEach((c, i) => setTimeout(() => c.classList.remove('adv-fg-clue-hidden'), (i + 1) * 200))
+    hiddenClues.forEach((c, i) => setTimeout(() => c.classList.remove('adv-fg-clue-hidden'), (i + 1) * 600))
+
+    // Show significance after all clues are revealed
+    const sigDelay = (hiddenClues.length + 1) * 600
+    significanceEl.textContent = `Significance: ${item.significance}`
+    setTimeout(() => significanceEl.classList.remove('adv-fg-clue-hidden'), sigDelay)
 
     // Replace controls with Next/Finish button (reuse More Clues button styling)
     ptsEl.style.display = 'none'

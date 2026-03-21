@@ -15,6 +15,7 @@ export const CATEGORIES = [
     items: [
       {
         id: 'pasque-flower',
+        subtype: 'flower',
         name: 'Pasque Flower',
         image: 'assets/field-guide/native-plants/pasque-flower.webp',
         clues: [
@@ -26,6 +27,7 @@ export const CATEGORIES = [
       },
       {
         id: 'purple-coneflower',
+        subtype: 'flower',
         name: 'Purple Coneflower',
         image: 'assets/field-guide/native-plants/purple-coneflower.webp',
         clues: [
@@ -37,6 +39,7 @@ export const CATEGORIES = [
       },
       {
         id: 'black-eyed-susan',
+        subtype: 'flower',
         name: 'Black-Eyed Susan',
         image: 'assets/field-guide/native-plants/black-eyed-susan.webp',
         clues: [
@@ -48,6 +51,7 @@ export const CATEGORIES = [
       },
       {
         id: 'big-bluestem',
+        subtype: 'grass',
         name: 'Big Bluestem',
         image: 'assets/field-guide/native-plants/big-bluestem.webp',
         clues: [
@@ -59,6 +63,7 @@ export const CATEGORIES = [
       },
       {
         id: 'little-bluestem',
+        subtype: 'grass',
         name: 'Little Bluestem',
         image: 'assets/field-guide/native-plants/little-bluestem.webp',
         clues: [
@@ -70,6 +75,7 @@ export const CATEGORIES = [
       },
       {
         id: 'prairie-coneflower',
+        subtype: 'flower',
         name: 'Prairie Coneflower',
         image: 'assets/field-guide/native-plants/prairie-coneflower.webp',
         clues: [
@@ -81,6 +87,7 @@ export const CATEGORIES = [
       },
       {
         id: 'bur-oak',
+        subtype: 'tree',
         name: 'Bur Oak',
         image: 'assets/field-guide/native-plants/bur-oak.webp',
         clues: [
@@ -92,6 +99,7 @@ export const CATEGORIES = [
       },
       {
         id: 'cottonwood',
+        subtype: 'tree',
         name: 'Eastern Cottonwood',
         image: 'assets/field-guide/native-plants/cottonwood.webp',
         clues: [
@@ -103,6 +111,7 @@ export const CATEGORIES = [
       },
       {
         id: 'ponderosa-pine',
+        subtype: 'tree',
         name: 'Ponderosa Pine',
         image: 'assets/field-guide/native-plants/ponderosa-pine.webp',
         clues: [
@@ -114,6 +123,7 @@ export const CATEGORIES = [
       },
       {
         id: 'prairie-rose',
+        subtype: 'shrub',
         name: 'Prairie Rose',
         image: 'assets/field-guide/native-plants/prairie-rose.webp',
         clues: [
@@ -125,6 +135,7 @@ export const CATEGORIES = [
       },
       {
         id: 'switchgrass',
+        subtype: 'grass',
         name: 'Switchgrass',
         image: 'assets/field-guide/native-plants/switchgrass.webp',
         clues: [
@@ -142,6 +153,7 @@ export const CATEGORIES = [
     items: [
       {
         id: 'cereal-rye',
+        subtype: 'grain',
         name: 'Cereal Rye',
         image: 'assets/field-guide/cover-crops/cereal-rye.webp',
         clues: [
@@ -153,6 +165,7 @@ export const CATEGORIES = [
       },
       {
         id: 'oilseed-radish',
+        subtype: 'brassica',
         name: 'Oilseed Radish',
         image: 'assets/field-guide/cover-crops/oilseed-radish.webp',
         clues: [
@@ -164,6 +177,7 @@ export const CATEGORIES = [
       },
       {
         id: 'crimson-clover',
+        subtype: 'legume',
         name: 'Crimson Clover',
         image: 'assets/field-guide/cover-crops/crimson-clover.webp',
         clues: [
@@ -175,6 +189,7 @@ export const CATEGORIES = [
       },
       {
         id: 'hairy-vetch',
+        subtype: 'legume',
         name: 'Hairy Vetch',
         image: 'assets/field-guide/cover-crops/hairy-vetch.webp',
         clues: [
@@ -186,6 +201,7 @@ export const CATEGORIES = [
       },
       {
         id: 'winter-oats',
+        subtype: 'grain',
         name: 'Winter Oats',
         image: 'assets/field-guide/cover-crops/winter-oats.webp',
         clues: [
@@ -197,6 +213,7 @@ export const CATEGORIES = [
       },
       {
         id: 'turnips',
+        subtype: 'brassica',
         name: 'Turnips',
         image: 'assets/field-guide/cover-crops/turnips.webp',
         clues: [
@@ -208,6 +225,7 @@ export const CATEGORIES = [
       },
       {
         id: 'corn',
+        subtype: 'grain',
         name: 'Corn',
         image: 'assets/field-guide/cover-crops/corn.webp',
         clues: [
@@ -219,6 +237,7 @@ export const CATEGORIES = [
       },
       {
         id: 'soybeans',
+        subtype: 'legume',
         name: 'Soybeans',
         image: 'assets/field-guide/cover-crops/soybeans.webp',
         clues: [
@@ -230,6 +249,7 @@ export const CATEGORIES = [
       },
       {
         id: 'winter-wheat',
+        subtype: 'grain',
         name: 'Winter Wheat',
         image: 'assets/field-guide/cover-crops/winter-wheat.webp',
         clues: [
@@ -241,6 +261,7 @@ export const CATEGORIES = [
       },
       {
         id: 'sunflower',
+        subtype: 'oilseed',
         name: 'Sunflower',
         image: 'assets/field-guide/cover-crops/sunflower.webp',
         clues: [
@@ -252,6 +273,7 @@ export const CATEGORIES = [
       },
       {
         id: 'grain-sorghum',
+        subtype: 'grain',
         name: 'Grain Sorghum',
         image: 'assets/field-guide/cover-crops/grain-sorghum.webp',
         clues: [
@@ -269,6 +291,7 @@ export const CATEGORIES = [
     items: [
       {
         id: 'no-till',
+        subtype: 'field-management',
         name: 'No-Till Farming',
         image: 'assets/field-guide/conservation-practices/no-till-farming.webp',
         clues: [
@@ -280,6 +303,7 @@ export const CATEGORIES = [
       },
       {
         id: 'contour-farming',
+        subtype: 'field-management',
         name: 'Contour Farming',
         image: 'assets/field-guide/conservation-practices/contour-farming.webp',
         clues: [
@@ -291,6 +315,7 @@ export const CATEGORIES = [
       },
       {
         id: 'terracing',
+        subtype: 'water-management',
         name: 'Terracing',
         image: 'assets/field-guide/conservation-practices/terracing.webp',
         clues: [
@@ -302,6 +327,7 @@ export const CATEGORIES = [
       },
       {
         id: 'grassed-waterway',
+        subtype: 'water-management',
         name: 'Grassed Waterway',
         image: 'assets/field-guide/conservation-practices/grassed-waterway.webp',
         clues: [
@@ -313,6 +339,7 @@ export const CATEGORIES = [
       },
       {
         id: 'riparian-buffer',
+        subtype: 'vegetation-based',
         name: 'Riparian Buffer',
         image: 'assets/field-guide/conservation-practices/riparian-buffer.webp',
         clues: [
@@ -324,6 +351,7 @@ export const CATEGORIES = [
       },
       {
         id: 'windbreak',
+        subtype: 'vegetation-based',
         name: 'Windbreak',
         image: 'assets/field-guide/conservation-practices/windbreak.webp',
         clues: [
@@ -335,6 +363,7 @@ export const CATEGORIES = [
       },
       {
         id: 'cover-cropping',
+        subtype: 'field-management',
         name: 'Cover Cropping',
         image: 'assets/field-guide/conservation-practices/cover-cropping.webp',
         clues: [
@@ -346,6 +375,7 @@ export const CATEGORIES = [
       },
       {
         id: 'strip-cropping',
+        subtype: 'field-management',
         name: 'Strip Cropping',
         image: 'assets/field-guide/conservation-practices/strip-cropping.webp',
         clues: [
@@ -363,6 +393,7 @@ export const CATEGORIES = [
     items: [
       {
         id: 'row-crop-planter',
+        subtype: 'planting',
         name: 'Row Crop Planter',
         image: 'assets/field-guide/farm-equipment/row-crop-planter.webp',
         clues: [
@@ -374,6 +405,7 @@ export const CATEGORIES = [
       },
       {
         id: 'no-till-drill',
+        subtype: 'planting',
         name: 'No-Till Drill',
         image: 'assets/field-guide/farm-equipment/no-till-drill.webp',
         clues: [
@@ -385,6 +417,7 @@ export const CATEGORIES = [
       },
       {
         id: 'combine-harvester',
+        subtype: 'harvesting',
         name: 'Combine Harvester',
         image: 'assets/field-guide/farm-equipment/combine-harvester.webp',
         clues: [
@@ -396,6 +429,7 @@ export const CATEGORIES = [
       },
       {
         id: 'grain-cart',
+        subtype: 'harvesting',
         name: 'Grain Cart',
         image: 'assets/field-guide/farm-equipment/grain-cart.webp',
         clues: [
@@ -407,6 +441,7 @@ export const CATEGORIES = [
       },
       {
         id: 'strip-till-rig',
+        subtype: 'tillage',
         name: 'Strip-Till Rig',
         image: 'assets/field-guide/farm-equipment/strip-till-rig.webp',
         clues: [
@@ -418,6 +453,7 @@ export const CATEGORIES = [
       },
       {
         id: 'roller-crimper',
+        subtype: 'specialty',
         name: 'Roller Crimper',
         image: 'assets/field-guide/farm-equipment/roller-crimper.webp',
         clues: [
@@ -429,6 +465,7 @@ export const CATEGORIES = [
       },
       {
         id: 'cover-crop-interseeder',
+        subtype: 'planting',
         name: 'Cover Crop Interseeder',
         image: 'assets/field-guide/farm-equipment/cover-crop-interseeder.webp',
         clues: [
@@ -440,6 +477,7 @@ export const CATEGORIES = [
       },
       {
         id: 'agricultural-drone',
+        subtype: 'specialty',
         name: 'Agricultural Drone',
         image: 'assets/field-guide/farm-equipment/agricultural-drone.webp',
         clues: [
@@ -453,6 +491,35 @@ export const CATEGORIES = [
   },
 ]
 
+// ─── Extra Distractor Names (same-category items NOT featured as questions) ───
+
+export const EXTRA_DISTRACTORS = {
+  'native-plants': {
+    flower: ['Wild Bergamot', 'Goldenrod', 'Prairie Smoke', 'Blazing Star', 'Prairie Clover', 'Milkweed', 'Blanket Flower', 'Spiderwort', 'Harebell'],
+    grass: ['Blue Grama Grass', 'Indian Grass', 'Side-Oats Grama', 'Buffalo Grass', 'Prairie Dropseed', 'Needle-and-Thread Grass', 'Western Wheatgrass'],
+    tree: ['American Elm', 'Green Ash', 'Chokecherry', 'Wild Plum', 'Paper Birch', 'Hackberry', 'Box Elder', 'Red Cedar'],
+    shrub: ['Leadplant', 'Silver Buffaloberry', 'Western Snowberry', 'Smooth Sumac', 'Skunkbush Sumac'],
+  },
+  'cover-crops': {
+    legume: ['Austrian Winter Pea', 'Red Clover', 'Sweet Clover', 'Cowpea', 'Sunn Hemp', 'Field Pea', 'Alfalfa', 'Dry Edible Bean', 'Lentil'],
+    grain: ['Barley', 'Pearl Millet', 'Annual Ryegrass', 'Triticale', 'Proso Millet', 'Oat'],
+    oilseed: ['Safflower', 'Canola', 'Flax', 'Camelina', 'Mustard'],
+    brassica: ['Kale', 'Ethiopian Cabbage', 'Forage Radish', 'Rape'],
+    broadleaf: ['Buckwheat', 'Phacelia', 'Chicory'],
+  },
+  'conservation-practices': {
+    'field-management': ['Crop Rotation', 'Mulching', 'Residue Management', 'Nutrient Management Plan', 'Integrated Pest Management'],
+    'water-management': ['Water & Sediment Control Basin', 'Grade Stabilization Structure', 'Wetland Restoration', 'Drainage Water Management'],
+    'vegetation-based': ['Prescribed Grazing', 'Pollinator Habitat', 'Prairie Restoration', 'Alley Cropping'],
+  },
+  'farm-equipment': {
+    planting: ['Air Seeder', 'Seed Tender', 'Broadcast Spreader', 'Precision Planter'],
+    tillage: ['Chisel Plow', 'Disc Harrow', 'Subsoiler', 'Field Cultivator', 'Moldboard Plow'],
+    harvesting: ['Bale Wrapper', 'Rotary Mower', 'Swather', 'Forage Harvester'],
+    specialty: ['Land Leveler', 'Fertigation System', 'Pivot Irrigator', 'Manure Spreader', 'Yield Monitor'],
+  },
+}
+
 // ─── Instructions ───
 
 export const INSTRUCTIONS = {
@@ -463,11 +530,11 @@ export const INSTRUCTIONS = {
 // ─── Rules ───
 
 export const RULES = [
-  'A photo is shown with a clue. Identify what\'s in the photo.',
-  'You start with 300 points available per question.',
-  'Tap "More Clues" to reveal additional hints (\u2212100 pts each).',
+  'A photo is shown — identify what\'s in it!',
+  'You start with 400 points. Tap "Show Clue" to reveal hints (\u2212100 pts each).',
+  'Each clue narrows it down. Fewer clues = more points.',
   'Tap one of four answer choices to guess.',
-  'Correct answers earn points based on clues used (300 pts / 200 pts / 100 pts).',
+  'Correct answers earn points based on clues used (400 / 300 / 200 / 100 pts).',
   'Wrong answers earn 0 points. The correct answer is shown.',
   'After completing a category, a brief soil health fact is revealed.',
   'Player with the most points wins!',
