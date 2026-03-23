@@ -448,7 +448,7 @@ function createGameplayScreen(players, selectedCategory) {
         <span>${esc(label)}</span>
       </div>
     `
-    el.appendChild(popup)
+    mainEl.appendChild(popup)
     requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
     setTimeout(() => {
       popup.classList.remove('adv-sw-popup-show')
