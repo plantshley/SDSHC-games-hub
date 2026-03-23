@@ -40,7 +40,7 @@ export const ADVANCED_GAMES = [
   {
     id: 'adv-field-guide',
     title: 'Field Guide',
-    description: 'Identify SD plants, crops, practices, and equipment from photos.',
+    description: 'Identify SD plants, crops, wildlife, soils, practices, and equipment from photos.',
     icon: '\u2618', // ☘ (shamrock)
     players: '1-4 players',
     module: () => import('../games/advanced/field-guide.js'),

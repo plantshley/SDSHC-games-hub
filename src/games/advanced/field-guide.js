@@ -714,18 +714,21 @@ function createGameplayScreen(players, selectedCategory) {
       const isTie = isMultiplayer && sorted.length > 1 && sorted[0].score === sorted[1].score
 
       let heading
-      if (fromQuit) {
-        heading = 'Game Over'
-      } else if (isMultiplayer) {
+      if (isMultiplayer) {
         heading = isTie ? 'Tie Game!' : `${esc(winner.name)} Wins!`
+      } else if (fromQuit) {
+        heading = 'Game Over'
       } else {
         heading = 'Great Job!'
       }
 
-      const maxPts = totalRounds * 300
-      const detail = isMultiplayer
-        ? ''
-        : `You scored ${winner.score} out of ${maxPts} possible points.`
+      const answered = state.round
+      const maxPts = totalRounds * 400
+      const detail = fromQuit
+        ? `${answered}/${totalRounds} questions completed`
+        : isMultiplayer
+          ? `${INSTRUCTIONS.completion}`
+          : `You scored ${winner.score} out of ${maxPts} possible points.`
 
       const overlay = document.createElement('div')
       overlay.className = 'adv-sw-completion-overlay'

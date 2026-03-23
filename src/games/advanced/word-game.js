@@ -328,16 +328,14 @@ function createGameplayScreen(players, totalRounds) {
         activeSlot.classList.remove('adv-wg-empty')
         activeSlot.classList.add('adv-wg-filled')
 
-        // Auto-advance to next empty slot
+        // Auto-advance to next empty slot, or stay on current if all filled
         const allSlots = [...blanksEl.querySelectorAll('.adv-wg-solve-slot:not(.adv-wg-locked)')]
         const curIdx = allSlots.indexOf(activeSlot)
-        activeSlot.classList.remove('adv-wg-slot-active')
         const next = allSlots.find((s, i) => i > curIdx && s.classList.contains('adv-wg-empty'))
         if (next) {
+          activeSlot.classList.remove('adv-wg-slot-active')
           next.classList.add('adv-wg-slot-active')
           activeSlot = next
-        } else {
-          activeSlot = null
         }
       })
     })
