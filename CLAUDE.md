@@ -1,4 +1,6 @@
-# SDSHC Games Hub
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -85,11 +87,13 @@ src/
     advanced/
       spin-wheel.js       # Advanced: converted from kid, dark theme, multiplayer
       trivia-blitz.js     # Advanced: converted from kid, dark theme, multiplayer
-      jeopardy.js         # Advanced: new, category grid, multiplayer
-      word-game.js        # Advanced: new, Wheel of Fortune style, multiplayer
+      jeopardy.js         # Advanced: category grid, daily doubles, multiplayer
+      word-game.js        # Advanced: Wheel of Fortune style, multiplayer
+      field-guide.js      # Advanced: photo ID game (exception to no-image rule)
+      connections.js      # Advanced: NYT Connections style, group 16 tiles
   data/
-    game-registry.js      # kid mode game metadata
-    advanced-game-registry.js  # advanced mode game metadata (flat, no tiers)
+    game-registry.js      # kid mode game metadata (GAMES array + TIER_META)
+    advanced-game-registry.js  # advanced mode game metadata (flat ADVANCED_GAMES array)
     content/
       soil-cake.js        # kid content files
       coloring.js
@@ -101,8 +105,14 @@ src/
         trivia-blitz.js
         jeopardy.js
         word-game.js
+        field-guide.js
+        connections.js
   utils/
     svg-recolor.js  # SVG preprocessing for coloring game
+    gradient-bg.js  # animated gradient background for advanced games
+    theme-toggle.js # dark/light mode toggle component
+    help-overlay.js # help/rules overlay component
+    typewriter.js   # typewriter text animation effect
 ```
 
 ## Fonts
@@ -171,7 +181,7 @@ Base palette: earthy greens, warm browns, sky blues, cream/parchment backgrounds
 
 ### Design Rules (Advanced Mode)
 
-- **NO image assets** — everything is CSS-only, Unicode symbols, inline SVG at most
+- **NO image assets** — everything is CSS-only, Unicode symbols, inline SVG at most **field guide game is exception**
 - **Clean, sleek, modern UI** — no pixel art, no sprites, no decorative images
 - **Dark/light mode toggle** — dark default, light option. Persisted in `localStorage`
 - **Silkscreen** for titles, **JetBrains Mono** for body text
@@ -192,12 +202,14 @@ CSS custom properties scoped under `[data-mode="advanced"]`:
 
 Light theme overrides under `[data-mode="advanced"][data-theme="light"]`.
 
-### Advanced Games (4 total)
+### Advanced Games (6 total)
 
-1. **Spin the Wheel** — converted from kid version, harder questions, dark theme, multiplayer
-2. **Trivia Blitz** — converted from kid version, college-level questions, dark theme, multiplayer
-3. **Soil Jeopardy** — category grid (5-6 categories x 5 point values), daily doubles, multiplayer
-4. **Word Game** — Wheel of Fortune style, guess soil science terms letter by letter, depleting progress bar for wrong guesses, multiplayer
+1. **Spin the Wheel** (`adv-spin-wheel`) — converted from kid version, harder questions, dark theme, multiplayer
+2. **Trivia Blitz** (`adv-trivia-blitz`) — converted from kid version, college-level questions, dark theme, multiplayer
+3. **Soil Jeopardy** (`adv-jeopardy`) — category grid (6 categories x 5 point values), daily doubles, multiplayer
+4. **Word or Worm?** (`adv-word-game`) — Wheel of Fortune style, guess soil science terms letter by letter, multiplayer
+5. **Field Guide** (`adv-field-guide`) — photo identification game (exception to no-image-assets rule), multiplayer
+6. **Conservation Connections** (`adv-connections`) — NYT Connections style, sort 16 tiles into 4 hidden groups, multiplayer
 
 ### Advanced Game Registry
 
@@ -226,9 +238,19 @@ Flat array (no tiers). Each entry:
 
 Each game is a standalone module exporting a `createXxxGame()` function that returns a DOM element. No GameBase class — games manage their own state, DOM, and events.
 
-Games register via their respective registry (`game-registry.js` for kid, `advanced-game-registry.js` for advanced).
+Games register via their respective registry (`game-registry.js` for kid, `advanced-game-registry.js` for advanced). Advanced games are lazy-loaded via dynamic `import()` in the registry.
 
 Content is separated into data files in `src/data/content/` (kid) and `src/data/content/advanced/` (advanced).
+
+### Advanced Game Shared Utils
+
+Advanced games share common UI components from `src/utils/`:
+- `gradient-bg.js` — `addGradientBackground(el)` adds the animated gradient spheres backdrop
+- `theme-toggle.js` — `createThemeToggle()` returns a dark/light toggle button, persists to `localStorage`
+- `help-overlay.js` — `createHelpButton(rules)` returns a "?" button that shows a rules overlay
+- `typewriter.js` — `typewriter(el, text)` animates text character by character
+
+Every advanced game screen must use `flex-direction: column` layout with `padding-top: 48px` on the main panel to accommodate the top bar.
 
 ## Asset References
 
@@ -261,33 +283,4 @@ npm run preview  # preview production build
 
 ## Other notes
 - Always ask the user clarifying questions when needed or helpful
-
-# Agent Instructions
-
-## Subagents
-
-Subagents are lightweight agents (Sonnet 4.5) with self-contained contexts, defined in `.claude/agents/`. They're cheaper, unbiased (no parent context leakage), and keep the parent context clean.
-
-### Available Subagents
-- `code-reviewer` - Unbiased code review with zero context. Returns issues by severity with a PASS/FAIL verdict.
-- `research` - Deep research via web search, file reads, and codebase exploration. Returns concise sourced findings.
-- `qa` - Generates tests for a code snippet, runs them, and reports pass/fail results.
-
-### Design & Build Workflow
-
-When building or modifying any non-trivial code (scripts, features, refactors), follow this loop:
-
-1. **Write/edit the code** — Make your changes.
-2. **Code Review** — Spawn `code-reviewer` subagent with the changed file(s). It reports issues back — it does NOT fix anything itself.
-3. **QA** — Spawn `qa` subagent with the code. It generates tests, runs them, and reports results back — it does NOT fix anything itself.
-4. **Fix** — The parent agent (you) reads the review and QA reports and applies all fixes.
-5. **Ship** — Only after review passes and tests pass.
-
-**Important:** Subagents are read-only reporters. All code changes happen in the parent agent.
-
-For research-heavy tasks, spawn `research` subagent first to gather context without polluting the main conversation.
-
-**Parallel execution:** When reviewing + QA'ing independent files, spawn both subagents in parallel using `run_in_background: true`.
-
-
-Be pragmatic. Be reliable. Self-anneal.
+- Agent instructions (subagents, design/build workflow) are in the parent `.claude/CLAUDE.md` — not repeated here
