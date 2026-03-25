@@ -52,6 +52,14 @@ const VARIANTS = {
     pos2: 'bottom: -15%; left: -15%;',
     pos3: 'top: 45%; left: -5%;',
   },
+  'connections': {
+    sphere1: 'linear-gradient(45deg, rgba(153, 115, 255, 0.5), rgba(56, 206, 188, 0.3))',
+    sphere2: 'linear-gradient(225deg, rgba(255, 113, 206, 0.4), rgba(184, 232, 74, 0.2))',
+    sphere3: 'linear-gradient(135deg, rgba(56, 206, 188, 0.5), rgba(153, 115, 255, 0.25))',
+    pos1: 'top: -15%; left: -10%;',
+    pos2: 'bottom: -20%; right: -5%;',
+    pos3: 'top: 55%; left: 30%;',
+  },
 }
 
 const PARTICLE_COUNT = 60

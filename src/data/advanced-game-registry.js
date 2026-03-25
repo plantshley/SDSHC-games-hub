@@ -45,6 +45,14 @@ export const ADVANCED_GAMES = [
     players: '1-4 players',
     module: () => import('../games/advanced/field-guide.js'),
   },
+  {
+    id: 'adv-connections',
+    title: 'Conservation Connections',
+    description: 'Sort 16 tiles into 4 hidden groups. Watch out for tricky overlaps!',
+    icon: '\u29C9', // ⧉ (two joined squares)
+    players: '1-4 players',
+    module: () => import('../games/advanced/connections.js'),
+  },
 ]
 
 export function getAdvancedGameById(id) {
