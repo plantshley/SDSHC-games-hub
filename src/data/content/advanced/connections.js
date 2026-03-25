@@ -89,17 +89,17 @@ export const PUZZLES = [
       {
         category: 'Soil Predators',
         difficulty: 2,
-        items: ['Nematode', 'Centipede', 'Ground Beetle', 'Spider Mite'],
+        items: ['Nematode', 'Centipede', 'Ground Beetle', 'Pseudoscorpion'],
       },
       {
         category: 'Symbiotic Relationships',
         difficulty: 3,
-        items: ['Mycorrhizal Network', 'Root Nodules', 'Lichen', 'Actinomycetes'],
+        items: ['Mycorrhizal Network', 'Root Nodules', 'Lichen', 'Endophyte'],
       },
       {
         category: 'Products of Soil Biology',
         difficulty: 4,
-        items: ['Glomalin', 'Humic Acid', 'Aggregate', 'Root Exudate'],
+        items: ['Glomalin', 'Humic Acid', 'Earthworm Cast', 'Root Exudate'],
       },
     ],
   },
@@ -108,9 +108,9 @@ export const PUZZLES = [
     title: 'Nutrient Management',
     groups: [
       {
-        category: 'Macronutrients (N-P-K-S)',
+        category: 'Macronutrients',
         difficulty: 1,
-        items: ['Nitrogen', 'Phosphorus', 'Potassium', 'Sulfur'],
+        items: ['Nitrogen', 'Phosphorus', 'Potassium', 'Calcium'],
       },
       {
         category: 'Forms of Nitrogen in Soil',
@@ -151,7 +151,7 @@ export const PUZZLES = [
       {
         category: 'Harmed by Soil Compaction',
         difficulty: 4,
-        items: ['Porosity', 'Aeration', 'Root Growth', 'Water Holding Capacity'],
+        items: ['Porosity', 'Aeration', 'Root Growth', 'Drainage'],
       },
     ],
   },
@@ -198,7 +198,7 @@ export const PUZZLES = [
       {
         category: 'pH Adjustment Materials',
         difficulty: 3,
-        items: ['Agricultural Lime', 'Elemental Sulfur', 'Gypsum', 'Wood Ash'],
+        items: ['Agricultural Lime', 'Elemental Sulfur', 'Aluminum Sulfate', 'Dolomitic Lime'],
       },
       {
         category: 'Signs of Problem Soils',
@@ -212,14 +212,14 @@ export const PUZZLES = [
     title: 'Traditional Agriculture',
     groups: [
       {
-        category: 'Three Sisters Crops',
+        category: 'Mesoamerican Crops',
         difficulty: 1,
         items: ['Maize', 'Beans', 'Squash', 'Sunflower'],
       },
       {
         category: 'Ancient Farming Systems',
         difficulty: 2,
-        items: ['Chinampas', 'Terrace Farming', 'Zai Pits', 'Paddy Rice'],
+        items: ['Chinampas', 'Terrace Farming', 'Zai Pits', 'Floating Rice'],
       },
       {
         category: 'Traditional Soil Amendments',
@@ -264,9 +264,9 @@ export const PUZZLES = [
     title: 'Climate & Carbon',
     groups: [
       {
-        category: 'Greenhouse Gases from Soil',
+        category: 'Gases Emitted from Soil',
         difficulty: 1,
-        items: ['Carbon Dioxide', 'Methane', 'Nitrous Oxide', 'Water Vapor'],
+        items: ['Carbon Dioxide', 'Methane', 'Nitrous Oxide', 'Ammonia'],
       },
       {
         category: 'Carbon Sequestration Practices',
