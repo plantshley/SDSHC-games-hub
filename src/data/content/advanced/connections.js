@@ -209,7 +209,7 @@ export const PUZZLES = [
   },
   {
     id: 'traditional-ag',
-    title: 'Traditional Agriculture',
+    title: 'Indigenous Agriculture',
     groups: [
       {
         category: 'Mesoamerican Crops',
