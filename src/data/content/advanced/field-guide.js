@@ -415,7 +415,7 @@ export const CATEGORIES = [
         name: 'Crop Rotation',
         image: 'assets/field-guide/conservation-practices/crop-rotation.webp',
         clues: [
-          'Same field photographed in different seasons shows completely different crops growing.',
+          'Two fields show completely different crops growing.',
           'Corn stubble one year, soybean plants the next — a deliberate alternating pattern visible across the landscape.',
           'The simplest and oldest conservation practice: never plant the same crop in the same field two years in a row.',
         ],

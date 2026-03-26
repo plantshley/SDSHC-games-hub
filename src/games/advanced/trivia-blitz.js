@@ -12,32 +12,11 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
+import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
 
 const POINTS_BASE = 100
 const POINTS_FAST = 50  // answered in <= 5s
 const POINTS_QUICK = 25 // answered in <= 10s
-
-// ─── HELPERS ───
-
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]]
-  }
-  return arr
-}
-
-function transitionTo(currentEl, newEl) {
-  const parent = currentEl.parentNode
-  currentEl.classList.remove('active')
-  currentEl.classList.add('exiting')
-  currentEl.addEventListener('animationend', () => currentEl.remove(), { once: true })
-  setTimeout(() => { if (currentEl.parentNode) currentEl.remove() }, 400)
-  parent.appendChild(newEl)
-  newEl.offsetHeight
-  newEl.classList.add('active', 'entering')
-  newEl.addEventListener('animationend', () => newEl.classList.remove('entering'), { once: true })
-}
 
 // ─── INTRO SCREEN ───
 
@@ -158,7 +137,7 @@ function createGameplayScreen(players, mode) {
   }
 
   if (mode === 'endless') {
-    state.endlessPool = ROUNDS.flatMap(r => r.questions.map(q => ({ ...q })))
+    state.endlessPool = ROUNDS.flatMap(r => r.questions.map(q => ({ ...q, roundTitle: r.title })))
     shuffleArray(state.endlessPool)
   }
 
@@ -266,6 +245,10 @@ function createGameplayScreen(players, mode) {
   const counterText = el.querySelector('#adv-tb-counter')
   const choicesContainer = el.querySelector('#adv-tb-choices')
   const mainPanel = el.querySelector('#adv-tb-main')
+
+  // Hide timer bar in endless solo (no timer)
+  const endlessSolo = mode === 'endless' && !isMultiplayer
+  if (endlessSolo) timerBar.style.display = 'none'
 
   // ── Timer ──
 
@@ -432,7 +415,7 @@ function createGameplayScreen(players, mode) {
         state.missedQuestions.push({
           question: q.text,
           correctAnswer: q.choices[q.correct],
-          round: ROUNDS[state.currentRound].title,
+          round: state.mode === 'endless' ? (q.roundTitle || 'Unknown') : ROUNDS[state.currentRound].title,
         })
       }
     }
@@ -784,11 +767,43 @@ function createGameplayScreen(players, mode) {
     })
   }
 
+  // ── Confirm Back ──
+
+  function confirmBack() {
+    // No progress yet — leave immediately
+    const hasProgress = mode === 'topic'
+      ? state.currentRound > 0 || state.questionIdx > 0
+      : state.endlessAnswered > 0
+    if (!hasProgress) { stopTimer(); navigate('game-select'); return }
+
+    const popup = document.createElement('div')
+    popup.className = 'adv-sw-completion-overlay'
+    popup.innerHTML = `
+      <div class="adv-sw-completion-content">
+        <h2 class="adv-sw-completion-heading">Leave Game?</h2>
+        <p class="adv-sw-completion-detail">Your progress will be lost.</p>
+        <div class="adv-sw-completion-btns">
+          <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-confirm-stay">Keep Playing</button>
+          <button class="adv-sw-comp-btn" id="adv-confirm-leave">Leave</button>
+        </div>
+      </div>
+    `
+    stopTimer()
+    el.appendChild(popup)
+    requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
+    popup.querySelector('#adv-confirm-stay').addEventListener('pointerdown', () => {
+      popup.classList.remove('adv-sw-popup-show')
+      setTimeout(() => { popup.remove(); if (!endlessSolo) startTimer() }, 300)
+    })
+    popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
+      navigate('game-select')
+    })
+  }
+
   // ── Event Bindings ──
 
   el.querySelector('#adv-tb-home').addEventListener('pointerdown', () => {
-    stopTimer()
-    navigate('game-select')
+    confirmBack()
   })
 
   el.querySelector('#adv-tb-quit').addEventListener('pointerdown', () => {
@@ -801,7 +816,11 @@ function createGameplayScreen(players, mode) {
     if (skipBtn) {
       skipBtn.addEventListener('pointerdown', () => {
         stopTimer()
-        if (state.currentRound < ROUNDS.length - 1) startRound(state.currentRound + 1)
+        if (state.currentRound < ROUNDS.length - 1) {
+          startRound(state.currentRound + 1)
+        } else {
+          showCompletion(true)
+        }
       })
     }
 
@@ -828,7 +847,8 @@ function createGameplayScreen(players, mode) {
   if (mode === 'topic') {
     setTimeout(() => startRound(0), initDelay)
   } else {
-    setTimeout(() => { startTimer(); showQuestion() }, initDelay)
+    // Endless: timer only in multiplayer, no timer in solo
+    setTimeout(() => { if (isMultiplayer) startTimer(); showQuestion() }, initDelay)
   }
 
   return el

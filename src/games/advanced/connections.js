@@ -13,16 +13,7 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
-
-// ─── HELPERS ───
-
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]]
-  }
-  return arr
-}
+import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
 
 const BURST_COLORS = ['#38cebc', '#b8e84a', '#ff71ce', '#01cdfe', '#b967ff']
 
@@ -40,18 +31,6 @@ function spawnBurstParticles(container, x, y, count = 12) {
     container.appendChild(p)
     p.addEventListener('animationend', () => p.remove())
   }
-}
-
-function transitionTo(currentEl, newEl) {
-  const parent = currentEl.parentNode
-  currentEl.classList.remove('active')
-  currentEl.classList.add('exiting')
-  currentEl.addEventListener('animationend', () => currentEl.remove(), { once: true })
-  setTimeout(() => { if (currentEl.parentNode) currentEl.remove() }, 400)
-  parent.appendChild(newEl)
-  newEl.offsetHeight
-  newEl.classList.add('active', 'entering')
-  newEl.addEventListener('animationend', () => newEl.classList.remove('entering'), { once: true })
 }
 
 function esc(str) {
@@ -260,10 +239,16 @@ function createGameplayScreen(players, rounds) {
     timerText.textContent = `${seconds}s`
     timerFill.style.width = `${pct}%`
 
-    timerBar.classList.remove('adv-tb-timer-green', 'adv-tb-timer-yellow', 'adv-tb-timer-red')
-    if (remaining > 15) timerBar.classList.add('adv-tb-timer-green')
-    else if (remaining > 5) timerBar.classList.add('adv-tb-timer-yellow')
-    else timerBar.classList.add('adv-tb-timer-red')
+    if (isMultiplayer) {
+      timerFill.style.background = state.players[state.currentPlayer].color
+      timerBar.classList.remove('adv-tb-timer-green', 'adv-tb-timer-yellow', 'adv-tb-timer-red')
+    } else {
+      timerFill.style.background = ''
+      timerBar.classList.remove('adv-tb-timer-green', 'adv-tb-timer-yellow', 'adv-tb-timer-red')
+      if (remaining > 15) timerBar.classList.add('adv-tb-timer-green')
+      else if (remaining > 5) timerBar.classList.add('adv-tb-timer-yellow')
+      else timerBar.classList.add('adv-tb-timer-red')
+    }
 
     if (remaining <= 0) {
       stopTimer()
@@ -358,7 +343,7 @@ function createGameplayScreen(players, rounds) {
     const dot = el.querySelector('#adv-cn-turn-dot')
     const name = el.querySelector('#adv-cn-turn-name')
     if (dot) dot.style.background = state.players[state.currentPlayer].color
-    if (name) name.textContent = state.players[state.currentPlayer].name
+    if (name) name.textContent = `${state.players[state.currentPlayer].name}'s Turn`
   }
 
   // ── Tile selection ──
@@ -761,8 +746,8 @@ function createGameplayScreen(players, rounds) {
     el.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('adv-sw-popup-show'))
 
-    overlay.querySelector('#adv-cn-done').addEventListener('pointerdown', () => navigate('game-select'))
-    overlay.querySelector('#adv-cn-again').addEventListener('pointerdown', () => transitionTo(el, createIntroScreen()))
+    overlay.querySelector('#adv-cn-done').addEventListener('pointerdown', () => { cleanup(); navigate('game-select') })
+    overlay.querySelector('#adv-cn-again').addEventListener('pointerdown', () => { cleanup(); transitionTo(el, createIntroScreen()) })
     if (hasMissed) {
       overlay.querySelector('#adv-cn-review').addEventListener('pointerdown', () => showReviewOverlay(overlay))
     }
@@ -899,12 +884,55 @@ function createGameplayScreen(players, rounds) {
   timerText = el.querySelector('#adv-cn-timer-text')
   timerBar = el.querySelector('#adv-cn-timer-bar')
 
+  // ── Cleanup ──
+
+  function cleanup() {
+    stopTimer()
+  }
+
+  // ── Leave confirmation (C16) ──
+
+  function confirmBack() {
+    // No progress — leave immediately
+    const hasProgress = state.currentRound > 0 || state.solvedGroups.length > 0 || state.mistakesThisRound > 0
+    if (!hasProgress) { cleanup(); navigate('game-select'); return }
+
+    stopTimer()
+    const prevPhase = state.phase
+    state.phase = 'confirm'
+
+    const popup = document.createElement('div')
+    popup.className = 'adv-sw-completion-overlay'
+    popup.innerHTML = `
+      <div class="adv-sw-completion-content">
+        <h2 class="adv-sw-completion-heading">Leave Game?</h2>
+        <p class="adv-sw-completion-detail">Your progress will be lost.</p>
+        <div class="adv-sw-completion-btns">
+          <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-cn-stay">Keep Playing</button>
+          <button class="adv-sw-comp-btn" id="adv-cn-leave">Leave</button>
+        </div>
+      </div>
+    `
+    el.appendChild(popup)
+    requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
+
+    popup.querySelector('#adv-cn-stay').addEventListener('pointerdown', () => {
+      popup.remove()
+      state.phase = prevPhase
+      if (prevPhase === 'selecting') startTimer()
+    })
+    popup.querySelector('#adv-cn-leave').addEventListener('pointerdown', () => {
+      cleanup()
+      navigate('game-select')
+    })
+  }
+
   // Wire events
-  el.querySelector('#adv-cn-home').addEventListener('pointerdown', () => navigate('game-select'))
+  el.querySelector('#adv-cn-home').addEventListener('pointerdown', () => confirmBack())
   el.querySelector('#adv-cn-deselect').addEventListener('pointerdown', () => deselectAll())
   el.querySelector('#adv-cn-shuffle').addEventListener('pointerdown', () => shuffleBoard())
   submitBtn.addEventListener('pointerdown', () => handleSubmit())
-  el.querySelector('#adv-cn-quit').addEventListener('pointerdown', () => showCompletion(true))
+  el.querySelector('#adv-cn-quit').addEventListener('pointerdown', () => { cleanup(); showCompletion(true) })
 
   // Initialize
   buildBoard()

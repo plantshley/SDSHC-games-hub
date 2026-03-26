@@ -1,5 +1,5 @@
 /**
- * Word Game (Wheel of Fortune style)
+ * Word or Worm? (Wheel of Fortune style)
  * Dark-themed, multiplayer (1-4 players), take turns guessing letters.
  * Solve button lets players guess the full word for bonus points.
  * Configurable round count with option to extend after completion.
@@ -13,28 +13,7 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
-
-// ─── HELPERS ───
-
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]]
-  }
-  return arr
-}
-
-function transitionTo(currentEl, newEl) {
-  const parent = currentEl.parentNode
-  currentEl.classList.remove('active')
-  currentEl.classList.add('exiting')
-  currentEl.addEventListener('animationend', () => currentEl.remove(), { once: true })
-  setTimeout(() => { if (currentEl.parentNode) currentEl.remove() }, 400)
-  parent.appendChild(newEl)
-  newEl.offsetHeight
-  newEl.classList.add('active', 'entering')
-  newEl.addEventListener('animationend', () => newEl.classList.remove('entering'), { once: true })
-}
+import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U'])
@@ -88,7 +67,7 @@ function createIntroScreen() {
     <div class="adv-sw-intro-inner">
       <div class="adv-sw-intro-topbar">
         <button class="adv-game-topbar-btn" id="adv-wg-back">\u2190 Back</button>
-        <h1 class="adv-sw-intro-title">Word Game</h1>
+        <h1 class="adv-sw-intro-title">Word or Worm?</h1>
       </div>
       <p class="adv-sw-intro-desc">${INSTRUCTIONS.intro}</p>
       <div class="adv-sw-player-setup">
@@ -113,7 +92,7 @@ function createIntroScreen() {
 
   addGradientBackground(el, 'word-game')
   const introTopbar = el.querySelector('.adv-sw-intro-topbar')
-  introTopbar.appendChild(createHelpButton('Word Game', RULES))
+  introTopbar.appendChild(createHelpButton('Word or Worm?', RULES))
   introTopbar.appendChild(createThemeToggle())
   typewriter(el.querySelector('.adv-sw-intro-desc'))
 
@@ -162,7 +141,7 @@ function createGameplayScreen(players, totalRounds) {
   el.innerHTML = `
     <div class="adv-sw-topbar">
       <button class="adv-game-topbar-btn" id="adv-wg-home">\u2190 Back</button>
-      <h2 class="adv-sw-game-title">Word Game</h2>
+      <h2 class="adv-sw-game-title">Word or Worm?</h2>
       ${isMultiplayer ? `
         <div class="adv-sw-turn-indicator" id="adv-wg-turn">
           <span class="adv-sw-turn-dot" id="adv-wg-turn-dot"></span>
@@ -213,7 +192,7 @@ function createGameplayScreen(players, totalRounds) {
 
   addGradientBackground(el, 'word-game')
   const gameTopbar = el.querySelector('.adv-sw-topbar')
-  gameTopbar.appendChild(createHelpButton('Word Game', RULES))
+  gameTopbar.appendChild(createHelpButton('Word or Worm?', RULES))
   gameTopbar.appendChild(createThemeToggle())
 
   // ── DOM refs ──
@@ -690,7 +669,7 @@ function createGameplayScreen(players, totalRounds) {
             `).join('')}
           </div>
           <div class="adv-sw-completion-btns">
-            ${hasMissed ? '<button class="adv-sw-comp-btn" id="adv-wg-review">\u2716 Review Missed Words</button>' : ''}
+            ${hasMissed ? '<button class="adv-sw-comp-btn" id="adv-wg-review">\u2716 Review Missed</button>' : ''}
             <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-wg-again">Play Again</button>
             <button class="adv-sw-comp-btn" id="adv-wg-home2">Back to Games</button>
           </div>
@@ -776,9 +755,39 @@ function createGameplayScreen(players, totalRounds) {
     })
   }
 
+  // ── Confirm Back ──
+
+  function confirmBack() {
+    if (state.wordsCompleted === 0 && state.guessedLetters.size === 0) {
+      navigate('game-select')
+      return
+    }
+    const popup = document.createElement('div')
+    popup.className = 'adv-sw-completion-overlay'
+    popup.innerHTML = `
+      <div class="adv-sw-completion-content">
+        <h2 class="adv-sw-completion-heading">Leave Game?</h2>
+        <p class="adv-sw-completion-detail">Your progress will be lost.</p>
+        <div class="adv-sw-completion-btns">
+          <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-confirm-stay">Keep Playing</button>
+          <button class="adv-sw-comp-btn" id="adv-confirm-leave">Leave</button>
+        </div>
+      </div>
+    `
+    el.appendChild(popup)
+    requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
+    popup.querySelector('#adv-confirm-stay').addEventListener('pointerdown', () => {
+      popup.classList.remove('adv-sw-popup-show')
+      setTimeout(() => popup.remove(), 300)
+    })
+    popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
+      navigate('game-select')
+    })
+  }
+
   // ── Event Bindings ──
 
-  el.querySelector('#adv-wg-home').addEventListener('pointerdown', () => navigate('game-select'))
+  el.querySelector('#adv-wg-home').addEventListener('pointerdown', () => confirmBack())
   solveBtn.addEventListener('pointerdown', () => enterSolveMode())
 
   // Quit button in lower right corner (like jeopardy)

@@ -13,18 +13,11 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
+import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
 
 const TAU = 2 * Math.PI
 
 // ─── HELPERS ───
-
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]]
-  }
-  return arr
-}
 
 const BURST_COLORS = ['#38cebc', '#b8e84a', '#ff71ce', '#01cdfe', '#b967ff']
 
@@ -42,18 +35,6 @@ function spawnBurstParticles(container, x, y, count = 12) {
     container.appendChild(p)
     p.addEventListener('animationend', () => p.remove())
   }
-}
-
-function transitionTo(currentEl, newEl) {
-  const parent = currentEl.parentNode
-  currentEl.classList.remove('active')
-  currentEl.classList.add('exiting')
-  currentEl.addEventListener('animationend', () => currentEl.remove(), { once: true })
-  setTimeout(() => { if (currentEl.parentNode) currentEl.remove() }, 400)
-  parent.appendChild(newEl)
-  newEl.offsetHeight
-  newEl.classList.add('active', 'entering')
-  newEl.addEventListener('animationend', () => newEl.classList.remove('entering'), { once: true })
 }
 
 // ─── INTRO SCREEN ───
@@ -329,8 +310,9 @@ function createGameplayScreen(players) {
     ctx.stroke()
   }
 
-  // Redraw wheel when theme changes
-  window.addEventListener('theme-change', () => drawWheel())
+  // Redraw wheel when theme changes (stored ref for cleanup)
+  const onThemeChange = () => drawWheel()
+  window.addEventListener('theme-change', onThemeChange)
 
   // ── Spin ──
 
@@ -363,10 +345,10 @@ function createGameplayScreen(players) {
 
     if (state.spunValue === 'steal') {
       spunValueEl.textContent = 'STEAL! — Choose a category'
-      spunValueEl.style.color = '#ff6193'
+      spunValueEl.style.color = '#e84ae5'
     } else if (state.spunValue === 'wild') {
       spunValueEl.textContent = 'WILD CARD! — Choose a category'
-      spunValueEl.style.color = '#b8e84a'
+      spunValueEl.style.color = '#e84ae5'
     } else {
       spunValueEl.textContent = `${state.spunValue} pts — Choose a category`
       spunValueEl.style.color = '#38cebc'
@@ -585,10 +567,10 @@ function createGameplayScreen(players) {
     updateAllScores()
   }
 
-  function showSpecialPopup(msg, type) {
+  function showSpecialPopup(msg) {
     const popup = document.createElement('div')
     popup.className = 'adv-sw-special-popup'
-    const color = type === 'steal' ? '#e84ae5' : '#e84ae5'
+    const color = '#e84ae5'
     popup.innerHTML = `
       <div class="adv-sw-special-content" style="border-color: ${color}; color: ${color}">
         ${msg}
@@ -820,7 +802,7 @@ function createGameplayScreen(players) {
         <h2 class="adv-sw-completion-heading">${heading}</h2>
         <p class="adv-sw-completion-detail">${fromQuit ? `${totalAnswered}/${totalQuestions} answered` : INSTRUCTIONS.completion}</p>
         <div class="adv-sw-completion-scores">
-          ${state.players.map(p => `
+          ${[...state.players].sort((a, b) => b.score - a.score).map(p => `
             <div class="adv-sw-completion-row">
               <span class="adv-sw-completion-dot" style="background: ${p.color}"></span>
               <span class="adv-sw-completion-name">${p.name}</span>
@@ -845,11 +827,11 @@ function createGameplayScreen(players) {
       })
     }
     overlay.querySelector('#adv-sw-again').addEventListener('pointerdown', () => {
-      cancelAnimationFrame(state.spinFrame)
+      cleanup()
       transitionTo(el, createIntroScreen())
     })
     overlay.querySelector('#adv-sw-home2').addEventListener('pointerdown', () => {
-      cancelAnimationFrame(state.spinFrame)
+      cleanup()
       navigate('game-select')
     })
   }
@@ -909,12 +891,50 @@ function createGameplayScreen(players) {
     })
   }
 
+  // ── Cleanup ──
+
+  function cleanup() {
+    cancelAnimationFrame(state.spinFrame)
+    clearTimeout(state.feedbackTimeout)
+    window.removeEventListener('theme-change', onThemeChange)
+  }
+
+  // ── Confirm Back ──
+
+  function confirmBack() {
+    if (state.phase === 'ready' && Object.values(state.categoryProgress).every(cp => cp.answered === 0)) {
+      cleanup()
+      navigate('game-select')
+      return
+    }
+    const popup = document.createElement('div')
+    popup.className = 'adv-sw-completion-overlay'
+    popup.innerHTML = `
+      <div class="adv-sw-completion-content">
+        <h2 class="adv-sw-completion-heading">Leave Game?</h2>
+        <p class="adv-sw-completion-detail">Your progress will be lost.</p>
+        <div class="adv-sw-completion-btns">
+          <button class="adv-sw-comp-btn adv-sw-comp-primary" id="adv-confirm-stay">Keep Playing</button>
+          <button class="adv-sw-comp-btn" id="adv-confirm-leave">Leave</button>
+        </div>
+      </div>
+    `
+    el.appendChild(popup)
+    requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
+    popup.querySelector('#adv-confirm-stay').addEventListener('pointerdown', () => {
+      popup.classList.remove('adv-sw-popup-show')
+      setTimeout(() => popup.remove(), 300)
+    })
+    popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
+      cleanup()
+      navigate('game-select')
+    })
+  }
+
   // ── Event Bindings ──
 
   el.querySelector('#adv-sw-home').addEventListener('pointerdown', () => {
-    cancelAnimationFrame(state.spinFrame)
-    clearTimeout(state.feedbackTimeout)
-    navigate('game-select')
+    confirmBack()
   })
 
   spinBtn.addEventListener('pointerdown', (e) => {
@@ -945,8 +965,7 @@ function createGameplayScreen(players) {
   })
 
   el.querySelector('#adv-sw-quit').addEventListener('pointerdown', () => {
-    cancelAnimationFrame(state.spinFrame)
-    clearTimeout(state.feedbackTimeout)
+    cleanup()
     showCompletion(true)
   })
 

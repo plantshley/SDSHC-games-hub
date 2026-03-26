@@ -15,7 +15,7 @@ export function createHelpButton(title, rules) {
   btn.textContent = '?'
   btn.title = 'How to play'
 
-  btn.addEventListener('click', (e) => {
+  btn.addEventListener('pointerdown', (e) => {
     e.stopPropagation()
     showHelpOverlay(title, rules)
   })
@@ -60,11 +60,11 @@ function showHelpOverlay(title, rules) {
     setTimeout(() => overlay.remove(), 250)
   }
 
-  overlay.querySelector('.adv-help-dismiss').addEventListener('click', (e) => {
+  overlay.querySelector('.adv-help-dismiss').addEventListener('pointerdown', (e) => {
     e.stopPropagation()
     dismiss()
   })
-  overlay.addEventListener('click', (e) => {
+  overlay.addEventListener('pointerdown', (e) => {
     if (e.target === overlay) dismiss()
   })
 }

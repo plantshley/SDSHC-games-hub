@@ -1113,6 +1113,7 @@
 
 [data-mode="advanced"] .screen > .adv-sw-impact-overlay {
   position: absolute;
+  padding-left: 50px;
   top: 0;
   left: 0;
   width: 100%;
