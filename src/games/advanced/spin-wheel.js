@@ -324,10 +324,10 @@ function createGameplayScreen(players) {
 
     function frame() {
       state.ang += state.angVel
-      state.angVel *= 0.975
+      state.angVel *= 0.96
       drawWheel()
 
-      if (state.angVel < 0.002) {
+      if (state.angVel < 0.003) {
         onSpinComplete()
         return
       }

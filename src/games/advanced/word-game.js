@@ -153,7 +153,7 @@ function createGameplayScreen(players, totalRounds) {
     <div class="adv-wg-body">
       <div class="adv-wg-main" id="adv-wg-main">
         <div class="adv-wg-progress-area">
-          <span class="adv-wg-progress-label">Round <span id="adv-wg-word-num">1</span>/${state.wordsTotal}</span>
+          <span class="adv-wg-progress-label">Round <span id="adv-wg-word-num">1</span>/<span id="adv-wg-word-total">${state.wordsTotal}</span></span>
           <div class="adv-wg-health-bar">
             <div class="adv-wg-health-fill" id="adv-wg-health"></div>
           </div>
@@ -339,9 +339,20 @@ function createGameplayScreen(players, totalRounds) {
         flashMessage('Solved! +' + PTS_SOLVE + ' pts', '#4ade80')
         setTimeout(() => advanceRound(), 3000)
       } else if (state.isLastChance) {
-        // Wrong solve on last chance — reveal the answer
+        // Wrong solve on last chance — pass to next player or reveal
         state.isLastChance = false
-        revealAnswer()
+        const passed = state.lastChancePassedPlayers || new Set()
+        passed.add(state.currentPlayer)
+        state.players[state.currentPlayer].score = Math.max(0, state.players[state.currentPlayer].score + PTS_WRONG_SOLVE)
+        updateScores()
+        flashMessage('Wrong! ' + PTS_WRONG_SOLVE + ' pts', '#ff6193')
+        if (isMultiplayer && passed.size < state.players.length) {
+          state.currentPlayer = (state.currentPlayer + 1) % state.players.length
+          updateTurnDisplay()
+          setTimeout(() => offerLastSolve(passed), 1500)
+        } else {
+          setTimeout(() => revealAnswer(), 1500)
+        }
       } else {
         // Wrong solve — penalty + turn passes
         state.phase = 'playing'
@@ -365,7 +376,15 @@ function createGameplayScreen(players, totalRounds) {
       solveBtn.style.display = ''
       if (state.isLastChance) {
         state.isLastChance = false
-        revealAnswer()
+        const passed = state.lastChancePassedPlayers || new Set()
+        passed.add(state.currentPlayer)
+        if (isMultiplayer && passed.size < state.players.length) {
+          state.currentPlayer = (state.currentPlayer + 1) % state.players.length
+          updateTurnDisplay()
+          offerLastSolve(passed)
+        } else {
+          revealAnswer()
+        }
       } else {
         state.phase = 'playing'
         renderWord()
@@ -438,9 +457,19 @@ function createGameplayScreen(players, totalRounds) {
     }
   }
 
-  function offerLastSolve() {
+  function offerLastSolve(passedPlayers = new Set()) {
     state.phase = 'lastChance'
-    flashMessage('Out of guesses! Try to solve?', '#b8e84a', 2500)
+
+    const allPassed = isMultiplayer && passedPlayers.size >= state.players.length
+    if (allPassed) {
+      revealAnswer()
+      return
+    }
+
+    const label = isMultiplayer
+      ? `${state.players[state.currentPlayer].name} — Solve or pass?`
+      : 'Out of guesses! Try to solve?'
+    flashMessage(label, '#b8e84a', 2500)
 
     // Show solve/pass prompt after flash
     setTimeout(() => {
@@ -457,20 +486,32 @@ function createGameplayScreen(players, totalRounds) {
       promptEl.querySelector('#adv-wg-lc-solve').addEventListener('pointerdown', () => {
         promptEl.remove()
         solveBtn.style.display = ''
-        enterSolveModeLastChance()
+        enterSolveModeLastChance(passedPlayers)
       })
       promptEl.querySelector('#adv-wg-lc-pass').addEventListener('pointerdown', () => {
         promptEl.remove()
         solveBtn.style.display = ''
-        revealAnswer()
+        if (isMultiplayer) {
+          passedPlayers.add(state.currentPlayer)
+          if (passedPlayers.size >= state.players.length) {
+            revealAnswer()
+          } else {
+            state.currentPlayer = (state.currentPlayer + 1) % state.players.length
+            updateTurnDisplay()
+            offerLastSolve(passedPlayers)
+          }
+        } else {
+          revealAnswer()
+        }
       })
     }, 800)
   }
 
-  function enterSolveModeLastChance() {
+  function enterSolveModeLastChance(passedPlayers = new Set()) {
     // Temporarily set playing so enterSolveMode accepts it
     state.phase = 'playing'
     state.isLastChance = true
+    state.lastChancePassedPlayers = passedPlayers
     enterSolveMode()
   }
 
@@ -562,9 +603,11 @@ function createGameplayScreen(players, totalRounds) {
         prompt.classList.remove('adv-sw-popup-show')
         setTimeout(() => {
           prompt.remove()
-          // Add 5 more rounds
-          const extra = Math.min(5, wordPool.length - state.wordIdx - 1)
+          // Add 3 more rounds
+          const extra = Math.min(3, wordPool.length - state.wordIdx - 1)
           state.wordsTotal += extra
+          const totalEl = el.querySelector('#adv-wg-word-total')
+          if (totalEl) totalEl.textContent = state.wordsTotal
           state.phase = 'playing'
           startNewWord()
         }, 300)

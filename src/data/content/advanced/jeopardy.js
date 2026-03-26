@@ -44,8 +44,8 @@ export const CATEGORIES = [
     questions: [
       { points: 100, text: 'The pH range where most crop nutrients are optimally available.', answer: '6.0–7.5', choices: ['4.0–5.0', '6.0–7.5', '8.0–9.0', '3.0–4.0'], correct: 1 },
       { points: 200, text: 'This calcium-based material is applied to acidic soils to raise pH.', answer: 'Agricultural lime (CaCO₃)', choices: ['Gypsum (CaSO₄)', 'Agricultural lime (CaCO₃)', 'Elemental sulfur', 'Potassium chloride'], correct: 1 },
-      { points: 300, text: 'At very low pH (below 5.0), this element becomes soluble at potentially toxic levels for crops.', answer: 'Aluminum', choices: ['Calcium', 'Aluminum', 'Iron', 'Manganese'], correct: 1 },
-      { points: 400, text: 'Phosphorus is a key component of ATP, DNA, and cell membranes. Unlike nitrogen, it lacks a significant cycle through this sphere.', answer: 'The atmosphere', choices: ['The hydrosphere', 'The atmosphere', 'The lithosphere', 'The biosphere'], correct: 1 },
+      { points: 300, text: 'Phosphorus is a key component of ATP, DNA, and cell membranes. Unlike nitrogen, it lacks a significant cycle through this sphere.', answer: 'The atmosphere', choices: ['The hydrosphere', 'The atmosphere', 'The lithosphere', 'The biosphere'], correct: 1 },
+      { points: 400, text: 'At very low pH (below 5.0), this element becomes soluble at potentially toxic levels for crops.', answer: 'Aluminum', choices: ['Calcium', 'Aluminum', 'Iron', 'Manganese'], correct: 1 },
       { points: 500, text: 'Excess phosphorus reaching waterways causes algal blooms that deplete dissolved oxygen. This process is called:', answer: 'Eutrophication', choices: ['Salinization', 'Eutrophication', 'Acidification', 'Desertification'], correct: 1 },
     ],
   },

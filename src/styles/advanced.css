@@ -1019,6 +1019,7 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  align-self: stretch;
 }
 
 .adv-sw-choice {

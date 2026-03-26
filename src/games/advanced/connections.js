@@ -88,9 +88,11 @@ function createIntroScreen() {
   }
 
   function renderTopics() {
-    el.querySelectorAll('.adv-cn-topic-card').forEach(card => {
+    el.querySelectorAll('.adv-cn-topic-card[data-id]').forEach(card => {
       card.classList.toggle('selected', selectedTopics.has(card.dataset.id))
     })
+    const allBtn = el.querySelector('#adv-cn-all')
+    if (allBtn) allBtn.classList.toggle('selected', selectedTopics.size === PUZZLES.length)
     updateStartBtn()
   }
 
@@ -125,8 +127,9 @@ function createIntroScreen() {
           <span class="adv-sw-setup-label">Topics</span>
           <div class="adv-cn-topic-picker">
             ${PUZZLES.map(p => `<button class="adv-cn-topic-card" data-id="${p.id}">${esc(p.title)}</button>`).join('')}
+            <button class="adv-cn-random-btn" id="adv-cn-random">Random 3</button>
+            <button class="adv-cn-topic-card adv-cn-topic-all" id="adv-cn-all">All</button>
           </div>
-          <button class="adv-cn-random-btn" id="adv-cn-random">Random 3</button>
         </div>
       </div>
 
@@ -144,7 +147,7 @@ function createIntroScreen() {
   el.querySelector('#adv-cn-minus').addEventListener('pointerdown', () => updateCount(-1))
   el.querySelector('#adv-cn-plus').addEventListener('pointerdown', () => updateCount(1))
 
-  el.querySelectorAll('.adv-cn-topic-card').forEach(card => {
+  el.querySelectorAll('.adv-cn-topic-card[data-id]').forEach(card => {
     card.addEventListener('pointerdown', () => {
       const id = card.dataset.id
       if (selectedTopics.has(id)) selectedTopics.delete(id)
@@ -154,10 +157,18 @@ function createIntroScreen() {
   })
 
   el.querySelector('#adv-cn-random').addEventListener('pointerdown', () => randomTopics())
+  el.querySelector('#adv-cn-all').addEventListener('pointerdown', () => {
+    if (selectedTopics.size === PUZZLES.length) {
+      selectedTopics.clear()
+    } else {
+      PUZZLES.forEach(p => selectedTopics.add(p.id))
+    }
+    renderTopics()
+  })
 
   el.querySelector('#adv-cn-start').addEventListener('pointerdown', () => {
     if (selectedTopics.size === 0) return
-    const rounds = [...selectedTopics].map(id => PUZZLES.find(p => p.id === id))
+    const rounds = shuffleArray([...selectedTopics].map(id => PUZZLES.find(p => p.id === id)))
     transitionTo(el, createGameplayScreen(players, rounds))
   })
 

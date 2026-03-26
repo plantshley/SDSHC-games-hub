@@ -308,7 +308,12 @@ function createGameplayScreen(players) {
       state.ddWager = 0
 
       if (state.questionsRemaining <= 0) {
-        showCompletion()
+        // If last question also completed a category, show that category's impact first
+        if (catComplete && IMPACT_MESSAGES[catId]) {
+          showCategoryImpact(catId, () => showCompletion(false, true))
+        } else {
+          showCompletion()
+        }
         return
       }
 
@@ -444,7 +449,7 @@ function createGameplayScreen(players) {
 
   // ── Completion ──
 
-  function showCompletion(fromQuit = false) {
+  function showCompletion(fromQuit = false, skipImpact = false) {
     state.phase = 'complete'
 
     const afterImpact = () => {
@@ -504,7 +509,7 @@ function createGameplayScreen(players) {
       })
     }
 
-    if (fromQuit) {
+    if (fromQuit || skipImpact) {
       afterImpact()
     } else {
       showImpactOverlay(afterImpact)
