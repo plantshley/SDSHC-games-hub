@@ -8,6 +8,7 @@ import './styles/advanced.css'
 
 import { initRouter, onRoute, navigate, navigateRaw } from './router.js'
 import { initIdleTimer, clearProgress, setIdleTimeout } from './idle-timer.js'
+import { trackIdleTimeout, trackGameStart } from './utils/analytics.js'
 import { createIntroScreen } from './screens/intro.js'
 import { createSplashScreen } from './screens/splash.js'
 import { createGradeSelectScreen } from './screens/grade-select.js'
@@ -109,6 +110,7 @@ function handleRoute(route) {
 
 function handleKidGame(route) {
   const game = getGameById(route.gameId)
+  trackGameStart(route.gameId, 'kid', { tier: game?.tier || null, playerCount: 1 })
 
   // Route to implemented games
   if (route.gameId === 'soil-cake') {
@@ -187,6 +189,7 @@ onRoute(handleRoute)
 initRouter()
 
 initIdleTimer(() => {
+  trackIdleTimeout(app.dataset.mode || 'intro', location.hash.replace('#', '') || 'intro')
   clearProgress()
   navigateRaw('intro')
 })

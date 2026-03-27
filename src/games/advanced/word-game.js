@@ -14,6 +14,7 @@ import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
+import { trackGameStart, trackGameComplete, trackGameQuit, trackPlayMoreRounds } from '../../utils/analytics.js'
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const VOWELS = new Set(['A', 'E', 'I', 'O', 'U'])
@@ -102,6 +103,7 @@ function createIntroScreen() {
   el.querySelector('#adv-wg-rminus').addEventListener('pointerdown', () => updateRounds(-1))
   el.querySelector('#adv-wg-rplus').addEventListener('pointerdown', () => updateRounds(1))
   el.querySelector('#adv-wg-start').addEventListener('pointerdown', () => {
+    trackGameStart('adv-word-game', 'advanced', { playerCount: players.length })
     transitionTo(el, createGameplayScreen(players, rounds))
   })
 
@@ -600,6 +602,7 @@ function createGameplayScreen(players, totalRounds) {
 
     if (canContinue) {
       prompt.querySelector('#adv-wg-more').addEventListener('pointerdown', () => {
+        trackPlayMoreRounds('adv-word-game', state.wordsCompleted)
         prompt.classList.remove('adv-sw-popup-show')
         setTimeout(() => {
           prompt.remove()
@@ -683,6 +686,7 @@ function createGameplayScreen(players, totalRounds) {
 
   function showCompletion(fromQuit = false) {
     state.phase = 'complete'
+    trackGameComplete('adv-word-game', 'advanced', { playerCount: state.players.length, score: Math.max(...state.players.map(p => p.score)) })
 
     const afterImpact = () => {
       let heading
@@ -838,7 +842,10 @@ function createGameplayScreen(players, totalRounds) {
   quitBtn.className = 'adv-sw-quit-btn adv-jp-quit-btn'
   quitBtn.textContent = 'Quit'
   el.querySelector('.adv-wg-body').appendChild(quitBtn)
-  quitBtn.addEventListener('pointerdown', () => showCompletion(true))
+  quitBtn.addEventListener('pointerdown', () => {
+    trackGameQuit('adv-word-game', 'advanced', state.wordsCompleted)
+    showCompletion(true)
+  })
 
   keyboard.querySelectorAll('.adv-wg-key').forEach(key => {
     key.addEventListener('pointerdown', () => handleGuess(key.dataset.letter))

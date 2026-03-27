@@ -2,6 +2,8 @@
  * Shared dark/light theme toggle for advanced mode screens.
  */
 
+import { trackThemeToggle } from './analytics.js'
+
 export function getTheme() {
   return localStorage.getItem('sdshc-theme') || 'dark'
 }
@@ -30,6 +32,7 @@ export function createThemeToggle() {
   btn.addEventListener('pointerdown', () => {
     const next = getTheme() === 'dark' ? 'light' : 'dark'
     setTheme(next)
+    trackThemeToggle(next)
     btn.textContent = next === 'dark' ? '\u2600' : '\u263E'
   })
 

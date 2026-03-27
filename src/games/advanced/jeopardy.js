@@ -13,6 +13,7 @@ import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
+import { trackGameStart, trackGameComplete, trackGameQuit } from '../../utils/analytics.js'
 
 // ─── INTRO SCREEN ───
 
@@ -77,6 +78,7 @@ function createIntroScreen() {
   el.querySelector('#adv-jp-minus').addEventListener('pointerdown', () => updateCount(-1))
   el.querySelector('#adv-jp-plus').addEventListener('pointerdown', () => updateCount(1))
   el.querySelector('#adv-jp-start').addEventListener('pointerdown', () => {
+    trackGameStart('adv-jeopardy', 'advanced', { playerCount: players.length })
     transitionTo(el, createGameplayScreen(players))
   })
 
@@ -451,6 +453,7 @@ function createGameplayScreen(players) {
 
   function showCompletion(fromQuit = false, skipImpact = false) {
     state.phase = 'complete'
+    trackGameComplete('adv-jeopardy', 'advanced', { playerCount: state.players.length, score: Math.max(...state.players.map(p => p.score)) })
 
     const afterImpact = () => {
       let heading
@@ -612,7 +615,7 @@ function createGameplayScreen(players) {
   quitBtn.className = 'adv-sw-quit-btn adv-jp-quit-btn'
   quitBtn.textContent = 'Quit'
   el.querySelector('.adv-jp-body').appendChild(quitBtn)
-  quitBtn.addEventListener('pointerdown', () => { state.phase = 'complete'; showCompletion(true) })
+  quitBtn.addEventListener('pointerdown', () => { state.phase = 'complete'; trackGameQuit('adv-jeopardy', 'advanced', totalCells - state.questionsRemaining); showCompletion(true) })
 
   // ── Initialize ──
 

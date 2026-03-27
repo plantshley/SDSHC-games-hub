@@ -13,6 +13,7 @@ import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
+import { trackGameStart, trackGameComplete, trackGameQuit, trackTopicSelect } from '../../utils/analytics.js'
 
 // ─── HELPERS ───
 
@@ -128,6 +129,8 @@ function createIntroScreen() {
   el.querySelector('#adv-fg-cat-next').addEventListener('pointerdown', () => cycleCategory(1))
   el.querySelector('#adv-fg-start').addEventListener('pointerdown', () => {
     const selectedCat = categoryOptions[categoryIdx].id
+    trackGameStart('adv-field-guide', 'advanced', { playerCount: players.length })
+    trackTopicSelect('adv-field-guide', [categoryOptions[categoryIdx].title])
     transitionTo(el, createGameplayScreen(players, selectedCat))
   })
 
@@ -688,6 +691,7 @@ function createGameplayScreen(players, selectedCategory) {
 
   function showCompletion(fromQuit = false) {
     state.phase = 'complete'
+    trackGameComplete('adv-field-guide', 'advanced', { playerCount: state.players.length, score: Math.max(...state.players.map(p => p.score)) })
 
     function afterImpact() {
       const sorted = [...state.players].sort((a, b) => b.score - a.score)
@@ -937,7 +941,7 @@ function createGameplayScreen(players, selectedCategory) {
   quitBtn.className = 'adv-fg-quit-btn'
   quitBtn.textContent = 'Quit'
   el.querySelector('.adv-sw-sidebar').appendChild(quitBtn)
-  quitBtn.addEventListener('pointerdown', () => { cancelled = true; showCompletion(true) })
+  quitBtn.addEventListener('pointerdown', () => { cancelled = true; trackGameQuit('adv-field-guide', 'advanced', state.round); showCompletion(true) })
 
   // ── Initialize ──
 

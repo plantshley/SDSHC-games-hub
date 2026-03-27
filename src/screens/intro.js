@@ -4,6 +4,7 @@
  */
 
 import { navigateRaw } from '../router.js'
+import { trackModeSelect } from '../utils/analytics.js'
 
 const PARTICLE_COUNT = 80
 
@@ -172,6 +173,7 @@ export function createIntroScreen() {
 
       // Navigate after a brief delay for the burst effect
       const mode = btn.dataset.mode
+      trackModeSelect(mode)
       setTimeout(() => {
         if (mode === 'kid') {
           navigateRaw('kid/grade-select')

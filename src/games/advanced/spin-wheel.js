@@ -14,6 +14,7 @@ import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
+import { trackGameStart, trackGameComplete, trackGameQuit, trackTopicSelect } from '../../utils/analytics.js'
 
 const TAU = 2 * Math.PI
 
@@ -108,6 +109,8 @@ function createIntroScreen() {
   el.querySelector('#adv-sw-minus').addEventListener('pointerdown', () => updateCount(-1))
   el.querySelector('#adv-sw-plus').addEventListener('pointerdown', () => updateCount(1))
   el.querySelector('#adv-sw-start').addEventListener('pointerdown', () => {
+    trackGameStart('adv-spin-wheel', 'advanced', { playerCount: players.length })
+    trackTopicSelect('adv-spin-wheel', CATEGORIES.map(c => c.title))
     transitionTo(el, createGameplayScreen(players))
   })
 
@@ -767,6 +770,7 @@ function createGameplayScreen(players) {
     cancelAnimationFrame(state.spinFrame)
     clearTimeout(state.feedbackTimeout)
     state.phase = 'complete'
+    trackGameComplete('adv-spin-wheel', 'advanced', { playerCount: state.players.length, score: Math.max(...state.players.map(p => p.score)) })
 
     // Quit and win-by-threshold skip impact overlay
     if (fromQuit || skipImpact) {
@@ -966,6 +970,7 @@ function createGameplayScreen(players) {
 
   el.querySelector('#adv-sw-quit').addEventListener('pointerdown', () => {
     cleanup()
+    trackGameQuit('adv-spin-wheel', 'advanced', Object.values(state.categoryProgress).reduce((sum, cp) => sum + cp.answered, 0))
     showCompletion(true)
   })
 

@@ -1,4 +1,5 @@
 import { navigate } from '../router.js'
+import { trackGradeTierSelect } from '../utils/analytics.js'
 
 const TIERS = [
   {
@@ -127,6 +128,7 @@ export function createGradeSelectScreen() {
 
   el.querySelectorAll('.tier-btn').forEach(btn => {
     btn.addEventListener('pointerdown', () => {
+      trackGradeTierSelect(btn.dataset.tier)
       navigate(`game-select/${btn.dataset.tier}`)
     })
   })

@@ -14,6 +14,7 @@ import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
+import { trackGameStart, trackGameComplete, trackGameQuit, trackTopicSelect } from '../../utils/analytics.js'
 
 const BURST_COLORS = ['#38cebc', '#b8e84a', '#ff71ce', '#01cdfe', '#b967ff']
 
@@ -169,6 +170,8 @@ function createIntroScreen() {
   el.querySelector('#adv-cn-start').addEventListener('pointerdown', () => {
     if (selectedTopics.size === 0) return
     const rounds = shuffleArray([...selectedTopics].map(id => PUZZLES.find(p => p.id === id)))
+    trackGameStart('adv-connections', 'advanced', { playerCount: players.length })
+    trackTopicSelect('adv-connections', rounds.map(r => r.title))
     transitionTo(el, createGameplayScreen(players, rounds))
   })
 
@@ -713,6 +716,7 @@ function createGameplayScreen(players, rounds) {
     }
 
     state.phase = 'complete'
+    trackGameComplete('adv-connections', 'advanced', { playerCount: state.players.length, score: Math.max(...state.players.map(p => p.score)) })
     const sorted = [...state.players].sort((a, b) => b.score - a.score)
     const winner = sorted[0]
     const isTie = isMultiplayer && sorted.length > 1 && sorted[0].score === sorted[1].score
@@ -943,7 +947,7 @@ function createGameplayScreen(players, rounds) {
   el.querySelector('#adv-cn-deselect').addEventListener('pointerdown', () => deselectAll())
   el.querySelector('#adv-cn-shuffle').addEventListener('pointerdown', () => shuffleBoard())
   submitBtn.addEventListener('pointerdown', () => handleSubmit())
-  el.querySelector('#adv-cn-quit').addEventListener('pointerdown', () => { cleanup(); showCompletion(true) })
+  el.querySelector('#adv-cn-quit').addEventListener('pointerdown', () => { cleanup(); trackGameQuit('adv-connections', 'advanced', state.currentRound); showCompletion(true) })
 
   // Initialize
   buildBoard()

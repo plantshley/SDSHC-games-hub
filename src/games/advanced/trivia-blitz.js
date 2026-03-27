@@ -13,6 +13,7 @@ import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
+import { trackGameStart, trackGameComplete, trackGameQuit, trackTopicSelect } from '../../utils/analytics.js'
 
 const POINTS_BASE = 100
 const POINTS_FAST = 50  // answered in <= 5s
@@ -100,6 +101,8 @@ function createIntroScreen() {
 
   el.querySelectorAll('.adv-tb-mode-card').forEach(card => {
     card.addEventListener('pointerdown', () => {
+      trackGameStart('adv-trivia-blitz', 'advanced', { playerCount: players.length })
+      trackTopicSelect('adv-trivia-blitz', [card.dataset.mode === 'topic' ? 'Topic Mode' : 'Endless Shuffle'])
       transitionTo(el, createGameplayScreen(players, card.dataset.mode))
     })
   })
@@ -636,6 +639,7 @@ function createGameplayScreen(players, mode) {
   function showCompletion(fromQuit = false) {
     stopTimer()
     state.answering = true // block further answers
+    trackGameComplete('adv-trivia-blitz', 'advanced', { playerCount: state.players.length, score: Math.max(...state.players.map(p => p.score)) })
 
     if (fromQuit) {
       showCompletionScreen(fromQuit)
@@ -808,6 +812,7 @@ function createGameplayScreen(players, mode) {
 
   el.querySelector('#adv-tb-quit').addEventListener('pointerdown', () => {
     stopTimer()
+    trackGameQuit('adv-trivia-blitz', 'advanced', state.currentRound)
     showCompletion(true)
   })
 
