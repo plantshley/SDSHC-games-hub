@@ -3831,7 +3831,7 @@
 /* Page nav — lives inside the header row */
 .dtd-page-nav {
   display: flex;
-  gap: 6px;
+  gap: 20px;
   padding: 0 12px;
   flex: 1;
   overflow-x: auto;
@@ -3846,10 +3846,8 @@
 .dtd-page-nav-item {
   display: flex;
   align-items: center;
-  padding: 4px 14px;
-  background: rgba(253, 246, 227, 0.85);
-  border: 2px solid rgba(166, 194, 100, 0.4);
-  border-radius: 16px;
+  padding: 6px 16px;
+  border-radius: 20px;
   cursor: pointer;
   white-space: nowrap;
   min-height: 32px;
@@ -3858,11 +3856,16 @@
   color: var(--color-text);
   transition: background var(--transition-fast), border-color var(--transition-fast);
   position: relative;
+
+  font-family: var(--font-header);
+  color: var(--color-sprouts);
+  background: rgba(166, 194, 100, 0.15);
+  border: 2px solid var(--color-sprouts);
+  
 }
 
 .dtd-page-nav-item.active {
-  background: var(--color-sprouts);
-  border-color: var(--color-sprouts-dark);
+  background: rgba(166, 194, 100, 0.5);
   color: #fff;
 }
 

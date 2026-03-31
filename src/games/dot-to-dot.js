@@ -196,11 +196,12 @@ function createGameScreen() {
   function computePlayRect() {
     const w = area.clientWidth
     const h = area.clientHeight
-    const size = Math.min(w * 0.72, h * 0.88)
+    const size = Math.min(w * 0.93, h * 0.93)
     return {
       x: (w - size) / 2,
       y: (h - size) / 2,
-      size,
+      w: size,
+      h: size,
     }
   }
 
@@ -255,6 +256,119 @@ function createGameScreen() {
     ctx.restore()
   }
 
+  // ─── Detail lines (revealed after completion) ───
+  let revealedDetails = []  // screen-coord polylines already revealed
+  let detailAnimId = null
+
+  // Convert a detail line's fractional coords to screen coords
+  function detailToScreen(detailLine) {
+    const play = computePlayRect()
+    return detailLine.map(pt => ({
+      x: play.x + pt[0] * play.w,
+      y: play.y + pt[1] * play.h,
+    }))
+  }
+
+  // Draw all currently revealed detail lines on canvas
+  function drawDetailLines() {
+    if (revealedDetails.length === 0) return
+    ctx.save()
+    ctx.lineJoin = 'round'
+    ctx.lineCap = 'round'
+
+    revealedDetails.forEach(line => {
+      if (line.length < 2) return
+      const path = () => {
+        ctx.beginPath()
+        ctx.moveTo(line[0].x, line[0].y)
+        for (let i = 1; i < line.length; i++) ctx.lineTo(line[i].x, line[i].y)
+      }
+      // Soft glow
+      path()
+      ctx.strokeStyle = 'rgba(255,255,255,0.30)'
+      ctx.lineWidth = 1
+      ctx.shadowColor = '#fff'
+      ctx.shadowBlur = 40
+      ctx.stroke()
+
+      // Core
+      path()
+      ctx.strokeStyle = 'rgba(255,255,255,0.90)'
+      ctx.lineWidth = 2
+      ctx.shadowBlur = 10
+      ctx.stroke()
+    })
+
+    ctx.restore()
+  }
+
+  // Animate detail lines appearing one by one, each drawing point-to-point
+  function revealDetails(puzzle, onAllDone) {
+    if (!puzzle.details || puzzle.details.length === 0) {
+      if (onAllDone) onAllDone()
+      return
+    }
+    revealedDetails = []
+    const allLines = puzzle.details.map(d => detailToScreen(d))
+    let lineIdx = 0
+
+    function revealNextLine() {
+      if (lineIdx >= allLines.length) {
+        detailAnimId = null
+        if (onAllDone) onAllDone()
+        return
+      }
+      const screenLine = allLines[lineIdx]
+      lineIdx++
+      // Animate this line drawing point-to-point
+      let ptIdx = 1
+      const partialLine = [screenLine[0]]
+      revealedDetails.push(partialLine)
+
+      function animateSegment() {
+        if (ptIdx >= screenLine.length) {
+          // This line done, start next after a short pause
+          setTimeout(revealNextLine, 80)
+          return
+        }
+        const from = screenLine[ptIdx - 1]
+        const to = screenLine[ptIdx]
+        const segStart = performance.now()
+        const segDuration = 120  // fast per-segment
+
+        function segFrame(now) {
+          const rawT = Math.min((now - segStart) / segDuration, 1)
+          const t = 1 - Math.pow(1 - rawT, 3)
+          const cur = {
+            x: from.x + (to.x - from.x) * t,
+            y: from.y + (to.y - from.y) * t,
+          }
+
+          // Replace trailing partial point
+          if (partialLine.length > ptIdx) partialLine.pop()
+          partialLine.push(cur)
+
+          // Redraw everything
+          ctx.clearRect(0, 0, area.clientWidth, area.clientHeight)
+          drawGlowPath(connectedPts)
+          drawDetailLines()
+
+          if (rawT < 1) {
+            detailAnimId = requestAnimationFrame(segFrame)
+          } else {
+            // Finalize this point
+            partialLine[partialLine.length - 1] = to
+            ptIdx++
+            animateSegment()
+          }
+        }
+        detailAnimId = requestAnimationFrame(segFrame)
+      }
+      animateSegment()
+    }
+    revealNextLine()
+  }
+
   // ─── Animated trail segment ───
   function animateNewSegment(fromPt, toPt, onComplete) {
     if (segmentAnimId) cancelAnimationFrame(segmentAnimId)
@@ -298,6 +412,8 @@ function createGameScreen() {
     pendingCompleteTimer = null
     pendingLevelTimer = null
     if (segmentAnimId) { cancelAnimationFrame(segmentAnimId); segmentAnimId = null }
+    if (detailAnimId) { cancelAnimationFrame(detailAnimId); detailAnimId = null }
+    revealedDetails = []
 
     currentPuzzleIdx = puzzleIdx
     nextDotIdx = 0
@@ -317,8 +433,8 @@ function createGameScreen() {
     dotMeta = []
 
     puzzle.dots.forEach((coord, i) => {
-      const sx = play.x + coord[0] * play.size
-      const sy = play.y + coord[1] * play.size
+      const sx = play.x + coord[0] * play.w
+      const sy = play.y + coord[1] * play.h
       const color = dotColor(i, puzzle.dots.length)
 
       const dotEl = document.createElement('div')
@@ -442,21 +558,22 @@ function createGameScreen() {
         navItems[completedIdx].classList.add('dtd-nav-done')
       }
 
-      // Auto-advance after 3s
-      pendingLevelTimer = setTimeout(() => {
-        if (currentPuzzleIdx !== completedIdx) return
-        const nextIdx = completedIdx + 1
-        if (nextIdx < level.puzzles.length) {
-          // Next puzzle
-          labelEl.classList.remove('dtd-label-visible')
-          el.querySelectorAll('.dtd-page-nav-item').forEach(b => b.classList.remove('active'))
-          if (navItems[nextIdx]) navItems[nextIdx].classList.add('active')
-          loadPuzzle(nextIdx)
-        } else {
-          // Level complete — show banner then back to intro
-          showLevelComplete()
-        }
-      }, 4000)
+      // Reveal detail lines, then auto-advance after they finish
+      revealDetails(puzzle, () => {
+        // Auto-advance 3s after details are done
+        pendingLevelTimer = setTimeout(() => {
+          if (currentPuzzleIdx !== completedIdx) return
+          const nextIdx = completedIdx + 1
+          if (nextIdx < level.puzzles.length) {
+            labelEl.classList.remove('dtd-label-visible')
+            el.querySelectorAll('.dtd-page-nav-item').forEach(b => b.classList.remove('active'))
+            if (navItems[nextIdx]) navItems[nextIdx].classList.add('active')
+            loadPuzzle(nextIdx)
+          } else {
+            showLevelComplete()
+          }
+        }, 3000)
+      })
     }, 300)
   }
 
