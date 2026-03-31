@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dot-to-Dot Placer Tool</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .canvas-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+
+  .play-area {
+    position: relative;
+    background: #ffffff;
+    border: 2px solid #333;
+    cursor: crosshair;
+  }
+
+  .play-area img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0.8;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .play-area canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .dot-marker {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 1px 3px #000;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Detail line point markers — smaller, blue */
+  .detail-marker {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #4488ff;
+    border: 2px solid #fff;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .controls-panel {
+    width: 400px;
+    background: #1a1a2e;
+    border-left: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 14px;
+    overflow-y: auto;
+  }
+
+  h2 { font-size: 18px; color: #38cebc; }
+  h3 { font-size: 14px; color: #999; margin-top: 4px; }
+
+  select, button {
+    padding: 8px 14px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background: #222;
+    color: #e0e0e0;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  select:hover, button:hover { border-color: #38cebc; }
+  button.danger { border-color: #e44; color: #e44; }
+  button.danger:hover { background: #e44; color: #fff; }
+  button.active-mode { border-color: #38cebc; background: #1a3a3e; color: #38cebc; }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .mode-tabs {
+    display: flex;
+    gap: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #444;
+  }
+  .mode-tab {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 0;
+    background: #222;
+    color: #888;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .mode-tab.active {
+    background: #38cebc;
+    color: #111;
+  }
+  .mode-tab:hover:not(.active) { background: #2a2a3e; color: #ccc; }
+
+  .output-block {
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 11px;
+    background: #0a0a14;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    white-space: pre-wrap;
+    word-break: break-all;
+    user-select: all;
+    max-height: 180px;
+    overflow-y: auto;
+    color: #b8e84a;
+  }
+
+  .dot-list {
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    background: #0a0a14;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    white-space: pre;
+    user-select: all;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+
+  .status {
+    font-size: 13px;
+    color: #888;
+  }
+
+  .img-opacity-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .img-opacity-row input[type="range"] { flex: 1; }
+
+  .instructions {
+    font-size: 12px;
+    color: #777;
+    line-height: 1.5;
+  }
+
+  .detail-section { display: none; }
+  .detail-section.visible { display: block; }
+  .outline-section { display: none; }
+  .outline-section.visible { display: block; }
+
+  .detail-line-item {
+    font-size: 12px;
+    color: #4488ff;
+    padding: 2px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-panel">
+  <div class="play-area" id="playArea">
+    <img id="refImage" src="" alt="Reference">
+    <svg class="grid-overlay" id="gridOverlay"></svg>
+    <canvas id="lineCanvas"></canvas>
+  </div>
+</div>
+
+<div class="controls-panel">
+  <h2>Dot-to-Dot Placer</h2>
+
+  <div>
+    <h3>Puzzle Image</h3>
+    <select id="imageSelect">
+      <optgroup label="Soil Makes...">
+        <option value="/SDSHC-games-hub/assets/prek%20soil%20makes-pencil.png">Pencil</option>
+        <option value="/SDSHC-games-hub/assets/prek%20soil%20makes-fruit.png">Fruit</option>
+        <option value="/SDSHC-games-hub/assets/prek%20soil%20makes-clothes.png">Clothes (new)</option>
+      </optgroup>
+      <optgroup label="Sand Makes...">
+        <option value="/SDSHC-games-hub/assets/prek%20sand%20makes-computer.png">Computer</option>
+        <option value="/SDSHC-games-hub/assets/prek%20sand%20makes-lightbulb.png">Lightbulb</option>
+        <option value="/SDSHC-games-hub/assets/prek%20sand%20makes-glasses.png">Glasses (new)</option>
+      </optgroup>
+      <optgroup label="Clay Makes...">
+        <option value="/SDSHC-games-hub/assets/clay%20makes-mug.png">Mug</option>
+        <option value="/SDSHC-games-hub/assets/clay%20makes-brick.png">Brick</option>
+        <option value="/SDSHC-games-hub/assets/clay%20makes-plate.png">Plate</option>
+      </optgroup>
+      <optgroup label="Flowers Love...">
+        <option value="/SDSHC-games-hub/assets/flowers-love-BEES.png">Bee</option>
+        <option value="/SDSHC-games-hub/assets/flowers-love-SUN.png">Sun</option>
+        <option value="/SDSHC-games-hub/assets/flowers-love-WATER.png">Water</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <div class="img-opacity-row">
+    <span>Image opacity:</span>
+    <input type="range" id="opacitySlider" min="10" max="100" value="80">
+    <span id="opacityLabel">80%</span>
+  </div>
+
+  <!-- Mode tabs -->
+  <div class="mode-tabs">
+    <div class="mode-tab active" id="tabOutline">1. Outline Dots</div>
+    <div class="mode-tab" id="tabDetails">2. Detail Lines</div>
+  </div>
+
+  <!-- Outline mode controls -->
+  <div class="outline-section visible" id="outlineSection">
+    <div class="btn-row">
+      <button id="undoBtn">Undo last dot</button>
+      <button id="clearBtn" class="danger">Clear all dots</button>
+    </div>
+    <div class="status" id="status">0 dots placed</div>
+    <h3>Dot coordinates</h3>
+    <div class="dot-list" id="dotList">// Click on the image to place dots...</div>
+  </div>
+
+  <!-- Detail lines mode controls -->
+  <div class="detail-section" id="detailSection">
+    <div class="btn-row">
+      <button id="finishLineBtn">Finish current line</button>
+      <button id="undoDetailBtn">Undo last point</button>
+      <button id="clearDetailBtn" class="danger">Clear all details</button>
+    </div>
+    <div class="status" id="detailStatus">Click to draw detail lines. Click "Finish" to start a new line.</div>
+    <h3>Detail lines</h3>
+    <div class="dot-list" id="detailList">// No detail lines yet</div>
+  </div>
+
+  <h3>JS Output (paste into content file)</h3>
+  <div class="output-block" id="output">dots: []</div>
+  <button id="copyBtn">Copy full output to clipboard</button>
+
+  <div class="instructions">
+    <strong>Outline mode:</strong> Left click to place numbered dots. Right click to undo. Dots loop back to first.<br>
+    <strong>Detail mode:</strong> Click points to draw lines. "Finish" to start a new line. These appear after puzzle completion.<br>
+    Aim for 5-15 outline dots. Detail lines add interior features (tip, ferrule, etc).
+  </div>
+</div>
+
+<script>
+const playArea = document.getElementById('playArea')
+const refImage = document.getElementById('refImage')
+const gridOverlay = document.getElementById('gridOverlay')
+const lineCanvas = document.getElementById('lineCanvas')
+const ctx = lineCanvas.getContext('2d')
+const imageSelect = document.getElementById('imageSelect')
+const opacitySlider = document.getElementById('opacitySlider')
+const opacityLabel = document.getElementById('opacityLabel')
+const undoBtn = document.getElementById('undoBtn')
+const clearBtn = document.getElementById('clearBtn')
+const dotList = document.getElementById('dotList')
+const output = document.getElementById('output')
+const copyBtn = document.getElementById('copyBtn')
+const statusEl = document.getElementById('status')
+const tabOutline = document.getElementById('tabOutline')
+const tabDetails = document.getElementById('tabDetails')
+const outlineSection = document.getElementById('outlineSection')
+const detailSection = document.getElementById('detailSection')
+const finishLineBtn = document.getElementById('finishLineBtn')
+const undoDetailBtn = document.getElementById('undoDetailBtn')
+const clearDetailBtn = document.getElementById('clearDetailBtn')
+const detailStatus = document.getElementById('detailStatus')
+const detailList = document.getElementById('detailList')
+
+let mode = 'outline' // 'outline' | 'details'
+let dots = []           // [{xFrac, yFrac, el}]
+let detailLines = []    // [ [{xFrac,yFrac,el}, ...], ... ]  — array of polylines
+let currentDetailLine = [] // points in the line being drawn
+
+const PLAY_SIZE = Math.min(window.innerHeight - 60, window.innerWidth - 450)
+
+playArea.style.width = PLAY_SIZE + 'px'
+playArea.style.height = PLAY_SIZE + 'px'
+lineCanvas.width = PLAY_SIZE * devicePixelRatio
+lineCanvas.height = PLAY_SIZE * devicePixelRatio
+lineCanvas.style.width = PLAY_SIZE + 'px'
+lineCanvas.style.height = PLAY_SIZE + 'px'
+ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
+
+// ─── Grid ───
+function drawGrid() {
+  const svg = gridOverlay
+  svg.innerHTML = ''
+  svg.setAttribute('viewBox', `0 0 ${PLAY_SIZE} ${PLAY_SIZE}`)
+  for (let i = 1; i < 10; i++) {
+    const pos = (i / 10) * PLAY_SIZE
+    const v = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    v.setAttribute('x1', pos); v.setAttribute('y1', 0)
+    v.setAttribute('x2', pos); v.setAttribute('y2', PLAY_SIZE)
+    v.setAttribute('stroke', 'rgba(0,0,0,0.1)'); v.setAttribute('stroke-width', '1')
+    svg.appendChild(v)
+    const h = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+    h.setAttribute('x1', 0); h.setAttribute('y1', pos)
+    h.setAttribute('x2', PLAY_SIZE); h.setAttribute('y2', pos)
+    h.setAttribute('stroke', 'rgba(0,0,0,0.1)'); h.setAttribute('stroke-width', '1')
+    svg.appendChild(h)
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    lbl.setAttribute('x', pos); lbl.setAttribute('y', 12)
+    lbl.setAttribute('fill', 'rgba(0,0,0,0.25)')
+    lbl.setAttribute('font-size', '10'); lbl.setAttribute('text-anchor', 'middle')
+    lbl.textContent = (i / 10).toFixed(1)
+    svg.appendChild(lbl)
+    const lbl2 = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    lbl2.setAttribute('x', 4); lbl2.setAttribute('y', pos + 4)
+    lbl2.setAttribute('fill', 'rgba(0,0,0,0.25)')
+    lbl2.setAttribute('font-size', '10')
+    lbl2.textContent = (i / 10).toFixed(1)
+    svg.appendChild(lbl2)
+  }
+}
+drawGrid()
+
+function dotColor(idx, total) {
+  return `hsl(${Math.round((idx / Math.max(total, 1)) * 360)} 100% 65%)`
+}
+
+function snap(v) { return Math.round(v * 100) / 100 }
+
+// ─── Outline dots ───
+
+function addDot(xFrac, yFrac) {
+  const idx = dots.length
+  const color = dotColor(idx, idx + 1)
+  const el = document.createElement('div')
+  el.className = 'dot-marker'
+  el.style.left = (xFrac * 100) + '%'
+  el.style.top = (yFrac * 100) + '%'
+  el.style.background = color
+  el.style.boxShadow = `0 0 8px ${color}, 0 0 20px ${color}, 0 0 40px ${color}`
+  el.textContent = idx + 1
+  playArea.appendChild(el)
+  dots.push({ xFrac, yFrac, el })
+  recolorDots()
+  redraw()
+}
+
+function removeLastDot() {
+  if (dots.length === 0) return
+  const last = dots.pop()
+  last.el.remove()
+  recolorDots()
+  redraw()
+}
+
+function clearAllDots() {
+  dots.forEach(d => d.el.remove())
+  dots = []
+  redraw()
+}
+
+function recolorDots() {
+  const total = dots.length
+  dots.forEach((d, i) => {
+    const color = dotColor(i, total)
+    d.el.style.background = color
+    d.el.style.boxShadow = `0 0 8px ${color}, 0 0 20px ${color}, 0 0 40px ${color}`
+    d.el.textContent = i + 1
+  })
+}
+
+// ─── Detail lines ───
+
+function addDetailPoint(xFrac, yFrac) {
+  const el = document.createElement('div')
+  el.className = 'detail-marker'
+  el.style.left = (xFrac * 100) + '%'
+  el.style.top = (yFrac * 100) + '%'
+  playArea.appendChild(el)
+  currentDetailLine.push({ xFrac, yFrac, el })
+  redraw()
+}
+
+function finishDetailLine() {
+  if (currentDetailLine.length < 2) {
+    detailStatus.textContent = 'Need at least 2 points to make a line.'
+    return
+  }
+  detailLines.push([...currentDetailLine])
+  currentDetailLine = []
+  redraw()
+  detailStatus.textContent = `${detailLines.length} detail line(s) saved. Click to start another.`
+}
+
+function undoDetailPoint() {
+  if (currentDetailLine.length > 0) {
+    const last = currentDetailLine.pop()
+    last.el.remove()
+  } else if (detailLines.length > 0) {
+    // Pop last finished line back into current for editing
+    currentDetailLine = detailLines.pop()
+  }
+  redraw()
+}
+
+function clearAllDetails() {
+  currentDetailLine.forEach(p => p.el.remove())
+  currentDetailLine = []
+  detailLines.forEach(line => line.forEach(p => p.el.remove()))
+  detailLines = []
+  redraw()
+}
+
+// ─── Drawing ───
+
+function redraw() {
+  ctx.clearRect(0, 0, PLAY_SIZE, PLAY_SIZE)
+  ctx.save()
+  ctx.lineJoin = 'round'
+  ctx.lineCap = 'round'
+
+  // Draw outline dots connection
+  if (dots.length >= 2) {
+    const drawPath = (close) => {
+      ctx.beginPath()
+      ctx.moveTo(dots[0].xFrac * PLAY_SIZE, dots[0].yFrac * PLAY_SIZE)
+      for (let i = 1; i < dots.length; i++) {
+        ctx.lineTo(dots[i].xFrac * PLAY_SIZE, dots[i].yFrac * PLAY_SIZE)
+      }
+      if (close) ctx.closePath()
+    }
+    drawPath(true)
+    ctx.strokeStyle = 'rgba(0,0,0,0.1)'
+    ctx.lineWidth = 4
+    ctx.shadowColor = 'rgba(0,0,0,0.3)'
+    ctx.shadowBlur = 12
+    ctx.stroke()
+
+    drawPath(true)
+    ctx.strokeStyle = 'rgba(220,50,50,0.7)'
+    ctx.lineWidth = 2
+    ctx.shadowBlur = 0
+    ctx.stroke()
+  }
+
+  // Draw finished detail lines (blue)
+  detailLines.forEach(line => {
+    if (line.length < 2) return
+    ctx.beginPath()
+    ctx.moveTo(line[0].xFrac * PLAY_SIZE, line[0].yFrac * PLAY_SIZE)
+    for (let i = 1; i < line.length; i++) {
+      ctx.lineTo(line[i].xFrac * PLAY_SIZE, line[i].yFrac * PLAY_SIZE)
+    }
+    ctx.strokeStyle = 'rgba(68,136,255,0.8)'
+    ctx.lineWidth = 2
+    ctx.shadowBlur = 0
+    ctx.stroke()
+  })
+
+  // Draw current (in-progress) detail line (dashed blue)
+  if (currentDetailLine.length >= 2) {
+    ctx.beginPath()
+    ctx.moveTo(currentDetailLine[0].xFrac * PLAY_SIZE, currentDetailLine[0].yFrac * PLAY_SIZE)
+    for (let i = 1; i < currentDetailLine.length; i++) {
+      ctx.lineTo(currentDetailLine[i].xFrac * PLAY_SIZE, currentDetailLine[i].yFrac * PLAY_SIZE)
+    }
+    ctx.setLineDash([6, 4])
+    ctx.strokeStyle = 'rgba(68,136,255,0.9)'
+    ctx.lineWidth = 2
+    ctx.stroke()
+    ctx.setLineDash([])
+  }
+
+  ctx.restore()
+
+  // Update status
+  statusEl.textContent = `${dots.length} outline dots`
+  const totalDetailPts = detailLines.reduce((s, l) => s + l.length, 0) + currentDetailLine.length
+  detailStatus.textContent = `${detailLines.length} finished line(s), ${currentDetailLine.length} pts in current. ${totalDetailPts} total pts.`
+
+  updateOutput()
+}
+
+function updateOutput() {
+  // Dot list
+  if (dots.length === 0) {
+    dotList.textContent = '// Click on the image to place dots...'
+  } else {
+    dotList.textContent = dots.map((d, i) =>
+      `${i + 1}. [${d.xFrac.toFixed(2)}, ${d.yFrac.toFixed(2)}]`
+    ).join('\n')
+  }
+
+  // Detail list
+  if (detailLines.length === 0 && currentDetailLine.length === 0) {
+    detailList.textContent = '// No detail lines yet'
+  } else {
+    const parts = []
+    detailLines.forEach((line, li) => {
+      parts.push(`Line ${li + 1}: ${line.map(p => `[${p.xFrac.toFixed(2)},${p.yFrac.toFixed(2)}]`).join(' -> ')}`)
+    })
+    if (currentDetailLine.length > 0) {
+      parts.push(`(drawing): ${currentDetailLine.map(p => `[${p.xFrac.toFixed(2)},${p.yFrac.toFixed(2)}]`).join(' -> ')}`)
+    }
+    detailList.textContent = parts.join('\n')
+  }
+
+  // Full JS output
+  const dotsArr = dots.map(d => `  [${d.xFrac.toFixed(2)}, ${d.yFrac.toFixed(2)}],`).join('\n')
+
+  let out = `dots: [\n${dotsArr}\n]`
+
+  const allDetailLines = [...detailLines]
+  if (currentDetailLine.length >= 2) allDetailLines.push(currentDetailLine)
+
+  if (allDetailLines.length > 0) {
+    const detailArr = allDetailLines.map(line => {
+      const pts = line.map(p => `[${p.xFrac.toFixed(2)}, ${p.yFrac.toFixed(2)}]`).join(', ')
+      return `  [${pts}],`
+    }).join('\n')
+    out += `,\ndetails: [\n${detailArr}\n]`
+  }
+
+  output.textContent = out
+}
+
+// ─── Mode switching ───
+
+function setMode(m) {
+  mode = m
+  tabOutline.classList.toggle('active', m === 'outline')
+  tabDetails.classList.toggle('active', m === 'details')
+  outlineSection.classList.toggle('visible', m === 'outline')
+  detailSection.classList.toggle('visible', m === 'details')
+}
+
+tabOutline.addEventListener('click', () => setMode('outline'))
+tabDetails.addEventListener('click', () => setMode('details'))
+
+// ─── Click handling ───
+
+playArea.addEventListener('click', e => {
+  const rect = playArea.getBoundingClientRect()
+  const xFrac = snap((e.clientX - rect.left) / rect.width)
+  const yFrac = snap((e.clientY - rect.top) / rect.height)
+
+  if (mode === 'outline') {
+    addDot(xFrac, yFrac)
+  } else {
+    addDetailPoint(xFrac, yFrac)
+  }
+})
+
+playArea.addEventListener('contextmenu', e => {
+  e.preventDefault()
+  if (mode === 'outline') {
+    removeLastDot()
+  } else {
+    undoDetailPoint()
+  }
+})
+
+// ─── Button events ───
+
+undoBtn.addEventListener('click', removeLastDot)
+clearBtn.addEventListener('click', clearAllDots)
+finishLineBtn.addEventListener('click', finishDetailLine)
+undoDetailBtn.addEventListener('click', undoDetailPoint)
+clearDetailBtn.addEventListener('click', clearAllDetails)
+
+imageSelect.addEventListener('change', () => {
+  refImage.src = imageSelect.value
+  clearAllDots()
+  clearAllDetails()
+})
+
+opacitySlider.addEventListener('input', () => {
+  const v = opacitySlider.value
+  refImage.style.opacity = v / 100
+  opacityLabel.textContent = v + '%'
+})
+
+copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(output.textContent).then(() => {
+    copyBtn.textContent = 'Copied!'
+    setTimeout(() => { copyBtn.textContent = 'Copy full output to clipboard' }, 1500)
+  })
+})
+
+// Load initial image
+refImage.src = imageSelect.value
+</script>
+</body>
+</html>
