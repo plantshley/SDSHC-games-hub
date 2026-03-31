@@ -3623,3 +3623,394 @@
   background: var(--color-meadow);
   color: #fff;
 }
+
+/* ═══════════════════════════════════════════════════════
+   DOT-TO-DOT — "What Does Soil Make?" (dtd-)
+   Little Sprouts tier. Mirrors coloring game layout.
+   ═══════════════════════════════════════════════════════ */
+
+/* ─── P1: INTRO SCREEN ─── */
+
+.dtd-intro {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.dtd-intro-bg {
+  position: absolute;
+  inset: 0;
+  background: url('/assets/gifs/pixel-house5.gif') center / cover no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dtd-intro-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.30);
+}
+
+.dtd-intro-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 32px;
+  width: 100%;
+  position: relative;
+  z-index: 3;
+}
+
+.dtd-intro-title {
+  font-family: var(--font-title);
+  font-size: 36px;
+  color: var(--color-white);
+  text-shadow: 0 3px 0 #2a5200, 0 0 24px rgba(166, 194, 100, 0.4);
+}
+
+.dtd-intro-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 120px;
+  padding: 0 40px;
+  position: relative;
+  z-index: 2;
+}
+
+.dtd-intro-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.dtd-speech-bubble {
+  width: 260px;
+  min-height: 80px;
+  padding: 18px 22px;
+  background: rgba(253, 246, 227, 0.95);
+  border-radius: 18px;
+  position: relative;
+}
+
+.dtd-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 12px solid transparent;
+  border-top-color: rgba(253, 246, 227, 0.95);
+}
+
+.dtd-speech-text {
+  font-family: var(--font-header);
+  font-size: 18px;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.dtd-intro-character {
+  height: 150px;
+  width: auto;
+  image-rendering: pixelated;
+  filter: saturate(1.3) brightness(1.05);
+  animation: cornerFloat 2.5s ease-in-out infinite;
+  margin-top: 20px;
+}
+
+.dtd-intro-right {
+  flex-shrink: 0;
+}
+
+/* Level picker grid (2×2) */
+.dtd-level-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.dtd-level-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 160px;
+  height: 160px;
+  background: rgba(253, 246, 227, 0.92);
+  border: 4px solid var(--color-sprouts);
+  border-bottom: 6px solid var(--color-sprouts-dark);
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  padding: 16px;
+}
+
+.dtd-level-btn:hover,
+.dtd-level-btn:active {
+  transform: translateY(3px) scale(0.97);
+  box-shadow: 0 2px 0 var(--color-sprouts-dark);
+}
+
+.dtd-level-icon {
+  font-size: 40px;
+}
+
+.dtd-level-title {
+  font-family: var(--font-header);
+  font-size: 17px;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.dtd-level-count {
+  font-size: 0px;
+  color: var(--color-sprouts-dark);
+  letter-spacing: 3px;
+}
+
+/* ─── P2: GAME SCREEN ─── */
+
+.dtd-game {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.dtd-game-bg {
+  position: absolute;
+  inset: 0;
+  background: url('/assets/backgrounds/pixel-background-night.jpg') repeat-x center / auto 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dtd-game-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 32px;
+  width: 100%;
+  position: relative;
+  z-index: 3;
+}
+
+.dtd-game-title {
+  font-family: var(--font-title);
+  font-size: 28px;
+  color: var(--color-white);
+  text-shadow: 0 3px 0 #2a5200, 0 0 20px rgba(166, 194, 100, 0.4);
+  white-space: nowrap;
+}
+
+.dtd-levels-btn {
+  font-family: var(--font-header);
+  font-size: 14px;
+  color: var(--color-sprouts);
+  background: rgba(166, 194, 100, 0.15);
+  border: 2px solid var(--color-sprouts);
+  border-radius: 20px;
+  padding: 6px 16px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.15s;
+}
+.dtd-levels-btn:hover,
+.dtd-levels-btn:active {
+  background: rgba(166, 194, 100, 0.15);
+}
+
+/* Nav pill emoji */
+.dtd-nav-emoji {
+  margin-right: 4px;
+}
+
+/* Page nav — lives inside the header row */
+.dtd-page-nav {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.dtd-page-nav::-webkit-scrollbar { display: none; }
+
+.dtd-page-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 14px;
+  background: rgba(253, 246, 227, 0.85);
+  border: 2px solid rgba(166, 194, 100, 0.4);
+  border-radius: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 32px;
+  font-family: var(--font-header);
+  font-size: 16px;
+  color: var(--color-text);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  position: relative;
+}
+
+.dtd-page-nav-item.active {
+  background: var(--color-sprouts);
+  border-color: var(--color-sprouts-dark);
+  color: #fff;
+}
+
+.dtd-page-nav-item.dtd-nav-done::after {
+  content: '  ✓';
+  color: #6bc264;
+  font-size: 0px;
+}
+
+.dtd-page-nav-item.active.dtd-nav-done::after {
+  color: rgba(255,255,255,0.85);
+}
+
+/* Game body */
+.dtd-game-body {
+  flex: 1;
+  display: flex;
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.dtd-puzzle-area {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dtd-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dtd-dots-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: pointer;
+}
+
+/* ─── DOT STYLES (CodeSandbox glow pattern) ─── */
+/* background + box-shadow set via inline style per dot */
+/* Glow blooms as dot scales up (scale changes shadow apparent size) */
+
+.dtd-dot {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-header);
+  font-size: 0px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  user-select: none;
+  touch-action: none;
+  /* Centers the dot on its [x,y] coordinate */
+  transform: translate(-50%, -50%);
+}
+
+/* Next dot to tap — pulses from pinprick to full bloom */
+.dtd-dot-next {
+  animation: dtdGlowNext 3.8s ease-in-out infinite;
+}
+@keyframes dtdGlowNext {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.1); }
+  50%       { transform: translate(-50%, -50%) scale(1.0); }
+}
+
+/* Waiting dots — tiny pinprick, barely visible */
+.dtd-dot-waiting {
+  opacity: 0.5;
+  animation: dtdGlowWait 4s ease-in-out infinite;
+}
+@keyframes dtdGlowWait {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.1); }
+  50%       { transform: translate(-50%, -50%) scale(0.18); }
+}
+
+/* Done dots — stays rainbow, just dimmed slightly */
+.dtd-dot-done {
+  opacity: 0.7;
+}
+
+/* Holds dot at full bloom while the line draws toward it */
+.dtd-dot-tapped {
+  transform: translate(-50%, -50%) scale(1.0) !important;
+  animation: none !important;
+}
+
+/* Correct tap: slow ease back to pinprick — mirrors CodeSandbox transition: 2s on un-hover */
+.dtd-dot-connect {
+  animation: dtdConnect 2s ease-in-out forwards !important;
+}
+@keyframes dtdConnect {
+  0%   { transform: translate(-50%, -50%) scale(1.0); }
+  100% { transform: translate(-50%, -50%) scale(0.1); }
+}
+
+/* Wrong tap shake */
+.dtd-dot-shake {
+  animation: dtdShake 0.4s ease-out forwards !important;
+}
+@keyframes dtdShake {
+  0%   { transform: translate(-50%, -50%) scale(1.0); }
+  20%  { transform: translate(calc(-50% - 7px), -50%) scale(1.0); }
+  40%  { transform: translate(calc(-50% + 7px), -50%) scale(1.0); }
+  60%  { transform: translate(calc(-50% - 4px), -50%) scale(1.0); }
+  80%  { transform: translate(calc(-50% + 4px), -50%) scale(1.0); }
+  100% { transform: translate(-50%, -50%) scale(1.0); }
+}
+
+/* ─── COMPLETION LABEL ─── */
+
+.dtd-reveal-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-title);
+  font-size: 56px;
+  color: #fff;
+  text-shadow:
+    0 4px 0 #2a5200,
+    0 0 40px rgba(107, 194, 100, 0.9),
+    0 0 80px rgba(107, 194, 100, 0.5);
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 500ms ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dtd-reveal-label.dtd-label-visible {
+  opacity: 1;
+}
+
+.dtd-reveal-label.dtd-label-big {
+  font-size: 72px;
+}
+
+/* Particles reuse cc-particle — no extra CSS needed */

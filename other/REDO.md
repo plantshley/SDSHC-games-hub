@@ -207,11 +207,11 @@ Base mechanic: 60-second timed rounds. Multiple choice. Score tracked.
 
 #### *Game 11: "Soil Food Web Builder" (Diagram Builder)*
 
-Basic mechanic: Drag organism names to correct positions. Then draw arrows showing "who feeds who." Scoring based on correct placements and connections.
+Basic mechanic: Drag organism names to correct positions between the existing arrows.
 
 Source: Soil Food Web, Upper elem
 
-Assets: soil-food-web-no-words2
+Assets: soil-food-web-no-words2, soil-food-web-arrows-only, soil-food-web-no-words3
 
 ## **Hub UX Flow**
 

@@ -21,6 +21,7 @@ import { createPlantingSimGame } from './games/planting-sim.js'
 import { createTriviaBlitzGame } from './games/trivia-blitz.js'
 import { createColoringGame } from './games/coloring.js'
 import { createSpinWheelGame } from './games/spin-wheel.js'
+import { createDotToDotGame } from './games/dot-to-dot.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -131,6 +132,10 @@ function handleKidGame(route) {
   }
   if (route.gameId === 'spin-wheel') {
     switchScreen(createSpinWheelGame())
+    return
+  }
+  if (route.gameId === 'dot-to-dot') {
+    switchScreen(createDotToDotGame())
     return
   }
 
