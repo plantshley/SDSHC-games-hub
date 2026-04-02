@@ -201,6 +201,54 @@
     color: #4488ff;
     padding: 2px 0;
   }
+
+  .organism-section { display: none; }
+  .organism-section.visible { display: block; }
+
+  .org-placed {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    cursor: grab;
+    user-select: none;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    transition: border-color 0.15s;
+  }
+  .org-placed:hover, .org-placed.selected {
+    border-color: #38cebc;
+  }
+  .org-placed.dragging {
+    cursor: grabbing;
+    opacity: 0.7;
+  }
+  .org-placed img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+  }
+  .org-placed .org-name-tag {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #38cebc;
+    white-space: nowrap;
+    text-shadow: 0 1px 3px #000;
+    pointer-events: none;
+  }
+
+  .org-size-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .org-size-row input[type="range"] { flex: 1; }
+  .org-size-row .size-val { width: 40px; text-align: right; }
 </style>
 </head>
 <body>
@@ -239,6 +287,10 @@
         <option value="/SDSHC-games-hub/assets/flowers-love-SUN.png">Sun</option>
         <option value="/SDSHC-games-hub/assets/flowers-love-WATER.png">Water</option>
       </optgroup>
+      <optgroup label="Soil Food Web">
+        <option value="/SDSHC-games-hub/assets/svg/soil-food-web-arrows-only.svg">Arrows Only</option>
+        <option value="/SDSHC-games-hub/assets/svg/soil-food-web-no-words3.svg">Full (no words)</option>
+      </optgroup>
     </select>
   </div>
 
@@ -252,6 +304,7 @@
   <div class="mode-tabs">
     <div class="mode-tab active" id="tabOutline">1. Outline Dots</div>
     <div class="mode-tab" id="tabDetails">2. Detail Lines</div>
+    <div class="mode-tab" id="tabOrganisms">3. Organism Placer</div>
   </div>
 
   <!-- Outline mode controls -->
@@ -277,6 +330,28 @@
     <div class="dot-list" id="detailList">// No detail lines yet</div>
   </div>
 
+  <!-- Organism placer mode controls -->
+  <div class="organism-section" id="organismSection">
+    <div>
+      <h3>Select organism to place</h3>
+      <select id="orgSelect">
+        <option value="">— pick one —</option>
+      </select>
+    </div>
+    <div class="org-size-row">
+      <span>Size:</span>
+      <input type="range" id="orgSizeSlider" min="30" max="200" value="80">
+      <span class="size-val" id="orgSizeLabel">80px</span>
+    </div>
+    <div class="btn-row">
+      <button id="orgDeleteBtn" class="danger">Delete selected</button>
+      <button id="orgClearBtn" class="danger">Clear all</button>
+    </div>
+    <div class="status" id="orgStatus">0/12 organisms placed. Click diagram to place selected organism.</div>
+    <h3>Placed organisms</h3>
+    <div class="dot-list" id="orgList">// No organisms placed yet</div>
+  </div>
+
   <h3>JS Output (paste into content file)</h3>
   <div class="output-block" id="output">dots: []</div>
   <button id="copyBtn">Copy full output to clipboard</button>
@@ -289,6 +364,9 @@
 </div>
 
 <script>
+// Paths already include /SDSHC-games-hub/ prefix which matches Vite's base config
+function assetPath(path) { return path }
+
 const playArea = document.getElementById('playArea')
 const refImage = document.getElementById('refImage')
 const gridOverlay = document.getElementById('gridOverlay')
@@ -313,10 +391,47 @@ const clearDetailBtn = document.getElementById('clearDetailBtn')
 const detailStatus = document.getElementById('detailStatus')
 const detailList = document.getElementById('detailList')
 
-let mode = 'outline' // 'outline' | 'details'
+const tabOrganisms = document.getElementById('tabOrganisms')
+const organismSection = document.getElementById('organismSection')
+const orgSelect = document.getElementById('orgSelect')
+const orgSizeSlider = document.getElementById('orgSizeSlider')
+const orgSizeLabel = document.getElementById('orgSizeLabel')
+const orgDeleteBtn = document.getElementById('orgDeleteBtn')
+const orgClearBtn = document.getElementById('orgClearBtn')
+const orgStatus = document.getElementById('orgStatus')
+const orgListEl = document.getElementById('orgList')
+
+let mode = 'outline' // 'outline' | 'details' | 'organisms'
 let dots = []           // [{xFrac, yFrac, el}]
 let detailLines = []    // [ [{xFrac,yFrac,el}, ...], ... ]  — array of polylines
 let currentDetailLine = [] // points in the line being drawn
+
+// ─── Organism data (matches food-web.js) ───
+const ORGANISM_DEFS = [
+  { id: 'plants', name: 'Plants', asset: '/SDSHC-games-hub/assets/svg/plants.svg' },
+  { id: 'organic-matter', name: 'Organic Matter', asset: '/SDSHC-games-hub/assets/svg/organic%20matter.svg' },
+  { id: 'earthworms', name: 'Earthworms', asset: '/SDSHC-games-hub/assets/svg/worm-food-web.svg' },
+  { id: 'bacteria', name: 'Bacteria', asset: '/SDSHC-games-hub/assets/svg/bacteria2.svg' },
+  { id: 'protozoa', name: 'Protozoa', asset: '/SDSHC-games-hub/assets/svg/protozoa.svg' },
+  { id: 'nematode-predators', name: 'Nematodes (predators)', asset: '/SDSHC-games-hub/assets/svg/nematode-predator.svg' },
+  { id: 'nematode-fungi-bacteria', name: 'Nematodes (fungi & bacteria eaters)', asset: '/SDSHC-games-hub/assets/svg/nematode.svg' },
+  { id: 'nematode-root-eaters', name: 'Nematodes (root eaters)', asset: '/SDSHC-games-hub/assets/svg/nematode-fungi-eater.svg' },
+  { id: 'fungi', name: 'Fungi', asset: '/SDSHC-games-hub/assets/svg/fungi.svg' },
+  { id: 'arthropod-shredders', name: 'Arthropods (shredders)', asset: '/SDSHC-games-hub/assets/svg/arthropod.svg' },
+  { id: 'arthropod-predators', name: 'Arthropods (predators)', asset: '/SDSHC-games-hub/assets/svg/mite.svg' },
+  { id: 'birds-animals', name: 'Birds & Animals', asset: '/SDSHC-games-hub/assets/svg/birb.svg' },
+]
+
+let placedOrganisms = [] // [{id, name, asset, xFrac, yFrac, size, el}]
+let selectedOrgEl = null // currently selected placed organism element
+
+// Populate organism dropdown
+ORGANISM_DEFS.forEach(org => {
+  const opt = document.createElement('option')
+  opt.value = org.id
+  opt.textContent = org.name
+  orgSelect.appendChild(opt)
+})
 
 const PLAY_SIZE = Math.min(window.innerHeight - 60, window.innerWidth - 450)
 
@@ -545,7 +660,12 @@ function updateOutput() {
     detailList.textContent = parts.join('\n')
   }
 
-  // Full JS output
+  // Full JS output — skip if organisms mode (has its own output)
+  if (mode === 'organisms') {
+    updateOrgOutput()
+    return
+  }
+
   const dotsArr = dots.map(d => `  [${d.xFrac.toFixed(2)}, ${d.yFrac.toFixed(2)}],`).join('\n')
 
   let out = `dots: [\n${dotsArr}\n]`
@@ -570,16 +690,26 @@ function setMode(m) {
   mode = m
   tabOutline.classList.toggle('active', m === 'outline')
   tabDetails.classList.toggle('active', m === 'details')
+  tabOrganisms.classList.toggle('active', m === 'organisms')
   outlineSection.classList.toggle('visible', m === 'outline')
   detailSection.classList.toggle('visible', m === 'details')
+  organismSection.classList.toggle('visible', m === 'organisms')
+  // Toggle play area cursor
+  playArea.style.cursor = m === 'organisms' ? 'default' : 'crosshair'
+  // Toggle organism elements interactivity
+  placedOrganisms.forEach(o => {
+    o.el.style.pointerEvents = m === 'organisms' ? 'auto' : 'none'
+  })
 }
 
 tabOutline.addEventListener('click', () => setMode('outline'))
 tabDetails.addEventListener('click', () => setMode('details'))
+tabOrganisms.addEventListener('click', () => setMode('organisms'))
 
 // ─── Click handling ───
 
 playArea.addEventListener('click', e => {
+  if (mode === 'organisms') return // handled by organism-specific listeners
   const rect = playArea.getBoundingClientRect()
   const xFrac = snap((e.clientX - rect.left) / rect.width)
   const yFrac = snap((e.clientY - rect.top) / rect.height)
@@ -609,7 +739,7 @@ undoDetailBtn.addEventListener('click', undoDetailPoint)
 clearDetailBtn.addEventListener('click', clearAllDetails)
 
 imageSelect.addEventListener('change', () => {
-  refImage.src = imageSelect.value
+  refImage.src = assetPath(imageSelect.value)
   clearAllDots()
   clearAllDetails()
 })
@@ -627,8 +757,192 @@ copyBtn.addEventListener('click', () => {
   })
 })
 
+// ─── Organism placer ───
+
+function placeOrganism(orgDef, xFrac, yFrac, size) {
+  // Check if already placed
+  if (placedOrganisms.find(o => o.id === orgDef.id)) {
+    orgStatus.textContent = `"${orgDef.name}" is already placed! Select it to move or resize.`
+    return
+  }
+
+  const el = document.createElement('div')
+  el.className = 'org-placed'
+  el.style.left = (xFrac * 100) + '%'
+  el.style.top = (yFrac * 100) + '%'
+  el.style.width = size + 'px'
+  el.style.height = size + 'px'
+  el.dataset.orgId = orgDef.id
+
+  const img = document.createElement('img')
+  img.src = assetPath(orgDef.asset)
+  img.alt = orgDef.name
+  img.draggable = false
+  el.appendChild(img)
+
+  const tag = document.createElement('span')
+  tag.className = 'org-name-tag'
+  tag.textContent = orgDef.name
+  el.appendChild(tag)
+
+  playArea.appendChild(el)
+
+  const entry = { id: orgDef.id, name: orgDef.name, asset: orgDef.asset, xFrac, yFrac, size, el }
+  placedOrganisms.push(entry)
+
+  // Make draggable
+  let dragging = false, startX, startY, startLeft, startTop
+
+  el.addEventListener('pointerdown', e => {
+    if (mode !== 'organisms') return
+    e.preventDefault()
+    e.stopPropagation()
+
+    // Select this organism
+    selectOrganism(entry)
+
+    dragging = true
+    el.classList.add('dragging')
+    startX = e.clientX
+    startY = e.clientY
+    const rect = playArea.getBoundingClientRect()
+    startLeft = entry.xFrac * rect.width
+    startTop = entry.yFrac * rect.height
+    el.setPointerCapture(e.pointerId)
+  })
+
+  el.addEventListener('pointermove', e => {
+    if (!dragging) return
+    const rect = playArea.getBoundingClientRect()
+    const dx = e.clientX - startX
+    const dy = e.clientY - startY
+    const newX = Math.max(0, Math.min(1, (startLeft + dx) / rect.width))
+    const newY = Math.max(0, Math.min(1, (startTop + dy) / rect.height))
+    entry.xFrac = snap(newX)
+    entry.yFrac = snap(newY)
+    el.style.left = (entry.xFrac * 100) + '%'
+    el.style.top = (entry.yFrac * 100) + '%'
+  })
+
+  el.addEventListener('pointerup', () => {
+    if (!dragging) return
+    dragging = false
+    el.classList.remove('dragging')
+    updateOrgOutput()
+  })
+
+  el.addEventListener('pointercancel', () => {
+    dragging = false
+    el.classList.remove('dragging')
+  })
+
+  // Disable the dropdown option
+  updateOrgDropdown()
+  selectOrganism(entry)
+  updateOrgOutput()
+}
+
+function selectOrganism(entry) {
+  // Deselect previous
+  if (selectedOrgEl) selectedOrgEl.classList.remove('selected')
+  selectedOrgEl = entry.el
+  entry.el.classList.add('selected')
+  orgSizeSlider.value = entry.size
+  orgSizeLabel.textContent = entry.size + 'px'
+  orgSelect.value = '' // clear dropdown since we're selecting a placed one
+}
+
+function deleteSelectedOrganism() {
+  if (!selectedOrgEl) return
+  const idx = placedOrganisms.findIndex(o => o.el === selectedOrgEl)
+  if (idx === -1) return
+  placedOrganisms[idx].el.remove()
+  placedOrganisms.splice(idx, 1)
+  selectedOrgEl = null
+  updateOrgDropdown()
+  updateOrgOutput()
+}
+
+function clearAllOrganisms() {
+  placedOrganisms.forEach(o => o.el.remove())
+  placedOrganisms = []
+  selectedOrgEl = null
+  updateOrgDropdown()
+  updateOrgOutput()
+}
+
+function updateOrgDropdown() {
+  const placedIds = new Set(placedOrganisms.map(o => o.id))
+  orgSelect.querySelectorAll('option').forEach(opt => {
+    if (opt.value === '') return
+    opt.disabled = placedIds.has(opt.value)
+  })
+}
+
+function updateOrgOutput() {
+  orgStatus.textContent = `${placedOrganisms.length}/${ORGANISM_DEFS.length} organisms placed. ` +
+    (placedOrganisms.length < ORGANISM_DEFS.length ? 'Select an organism and click the diagram.' : 'All placed!')
+
+  if (placedOrganisms.length === 0) {
+    orgListEl.textContent = '// No organisms placed yet'
+  } else {
+    orgListEl.textContent = placedOrganisms.map(o =>
+      `${o.name}: x=${o.xFrac.toFixed(2)}, y=${o.yFrac.toFixed(2)}, size=${o.size}px`
+    ).join('\n')
+  }
+
+  // Update main output when in organisms mode
+  if (mode === 'organisms') {
+    if (placedOrganisms.length === 0) {
+      output.textContent = '// No organisms placed'
+    } else {
+      output.textContent = placedOrganisms.map(o =>
+        `// ${o.name}\n{ id: '${o.id}', snapX: ${Math.round(o.xFrac * 100)}, snapY: ${Math.round(o.yFrac * 100)}, displaySize: ${o.size} },`
+      ).join('\n\n')
+    }
+  }
+}
+
+// Click on play area to place organism (only in organisms mode)
+playArea.addEventListener('pointerdown', e => {
+  if (mode !== 'organisms') return
+  // Only handle clicks on the play area itself, not on placed organisms
+  if (e.target !== playArea && e.target !== refImage && e.target !== gridOverlay && e.target !== lineCanvas) return
+
+  const orgId = orgSelect.value
+  if (!orgId) {
+    orgStatus.textContent = 'Select an organism from the dropdown first!'
+    return
+  }
+  const orgDef = ORGANISM_DEFS.find(o => o.id === orgId)
+  if (!orgDef) return
+
+  const rect = playArea.getBoundingClientRect()
+  const xFrac = snap((e.clientX - rect.left) / rect.width)
+  const yFrac = snap((e.clientY - rect.top) / rect.height)
+  const size = parseInt(orgSizeSlider.value)
+
+  placeOrganism(orgDef, xFrac, yFrac, size)
+})
+
+// Size slider — updates selected organism in real time
+orgSizeSlider.addEventListener('input', () => {
+  const size = parseInt(orgSizeSlider.value)
+  orgSizeLabel.textContent = size + 'px'
+  if (!selectedOrgEl) return
+  const entry = placedOrganisms.find(o => o.el === selectedOrgEl)
+  if (!entry) return
+  entry.size = size
+  entry.el.style.width = size + 'px'
+  entry.el.style.height = size + 'px'
+  updateOrgOutput()
+})
+
+orgDeleteBtn.addEventListener('click', deleteSelectedOrganism)
+orgClearBtn.addEventListener('click', clearAllOrganisms)
+
 // Load initial image
-refImage.src = imageSelect.value
+refImage.src = assetPath(imageSelect.value)
 </script>
 </body>
 </html>

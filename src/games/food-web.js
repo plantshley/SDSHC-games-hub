@@ -126,13 +126,15 @@ function createGameScreen() {
     </div>
   `).join('')
 
-  // Build drop zones
-  const zonesHtml = ORGANISMS.map(org => `
-    <div class="fw-drop-zone" data-accepts-id="${org.id}"
-         style="left:${org.snapX}%;top:${org.snapY}%;">
+  // Build drop zones — sized proportionally to displaySize
+  const zonesHtml = ORGANISMS.map(org => {
+    const zoneSize = Math.round(org.displaySize * 0.55)
+    return `
+    <div class="fw-drop-zone" data-accepts-id="${org.id}" data-display-size="${org.displaySize}"
+         style="left:${org.snapX}%;top:${org.snapY}%;width:${zoneSize}px;height:${zoneSize}px;">
       <span class="fw-zone-label">?</span>
     </div>
-  `).join('')
+  `}).join('')
 
   el.innerHTML = `
     <div class="fw-game-bg"></div>
@@ -162,7 +164,13 @@ function createGameScreen() {
         <div class="fw-diagram-container" id="fw-diagram">
           <img src="/assets/svg/soil-food-web-arrows-only.svg" class="fw-diagram-bg" alt="Food Web Arrows" draggable="false">
           ${zonesHtml}
-          <div class="fw-fact-toast" id="fw-fact-toast"></div>
+          <div class="fw-fact-modal" id="fw-fact-modal">
+            <div class="fw-fact-card">
+              <span class="fw-fact-title" id="fw-fact-title"></span>
+              <p id="fw-fact-text"></p>
+              <button class="fw-fact-continue" id="fw-fact-continue">Continue</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -183,18 +191,21 @@ function createGameScreen() {
 
   const diagram = el.querySelector('#fw-diagram')
   const progressEl = el.querySelector('#fw-progress')
-  const factToast = el.querySelector('#fw-fact-toast')
-  let factTimer = null
+  const factModal = el.querySelector('#fw-fact-modal')
+  const factTitle = el.querySelector('#fw-fact-title')
+  const factText = el.querySelector('#fw-fact-text')
+  const factContinueBtn = el.querySelector('#fw-fact-continue')
 
-  // ─── Show fact toast ───
+  // ─── Show fact modal ───
   function showFact(org) {
-    clearTimeout(factTimer)
-    factToast.textContent = `${org.name.replace(/\n/g, ' ')}: ${org.fact}`
-    factToast.classList.add('fw-toast-visible')
-    factTimer = setTimeout(() => {
-      factToast.classList.remove('fw-toast-visible')
-    }, 4000)
+    factTitle.textContent = org.name.replace(/\n/g, ' ')
+    factText.textContent = org.fact
+    factModal.classList.add('fw-fact-visible')
   }
+
+  factContinueBtn.addEventListener('pointerdown', () => {
+    factModal.classList.remove('fw-fact-visible')
+  })
 
   // ─── Show hint in instructions ───
   function showHint(org) {
@@ -268,12 +279,15 @@ function createGameScreen() {
         targetZone.classList.add('fw-zone-filled')
         targetZone.querySelector('.fw-zone-label').textContent = ''
 
-        // Place organism image in the zone
+        // Place organism image in the zone — sized to displaySize
+        const dSize = org.displaySize || 80
         const placedImg = document.createElement('img')
         placedImg.src = org.asset
         placedImg.alt = org.name.replace(/\n/g, ' ')
         placedImg.className = 'fw-placed-img'
         placedImg.draggable = false
+        placedImg.style.width = dSize + 'px'
+        placedImg.style.height = dSize + 'px'
         targetZone.appendChild(placedImg)
 
         // Add name label below placed image
@@ -296,8 +310,7 @@ function createGameScreen() {
         // Check completion — guard prevents double-trigger
         if (placedSet.size === ORGANISMS.length && !quizStarted) {
           quizStarted = true
-          clearTimeout(factTimer)
-          factToast.classList.remove('fw-toast-visible')
+          factModal.classList.remove('fw-fact-visible')
           setTimeout(() => startQuizPhase(), 2000)
         }
       } else {
@@ -451,7 +464,6 @@ function createGameScreen() {
 
   // ─── Home button ───
   el.querySelector('#fw-game-home').addEventListener('pointerdown', () => {
-    clearTimeout(factTimer)
     clearTimeout(quizAdvanceTimer)
     navigate('game-select/guardians')
   })

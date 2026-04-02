@@ -4356,11 +4356,9 @@
 
 .fw-diagram-container {
   position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio: 1 / 1;
+  height: 120%;
+  max-width: 120%;
 }
 
 .fw-diagram-bg {
@@ -4377,12 +4375,11 @@
 
 .fw-drop-zone {
   position: absolute;
-  width: 80px;
-  height: 80px;
+  /* width/height set inline per organism's displaySize */
   transform: translate(-50%, -50%);
   border: 3px dashed rgba(56, 206, 188, 0.5);
   background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
+  border-radius: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4405,13 +4402,10 @@
 }
 
 .fw-zone-filled {
-  border-style: solid;
-  border-color: var(--color-guardians);
-  background: rgba(56, 206, 188, 0.08);
-  width: auto;
-  height: auto;
-  min-width: 80px;
-  min-height: 80px;
+  border-color: transparent;
+  background: transparent;
+  width: auto !important;
+  height: auto !important;
   padding: 6px;
 }
 
@@ -4420,15 +4414,14 @@
 }
 
 .fw-placed-img {
-  width: 56px;
-  height: 56px;
+  /* width/height set inline per organism's displaySize */
   object-fit: contain;
   pointer-events: none;
 }
 
 .fw-placed-name {
   font-family: var(--font-body);
-  font-size: 9px;
+  font-size: 0px;
   color: var(--color-text-light);
   text-align: center;
   line-height: 1.1;
@@ -4454,31 +4447,63 @@
   50% { box-shadow: 0 0 20px var(--color-guardians), 0 0 40px var(--color-guardians), 0 0 60px rgba(56, 206, 188, 0.5); }
 }
 
-/* ── Fact toast ── */
+/* ── Fact modal ── */
 
-.fw-fact-toast {
+.fw-fact-modal {
   position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  max-width: 85%;
-  padding: 14px 20px;
-  background: rgba(26, 26, 46, 0.88);
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.5;
-  border-radius: 12px;
-  border: 2px solid var(--color-guardians);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 26, 46, 0);
   z-index: 10;
   opacity: 0;
-  transition: opacity 0.4s, transform 0.4s;
   pointer-events: none;
+  transition: opacity 0.3s;
 }
 
-.fw-toast-visible {
+.fw-fact-modal.fw-fact-visible {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.fw-fact-card {
+  max-width: 50%;
+  padding: 20px 20px;
+  background: rgba(177, 247, 235, 0.95);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  border-radius: 14px;
+  border: 2px solid var(--color-guardians-dark);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fw-fact-title {
+  font-family: var(--font-header);
+  font-size: 30px;
+  color: var(--color-guardians-dark);
+}
+
+.fw-fact-continue {
+  align-self: center;
+  padding: 10px 32px;
+  font-family: var(--font-header);
+  font-size: 16px;
+  background: var(--color-guardians-dark);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.fw-fact-continue:active {
+  transform: scale(0.95);
 }
 
 /* ── Drag clone ── */
