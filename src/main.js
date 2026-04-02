@@ -22,6 +22,7 @@ import { createTriviaBlitzGame } from './games/trivia-blitz.js'
 import { createColoringGame } from './games/coloring.js'
 import { createSpinWheelGame } from './games/spin-wheel.js'
 import { createDotToDotGame } from './games/dot-to-dot.js'
+import { createFoodWebGame } from './games/food-web.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -136,6 +137,10 @@ function handleKidGame(route) {
   }
   if (route.gameId === 'dot-to-dot') {
     switchScreen(createDotToDotGame())
+    return
+  }
+  if (route.gameId === 'food-web') {
+    switchScreen(createFoodWebGame())
     return
   }
 
