@@ -13,7 +13,7 @@ export const ORGANISMS = [
     asset: '/assets/svg/plants.svg',
     snapX: 18, snapY: 35, displaySize: 192,
     fact: 'Plants capture sunlight and convert it to energy through photosynthesis. Their roots release sugars that feed billions of soil organisms.',
-    hint: 'These are producers — they form the base of the food web.',
+    hint: 'These are producers — they form a cornerstone of the food web.',
   },
   {
     id: 'organic-matter',
@@ -37,7 +37,7 @@ export const ORGANISMS = [
     asset: '/assets/svg/bacteria2.svg',
     snapX: 42, snapY: 76, displaySize: 107,
     fact: 'A single teaspoon of healthy soil contains up to 1 billion bacteria. They decompose organic matter and convert nitrogen into forms plants can use.',
-    hint: 'These are microscopic decomposers found on the right side of the web.',
+    hint: 'These are microscopic decomposers that some nematodes, protozoa, and arthropods eat.',
   },
   {
     id: 'protozoa',
@@ -69,7 +69,7 @@ export const ORGANISMS = [
     asset: '/assets/svg/nematode-fungi-eater.svg',
     snapX: 43, snapY: 34, displaySize: 142,
     fact: 'Root-feeding nematodes pierce plant roots with a needle-like mouth part called a stylet. In large numbers, they can damage crops.',
-    hint: 'These feed directly on plant roots — look for them on the left, near the plants.',
+    hint: 'These feed directly on plant roots — look for them near the plants.',
   },
   {
     id: 'fungi',

@@ -116,7 +116,6 @@ function createGameScreen() {
   const placedSet = new Set()
   let quizStarted = false
   let quizScore = 0
-  let quizAdvanceTimer = null
 
   // Build organism sidebar items
   const itemsHtml = ORGANISMS.map(org => `
@@ -197,15 +196,58 @@ function createGameScreen() {
   const factContinueBtn = el.querySelector('#fw-fact-continue')
 
   // ─── Show fact modal ───
-  function showFact(org) {
+  let factDismissCallback = null
+
+  function showFact(org, onDismiss) {
     factTitle.textContent = org.name.replace(/\n/g, ' ')
     factText.textContent = org.fact
+    factDismissCallback = onDismiss || null
     factModal.classList.add('fw-fact-visible')
   }
 
   factContinueBtn.addEventListener('pointerdown', () => {
     factModal.classList.remove('fw-fact-visible')
+    if (factDismissCallback) {
+      factDismissCallback()
+      factDismissCallback = null
+    }
   })
+
+  // ─── Place an organism programmatically (no modal) ───
+  function placeOrganism(org) {
+    placedSet.add(org.id)
+
+    // Mark sidebar item as done
+    const sidebarItem = el.querySelector(`.fw-organism-item[data-org-id="${org.id}"]`)
+    if (sidebarItem) sidebarItem.classList.add('fw-item-done')
+
+    // Fill the drop zone
+    const zone = diagram.querySelector(`.fw-drop-zone[data-accepts-id="${org.id}"]`)
+    if (!zone) return
+    zone.classList.add('fw-zone-filled')
+    zone.querySelector('.fw-zone-label').textContent = ''
+
+    const dSize = org.displaySize || 80
+    const placedImg = document.createElement('img')
+    placedImg.src = org.asset
+    placedImg.alt = org.name.replace(/\n/g, ' ')
+    placedImg.className = 'fw-placed-img'
+    placedImg.draggable = false
+    placedImg.style.width = dSize + 'px'
+    placedImg.style.height = dSize + 'px'
+    zone.appendChild(placedImg)
+
+    const nameLabel = document.createElement('span')
+    nameLabel.className = 'fw-placed-name'
+    nameLabel.textContent = org.name.replace(/\n/g, ' ')
+    zone.appendChild(nameLabel)
+
+    progressEl.textContent = `${placedSet.size}/${ORGANISMS.length}`
+  }
+
+  // Pre-place one random organism on startup
+  const preplacedOrg = ORGANISMS[Math.floor(Math.random() * ORGANISMS.length)]
+  placeOrganism(preplacedOrg)
 
   // ─── Show hint in instructions ───
   function showHint(org) {
@@ -304,14 +346,14 @@ function createGameScreen() {
         // Update progress
         progressEl.textContent = `${placedSet.size}/${ORGANISMS.length}`
 
-        // Show fact
-        showFact(org)
-
-        // Check completion — guard prevents double-trigger
+        // Show fact — for the last organism, transition to quiz after dismiss
         if (placedSet.size === ORGANISMS.length && !quizStarted) {
           quizStarted = true
-          factModal.classList.remove('fw-fact-visible')
-          setTimeout(() => startQuizPhase(), 2000)
+          showFact(org, () => {
+            setTimeout(() => startQuizPhase(), 800)
+          })
+        } else {
+          showFact(org)
         }
       } else {
         // Wrong placement — shake + hint
@@ -405,13 +447,15 @@ function createGameScreen() {
       })
     }
 
-    // Show explanation
+    // Show explanation + next button
     const explEl = el.querySelector('#fw-explanation')
-    explEl.textContent = q.explanation
+    explEl.innerHTML = `
+      <p>${q.explanation}</p>
+      <button class="fw-quiz-next" id="fw-quiz-next">${qIdx + 1 < QUIZ_QUESTIONS.length ? 'Next Question' : 'See Results'}</button>
+    `
     explEl.classList.add('fw-explanation-visible')
 
-    // Auto-advance after delay
-    quizAdvanceTimer = setTimeout(() => {
+    explEl.querySelector('#fw-quiz-next').addEventListener('pointerdown', () => {
       if (!el.parentNode) return
       clearHighlights()
       if (qIdx + 1 < QUIZ_QUESTIONS.length) {
@@ -419,7 +463,7 @@ function createGameScreen() {
       } else {
         showCompletion()
       }
-    }, 4000)
+    })
   }
 
   function clearHighlights() {
@@ -464,7 +508,6 @@ function createGameScreen() {
 
   // ─── Home button ───
   el.querySelector('#fw-game-home').addEventListener('pointerdown', () => {
-    clearTimeout(quizAdvanceTimer)
     navigate('game-select/guardians')
   })
 
