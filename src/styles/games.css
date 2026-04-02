@@ -4357,8 +4357,9 @@
 .fw-diagram-container {
   position: relative;
   aspect-ratio: 1 / 1;
-  height: 120%;
-  max-width: 120%;
+  height: 130%;
+  max-width: 130%;
+  margin-top: -5%;
 }
 
 .fw-diagram-bg {
