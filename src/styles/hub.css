@@ -129,6 +129,7 @@
   padding: 10px;
   border-radius: 20px;
   position: relative;
+  
 }
 
 .tier-btn[data-tier="sprouts"] .tier-btn-outer {
@@ -156,6 +157,7 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  
 }
 
 .tier-btn .tier-icon {
@@ -220,9 +222,9 @@
 
 .speech-bubble {
   position: absolute;
-  bottom: 190px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 220px;
+  left: 41.5%;
+  transform: translateX(0%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -234,13 +236,14 @@
   z-index: 7;
   opacity: 0;
   animation: fadeSlideIn 0.5s 0.6s ease forwards;
+  
 }
 
 .speech-bubble::after {
   content: '';
   position: absolute;
   bottom: -16px;
-  left: 40%;
+  left: 45%;
   width: 0;
   height: 0;
   border-left: 12px solid transparent;
@@ -481,6 +484,7 @@
   border-bottom: 5px solid var(--card-color-dark);
   border-right: 3px solid var(--card-color-dark);
   display: flex;
+  aspect-ratio: 1 / 1;
 }
 
 /* Cream inner */
@@ -497,8 +501,9 @@
 }
 
 .game-card-icon {
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
+  margin-bottom: -10px;
   object-fit: contain;
   image-rendering: pixelated;
   filter: saturate(1.3) brightness(1.05);
@@ -506,10 +511,10 @@
 
 .game-card-title {
   font-family: var(--font-header);
-  font-size: 18px;
+  font-size: 20px;
   color: var(--color-text);
   text-align: center;
-  line-height: 1.4;
+  line-height: 1.2;
   min-height: 2.8em;
   display: flex;
   align-items: center;
@@ -518,13 +523,16 @@
 
 .game-card-levels {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--color-text-light);
-  white-space: nowrap;
+  white-space: wrap;
+  font-style: italic;
+  max-width: 70%;
+
 }
 
 .game-card-levels .hearts {
-  font-size: 16px;
+  font-size: 0px;
   letter-spacing: 1px;
   vertical-align: middle;
 }

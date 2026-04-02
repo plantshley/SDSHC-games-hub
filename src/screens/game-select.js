@@ -126,7 +126,7 @@ export function createGameSelectScreen(tier) {
           <div class="game-card-inner">
             <img class="game-card-icon" src="${game.icon}" alt="">
             <span class="game-card-title">${title}</span>
-            <span class="game-card-levels">Levels: <span class="hearts">${createHearts(game.levelCount)}</span></span>
+            <span class="game-card-levels">${game.description}</span>
           </div>
         </div>
       </button>

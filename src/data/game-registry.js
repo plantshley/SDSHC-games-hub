@@ -29,7 +29,7 @@ export const GAMES = [
     tier: 'sprouts',
     levelCount: 1,
     icon: '/assets/gifs/cake-gif.gif',
-    description: 'Fill in the soil layers with the right colors!',
+    description: 'Fill in soil layers with the right colors',
   },
   {
     id: 'dot-to-dot',
@@ -37,15 +37,15 @@ export const GAMES = [
     tier: 'sprouts',
     levelCount: 4,
     icon: '/assets/sprites/Basic_Grass_Biom_things_sunflower.png',
-    description: 'Connect the glowing dots to reveal hidden objects!',
+    description: 'Connect glowing dots to reveal objects',
   },
   {
     id: 'dont-belong',
     title: "Things That Don't Belong",
     tier: 'sprouts',
     levelCount: 4,
-    icon: '/assets/sprites/Basic_Grass_Biom_things_rock.png',
-    description: 'Tap the item that doesn\'t belong!',
+    icon: '/assets/gifs/h03-icon-strawberry.gif',
+    description: 'Tap the item that doesn\'t belong',
   },
   {
     id: 'coloring',
@@ -53,7 +53,7 @@ export const GAMES = [
     tier: 'sprouts',
     levelCount: 12,
     icon: '/assets/sprites/Basic_Grass_Biom_things_flower3.png',
-    description: 'Pick colors and paint soil critters!',
+    description: 'Pick colors and paint soil critters',
   },
 
   // Tier 2: Meadow Makers
@@ -63,7 +63,7 @@ export const GAMES = [
     tier: 'meadow',
     levelCount: 3,
     icon: '/assets/sprites/Basic_Plants_fruit-grow3.png',
-    description: 'Plant the right crops in the right spots!',
+    description: 'Plant the right crops in the right spots',
   },
   {
     id: 'spin-wheel',
@@ -71,7 +71,7 @@ export const GAMES = [
     tier: 'meadow',
     levelCount: 7,
     icon: '/assets/sprites/Free_Chicken_Sprites_6.png',
-    description: 'Spin the wheel and answer soil trivia!',
+    description: 'Spin the wheel and answer soil trivia',
   },
   {
     id: 'odd-one-out',
@@ -87,7 +87,7 @@ export const GAMES = [
     tier: 'meadow',
     levelCount: 5,
     icon: '/assets/sprites/Basic_Grass_Biom_things_flower1.png',
-    description: 'Drag words to the right spot!',
+    description: 'Drag words to the right spot',
   },
 
   // Tier 3: Harvest Guardians
@@ -105,7 +105,7 @@ export const GAMES = [
     tier: 'guardians',
     levelCount: 10,
     icon: '/assets/sprites/Weather_Icons_smal_sunny.png',
-    description: '60-second timed trivia challenge!',
+    description: '60-second timed trivia challenge',
   },
   {
     id: 'food-web',
@@ -113,7 +113,7 @@ export const GAMES = [
     tier: 'guardians',
     levelCount: 1,
     icon: '/assets/sprites/Basic_Grass_Biom_things_log.png',
-    description: 'Build the soil food web diagram!',
+    description: 'Build a soil food web diagram',
   },
 ]
 
