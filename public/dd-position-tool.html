@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Drag-Drop Position Tool</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .sidebar {
+    width: 320px;
+    background: #1a1a2e;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  h2 { font-size: 18px; color: #38cebc; }
+  h3 { font-size: 14px; color: #888; margin-bottom: 4px; }
+
+  select, button {
+    padding: 8px 12px;
+    background: #2a2a3e;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button:hover { background: #3a3a4e; }
+
+  .item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #2a2a3e;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .item-row.active { border-color: #38cebc; }
+  .item-row.placed { border-color: #b8e84a; }
+
+  .item-name { flex: 1; font-size: 14px; }
+  .item-coords {
+    font-size: 12px;
+    color: #888;
+    font-family: monospace;
+  }
+
+  .output-box {
+    flex: 1;
+    background: #0a0a14;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #b8e84a;
+    white-space: pre;
+    overflow: auto;
+    min-height: 120px;
+  }
+
+  .canvas-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+
+  .play-area {
+    position: relative;
+    background: #ffffff;
+    border: 2px solid #333;
+    cursor: crosshair;
+  }
+
+  .play-area img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0.85;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #38cebc;
+    border: 2px solid #fff;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .dot.active { background: #ff6b6b; }
+
+  .dot-label {
+    position: absolute;
+    transform: translate(-50%, -130%);
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Segoe UI', sans-serif;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 6;
+  }
+
+  .instructions {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>Drag-Drop Position Tool</h2>
+
+  <div>
+    <h3>Diagram</h3>
+    <select id="diagramSelect">
+      <option value="/assets/svg/soil-carbon-store.svg">Level 5: Ways We Store Carbon</option>
+      <option value="/assets/svg/soil carbon2 - release.svg">Level 6: Ways We Release Carbon</option>
+    </select>
+  </div>
+
+  <div class="instructions">
+    1. Select a diagram above<br>
+    2. Click an item below to select it<br>
+    3. Click on the diagram to place it<br>
+    4. Copy output when done
+  </div>
+
+  <div>
+    <h3>Items</h3>
+    <div class="item-list" id="itemList"></div>
+  </div>
+
+  <div>
+    <h3>Output (snapX, snapY %)</h3>
+    <div class="output-box" id="output"></div>
+  </div>
+
+  <button id="copyBtn">Copy Output</button>
+  <button id="resetBtn">Reset All Positions</button>
+</div>
+
+<div class="canvas-panel" id="canvasPanel">
+  <div class="play-area" id="playArea">
+    <img id="refImage" src="" alt="Diagram">
+  </div>
+</div>
+
+<script>
+const LEVELS = {
+  '/assets/svg/soil-carbon-store.svg': {
+    title: 'Ways We Store Carbon',
+    items: [
+      { id: 'trees', label: 'Trees' },
+      { id: 'no-till', label: 'No-till' },
+      { id: 'healthy-air', label: 'Healthy Air' },
+      { id: 'roots', label: 'Roots' },
+      { id: 'organic-matter', label: 'Organic Matter' },
+    ]
+  },
+  '/assets/svg/soil carbon2 - release.svg': {
+    title: 'Ways We Release Carbon',
+    items: [
+      { id: 'plowing', label: 'Plowing' },
+      { id: 'deforestation', label: 'Deforestation' },
+      { id: 'burning', label: 'Burning' },
+      { id: 'livestock', label: 'Livestock' },
+    ]
+  }
+}
+
+const diagramSelect = document.getElementById('diagramSelect')
+const itemList = document.getElementById('itemList')
+const playArea = document.getElementById('playArea')
+const refImage = document.getElementById('refImage')
+const output = document.getElementById('output')
+const canvasPanel = document.getElementById('canvasPanel')
+
+let activeItemId = null
+let positions = {} // { itemId: { x%, y% } }
+let dots = {} // { itemId: dotEl }
+
+function getBasePath() {
+  const path = location.pathname
+  const idx = path.lastIndexOf('/')
+  return idx > 0 ? path.substring(0, idx) : ''
+}
+
+function loadDiagram() {
+  const src = diagramSelect.value
+  const base = getBasePath()
+  refImage.src = base + src
+  positions = {}
+  activeItemId = null
+  Object.values(dots).forEach(d => d.remove())
+  dots = {}
+  Object.values(dotLabels).forEach(d => d.remove())
+  dotLabels = {}
+  renderItems()
+  updateOutput()
+}
+
+let dotLabels = {}
+
+function renderItems() {
+  const level = LEVELS[diagramSelect.value]
+  if (!level) return
+  itemList.innerHTML = ''
+  level.items.forEach(item => {
+    const row = document.createElement('div')
+    row.className = 'item-row'
+    if (item.id === activeItemId) row.classList.add('active')
+    if (positions[item.id]) row.classList.add('placed')
+
+    const name = document.createElement('span')
+    name.className = 'item-name'
+    name.textContent = item.label
+
+    const coords = document.createElement('span')
+    coords.className = 'item-coords'
+    if (positions[item.id]) {
+      coords.textContent = `${positions[item.id].x}, ${positions[item.id].y}`
+    } else {
+      coords.textContent = '—'
+    }
+
+    row.appendChild(name)
+    row.appendChild(coords)
+    row.addEventListener('click', () => {
+      activeItemId = item.id
+      renderItems()
+    })
+    itemList.appendChild(row)
+  })
+}
+
+function updateOutput() {
+  const level = LEVELS[diagramSelect.value]
+  if (!level) return
+  const lines = level.items.map(item => {
+    const pos = positions[item.id]
+    if (pos) {
+      return `{ id: '${item.id}', label: '${item.label}', snapX: ${pos.x}, snapY: ${pos.y} }`
+    }
+    return `{ id: '${item.id}', label: '${item.label}', snapX: ??, snapY: ?? }`
+  })
+  output.textContent = lines.join('\n')
+}
+
+function sizePlayArea() {
+  const pw = canvasPanel.clientWidth - 40
+  const ph = canvasPanel.clientHeight - 40
+  const ratio = 16 / 9
+  let w, h
+  if (pw / ph > ratio) {
+    h = ph
+    w = h * ratio
+  } else {
+    w = pw
+    h = w / ratio
+  }
+  playArea.style.width = w + 'px'
+  playArea.style.height = h + 'px'
+}
+
+playArea.addEventListener('click', (e) => {
+  if (!activeItemId) return
+  const rect = playArea.getBoundingClientRect()
+  const xPct = Math.round(((e.clientX - rect.left) / rect.width) * 100)
+  const yPct = Math.round(((e.clientY - rect.top) / rect.height) * 100)
+
+  positions[activeItemId] = { x: xPct, y: yPct }
+
+  // Update or create dot
+  if (dots[activeItemId]) dots[activeItemId].remove()
+  if (dotLabels[activeItemId]) dotLabels[activeItemId].remove()
+
+  const dot = document.createElement('div')
+  dot.className = 'dot'
+  dot.style.left = xPct + '%'
+  dot.style.top = yPct + '%'
+  playArea.appendChild(dot)
+  dots[activeItemId] = dot
+
+  const label = document.createElement('div')
+  label.className = 'dot-label'
+  label.textContent = LEVELS[diagramSelect.value].items.find(i => i.id === activeItemId).label
+  label.style.left = xPct + '%'
+  label.style.top = yPct + '%'
+  playArea.appendChild(label)
+  dotLabels[activeItemId] = label
+
+  // Auto-advance to next unplaced item
+  const level = LEVELS[diagramSelect.value]
+  const currentIdx = level.items.findIndex(i => i.id === activeItemId)
+  const nextUnplaced = level.items.find((item, i) => i > currentIdx && !positions[item.id])
+  if (nextUnplaced) {
+    activeItemId = nextUnplaced.id
+  } else {
+    const firstUnplaced = level.items.find(item => !positions[item.id])
+    activeItemId = firstUnplaced ? firstUnplaced.id : null
+  }
+
+  renderItems()
+  updateOutput()
+})
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(output.textContent).then(() => {
+    document.getElementById('copyBtn').textContent = 'Copied!'
+    setTimeout(() => document.getElementById('copyBtn').textContent = 'Copy Output', 1500)
+  })
+})
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  positions = {}
+  activeItemId = null
+  Object.values(dots).forEach(d => d.remove())
+  dots = {}
+  Object.values(dotLabels).forEach(d => d.remove())
+  dotLabels = {}
+  renderItems()
+  updateOutput()
+})
+
+diagramSelect.addEventListener('change', loadDiagram)
+
+window.addEventListener('resize', sizePlayArea)
+sizePlayArea()
+loadDiagram()
+</script>
+</body>
+</html>

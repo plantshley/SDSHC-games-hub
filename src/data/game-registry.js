@@ -85,7 +85,7 @@ export const GAMES = [
     id: 'drag-drop',
     title: 'Drag & Drop Match',
     tier: 'meadow',
-    levelCount: 5,
+    levelCount: 6,
     icon: '/assets/sprites/Basic_Grass_Biom_things_flower1.png',
     description: 'Drag words to the right spot',
   },

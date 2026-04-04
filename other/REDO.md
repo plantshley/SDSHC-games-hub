@@ -146,7 +146,7 @@ Base mechanic: Four items appear on screen. Tap the one that doesn't belong. Fas
 
 #### *Game 8: Drag and drop matching*
 
-Basic mechanic: Drag words to correct image + description (or correct spot on the image, in the case of levels 2 and 3); image fills in with color when correct
+Basic mechanic: Drag words to correct image + description (or correct spot on the image, in the case of levels 3 and 4); image fills in with color when correct
 
 * Level 1: Soil Functions
   * Source: Soil Functions crossword, Lower elem
@@ -154,16 +154,16 @@ Basic mechanic: Drag words to correct image + description (or correct spot on th
 * Level 2: Earth Spheres
   * Source: Earth "Spheres" word search, lower elem
   * Assets: See Clues & Answers
-* Level 2: Ways we store carbon
+* Level 3: Ways we store carbon
   * Source: Soil & Carbon, Lower elem
   * Assets: See Clues & Answers
-* Level 3: Ways we release carbon
+* Level 4: Ways we release carbon
   * Source: Soil & Carbon, Lower elem
   * Assets: See Clues & Answers
-* Level 4: Soil, Art, & Culture
+* Level 5: Soil, Art, & Culture
   * Source: Soil, Art, & Culture word search, Lower elem
   * Assets:
-* Level 5: Indigenous Farming Practices
+* Level 6: Indigenous Farming Practices
   * Source: Indigenous Farming crossword, Upper elem
   * Assets: See Clues & Answers
 
