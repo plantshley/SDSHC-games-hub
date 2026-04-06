@@ -24,6 +24,7 @@ import { createSpinWheelGame } from './games/spin-wheel.js'
 import { createDotToDotGame } from './games/dot-to-dot.js'
 import { createFoodWebGame } from './games/food-web.js'
 import { createDragDropGame } from './games/drag-drop.js'
+import { createFarmManagerGame } from './games/farm-manager.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -146,6 +147,10 @@ function handleKidGame(route) {
   }
   if (route.gameId === 'drag-drop') {
     switchScreen(createDragDropGame())
+    return
+  }
+  if (route.gameId === 'farm-manager') {
+    switchScreen(createFarmManagerGame())
     return
   }
 

@@ -1,0 +1,19 @@
+## Summary
+Solid port from the drag-drop pattern — structure, naming conventions, and event flow are consistent. Three real issues found: a stale-closure bug that silently skips wrong-answer resets, a dismissed-callback leak that can fire after the screen is gone, and a data inconsistency in the content file.
+
+## Issues
+
+- **[severity: high]** Correctness — `instrTimer` stale closure in `wireLevelNav`. `wireLevelNav(el, levelIdx, instrTimer)` is called at line 292 *after* `instrTimer` is assigned (line 210), but `instrTimer` is a `let` binding that gets reassigned inside `typeInstr` on every character. The value passed to `wireLevelNav` is a snapshot of whatever `instrTimer` held at call time — it will not track later reassignments. When the user taps a level nav pill mid-animation, the currently-running typing timer is NOT cleared, so it keeps ticking on the detached element. The drag-drop game has the identical pattern, so this is a shared bug, but it is still a real one. Fix: pass the `el` element instead and read `instrTimer` via closure inside `wireLevelNav`, or change `instrTimer` to a ref object (`{ id: null }`).
+
+- **[severity: medium]** Correctness — `factContinueBtn._onDismiss` callback can fire after the screen element has been removed from the DOM. In the wrong-answer `setTimeout` at line 274, `instrEl.textContent` is written after a 3-second delay with no guard that `el` is still in the DOM. If the user taps the level nav (or home/quit) before 3 seconds elapse, `instrEl` still gets written because `el` was removed but the timeout still holds a reference. This is the same issue as the drag-drop game. Fix: add `if (el.parentNode)` guard in that `setTimeout` callback, matching the guard already present in `typeInstr`.
+
+- **[severity: medium]** Correctness — `showFact` dismissal stores the callback on a DOM property (`factContinueBtn._onDismiss`) rather than a closure variable. This diverges from the drag-drop pattern which uses a proper `let factDismissCallback` variable. The DOM-property approach is fragile: if `showFact` is called twice before dismissal (theoretically possible if the guard `if (answered) return` fails), the first callback is silently overwritten and the first action's completion flow is lost. The drag-drop version's `let factDismissCallback` approach is safer. Fix: replace `factContinueBtn._onDismiss` with a scoped `let factDismissCallback = null` and mirror the drag-drop pattern exactly.
+
+- **[severity: low]** Correctness (content data) — Level 7 (`soil-compaction`) has a mismatch between its `id` field (`'soil-compaction'`) and its `title` field (`'Soil Structure'`). The title is more accurate to the content, but the id does not match. This is cosmetic for now, but if level state is ever persisted or referenced by id the mismatch will cause confusion. Fix: change `id` to `'soil-structure'` to match the title, or change the title back to `'Soil Compaction'` to match the id.
+
+- **[severity: low]** Correctness — `practiceDesc.classList.add('fm-desc-hidden')` hides the description text on a correct answer (line 257), but it is never removed if the user navigates away via the level nav and then returns to that level. Each call to `createGameplayScreen` creates a fresh DOM, so there is no actual state leak here — this is fine. No fix needed.
+
+- **[severity: low]** Correctness — `spawnParticles` is called twice on correct answer: once at line 261 (right away) and again inside `showCompletion` at line 323. The first burst fires immediately on answer; the second fires ~1.4 seconds later when the completion overlay appears (800ms fact delay + 600ms dismiss delay). This is intentional and working. No issue, noted for clarity.
+
+## Verdict
+NEEDS CHANGES — the stale `instrTimer` closure (high) and the missing DOM-guard on the wrong-answer reset timeout (medium) are both real bugs that will produce observable misbehavior on a touchscreen kiosk where users tap quickly.
