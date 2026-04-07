@@ -1,7 +1,7 @@
 /**
  * Farm Manager Simulator — content data
  *
- * 8 levels: each presents a farm crisis scenario.
+ * 9 levels: each presents a farm crisis scenario.
  * Player selects the correct conservation practice from 4 options.
  */
 
@@ -12,7 +12,8 @@ export const LEVELS = [
     title: 'Nutrient Runoff',
     scenario: 'Your field is losing nutrients into the local river!',
     correctId: 'saturated-buffers',
-    image: '/assets/svg/cons practices-buffer.svg',
+    image: '/assets/svg/cons practices-buffer.png',
+    revealImage: '/assets/fms-saturated-buffer.webp',
     description: 'A technology that allows farmers to pass drainage tile water through perennial vegetation to reduce nutrient loss to local waterbodies.',
     options: [
       { id: 'saturated-buffers', label: 'Saturated Buffers' },
@@ -30,7 +31,8 @@ export const LEVELS = [
     title: 'Hillside Erosion',
     scenario: 'Erosion is destroying your hillside crops!',
     correctId: 'prairie-strips',
-    image: '/assets/svg/cons practices-prairie-strip.svg',
+    image: '/assets/svg/cons practices-prairie-strip.png',
+    revealImage: '/assets/fms-prairie-strip.png',
     description: 'A line of prairie plants planted in-between row crop or along streams and waterbodies that aids in reducing erosion and nutrient runoff.',
     options: [
       { id: 'prairie-strips', label: 'Prairie Strips' },
@@ -48,7 +50,8 @@ export const LEVELS = [
     title: 'High Water Table',
     scenario: 'Your water table is too high after heavy rain!',
     correctId: 'drainage-water-mgmt',
-    image: '/assets/svg/cons practices-DWM.svg',
+    image: '/assets/svg/cons practices-DWM.png',
+    revealImage: '/assets/fms-dwm.JPG',
     description: 'A technology where water control structures are added to existing tile networks to raise or lower the water table to a desired elevation.',
     options: [
       { id: 'drainage-water-mgmt', label: 'Drainage Water Management' },
@@ -66,7 +69,8 @@ export const LEVELS = [
     title: 'Creek Runoff',
     scenario: 'You need to filter runoff before it hits the creek!',
     correctId: 'bioreactors',
-    image: '/assets/svg/cons practices-bioreactor.svg',
+    image: '/assets/svg/cons practices-bioreactor.png',
+    revealImage: '/assets/fms-bioreactor.jpg',
     description: 'An edge of field practice that filters drainage tile water through woodchips to remove nutrients and protect water quality.',
     options: [
       { id: 'bioreactors', label: 'Bioreactors' },
@@ -84,7 +88,8 @@ export const LEVELS = [
     title: 'Depleted Soil',
     scenario: 'Your soil is depleted after harvest season!',
     correctId: 'cover-crops',
-    image: '/assets/svg/cons practices-CC.svg',
+    image: '/assets/svg/cons practices-CC.png',
+    revealImage: '/assets/fms-cover-crop.jpg',
     description: 'A practice that provides living roots throughout much of the year which absorbs nutrients and prevents loss. They are planted in addition to a cash crop.',
     options: [
       { id: 'cover-crops', label: 'Cover Crops' },
@@ -102,7 +107,8 @@ export const LEVELS = [
     title: 'Flooding',
     scenario: 'Flooding threatens your lowland fields!',
     correctId: 'wetlands',
-    image: '/assets/svg/cons practices-wetland.svg',
+    image: '/assets/svg/cons practices-wetland.png',
+    revealImage: '/assets/fms-wetland.JPG',
     description: 'Shallow pools that filter sediment, nitrate, and other nutrients and also provide flood mitigation and habitat benefits.',
     options: [
       { id: 'wetlands', label: 'Wetlands' },
@@ -121,7 +127,8 @@ export const LEVELS = [
     scenario: 'Your soil has no structure and compacts easily!',
     correctId: 'living-roots',
     image: '/assets/svg/soil-functions-plant.svg',
-    description: 'Living roots hold soil particles together, improving structure and preventing compaction while feeding beneficial soil organisms.',
+    revealImage: '/assets/fms-living-roots.jpg',
+    description: 'A practice that holds soil particles together, improving structure and preventing compaction while feeding beneficial soil organisms.',
     options: [
       { id: 'living-roots', label: 'Cover Crops / Living Roots' },
       { id: 'bioreactors', label: 'Bioreactors' },
@@ -138,7 +145,8 @@ export const LEVELS = [
     title: 'Monoculture',
     scenario: 'Pests are taking over \u2014 monoculture is failing!',
     correctId: 'plant-diversity',
-    image: '/assets/svg/polyculture.svg',
+    image: '/assets/svg/polyculture.png',
+    revealImage: '/assets/fms-polyculture.jpg',
     description: 'Growing different crops breaks pest cycles and builds healthier soil ecosystems through diverse root systems and nutrient cycling.',
     options: [
       { id: 'plant-diversity', label: 'Plant Diversity / Crop Rotation' },
@@ -148,6 +156,25 @@ export const LEVELS = [
     ],
     fact: 'Rotating crops removes the host plant pests depend on, starving out populations. Research showed corn rootworm infestations drop by over 90% in corn-soybean rotations compared to continuous corn. Diverse rotations feed a wider variety of soil organisms, improving nutrient cycling and long-term fertility.',
     source: 'NRCS Soil Health Principle 3, Purdue University',
+  },
+
+  // ── Level 9: Soil Carbon Loss ──
+  {
+    id: 'carbon-loss',
+    title: 'Carbon Loss',
+    scenario: 'Your tilled fields are releasing carbon into the atmosphere!',
+    correctId: 'no-till',
+    image: '/assets/svg/soil-carbon-store.svg',
+    revealImage: '/assets/fms-no-till.webp',
+    description: 'A farming method that leaves the soil undisturbed, keeping carbon locked underground instead of releasing it into the atmosphere.',
+    options: [
+      { id: 'no-till', label: 'Conservation Tillage / No-Till' },
+      { id: 'bioreactors', label: 'Bioreactors' },
+      { id: 'saturated-buffers', label: 'Saturated Buffers' },
+      { id: 'drainage-water-mgmt', label: 'Drainage Water Management' },
+    ],
+    fact: 'No-till farming leaves the soil undisturbed, keeping carbon locked underground. Conventional tillage exposes soil organic matter to oxygen, releasing stored carbon as CO\u2082. USDA research found that no-till fields can sequester 0.1\u20130.5 tons of carbon per acre per year while also reducing erosion by up to 90% and improving water infiltration.',
+    source: 'USDA NRCS, Soil Health Division',
   },
 ]
 

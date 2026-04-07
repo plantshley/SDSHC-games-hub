@@ -25,6 +25,8 @@ import { createDotToDotGame } from './games/dot-to-dot.js'
 import { createFoodWebGame } from './games/food-web.js'
 import { createDragDropGame } from './games/drag-drop.js'
 import { createFarmManagerGame } from './games/farm-manager.js'
+import { createDontBelongGame } from './games/dont-belong.js'
+import { createOddOneOutGame } from './games/odd-one-out.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -151,6 +153,14 @@ function handleKidGame(route) {
   }
   if (route.gameId === 'farm-manager') {
     switchScreen(createFarmManagerGame())
+    return
+  }
+  if (route.gameId === 'dont-belong') {
+    switchScreen(createDontBelongGame())
+    return
+  }
+  if (route.gameId === 'odd-one-out') {
+    switchScreen(createOddOneOutGame())
     return
   }
 

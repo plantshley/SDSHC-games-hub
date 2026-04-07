@@ -11,24 +11,6 @@ import { LEVELS, INSTRUCTIONS } from '../data/content/farm-manager.js'
 
 let instrTyped = false
 
-// ─── PARTICLES ───
-
-function spawnParticles(container, x, y, count = 12) {
-  for (let i = 0; i < count; i++) {
-    const p = document.createElement('div')
-    p.className = 'cc-particle fm-particle'
-    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.6
-    const dist = 40 + Math.random() * 80
-    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px')
-    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px')
-    p.style.backgroundColor = `hsl(${Math.round(Math.random() * 40 + 160)} 70% 55%)`
-    p.style.left = x + 'px'
-    p.style.top = y + 'px'
-    container.appendChild(p)
-    p.addEventListener('animationend', () => p.remove())
-  }
-}
-
 // ─── SCREEN TRANSITIONS ───
 
 function transitionTo(oldEl, newEl) {
@@ -201,7 +183,6 @@ function createGameplayScreen(levelIdx) {
 
   const farmImage = el.querySelector('#fm-farm-image')
   const practiceDesc = el.querySelector('#fm-practice-desc')
-  const canvasPanel = el.querySelector('.fm-canvas-panel')
   const factModal = el.querySelector('#fm-fact-modal')
   const factTitle = el.querySelector('#fm-fact-title')
   const factText = el.querySelector('#fm-fact-text')
@@ -257,16 +238,21 @@ function createGameplayScreen(levelIdx) {
           if (c !== card) c.classList.add('fm-option-disabled')
         })
 
-        // Greyscale → color transition
-        farmImage.classList.add('fm-farm-healthy')
+        // Swap to reveal image — wait for it to load, then transition in
         practiceDesc.classList.add('fm-desc-hidden')
+        if (level.revealImage) {
+          farmImage.addEventListener('load', () => {
+            requestAnimationFrame(() => {
+              farmImage.classList.add('fm-farm-healthy')
+            })
+          }, { once: true })
+          farmImage.src = level.revealImage
+        } else {
+          farmImage.classList.add('fm-farm-healthy')
+        }
 
-        // Particles
-        const cr = canvasPanel.getBoundingClientRect()
-        spawnParticles(canvasPanel, cr.width / 2, cr.height / 2, 15)
-
-        // Show fact modal after brief delay
-        setTimeout(() => showFact(level), 800)
+        // Show fact modal after letting the reveal image breathe
+        setTimeout(() => showFact(level), 5000)
       } else {
         // Wrong — shake + hint
         card.classList.add('fm-option-wrong')

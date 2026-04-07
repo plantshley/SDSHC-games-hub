@@ -95,7 +95,7 @@ export const GAMES = [
     id: 'farm-manager',
     title: 'Farm Manager Simulator',
     tier: 'guardians',
-    levelCount: 8,
+    levelCount: 9,
     icon: '/assets/sprites/Basic_Plants_wheat-grow4.png',
     description: 'Save the farm with the right practice!',
   },
