@@ -160,11 +160,14 @@ function createGameplayScreen(levelIdx) {
           <span class="db-reveal-text" id="db-reveal-text"></span>
         </div>
         <div class="db-completion-overlay" id="db-completion-overlay">
-          <div class="db-completion-card">
-            <h3 class="db-completion-title">${INSTRUCTIONS.complete}</h3>
+          <div class="db-completion-content">
+            <div class="db-completion-bubble">
+              <span class="db-completion-text">${INSTRUCTIONS.complete}</span>
+            </div>
+            <img class="db-completion-character" src="/assets/sprites/Basic_Charakter_wave.png" alt="">
             <div class="db-completion-buttons">
-              <button class="db-comp-btn" id="db-play-again">Play Again</button>
-              <button class="db-comp-btn db-comp-back" id="db-back-games">Back to Games</button>
+              <button class="db-completion-btn" id="db-play-again">Play Again</button>
+              <button class="db-completion-btn db-completion-btn-primary" id="db-back-games">Back to Games</button>
             </div>
           </div>
         </div>
@@ -231,7 +234,7 @@ function createGameplayScreen(levelIdx) {
           if (!el.parentNode) return
           if (isLastLevel) {
             categoryReveal.classList.remove('db-reveal-visible')
-            completionOverlay.classList.add('db-completion-visible')
+            requestAnimationFrame(() => completionOverlay.classList.add('db-show'))
             spawnParticles(canvasPanel, canvasPanel.offsetWidth / 2, canvasPanel.offsetHeight / 2, 20)
           } else {
             transitionTo(el, createGameplayScreen(levelIdx + 1))
@@ -250,12 +253,8 @@ function createGameplayScreen(levelIdx) {
   })
 
   // Completion overlay buttons
-  el.querySelector('#db-play-again').addEventListener('pointerdown', () => {
-    transitionTo(el, createGameplayScreen(0))
-  })
-  el.querySelector('#db-back-games').addEventListener('pointerdown', () => {
-    navigate('game-select/sprouts')
-  })
+  el.querySelector('#db-play-again').addEventListener('pointerdown', () => transitionTo(el, createGameplayScreen(0)))
+  el.querySelector('#db-back-games').addEventListener('pointerdown', () => navigate('game-select/sprouts'))
 
   // Home + quit
   el.querySelector('#db-game-home').addEventListener('pointerdown', () => {

@@ -11,6 +11,24 @@ import { LEVELS, INSTRUCTIONS } from '../data/content/farm-manager.js'
 
 let instrTyped = false
 
+// ─── PARTICLES ───
+
+function spawnParticles(container, x, y, count = 12) {
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div')
+    p.className = 'cc-particle fm-particle'
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.6
+    const dist = 40 + Math.random() * 80
+    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px')
+    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px')
+    p.style.backgroundColor = `hsl(${Math.round(Math.random() * 40 + 160)} 60% 55%)`
+    p.style.left = x + 'px'
+    p.style.top = y + 'px'
+    container.appendChild(p)
+    p.addEventListener('animationend', () => p.remove())
+  }
+}
+
 // ─── SCREEN TRANSITIONS ───
 
 function transitionTo(oldEl, newEl) {
@@ -155,7 +173,18 @@ function createGameplayScreen(levelIdx) {
             <span class="fm-fact-source" id="fm-fact-source"></span>
             <div class="fm-fact-buttons">
               <button class="fm-fact-continue" id="fm-fact-continue">Next Level</button>
-              <button class="fm-fact-continue fm-fact-back" id="fm-fact-back" style="display:none;">Back to Games</button>
+            </div>
+          </div>
+        </div>
+        <div class="fm-completion-overlay" id="fm-completion-overlay">
+          <div class="fm-completion-content">
+            <div class="fm-completion-bubble">
+              <span class="fm-completion-text">${INSTRUCTIONS.complete}</span>
+            </div>
+            <img class="fm-completion-character" src="/assets/sprites/Basic_Charakter_wave.png" alt="">
+            <div class="fm-completion-buttons">
+              <button class="fm-completion-btn" id="fm-play-again">Play Again</button>
+              <button class="fm-completion-btn fm-completion-btn-primary" id="fm-back-games">Back to Games</button>
             </div>
           </div>
         </div>
@@ -188,37 +217,34 @@ function createGameplayScreen(levelIdx) {
   const factText = el.querySelector('#fm-fact-text')
   const factSource = el.querySelector('#fm-fact-source')
   const factContinueBtn = el.querySelector('#fm-fact-continue')
-  const factBackBtn = el.querySelector('#fm-fact-back')
+
 
   const isLastLevel = levelIdx >= LEVELS.length - 1
+
+  const completionOverlay = el.querySelector('#fm-completion-overlay')
+  const canvasPanel = el.querySelector('.fm-canvas-panel')
 
   function showFact(lvl) {
     factTitle.textContent = lvl.options.find(o => o.id === lvl.correctId).label
     factText.textContent = lvl.fact
     factSource.textContent = `Source: ${lvl.source}`
-    if (isLastLevel) {
-      factContinueBtn.textContent = 'Play Again'
-      factBackBtn.style.display = ''
-    } else {
-      factContinueBtn.textContent = 'Next Level'
-      factBackBtn.style.display = 'none'
-    }
+    factContinueBtn.textContent = isLastLevel ? 'Continue' : 'Next Level'
     factModal.classList.add('fm-fact-visible')
   }
 
   factContinueBtn.addEventListener('pointerdown', () => {
     factModal.classList.remove('fm-fact-visible')
     if (isLastLevel) {
-      transitionTo(el, createGameplayScreen(0))
+      requestAnimationFrame(() => completionOverlay.classList.add('fm-show'))
+      const r = canvasPanel.getBoundingClientRect()
+      spawnParticles(canvasPanel, r.width / 2, r.height / 2, 20)
     } else {
       transitionTo(el, createGameplayScreen(levelIdx + 1))
     }
   })
 
-  factBackBtn.addEventListener('pointerdown', () => {
-    factModal.classList.remove('fm-fact-visible')
-    navigate('game-select/guardians')
-  })
+  el.querySelector('#fm-play-again').addEventListener('pointerdown', () => transitionTo(el, createGameplayScreen(0)))
+  el.querySelector('#fm-back-games').addEventListener('pointerdown', () => navigate('game-select/guardians'))
 
   // ─── Option tap handlers ───
   el.querySelectorAll('.fm-option-card').forEach(card => {

@@ -146,9 +146,32 @@ function createGameScreen() {
         <canvas class="dtd-canvas" id="dtd-canvas"></canvas>
         <div class="dtd-dots-overlay" id="dtd-dots-overlay"></div>
         <div class="dtd-reveal-label" id="dtd-reveal-label"></div>
+        <div class="dtd-completion-overlay" id="dtd-completion-overlay">
+          <div class="dtd-completion-content">
+            <div class="dtd-completion-bubble">
+              <span class="dtd-completion-text">Great job! You completed all the puzzles!</span>
+            </div>
+            <img class="dtd-completion-character" src="/assets/sprites/Basic_Charakter_wave.png" alt="">
+            <div class="dtd-completion-buttons">
+              <button class="dtd-completion-btn" id="dtd-play-again">Play Again</button>
+              <button class="dtd-completion-btn dtd-completion-btn-primary" id="dtd-back-games">Back to Games</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `
+
+  el.querySelector('#dtd-play-again').addEventListener('pointerdown', () => {
+    clearTimeout(pendingCompleteTimer)
+    clearTimeout(pendingLevelTimer)
+    transitionTo(el, createGameScreen())
+  })
+  el.querySelector('#dtd-back-games').addEventListener('pointerdown', () => {
+    clearTimeout(pendingCompleteTimer)
+    clearTimeout(pendingLevelTimer)
+    navigate('game-select/sprouts')
+  })
 
   el.querySelector('#dtd-game-home').addEventListener('pointerdown', () => {
     clearTimeout(pendingCompleteTimer)
@@ -583,9 +606,13 @@ function createGameScreen() {
     const cx = area.clientWidth / 2
     const cy = area.clientHeight / 2
     spawnParticles(area, cx, cy, 36)
+
+    const completionOverlay = el.querySelector('#dtd-completion-overlay')
     pendingLevelTimer = setTimeout(() => {
-      transitionTo(el, createIntroScreen())
-    }, 2500)
+      labelEl.classList.remove('dtd-label-visible', 'dtd-label-big')
+      requestAnimationFrame(() => completionOverlay.classList.add('dtd-show'))
+      spawnParticles(area, cx, cy, 20)
+    }, 2000)
   }
 
   // ─── Nav pill switching ───
