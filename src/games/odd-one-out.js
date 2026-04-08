@@ -151,13 +151,11 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
             <span class="oo-score-value" id="oo-score">${score}</span>
           </div>
           <div class="oo-panel-divider"></div>
-          <button class="oo-quit-btn" id="oo-quit">Quit ✕</button>
-        </div>
-        <div class="oo-panel-bottom">
-          <div class="oo-instructions">
-            <p id="oo-instruction-text"></p>
+          <div class="db-speech-bubble db-game-speech">
+            <span class="oo-speech-text" id="oo-instruction-text"></span>
           </div>
           <img class="oo-game-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="">
+          <button class="oo-quit-btn" id="oo-quit">Quit ✕</button>
         </div>
       </div>
       <div class="oo-canvas-panel">
@@ -173,6 +171,16 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
           <div class="oo-fact-card">
             <p id="oo-fact-text"></p>
             <button class="oo-fact-continue" id="oo-fact-continue">Continue</button>
+          </div>
+        </div>
+        <div class="oo-completion-overlay" id="oo-completion-overlay">
+          <div class="oo-completion-card">
+            <h3 class="oo-completion-title" id="oo-comp-title"></h3>
+            <div class="oo-completion-score">
+              <span class="oo-completion-score-label">Score</span>
+              <span class="oo-completion-score-value" id="oo-comp-score"></span>
+            </div>
+            <div class="oo-completion-buttons" id="oo-comp-buttons"></div>
           </div>
         </div>
       </div>
@@ -203,6 +211,10 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
   const factModal = el.querySelector('#oo-fact-modal')
   const factText = el.querySelector('#oo-fact-text')
   const factContinueBtn = el.querySelector('#oo-fact-continue')
+  const completionOverlay = el.querySelector('#oo-completion-overlay')
+  const compTitle = el.querySelector('#oo-comp-title')
+  const compScore = el.querySelector('#oo-comp-score')
+  const compButtons = el.querySelector('#oo-comp-buttons')
 
   // ─── Timer ───
   function startTimer() {
@@ -250,19 +262,44 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
     factModal.classList.add('oo-fact-visible')
   }
 
+  function showCompletion() {
+    const isLastLevel = levelIdx >= LEVELS.length - 1
+    compTitle.textContent = isLastLevel ? INSTRUCTIONS.complete : level.title + ' Complete!'
+    compScore.textContent = score
+    if (isLastLevel) {
+      compButtons.innerHTML = `
+        <button class="oo-comp-btn" id="oo-play-again">Play Again</button>
+        <button class="oo-comp-btn oo-comp-back" id="oo-back-games">Back to Games</button>
+      `
+      compButtons.querySelector('#oo-play-again').addEventListener('pointerdown', () => {
+        transitionTo(el, createGameplayScreen(0, 0, 0))
+      })
+      compButtons.querySelector('#oo-back-games').addEventListener('pointerdown', () => {
+        navigate('game-select/meadow')
+      })
+    } else {
+      compButtons.innerHTML = `<button class="oo-comp-btn" id="oo-next-level">Next Level</button>`
+      compButtons.querySelector('#oo-next-level').addEventListener('pointerdown', () => {
+        transitionTo(el, createGameplayScreen(levelIdx + 1, 0, 0))
+      })
+    }
+    completionOverlay.classList.add('oo-completion-visible')
+
+    // Particles
+    setTimeout(() => {
+      if (!el.parentNode) return
+      const r = canvasPanel.getBoundingClientRect()
+      spawnParticles(canvasPanel, r.width / 2, r.height / 2, 20)
+    }, 300)
+  }
+
   function advanceRound() {
     factModal.classList.remove('oo-fact-visible')
     const nextRound = roundIdx + 1
     if (nextRound < level.rounds.length) {
       transitionTo(el, createGameplayScreen(levelIdx, nextRound, score))
     } else {
-      // Level complete — show completion then advance
-      const nextLevel = levelIdx + 1
-      if (nextLevel < LEVELS.length) {
-        transitionTo(el, createCompletionScreen(levelIdx, score, nextLevel))
-      } else {
-        transitionTo(el, createCompletionScreen(levelIdx, score, null))
-      }
+      showCompletion()
     }
   }
 
@@ -334,69 +371,6 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
 
   // Start the timer
   startTimer()
-
-  return el
-}
-
-// ─── COMPLETION SCREEN ───
-
-function createCompletionScreen(levelIdx, finalScore, nextLevelIdx) {
-  const level = LEVELS[levelIdx]
-  const el = document.createElement('div')
-  el.className = 'screen oo-game'
-
-  const isLastLevel = nextLevelIdx === null
-
-  el.innerHTML = `
-    <div class="oo-game-bg"></div>
-    <div class="oo-game-header">
-      <button class="home-btn" id="oo-comp-home">
-        <img src="/assets/sprites/ui_board-home.png" alt="Home">
-      </button>
-      <h2 class="oo-game-title">Odd One Out</h2>
-    </div>
-    <div class="oo-completion">
-      <div class="oo-completion-card">
-        <h3 class="oo-completion-title">${isLastLevel ? INSTRUCTIONS.complete : level.title + ' Complete!'}</h3>
-        <div class="oo-completion-score">
-          <span class="oo-completion-score-label">Score</span>
-          <span class="oo-completion-score-value">${finalScore}</span>
-        </div>
-        <div class="oo-completion-buttons">
-          ${isLastLevel
-            ? `<button class="oo-comp-btn" id="oo-play-again">Play Again</button>
-               <button class="oo-comp-btn oo-comp-back" id="oo-back-games">Back to Games</button>`
-            : `<button class="oo-comp-btn" id="oo-next-level">Next Level</button>`
-          }
-        </div>
-      </div>
-    </div>
-  `
-
-  el.querySelector('#oo-comp-home').addEventListener('pointerdown', () => navigate('game-select/meadow'))
-
-  if (isLastLevel) {
-    el.querySelector('#oo-play-again').addEventListener('pointerdown', () => {
-      transitionTo(el, createGameplayScreen(0, 0, 0))
-    })
-    el.querySelector('#oo-back-games').addEventListener('pointerdown', () => {
-      navigate('game-select/meadow')
-    })
-  } else {
-    el.querySelector('#oo-next-level').addEventListener('pointerdown', () => {
-      transitionTo(el, createGameplayScreen(nextLevelIdx, 0, 0))
-    })
-  }
-
-  // Spawn particles on entry
-  setTimeout(() => {
-    if (!el.parentNode) return
-    const comp = el.querySelector('.oo-completion')
-    if (comp) {
-      const r = comp.getBoundingClientRect()
-      spawnParticles(comp, r.width / 2, r.height / 2, 20)
-    }
-  }, 300)
 
   return el
 }

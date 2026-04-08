@@ -148,13 +148,8 @@ function createGameplayScreen(levelIdx) {
           <div class="db-speech-bubble db-game-speech">
             <span class="db-speech-text" id="db-feedback-text"></span>
           </div>
-          <button class="db-quit-btn" id="db-quit">Quit ✕</button>
-        </div>
-        <div class="db-panel-bottom">
-          <div class="db-instructions">
-            <p id="db-instruction-text"></p>
-          </div>
           <img class="db-game-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="">
+          <button class="db-quit-btn" id="db-quit">Quit ✕</button>
         </div>
       </div>
       <div class="db-canvas-panel">
@@ -164,36 +159,42 @@ function createGameplayScreen(levelIdx) {
         <div class="db-category-reveal" id="db-category-reveal">
           <span class="db-reveal-text" id="db-reveal-text"></span>
         </div>
+        <div class="db-completion-overlay" id="db-completion-overlay">
+          <div class="db-completion-card">
+            <h3 class="db-completion-title">${INSTRUCTIONS.complete}</h3>
+            <div class="db-completion-buttons">
+              <button class="db-comp-btn" id="db-play-again">Play Again</button>
+              <button class="db-comp-btn db-comp-back" id="db-back-games">Back to Games</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `
 
-  // Type instruction (only animate on first level entry)
-  const instrEl = el.querySelector('#db-instruction-text')
-  const instrText = INSTRUCTIONS.gameplay
+  const feedbackEl = el.querySelector('#db-feedback-text')
+  const canvasPanel = el.querySelector('.db-canvas-panel')
+  const categoryReveal = el.querySelector('#db-category-reveal')
+  const revealText = el.querySelector('#db-reveal-text')
+  const completionOverlay = el.querySelector('#db-completion-overlay')
+  const isLastLevel = levelIdx >= LEVELS.length - 1
   const instrTimerRef = { id: null }
+
+  // Type gameplay instruction into speech bubble (only animate on first level)
+  const instrText = INSTRUCTIONS.gameplay
   if (instrTyped) {
-    instrEl.textContent = instrText
+    feedbackEl.textContent = instrText
   } else {
     let instrIdx = 0
     function typeInstr() {
       if (instrIdx < instrText.length && el.parentNode) {
-        instrEl.textContent += instrText[instrIdx++]
+        feedbackEl.textContent += instrText[instrIdx++]
         instrTimerRef.id = setTimeout(typeInstr, 35)
       }
     }
     instrTimerRef.id = setTimeout(typeInstr, 400)
     instrTyped = true
   }
-
-  const feedbackEl = el.querySelector('#db-feedback-text')
-  const canvasPanel = el.querySelector('.db-canvas-panel')
-  const categoryReveal = el.querySelector('#db-category-reveal')
-  const revealText = el.querySelector('#db-reveal-text')
-  const isLastLevel = levelIdx >= LEVELS.length - 1
-
-  // Set initial feedback
-  feedbackEl.textContent = INSTRUCTIONS.gameplay
 
   // ─── Item tap handlers ───
   el.querySelectorAll('.db-item-card').forEach(card => {
@@ -229,7 +230,9 @@ function createGameplayScreen(levelIdx) {
         setTimeout(() => {
           if (!el.parentNode) return
           if (isLastLevel) {
-            transitionTo(el, createIntroScreen())
+            categoryReveal.classList.remove('db-reveal-visible')
+            completionOverlay.classList.add('db-completion-visible')
+            spawnParticles(canvasPanel, canvasPanel.offsetWidth / 2, canvasPanel.offsetHeight / 2, 20)
           } else {
             transitionTo(el, createGameplayScreen(levelIdx + 1))
           }
@@ -244,6 +247,14 @@ function createGameplayScreen(levelIdx) {
         }, 2000)
       }
     })
+  })
+
+  // Completion overlay buttons
+  el.querySelector('#db-play-again').addEventListener('pointerdown', () => {
+    transitionTo(el, createGameplayScreen(0))
+  })
+  el.querySelector('#db-back-games').addEventListener('pointerdown', () => {
+    navigate('game-select/sprouts')
   })
 
   // Home + quit
