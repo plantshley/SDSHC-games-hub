@@ -454,7 +454,7 @@ export const LEVELS = [
 ]
 
 export const INSTRUCTIONS = {
-  intro: 'Welcome to Soil Health Trivia Blitz! Test your knowledge across 9 soil health & agriculture categories. Answer fast for bonus points!',
+  intro: 'Test your knowledge across 9 soil health & agriculture categories. Answer fast for bonus points!',
   topicMode: 'Answer questions in each category. You have 60 seconds per round — go!',
   endlessMode: 'Random questions from all categories. One wrong answer and it\'s game over! How far can you get?',
   completion: 'You conquered all 9 trivia categories! You\'re a true Soil Health expert!',

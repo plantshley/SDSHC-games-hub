@@ -273,6 +273,6 @@ export const PLAYER_NAMES = {
 export const PLAYER_COLORS = ['#ff8fb2', '#a6c264', '#38cebc', '#e4c84a']
 
 export const INSTRUCTIONS = {
-  intro: "Welcome to Spin the Soil Wheel! Spin the wheel, pick a category, and answer soil trivia to grow your plant. Watch out for special slices — Steal and Wild Card! The first to fully grow their plant wins!",
+  intro: "Spin the wheel, pick a category, and answer trivia to grow your plant. Watch out for special slices — Steal and Wild Card! The first to fully grow their plant wins!",
   completion: "Amazing job! You've answered soil trivia like a true Meadow Maker!",
 }

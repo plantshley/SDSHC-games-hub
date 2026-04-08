@@ -111,7 +111,7 @@ function createIntroScreen() {
           </div>
           <div class="sw-player-names" id="sw-names"></div>
         </div>
-        <button class="sw-start-btn" id="sw-start">Start!</button>
+        <button class="sw-start-btn" id="sw-start"><span>Start! <span class="sw-arrow-nudge">➜</span></span></button>
       </div>
     </div>
   `

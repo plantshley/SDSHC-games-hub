@@ -66,7 +66,7 @@ function createIntroScreen() {
         <img class="oo-intro-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="Character">
       </div>
       <div class="oo-intro-right">
-        <button class="oo-go-btn" id="oo-go-btn">Let's Go! ➝</button>
+        <button class="oo-go-btn" id="oo-go-btn"><span>Let's Go! <span class="oo-arrow-nudge">➜</span></span></button>
       </div>
     </div>
   `

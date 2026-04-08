@@ -66,7 +66,7 @@ function createIntroScreen() {
         <img class="db-intro-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="Character">
       </div>
       <div class="db-intro-right">
-        <button class="db-go-btn" id="db-go-btn">Let's Go! ➝</button>
+        <button class="db-go-btn" id="db-go-btn"><span>Let's Go! <span class="db-arrow-nudge">➜</span></span></button>
       </div>
     </div>
   `

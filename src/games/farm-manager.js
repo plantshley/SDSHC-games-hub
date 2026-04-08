@@ -67,7 +67,7 @@ function createIntroScreen() {
         <img class="fm-intro-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="Character">
       </div>
       <div class="fm-intro-right">
-        <button class="fm-go-btn" id="fm-go-btn">Let's Go! ➝</button>
+        <button class="fm-go-btn" id="fm-go-btn"><span>Let's Go! <span class="fm-arrow-nudge">➜</span></span></button>
       </div>
     </div>
   `
