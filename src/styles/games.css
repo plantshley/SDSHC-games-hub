@@ -6453,7 +6453,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: rgba(166, 194, 100, 0.08);
+  background: rgb(255, 255, 255);
   border: 4px solid rgba(166, 194, 100, 0.3);
   border-radius: 20px;
   padding: 24px;
@@ -6473,11 +6473,19 @@
   object-fit: contain;
 }
 
+.db-photo-grid .db-item-img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .db-item-label {
   font-family: var(--font-header);
-  font-size: 18px;
+  font-size: 25px;
   color: var(--color-text);
   text-align: center;
+  margin-bottom: -10px;
 }
 
 /* ── Correct / wrong states ── */
@@ -7073,7 +7081,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: rgba(228, 150, 215, 0.06);
+  background: rgb(255, 255, 255);
   border: 4px solid rgba(228, 150, 215, 0.3);
   border-radius: 20px;
   padding: 20px;
@@ -7088,14 +7096,18 @@
 
 .oo-item-img {
   width: 100%;
-  
   max-height: 220px;
   object-fit: contain;
 }
 
+.oo-sprite-grid .oo-item-img {
+  max-width: 120px;
+  max-height: 120px;
+}
+
 .oo-item-label {
   font-family: var(--font-header);
-  font-size: 16px;
+  font-size: 20px;
   color: var(--color-text);
   text-align: center;
 }

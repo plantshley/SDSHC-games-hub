@@ -10,23 +10,23 @@ export const LEVELS = [
   {
     id: 'animals-vs-plant',
     items: [
-      { id: 'bee', label: 'Bee', asset: '/assets/gifs/bee-gif2.gif' },
+      { id: 'fox', label: 'Fox', asset: '/assets/gifs/fox-gif.gif' },
       { id: 'cow', label: 'Cow', asset: '/assets/gifs/cow-gif2.gif' },
-      { id: 'butterfly', label: 'Butterfly', asset: '/assets/gifs/butterflies-gif.gif' },
+      { id: 'frog', label: 'Frog', asset: '/assets/gifs/frog.gif' },
       { id: 'flower', label: 'Flower', asset: '/assets/gifs/flowers-gif.gif' },
     ],
     answer: 'flower',
-    categoryReveal: "They're all animals! 🐝🐄🦋",
+    categoryReveal: "They're all animals! 🦊🐄🐸",
   },
 
   // ── Level 2: Soil Parts vs Organic ──
   {
     id: 'soil-vs-organic',
     items: [
-      { id: 'sand', label: 'Sand', asset: '/assets/sprites/dirt_main.png' },
-      { id: 'clay', label: 'Clay', asset: '/assets/svg/prek maze objects-dirt.svg' },
-      { id: 'silt', label: 'Silt', asset: '/assets/sprites/dirt_topsoil.png' },
-      { id: 'leaf', label: 'Leaf', asset: '/assets/sprites/Basic_Grass_Biom_things_sprout.png' },
+      { id: 'sand', label: 'Sand', asset: '/assets/field-guide/soil-types/sandy-loam.webp' },
+      { id: 'clay', label: 'Clay', asset: '/assets/field-guide/soil-types/clay-soil.webp' },
+      { id: 'silt', label: 'Silt', asset: '/assets/field-guide/soil-types/loess.webp' },
+      { id: 'leaf', label: 'Leaf', asset: '/assets/field-guide/native-plants/bur-oak.webp' },
     ],
     answer: 'leaf',
     categoryReveal: "They're all parts of soil! 🪨",
@@ -39,7 +39,7 @@ export const LEVELS = [
       { id: 'bunny', label: 'Bunny', asset: '/assets/svg/bunny.svg' },
       { id: 'sun', label: 'Sun', asset: '/assets/svg/prek maze objects-sun.svg' },
       { id: 'pig', label: 'Pig', asset: '/assets/svg/pig.svg' },
-      { id: 'duck', label: 'Duck', asset: '/assets/gifs/ducks-gif.gif' },
+      { id: 'duck', label: 'Duck', asset: '/assets/svg/duck.svg' },
     ],
     answer: 'sun',
     categoryReveal: "They're all animals! 🐰🐷🦆",

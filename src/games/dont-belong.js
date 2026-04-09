@@ -124,6 +124,7 @@ function createGameplayScreen(levelIdx) {
   let answered = false
 
   const shuffledItems = [...level.items].sort(() => Math.random() - 0.5)
+  const isPhotoLevel = level.items.some(i => i.asset.endsWith('.webp'))
 
   const itemsHtml = shuffledItems.map(item => `
     <button class="db-item-card" data-item-id="${item.id}">
@@ -153,7 +154,7 @@ function createGameplayScreen(levelIdx) {
         </div>
       </div>
       <div class="db-canvas-panel">
-        <div class="db-item-grid" id="db-item-grid">
+        <div class="db-item-grid${isPhotoLevel ? ' db-photo-grid' : ''}" id="db-item-grid">
           ${itemsHtml}
         </div>
         <div class="db-category-reveal" id="db-category-reveal">

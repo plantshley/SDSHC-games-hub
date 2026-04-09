@@ -164,7 +164,7 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
           <span class="oo-timer-text" id="oo-timer-text">${ROUND_TIME}s</span>
         </div>
         <div class="oo-round-label">Round ${roundIdx + 1} of ${level.rounds.length}</div>
-        <div class="oo-item-grid" id="oo-item-grid">
+        <div class="oo-item-grid${level.id === 'plant-parts' ? ' oo-sprite-grid' : ''}" id="oo-item-grid">
           ${itemsHtml}
         </div>
         <div class="oo-fact-modal" id="oo-fact-modal">

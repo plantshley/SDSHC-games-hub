@@ -23,10 +23,10 @@ export const LEVELS = [
       },
       {
         items: [
-          { id: 'broccoli', label: 'Broccoli', asset: '/assets/sprites/artichoke-pixel.png' },
+          { id: 'broccoli', label: 'Broccoli', asset: '/assets/sprites/Basic_Grass_Biom_things_tree2.png' },
           { id: 'artichoke', label: 'Artichoke', asset: '/assets/sprites/artichoke-pixel.png' },
           { id: 'coconut', label: 'Coconut', asset: '/assets/sprites/coconut-pixel.png' },
-          { id: 'squash', label: 'Squash', asset: '/assets/sprites/squash-pixel.png' },
+          { id: 'squash', label: 'Squash', asset: '/assets/sprites/squash-pixel3.png' },
         ],
         answer: 'squash',
         explanation: 'The rest are flowers, buds, or seeds! Squash is a fruit.',
@@ -43,7 +43,7 @@ export const LEVELS = [
       },
       {
         items: [
-          { id: 'lettuce2', label: 'Lettuce', asset: '/assets/sprites/lettuce-pixel.png' },
+          { id: 'lettuce2', label: 'Lettuce', asset: '/assets/sprites/lettuce-pixel2.png' },
           { id: 'wheat', label: 'Wheat', asset: '/assets/sprites/wheat-pixel.png' },
           { id: 'beans', label: 'Beans', asset: '/assets/sprites/beans-pixel.png' },
           { id: 'coconut2', label: 'Coconut', asset: '/assets/sprites/coconut-pixel.png' },
@@ -190,7 +190,7 @@ export const LEVELS = [
           { id: 'cc3', label: 'Cover Crops', asset: '/assets/svg/cons practices-CC.png' },
           { id: 'dwm', label: 'Drainage Water Mgmt', asset: '/assets/svg/cons practices-DWM.png' },
           { id: 'sb', label: 'Saturated Buffers', asset: '/assets/svg/cons practices-buffer.png' },
-          { id: 'crop-dusting', label: 'Crop Dusting', asset: '/assets/svg/CLORP-climate.svg' },
+          { id: 'crop-dusting', label: 'Crop Dusting', asset: '/assets/svg/prek maze objects-wind.svg' },
         ],
         answer: 'crop-dusting',
         explanation: 'The rest are real conservation practices! Crop dusting is not.',
@@ -200,7 +200,7 @@ export const LEVELS = [
           { id: 'ps3', label: 'Prairie Strips', asset: '/assets/svg/cons practices-prairie-strip.png' },
           { id: 'bio2', label: 'Bioreactors', asset: '/assets/svg/cons practices-bioreactor.png' },
           { id: 'wet2', label: 'Wetlands', asset: '/assets/svg/cons practices-wetland.png' },
-          { id: 'pesticide', label: 'Pesticide Spraying', asset: '/assets/svg/CLORP-climate.svg' },
+          { id: 'pesticide', label: 'Pesticide Spraying', asset: '/assets/svg/prek maze objects-wind.svg' },
         ],
         answer: 'pesticide',
         explanation: 'The rest filter or reduce nutrients! Pesticide spraying adds chemicals.',
