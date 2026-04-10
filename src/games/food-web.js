@@ -369,16 +369,19 @@ function createGameScreen() {
 
   // ─── Phase 2: Quiz ───
 
+  let shuffledQuiz = []
+
   function startQuizPhase() {
     quizScore = 0
+    shuffledQuiz = [...QUIZ_QUESTIONS].sort(() => Math.random() - 0.5)
 
-    // Update header
-    progressEl.textContent = ''
+    // Hide progress pill
+    progressEl.style.display = 'none'
 
     // Swap sidebar to quiz mode
     const panel = el.querySelector('#fw-panel')
     panel.innerHTML = `
-      <span class="fw-panel-heading" id="fw-quiz-heading">Question 1/${QUIZ_QUESTIONS.length}</span>
+      <span class="fw-panel-heading" id="fw-quiz-heading">Question 1/${shuffledQuiz.length}</span>
       <div class="fw-quiz-panel" id="fw-quiz-panel"></div>
     `
 
@@ -399,10 +402,10 @@ function createGameScreen() {
 
   function loadQuestion(qIdx) {
     if (!el.parentNode) return
-    const q = QUIZ_QUESTIONS[qIdx]
+    const q = shuffledQuiz[qIdx]
 
     const heading = el.querySelector('#fw-quiz-heading')
-    heading.textContent = `Question ${qIdx + 1}/${QUIZ_QUESTIONS.length}`
+    heading.textContent = `Question ${qIdx + 1}/${shuffledQuiz.length}`
 
     // Highlight organisms on diagram
     clearHighlights()
@@ -428,7 +431,7 @@ function createGameScreen() {
   }
 
   function handleAnswer(btn, qIdx) {
-    const q = QUIZ_QUESTIONS[qIdx]
+    const q = shuffledQuiz[qIdx]
     const choiceIdx = parseInt(btn.dataset.idx)
     const choice = q.choices[choiceIdx]
     const allBtns = el.querySelectorAll('.fw-quiz-choice')
@@ -451,14 +454,14 @@ function createGameScreen() {
     const explEl = el.querySelector('#fw-explanation')
     explEl.innerHTML = `
       <p>${q.explanation}</p>
-      <button class="fw-quiz-next" id="fw-quiz-next">${qIdx + 1 < QUIZ_QUESTIONS.length ? 'Next Question' : 'See Results'}</button>
+      <button class="fw-quiz-next" id="fw-quiz-next">${qIdx + 1 < shuffledQuiz.length ? 'Next Question' : 'See Results'}</button>
     `
     explEl.classList.add('fw-explanation-visible')
 
     explEl.querySelector('#fw-quiz-next').addEventListener('pointerdown', () => {
       if (!el.parentNode) return
       clearHighlights()
-      if (qIdx + 1 < QUIZ_QUESTIONS.length) {
+      if (qIdx + 1 < shuffledQuiz.length) {
         loadQuestion(qIdx + 1)
       } else {
         showCompletion()
@@ -482,7 +485,7 @@ function createGameScreen() {
       <div class="fw-completion-content">
         <div class="fw-completion-bubble">
           <span class="fw-completion-text">${INSTRUCTIONS.complete}</span>
-          <span class="fw-completion-score">Quiz Score: ${quizScore}/${QUIZ_QUESTIONS.length}</span>
+          <span class="fw-completion-score">Quiz Score: ${quizScore}/${shuffledQuiz.length}</span>
         </div>
         <img class="fw-completion-character" src="/assets/sprites/Basic_Charakter_wave.png" alt="">
         <div class="fw-completion-buttons">

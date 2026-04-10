@@ -1760,6 +1760,7 @@
   max-width: 250px;
   pointer-events: auto;
   margin-right: 20px;
+  height: 120px
 }
 
 .ps-instructions p {
@@ -2275,7 +2276,7 @@
 }
 
 .tb-question-text {
-  font-family: var(--font-header); font-size: 30px;
+  font-family: var(--font-body); font-size: 24px;
   color: var(--color-text); text-align: center;
   line-height: 1.5; max-width: 800px;
   flex-shrink: 0;
@@ -5073,6 +5074,7 @@
   cursor: grab;
   transition: transform 0.15s, opacity 0.3s;
   touch-action: none;
+  letter-spacing: 1px;
 }
 
 .dd-word-item:active {
@@ -5240,7 +5242,7 @@
 }
 
 .dd-card-image {
-  width: 100%;
+  width: 95%;
   max-height: 180px;
   object-fit: contain;
   object-position: center;
@@ -5268,6 +5270,7 @@
   text-align: center;
   min-height: 20px;
   margin-bottom: -10px;
+  letter-spacing: 1px;
 }
 
 .dd-card-matched {

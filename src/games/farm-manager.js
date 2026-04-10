@@ -278,7 +278,7 @@ function createGameplayScreen(levelIdx) {
         }
 
         // Show fact modal after letting the reveal image breathe
-        setTimeout(() => showFact(level), 5000)
+        setTimeout(() => showFact(level), 2000)
       } else {
         // Wrong — shake + hint
         card.classList.add('fm-option-wrong')

@@ -29,7 +29,7 @@ export const LEVELS = [
       { id: 'leaf', label: 'Leaf', asset: '/assets/field-guide/native-plants/bur-oak.webp' },
     ],
     answer: 'leaf',
-    categoryReveal: "They're all parts of soil! 🪨",
+    categoryReveal: "They're all parts of soil! 🌱🪨",
   },
 
   // ── Level 3: Animals vs Celestial ──

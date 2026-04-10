@@ -755,8 +755,8 @@ function createYearInBloom(level, levelIdx) {
       const monthData = level.months.find(m => m.id === monthId)
       const comboKey = `${monthId}:${flowerId}`
 
-      // Must match the current clue exactly (right flower + right month)
-      if (currentClue && flowerId === currentClue.flowerId && monthId === currentClue.monthId && !doneCombos.has(comboKey)) {
+      // Must be the clued flower, dropped on any valid month for that flower
+      if (currentClue && flowerId === currentClue.flowerId && monthData.accepts.includes(flowerId) && !doneCombos.has(comboKey)) {
         doneCombos.add(comboKey)
         monthPlacements[monthId].add(flowerId)
 
@@ -805,9 +805,9 @@ function createYearInBloom(level, levelIdx) {
         targetSlot.classList.add('ps-wrong')
         setTimeout(() => targetSlot.classList.remove('ps-wrong'), 400)
         const rightFlower = currentClue && flowerId === currentClue.flowerId
-        const rightMonth = currentClue && monthId === currentClue.monthId
+        const monthAcceptsClue = currentClue && monthData.accepts.includes(currentClue.flowerId)
         const errMsg = rightFlower ? 'Right flower! Try a different month.'
-          : rightMonth ? 'Right month! Try a different flower.'
+          : monthAcceptsClue ? 'Right month! Try a different flower.'
           : 'Not quite! Read the clue again.'
         clueEl.textContent = errMsg
         setTimeout(() => {
