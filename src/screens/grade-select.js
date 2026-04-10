@@ -1,4 +1,4 @@
-import { navigate } from '../router.js'
+import { navigate, navigateRaw } from '../router.js'
 import { trackGradeTierSelect } from '../utils/analytics.js'
 
 const TIERS = [
@@ -106,6 +106,9 @@ export function createGradeSelectScreen() {
 
   // No .grade-bg div — background is on .grade-screen itself via CSS
   el.innerHTML = `
+    <button class="home-btn grade-back-btn" id="grade-back">
+      <img src="/assets/sprites/ui_board-home.png" alt="Back">
+    </button>
     <div class="grade-content">
       <div class="grade-buttons">
         ${buttonsHtml}
@@ -125,6 +128,8 @@ export function createGradeSelectScreen() {
 
   el.querySelector('.character-area').appendChild(createFoliage())
   addSparkles(el)
+
+  el.querySelector('#grade-back').addEventListener('pointerdown', () => navigateRaw('intro'))
 
   el.querySelectorAll('.tier-btn').forEach(btn => {
     btn.addEventListener('pointerdown', () => {
