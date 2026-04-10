@@ -39,7 +39,7 @@ export const PALETTE = [
   { name: 'Tan', hex: '#c4a882' },
   { name: 'Black', hex: '#2c2c2c' },
   { name: 'White', hex: '#ffffff' },
-  { name: 'Eraser', hex: '#fdf6e3eb' },
+  { name: 'Eraser', hex: '#fdf6e3' },
   
 ]
 

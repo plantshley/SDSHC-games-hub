@@ -22,8 +22,8 @@ export const LEVELS = [
       },
       {
         id: 'beans',
-        name: 'Beans (iya)',
-        cherokee: 'iya',
+        name: 'Beans (tuya)',
+        cherokee: 'tuya',
         clue: 'Helps the soil stay healthy by putting nutrients back into it',
         asset: '/assets/sprites/beans-pixel.png',
         assetType: 'sprite',
@@ -32,8 +32,8 @@ export const LEVELS = [
       },
       {
         id: 'squash',
-        name: 'Squash (tuya)',
-        cherokee: 'tuya',
+        name: 'Squash (iya)',
+        cherokee: 'iya',
         clue: 'Spreads out big leaves to cover the ground, keeps soil moist and stops weeds',
         asset: '/assets/sprites/squash-pixel3.png',
         assetType: 'sprite',

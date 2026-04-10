@@ -2,8 +2,6 @@
  * Soil Food Web Builder — content data
  *
  * 12 organisms to place on the arrows-only diagram.
- * Positions are PLACEHOLDER estimates — will be replaced with exact
- * coordinates once mapped via the dot-placer tool.
  */
 
 export const ORGANISMS = [

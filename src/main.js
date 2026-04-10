@@ -16,17 +16,6 @@ import { createGameSelectScreen } from './screens/game-select.js'
 import { createAdvancedGameSelectScreen } from './screens/advanced-game-select.js'
 import { getGameById } from './data/game-registry.js'
 import { getAdvancedGameById } from './data/advanced-game-registry.js'
-import { createSoilCakeGame } from './games/soil-cake.js'
-import { createPlantingSimGame } from './games/planting-sim.js'
-import { createTriviaBlitzGame } from './games/trivia-blitz.js'
-import { createColoringGame } from './games/coloring.js'
-import { createSpinWheelGame } from './games/spin-wheel.js'
-import { createDotToDotGame } from './games/dot-to-dot.js'
-import { createFoodWebGame } from './games/food-web.js'
-import { createDragDropGame } from './games/drag-drop.js'
-import { createFarmManagerGame } from './games/farm-manager.js'
-import { createDontBelongGame } from './games/dont-belong.js'
-import { createOddOneOutGame } from './games/odd-one-out.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -114,75 +103,29 @@ function handleRoute(route) {
   }
 }
 
-function handleKidGame(route) {
+async function handleKidGame(route) {
   const game = getGameById(route.gameId)
   trackGameStart(route.gameId, 'kid', { tier: game?.tier || null, playerCount: 1 })
 
-  // Route to implemented games
-  if (route.gameId === 'soil-cake') {
-    switchScreen(createSoilCakeGame())
-    return
-  }
-  if (route.gameId === 'planting-sim') {
-    switchScreen(createPlantingSimGame())
-    return
-  }
-  if (route.gameId === 'trivia-blitz') {
-    switchScreen(createTriviaBlitzGame())
-    return
-  }
-  if (route.gameId === 'coloring') {
-    switchScreen(createColoringGame())
-    return
-  }
-  if (route.gameId === 'spin-wheel') {
-    switchScreen(createSpinWheelGame())
-    return
-  }
-  if (route.gameId === 'dot-to-dot') {
-    switchScreen(createDotToDotGame())
-    return
-  }
-  if (route.gameId === 'food-web') {
-    switchScreen(createFoodWebGame())
-    return
-  }
-  if (route.gameId === 'drag-drop') {
-    switchScreen(createDragDropGame())
-    return
-  }
-  if (route.gameId === 'farm-manager') {
-    switchScreen(createFarmManagerGame())
-    return
-  }
-  if (route.gameId === 'dont-belong') {
-    switchScreen(createDontBelongGame())
-    return
-  }
-  if (route.gameId === 'odd-one-out') {
-    switchScreen(createOddOneOutGame())
+  if (!game || !game.module) {
+    // Unknown game — go back to game select
+    navigate(`game-select/${game ? game.tier : 'sprouts'}`)
     return
   }
 
-  // Placeholder for unimplemented games
-  const placeholder = document.createElement('div')
-  placeholder.className = 'screen game-placeholder'
-  placeholder.innerHTML = `
-    <div class="game-placeholder-topbar">
-      <button class="home-btn" id="game-back">
-        <img src="/assets/sprites/ui_board-home.png" alt="Back">
-      </button>
-      <span class="game-placeholder-title">${game ? game.title : route.gameId}</span>
-      <span class="game-placeholder-level">Level ${route.level + 1}</span>
-    </div>
-    <div class="game-placeholder-body">
-      <p>Game coming soon!</p>
-    </div>
-  `
-  placeholder.querySelector('#game-back').addEventListener('pointerdown', () => {
-    navigate(`game-select/${game ? game.tier : 'sprouts'}`)
-  })
-  switchScreen(placeholder)
+  try {
+    const mod = await game.module()
+    // Find the create function export (first exported function)
+    const createFn = mod.default || Object.values(mod).find(v => typeof v === 'function')
+    if (createFn) {
+      switchScreen(createFn())
+    } else {
+      navigate(`game-select/${game.tier}`)
+    }
+  } catch (err) {
+    console.error('Failed to load kid game:', err)
+    navigate(`game-select/${game.tier}`)
+  }
 }
 
 /**

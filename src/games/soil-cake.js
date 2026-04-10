@@ -191,6 +191,7 @@ function initCake(container) {
   const img = new Image()
   img.crossOrigin = 'anonymous'
   img.onload = () => {
+    if (!container.parentNode) return // screen was navigated away
     const tmp = document.createElement('canvas')
     tmp.width = img.width
     tmp.height = img.height
@@ -234,7 +235,6 @@ function initCake(container) {
 
     createLayerZones(container, layersDiv)
     createLayerLabels(container, fh)
-    createPermanentFills(cakeContainerEl)
   }
   img.src = '/assets/svg/soil cake4.svg'
 }
@@ -325,6 +325,12 @@ function createLayerZones(container, layersDiv) {
         el.textContent = `${horizon.id} Horizon: ${horizon.clue}`
         const btn = container.querySelector(`.sc-color-btn[data-id="${zone.id}"]`)
         if (btn) btn.classList.add('done')
+        // Check completion
+        if (filledLayers.size === LAYER_ZONES.length) {
+          setTimeout(() => {
+            el.textContent = 'Amazing! You built the whole soil cake! Now add some decorations! 🎂'
+          }, 1200)
+        }
       } else {
         div.classList.add('sc-wrong')
         setTimeout(() => div.classList.remove('sc-wrong'), 400)

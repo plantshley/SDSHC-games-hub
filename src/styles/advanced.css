@@ -2454,10 +2454,8 @@
 }
 
 .adv-fg-more-clues-btn.adv-fg-next-mode {
-  font-family: var(--font-title), sans-serif;
-  letter-spacing: 1px;
+  font-family: var(--font-body), sans-serif;
   font-size: 0.85rem;
-  font-weight: 600;
   transform: translateY(0);
   transition: opacity 0.6s ease-out, max-height 0.5s ease-out, margin 0.5s ease-out, transform 0.6s ease-out;
 }

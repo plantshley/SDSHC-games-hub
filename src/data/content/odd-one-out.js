@@ -19,7 +19,7 @@ export const LEVELS = [
           { id: 'lettuce', label: 'Lettuce', asset: '/assets/sprites/lettuce-pixel2.png' },
         ],
         answer: 'lettuce',
-        explanation: 'The rest are all roots! Lettuce is a leaf.',
+        explanation: 'The rest all grow underground! Lettuce is a leaf that grows above ground.',
       },
       {
         items: [
@@ -29,7 +29,7 @@ export const LEVELS = [
           { id: 'squash', label: 'Squash', asset: '/assets/sprites/squash-pixel3.png' },
         ],
         answer: 'squash',
-        explanation: 'The rest are flowers, buds, or seeds! Squash is a fruit.',
+        explanation: 'Broccoli and artichoke are flower buds, and coconut is a seed. Squash is a fruit!',
       },
       {
         items: [

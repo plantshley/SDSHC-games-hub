@@ -30,6 +30,7 @@ export const GAMES = [
     levelCount: 1,
     icon: '/assets/gifs/cake-gif.gif',
     description: 'Fill in soil layers with the right colors',
+    module: () => import('../games/soil-cake.js'),
   },
   {
     id: 'dot-to-dot',
@@ -38,6 +39,7 @@ export const GAMES = [
     levelCount: 4,
     icon: '/assets/sprites/Basic_Grass_Biom_things_sunflower.png',
     description: 'Connect glowing dots to reveal objects',
+    module: () => import('../games/dot-to-dot.js'),
   },
   {
     id: 'dont-belong',
@@ -46,6 +48,7 @@ export const GAMES = [
     levelCount: 4,
     icon: '/assets/gifs/h03-icon-strawberry.gif',
     description: 'Tap the item that doesn\'t belong',
+    module: () => import('../games/dont-belong.js'),
   },
   {
     id: 'coloring',
@@ -54,6 +57,7 @@ export const GAMES = [
     levelCount: 12,
     icon: '/assets/sprites/Basic_Grass_Biom_things_flower3.png',
     description: 'Pick colors and paint soil critters',
+    module: () => import('../games/coloring.js'),
   },
 
   // Tier 2: Meadow Makers
@@ -64,6 +68,7 @@ export const GAMES = [
     levelCount: 3,
     icon: '/assets/sprites/Basic_Plants_fruit-grow3.png',
     description: 'Plant the right crops in the right spots',
+    module: () => import('../games/planting-sim.js'),
   },
   {
     id: 'spin-wheel',
@@ -72,6 +77,7 @@ export const GAMES = [
     levelCount: 7,
     icon: '/assets/sprites/Free_Chicken_Sprites_6.png',
     description: 'Spin the wheel and answer soil trivia',
+    module: () => import('../games/spin-wheel.js'),
   },
   {
     id: 'odd-one-out',
@@ -80,6 +86,7 @@ export const GAMES = [
     levelCount: 4,
     icon: '/assets/sprites/Basic_Grass_Biom_things_mushroom2.png',
     description: 'Find what doesn\'t belong — fast!',
+    module: () => import('../games/odd-one-out.js'),
   },
   {
     id: 'drag-drop',
@@ -88,6 +95,7 @@ export const GAMES = [
     levelCount: 6,
     icon: '/assets/sprites/Basic_Grass_Biom_things_flower1.png',
     description: 'Drag words to the right spot',
+    module: () => import('../games/drag-drop.js'),
   },
 
   // Tier 3: Harvest Guardians
@@ -98,14 +106,16 @@ export const GAMES = [
     levelCount: 9,
     icon: '/assets/sprites/Basic_Plants_wheat-grow4.png',
     description: 'Save the farm with the right practice!',
+    module: () => import('../games/farm-manager.js'),
   },
   {
     id: 'trivia-blitz',
     title: 'Soil Health Trivia Blitz',
     tier: 'guardians',
-    levelCount: 10,
+    levelCount: 9,
     icon: '/assets/sprites/Weather_Icons_smal_sunny.png',
     description: '60-second timed trivia challenge',
+    module: () => import('../games/trivia-blitz.js'),
   },
   {
     id: 'food-web',
@@ -114,6 +124,7 @@ export const GAMES = [
     levelCount: 1,
     icon: '/assets/sprites/Basic_Grass_Biom_things_log.png',
     description: 'Build a soil food web diagram',
+    module: () => import('../games/food-web.js'),
   },
 ]
 

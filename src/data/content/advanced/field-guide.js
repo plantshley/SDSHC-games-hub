@@ -17,7 +17,7 @@ export const CATEGORIES = [
         id: 'pasque-flower',
         subtype: 'flower',
         name: 'Pasque Flower',
-        image: 'assets/field-guide/native-plants/pasque-flower.webp',
+        image: '/assets/field-guide/native-plants/pasque-flower.webp',
         clues: [
           'South Dakota\'s state flower — a purple spring wildflower.',
           'One of the first blooms of spring, often pushing through snow. Named after "Pascha" (Easter).',
@@ -29,7 +29,7 @@ export const CATEGORIES = [
         id: 'purple-coneflower',
         subtype: 'flower',
         name: 'Purple Coneflower',
-        image: 'assets/field-guide/native-plants/purple-coneflower.webp',
+        image: '/assets/field-guide/native-plants/purple-coneflower.webp',
         clues: [
           'A prairie wildflower with drooping pink-to-purple petals around a spiny center cone.',
           'The central cone is copper-orange and prickly to the touch. Stems are rough and stiff-haired.',
@@ -41,7 +41,7 @@ export const CATEGORIES = [
         id: 'black-eyed-susan',
         subtype: 'flower',
         name: 'Black-Eyed Susan',
-        image: 'assets/field-guide/native-plants/black-eyed-susan.webp',
+        image: '/assets/field-guide/native-plants/black-eyed-susan.webp',
         clues: [
           'A cheerful, daisy-like wildflower with bright golden-yellow petals.',
           'The dark brown-black center dome is its most distinctive feature. Blooms June through September.',
@@ -53,7 +53,7 @@ export const CATEGORIES = [
         id: 'big-bluestem',
         subtype: 'grass',
         name: 'Big Bluestem',
-        image: 'assets/field-guide/native-plants/big-bluestem.webp',
+        image: '/assets/field-guide/native-plants/big-bluestem.webp',
         clues: [
           'Called the "King of the Prairie" — this native grass towers 6-8 feet tall.',
           'Its most distinctive feature is a three-branched seed head that resembles a turkey\'s foot.',
@@ -65,7 +65,7 @@ export const CATEGORIES = [
         id: 'little-bluestem',
         subtype: 'grass',
         name: 'Little Bluestem',
-        image: 'assets/field-guide/native-plants/little-bluestem.webp',
+        image: '/assets/field-guide/native-plants/little-bluestem.webp',
         clues: [
           'A shorter, more delicate native grass cousin, typically 2-4 feet tall.',
           'In fall, it transforms to brilliant copper-red with fluffy white cottony seed tufts catching the light.',
@@ -77,7 +77,7 @@ export const CATEGORIES = [
         id: 'prairie-coneflower',
         subtype: 'flower',
         name: 'Prairie Coneflower',
-        image: 'assets/field-guide/native-plants/prairie-coneflower.webp',
+        image: '/assets/field-guide/native-plants/prairie-coneflower.webp',
         clues: [
           'Also called "Mexican Hat" — its flower looks like a tiny sombrero.',
           'The central cone is unusually tall and elongated (up to 2 inches), with petals drooping below it.',
@@ -89,7 +89,7 @@ export const CATEGORIES = [
         id: 'bur-oak',
         subtype: 'tree',
         name: 'Bur Oak',
-        image: 'assets/field-guide/native-plants/bur-oak.webp',
+        image: '/assets/field-guide/native-plants/bur-oak.webp',
         clues: [
           'The most fire- and drought-resistant oak tree on the Great Plains.',
           'Its bark is deeply furrowed and rough. Younger branches often develop corky, wing-like ridges.',
@@ -101,7 +101,7 @@ export const CATEGORIES = [
         id: 'cottonwood',
         subtype: 'tree',
         name: 'Eastern Cottonwood',
-        image: 'assets/field-guide/native-plants/cottonwood.webp',
+        image: '/assets/field-guide/native-plants/cottonwood.webp',
         clues: [
           'A massive, fast-growing tree found along rivers and streams — the tallest native tree on the Great Plains.',
           'Triangular (delta-shaped) leaves flutter in the slightest breeze. Bark is silvery-white when young.',
@@ -113,7 +113,7 @@ export const CATEGORIES = [
         id: 'ponderosa-pine',
         subtype: 'tree',
         name: 'Ponderosa Pine',
-        image: 'assets/field-guide/native-plants/ponderosa-pine.webp',
+        image: '/assets/field-guide/native-plants/ponderosa-pine.webp',
         clues: [
           'The dominant tree of the Black Hills — tall, straight-trunked conifers that can exceed 100 feet.',
           'Mature bark breaks into large, orange puzzle-piece scales. Long needles grow in bundles of 2 (occasionally 3).',
@@ -125,7 +125,7 @@ export const CATEGORIES = [
         id: 'prairie-rose',
         subtype: 'shrub',
         name: 'Prairie Rose',
-        image: 'assets/field-guide/native-plants/prairie-rose.webp',
+        image: '/assets/field-guide/native-plants/prairie-rose.webp',
         clues: [
           'A small, shrubby wild rose found in nearly every county in South Dakota.',
           'Simple five-petaled pink flowers with a yellow center bloom May through August.',
@@ -137,7 +137,7 @@ export const CATEGORIES = [
         id: 'switchgrass',
         subtype: 'grass',
         name: 'Switchgrass',
-        image: 'assets/field-guide/native-plants/switchgrass.webp',
+        image: '/assets/field-guide/native-plants/switchgrass.webp',
         clues: [
           'A tall, airy warm-season prairie grass with a wide, open seed head (panicle).',
           'A distinctive patch of white hairs marks where each leaf blade joins the stem.',
@@ -149,7 +149,7 @@ export const CATEGORIES = [
         id: 'indian-grass',
         subtype: 'grass',
         name: 'Indian Grass',
-        image: 'assets/field-guide/native-plants/indian-grass.webp',
+        image: '/assets/field-guide/native-plants/indian-grass.webp',
         clues: [
           'A tall warm-season prairie grass with a distinctive golden-bronze, plume-like seed head.',
           'Leaf blades have a characteristic tall, membranous ligule where the blade meets the stem.',
@@ -167,7 +167,7 @@ export const CATEGORIES = [
         id: 'cereal-rye',
         subtype: 'grain',
         name: 'Cereal Rye',
-        image: 'assets/field-guide/cover-crops/cereal-rye.webp',
+        image: '/assets/field-guide/cover-crops/cereal-rye.webp',
         clues: [
           'The most popular cover crop in South Dakota and the upper Midwest.',
           'Narrow, upright blue-green blades with a waxy coating form a dense, weed-smothering carpet over winter.',
@@ -179,7 +179,7 @@ export const CATEGORIES = [
         id: 'oilseed-radish',
         subtype: 'brassica',
         name: 'Oilseed Radish',
-        image: 'assets/field-guide/cover-crops/oilseed-radish.webp',
+        image: '/assets/field-guide/cover-crops/oilseed-radish.webp',
         clues: [
           'Also called a "tillage radish" — this cover crop has a massive white taproot that drills into compacted soil.',
           'The thick carrot-like root (up to 3 inches in diameter) often pushes visibly out of the ground.',
@@ -191,7 +191,7 @@ export const CATEGORIES = [
         id: 'crimson-clover',
         subtype: 'legume',
         name: 'Crimson Clover',
-        image: 'assets/field-guide/cover-crops/crimson-clover.webp',
+        image: '/assets/field-guide/cover-crops/crimson-clover.webp',
         clues: [
           'The most visually striking cover crop — when it blooms, entire fields glow brilliant red.',
           'Elongated cone-shaped flower heads up to 2 inches long in deep crimson/scarlet.',
@@ -203,7 +203,7 @@ export const CATEGORIES = [
         id: 'hairy-vetch',
         subtype: 'legume',
         name: 'Hairy Vetch',
-        image: 'assets/field-guide/cover-crops/hairy-vetch.webp',
+        image: '/assets/field-guide/cover-crops/hairy-vetch.webp',
         clues: [
           'A vining legume that sprawls and climbs, creating a tangled mat 3-4 feet tall.',
           'Compound leaves with many small leaflets in opposite pairs, plus coiling tendrils at the tips.',
@@ -215,7 +215,7 @@ export const CATEGORIES = [
         id: 'winter-oats',
         subtype: 'grain',
         name: 'Oats (Cover Crop)',
-        image: 'assets/field-guide/cover-crops/winter-oats.webp',
+        image: '/assets/field-guide/cover-crops/winter-oats.webp',
         clues: [
           'Resembles wheat or rye but with broader, smoother leaf blades.',
           'Distinctive open, drooping seed head (panicle) — not a tight spike like wheat.',
@@ -227,7 +227,7 @@ export const CATEGORIES = [
         id: 'turnips',
         subtype: 'brassica',
         name: 'Turnips',
-        image: 'assets/field-guide/cover-crops/turnips.webp',
+        image: '/assets/field-guide/cover-crops/turnips.webp',
         clues: [
           'A brassica cover crop with a round purple-and-white bulb sitting at the soil surface.',
           'Large, coarse blue-green lobed leaves form a rosette above the bulb.',
@@ -239,7 +239,7 @@ export const CATEGORIES = [
         id: 'corn',
         subtype: 'grain',
         name: 'Corn',
-        image: 'assets/field-guide/cover-crops/corn.webp',
+        image: '/assets/field-guide/cover-crops/corn.webp',
         clues: [
           'South Dakota\'s top commodity crop — one of the most recognizable crops in the field.',
           'Wide, sword-shaped leaves alternate along a thick central stalk. Male tassel forms at the very top.',
@@ -251,7 +251,7 @@ export const CATEGORIES = [
         id: 'soybeans',
         subtype: 'legume',
         name: 'Soybeans',
-        image: 'assets/field-guide/cover-crops/soybeans.webp',
+        image: '/assets/field-guide/cover-crops/soybeans.webp',
         clues: [
           'SD\'s second-largest crop. Compact, bushy plants 2-4 feet tall.',
           'Each leaf has exactly three rounded leaflets with pointed tips (trifoliate).',
@@ -263,7 +263,7 @@ export const CATEGORIES = [
         id: 'winter-wheat',
         subtype: 'grain',
         name: 'Winter Wheat',
-        image: 'assets/field-guide/cover-crops/winter-wheat.webp',
+        image: '/assets/field-guide/cover-crops/winter-wheat.webp',
         clues: [
           'Planted in fall, overwinters as a low green carpet, then bolts upright in spring.',
           'Tight, compact grain heads with short "beards" (awns) on each kernel.',
@@ -275,7 +275,7 @@ export const CATEGORIES = [
         id: 'sunflower',
         subtype: 'oilseed',
         name: 'Sunflower',
-        image: 'assets/field-guide/cover-crops/sunflower.webp',
+        image: '/assets/field-guide/cover-crops/sunflower.webp',
         clues: [
           'South Dakota ranks in the top 2 states nationally for production of this crop.',
           'Unmistakable: a single massive flower head (4-12 inches across) atop a stout, rough, hairy stalk.',
@@ -287,7 +287,7 @@ export const CATEGORIES = [
         id: 'grain-sorghum',
         subtype: 'grain',
         name: 'Grain Sorghum',
-        image: 'assets/field-guide/cover-crops/grain-sorghum.webp',
+        image: '/assets/field-guide/cover-crops/grain-sorghum.webp',
         clues: [
           'Looks like a shorter, stouter version of corn — but without ears on the stalk.',
           'Grain forms in a large, bushy, upright head (panicle) at the very top of the plant.',
@@ -299,7 +299,7 @@ export const CATEGORIES = [
         id: 'field-pea',
         subtype: 'legume',
         name: 'Field Pea',
-        image: 'assets/field-guide/cover-crops/field-pea.webp',
+        image: '/assets/field-guide/cover-crops/field-pea.webp',
         clues: [
           'A cool-season annual legume with delicate, branching tendrils that climb and cling.',
           'Compound leaves with 2-3 pairs of rounded leaflets plus curling tendrils at the tip. White to pale purple flowers.',
@@ -317,7 +317,7 @@ export const CATEGORIES = [
         id: 'no-till',
         subtype: 'field-management',
         name: 'No-Till Farming',
-        image: 'assets/field-guide/conservation-practices/no-till-farming.webp',
+        image: '/assets/field-guide/conservation-practices/no-till-farming.webp',
         clues: [
           'This field has never been plowed — the surface is covered with last year\'s crop residue.',
           'Seeds are planted directly through the residue mat with a specialized drill. The soil surface is undisturbed.',
@@ -329,7 +329,7 @@ export const CATEGORIES = [
         id: 'contour-farming',
         subtype: 'field-management',
         name: 'Contour Farming',
-        image: 'assets/field-guide/conservation-practices/contour-farming.webp',
+        image: '/assets/field-guide/conservation-practices/contour-farming.webp',
         clues: [
           'Crop rows curve in graceful parallel lines following the natural elevation of a hillside.',
           'From above, the field looks like a fingerprint — rows run across the slope, not up and down.',
@@ -341,7 +341,7 @@ export const CATEGORIES = [
         id: 'terracing',
         subtype: 'water-management',
         name: 'Terracing',
-        image: 'assets/field-guide/conservation-practices/terracing.webp',
+        image: '/assets/field-guide/conservation-practices/terracing.webp',
         clues: [
           'Step-like earthen platforms cut into steep hillsides to create level planting areas.',
           'Distinct flat benches separated by steep banks — a staircase carved into the landscape.',
@@ -353,7 +353,7 @@ export const CATEGORIES = [
         id: 'grassed-waterway',
         subtype: 'water-management',
         name: 'Grassed Waterway',
-        image: 'assets/field-guide/conservation-practices/grassed-waterway.webp',
+        image: '/assets/field-guide/conservation-practices/grassed-waterway.webp',
         clues: [
           'A broad, shallow, grass-lined channel running through farm cropland.',
           'Intentionally shaped to funnel runoff safely without causing erosion. Permanently kept in grass.',
@@ -365,7 +365,7 @@ export const CATEGORIES = [
         id: 'riparian-buffer',
         subtype: 'vegetation-based',
         name: 'Riparian Buffer',
-        image: 'assets/field-guide/conservation-practices/riparian-buffer.webp',
+        image: '/assets/field-guide/conservation-practices/riparian-buffer.webp',
         clues: [
           'A strip of permanent vegetation planted between a farm field and a waterway.',
           'Multi-layer design: trees nearest the water, shrubs in the middle, grasses at the field edge.',
@@ -377,7 +377,7 @@ export const CATEGORIES = [
         id: 'windbreak',
         subtype: 'vegetation-based',
         name: 'Windbreak',
-        image: 'assets/field-guide/conservation-practices/windbreak.webp',
+        image: '/assets/field-guide/conservation-practices/windbreak.webp',
         clues: [
           'Rows of trees and shrubs planted in a line along field edges to slow the wind.',
           'Typically 3-8 rows wide: shorter shrubs on the outside, taller trees in the center.',
@@ -389,7 +389,7 @@ export const CATEGORIES = [
         id: 'cover-cropping',
         subtype: 'field-management',
         name: 'Cover Cropping',
-        image: 'assets/field-guide/conservation-practices/cover-cropping.webp',
+        image: '/assets/field-guide/conservation-practices/cover-cropping.webp',
         clues: [
           'After cash crop harvest, this field stays green while neighboring conventional fields are bare brown stubble.',
           'Growing plants visible in a harvested field during fall or winter — a striking contrast with bare neighbors.',
@@ -401,7 +401,7 @@ export const CATEGORIES = [
         id: 'strip-cropping',
         subtype: 'field-management',
         name: 'Strip Cropping',
-        image: 'assets/field-guide/conservation-practices/strip-cropping.webp',
+        image: '/assets/field-guide/conservation-practices/strip-cropping.webp',
         clues: [
           'Alternating strips of row crops and close-growing grasses run across a hillside.',
           'From above, the field has alternating green-and-brown horizontal bands — a pinstripe pattern.',
@@ -413,7 +413,7 @@ export const CATEGORIES = [
         id: 'crop-rotation',
         subtype: 'field-management',
         name: 'Crop Rotation',
-        image: 'assets/field-guide/conservation-practices/crop-rotation.webp',
+        image: '/assets/field-guide/conservation-practices/crop-rotation.webp',
         clues: [
           'Two fields show completely different crops growing.',
           'Corn stubble one year, soybean plants the next — a deliberate alternating pattern visible across the landscape.',
@@ -425,7 +425,7 @@ export const CATEGORIES = [
         id: 'grazing-management',
         subtype: 'vegetation-based',
         name: 'Grazing Management',
-        image: 'assets/field-guide/conservation-practices/grazing-management.webp',
+        image: '/assets/field-guide/conservation-practices/grazing-management.webp',
         clues: [
           'Cattle graze in a small, fenced-off section of pasture while adjacent sections rest ungrazed.',
           'Temporary electric fencing divides a large pasture into smaller paddocks. Cattle are rotated every few days.',
@@ -437,7 +437,7 @@ export const CATEGORIES = [
         id: 'wetland-restoration',
         subtype: 'water-management',
         name: 'Wetland Restoration',
-        image: 'assets/field-guide/conservation-practices/wetland-restoration.webp',
+        image: '/assets/field-guide/conservation-practices/wetland-restoration.webp',
         clues: [
           'A low-lying area in farmland that has been allowed to refill with water and native vegetation.',
           'Cattails, rushes, and sedges surround shallow standing water in what was once a drained crop field.',
@@ -449,7 +449,7 @@ export const CATEGORIES = [
         id: 'pollinator-habitat',
         subtype: 'vegetation-based',
         name: 'Pollinator Habitat',
-        image: 'assets/field-guide/conservation-practices/pollinator-habitat.webp',
+        image: '/assets/field-guide/conservation-practices/pollinator-habitat.webp',
         clues: [
           'A colorful strip of wildflowers planted along a field edge buzzing with bees and butterflies.',
           'Dense mix of blooming native forbs — purple, yellow, pink — planted intentionally next to crop fields.',
@@ -467,7 +467,7 @@ export const CATEGORIES = [
         id: 'row-crop-planter',
         subtype: 'planting',
         name: 'Row Crop Planter',
-        image: 'assets/field-guide/farm-equipment/row-crop-planter.webp',
+        image: '/assets/field-guide/farm-equipment/row-crop-planter.webp',
         clues: [
           'This machine plants corn and soybeans at precise spacing and depth.',
           'A long horizontal toolbar with individual planting units hanging down — each unit plants one row.',
@@ -479,7 +479,7 @@ export const CATEGORIES = [
         id: 'no-till-drill',
         subtype: 'planting',
         name: 'No-Till Drill',
-        image: 'assets/field-guide/farm-equipment/no-till-drill.webp',
+        image: '/assets/field-guide/farm-equipment/no-till-drill.webp',
         clues: [
           'A wide, low box on wheels that plants small grains and cover crops into un-tilled soil.',
           'Multiple disk or coulter openers along the front slice through residue to deposit seed.',
@@ -491,7 +491,7 @@ export const CATEGORIES = [
         id: 'combine-harvester',
         subtype: 'harvesting',
         name: 'Combine Harvester',
-        image: 'assets/field-guide/farm-equipment/combine-harvester.webp',
+        image: '/assets/field-guide/farm-equipment/combine-harvester.webp',
         clues: [
           'The largest single machine in a harvest-season field — it cuts, threshes, and separates grain in one pass.',
           'Wide cutting header on the front (sometimes 40+ feet). Large grain tank on top.',
@@ -503,7 +503,7 @@ export const CATEGORIES = [
         id: 'grain-cart',
         subtype: 'harvesting',
         name: 'Grain Cart',
-        image: 'assets/field-guide/farm-equipment/grain-cart.webp',
+        image: '/assets/field-guide/farm-equipment/grain-cart.webp',
         clues: [
           'A large wagon with a built-in auger, pulled by a tractor alongside a harvesting combine.',
           'The combine fills it on-the-go through a side-discharge auger while both machines keep moving.',
@@ -515,7 +515,7 @@ export const CATEGORIES = [
         id: 'strip-till-rig',
         subtype: 'tillage',
         name: 'Strip-Till Rig',
-        image: 'assets/field-guide/farm-equipment/strip-till-rig.webp',
+        image: '/assets/field-guide/farm-equipment/strip-till-rig.webp',
         clues: [
           'A toolbar with individual shank units spaced at row width, pulled by a tractor.',
           'Each shank tills a narrow 8-10 inch band while leaving everything between rows completely undisturbed.',
@@ -527,7 +527,7 @@ export const CATEGORIES = [
         id: 'roller-crimper',
         subtype: 'specialty',
         name: 'Roller Crimper',
-        image: 'assets/field-guide/farm-equipment/roller-crimper.webp',
+        image: '/assets/field-guide/farm-equipment/roller-crimper.webp',
         clues: [
           'A heavy steel drum with dull, blunt blades welded in a chevron (V-pattern) across its surface.',
           'Rolled over standing cover crops to flatten and crimp them — killing the cover crop mechanically.',
@@ -539,7 +539,7 @@ export const CATEGORIES = [
         id: 'cover-crop-interseeder',
         subtype: 'planting',
         name: 'Cover Crop Interseeder',
-        image: 'assets/field-guide/farm-equipment/cover-crop-interseeder.webp',
+        image: '/assets/field-guide/farm-equipment/cover-crop-interseeder.webp',
         clues: [
           'A tall, high-clearance machine that drives over standing corn or soybeans mid-season.',
           'Looks like a sprayer on stilts — 5-8 feet of ground clearance. Carries seed instead of liquid.',
@@ -551,7 +551,7 @@ export const CATEGORIES = [
         id: 'agricultural-drone',
         subtype: 'specialty',
         name: 'Agricultural Drone',
-        image: 'assets/field-guide/farm-equipment/agricultural-drone.webp',
+        image: '/assets/field-guide/farm-equipment/agricultural-drone.webp',
         clues: [
           'A large multi-rotor aircraft (6-12 rotors) with a seed hopper mounted underneath.',
           'Used to aerial-seed cover crops into standing crops or areas too wet for ground equipment.',
@@ -563,7 +563,7 @@ export const CATEGORIES = [
         id: 'manure-spreader',
         subtype: 'specialty',
         name: 'Manure Spreader',
-        image: 'assets/field-guide/farm-equipment/manure-spreader.webp',
+        image: '/assets/field-guide/farm-equipment/manure-spreader.webp',
         clues: [
           'A large box-shaped wagon with a spinning mechanism at the rear that flings material across the field.',
           'Pulled by a tractor, it distributes livestock waste evenly. Beater bars or spinning disks at the rear break up and broadcast the load.',
@@ -575,7 +575,7 @@ export const CATEGORIES = [
         id: 'soil-sampler',
         subtype: 'specialty',
         name: 'Soil Sampler',
-        image: 'assets/field-guide/farm-equipment/soil-sampler.webp',
+        image: '/assets/field-guide/farm-equipment/soil-sampler.webp',
         clues: [
           'A narrow metal tube pushed or hydraulically driven into the ground to extract a cylinder of earth.',
           'The extracted core shows distinct soil layers — dark topsoil above, lighter subsoil below. Samples go to a lab.',
@@ -587,7 +587,7 @@ export const CATEGORIES = [
         id: 'center-pivot',
         subtype: 'water-management',
         name: 'Center Pivot Irrigation',
-        image: 'assets/field-guide/farm-equipment/center-pivot.webp',
+        image: '/assets/field-guide/farm-equipment/center-pivot.webp',
         clues: [
           'A long metal arm on wheels stretches from a central point, slowly rotating across a circular field.',
           'From above, the irrigated field forms a perfect green circle against brown surroundings. Sprinkler heads hang along the arm.',
@@ -599,7 +599,7 @@ export const CATEGORIES = [
         id: 'grain-bin',
         subtype: 'storage',
         name: 'Grain Bin',
-        image: 'assets/field-guide/farm-equipment/grain-bin.webp',
+        image: '/assets/field-guide/farm-equipment/grain-bin.webp',
         clues: [
           'Tall, round, corrugated-metal cylinders that dominate farmstead skylines across the Great Plains.',
           'Conical or flat roof, often with a ladder and catwalk on top. A sweep auger inside moves grain to a center sump for unloading.',
@@ -617,7 +617,7 @@ export const CATEGORIES = [
         id: 'ring-necked-pheasant',
         subtype: 'bird',
         name: 'Ring-necked Pheasant',
-        image: 'assets/field-guide/sd-wildlife/ring-necked-pheasant.webp',
+        image: '/assets/field-guide/sd-wildlife/ring-necked-pheasant.webp',
         clues: [
           'South Dakota\'s state bird — a large, brilliantly colored game bird introduced from Asia.',
           'Males have iridescent copper-gold body plumage, a dark green head, and a bold white neck ring.',
@@ -629,7 +629,7 @@ export const CATEGORIES = [
         id: 'american-bison',
         subtype: 'mammal',
         name: 'American Bison',
-        image: 'assets/field-guide/sd-wildlife/american-bison.webp',
+        image: '/assets/field-guide/sd-wildlife/american-bison.webp',
         clues: [
           'The largest land mammal in North America — once numbering 30-60 million on the Great Plains.',
           'Massive shaggy brown body with a huge humped shoulder, short curved horns, and a bearded chin.',
@@ -641,7 +641,7 @@ export const CATEGORIES = [
         id: 'prairie-dog',
         subtype: 'mammal',
         name: 'Black-tailed Prairie Dog',
-        image: 'assets/field-guide/sd-wildlife/prairie-dog.webp',
+        image: '/assets/field-guide/sd-wildlife/prairie-dog.webp',
         clues: [
           'A stout, sandy-tan rodent about 12-16 inches long that lives in elaborate underground burrow colonies called "towns."',
           'Stands upright on hind legs at burrow entrances, barking alarm calls — earning its "dog" name.',
@@ -653,7 +653,7 @@ export const CATEGORIES = [
         id: 'monarch-butterfly',
         subtype: 'insect',
         name: 'Monarch Butterfly',
-        image: 'assets/field-guide/sd-wildlife/monarch-butterfly.webp',
+        image: '/assets/field-guide/sd-wildlife/monarch-butterfly.webp',
         clues: [
           'Bright orange wings with black veins and a border of white dots — one of North America\'s most recognized insects.',
           'Migrates up to 3,000 miles from SD to central Mexico each fall — one of nature\'s longest insect migrations.',
@@ -665,7 +665,7 @@ export const CATEGORIES = [
         id: 'western-meadowlark',
         subtype: 'bird',
         name: 'Western Meadowlark',
-        image: 'assets/field-guide/sd-wildlife/western-meadowlark.webp',
+        image: '/assets/field-guide/sd-wildlife/western-meadowlark.webp',
         clues: [
           'A robin-sized songbird with a bright yellow breast and a distinctive black V-shaped bib.',
           'Perches on fence posts across SD grasslands, singing a flute-like warbling song at dawn.',
@@ -677,7 +677,7 @@ export const CATEGORIES = [
         id: 'white-tailed-deer',
         subtype: 'mammal',
         name: 'White-tailed Deer',
-        image: 'assets/field-guide/sd-wildlife/white-tailed-deer.webp',
+        image: '/assets/field-guide/sd-wildlife/white-tailed-deer.webp',
         clues: [
           'The most common large mammal in South Dakota — tan-brown coat, white underside, and a broad white tail raised like a flag when alarmed.',
           'Males grow branching antlers each year (shed in winter). Does often have twin fawns with white spots.',
@@ -689,7 +689,7 @@ export const CATEGORIES = [
         id: 'pronghorn',
         subtype: 'mammal',
         name: 'Pronghorn',
-        image: 'assets/field-guide/sd-wildlife/pronghorn.webp',
+        image: '/assets/field-guide/sd-wildlife/pronghorn.webp',
         clues: [
           'The fastest land animal in the Western Hemisphere — clocked at 55 mph on open prairie.',
           'Tan body with white rump patch, white side bars, and short black forked horns. The outer horn sheaths are shed and regrown annually — unique among horned animals.',
@@ -701,7 +701,7 @@ export const CATEGORIES = [
         id: 'bald-eagle',
         subtype: 'bird',
         name: 'Bald Eagle',
-        image: 'assets/field-guide/sd-wildlife/bald-eagle.webp',
+        image: '/assets/field-guide/sd-wildlife/bald-eagle.webp',
         clues: [
           'A massive raptor with a wingspan reaching 7 feet — the national bird and symbol of the United States.',
           'Adults have a pure white head and tail contrasting with a dark brown body. Heavy yellow beak hooked for tearing fish.',
@@ -713,7 +713,7 @@ export const CATEGORIES = [
         id: 'painted-lady',
         subtype: 'insect',
         name: 'Painted Lady Butterfly',
-        image: 'assets/field-guide/sd-wildlife/painted-lady.webp',
+        image: '/assets/field-guide/sd-wildlife/painted-lady.webp',
         clues: [
           'Orange-and-black wings with white spots near the tips — similar to a Monarch but smaller and paler.',
           'The most widespread butterfly in the world — found on every continent except Antarctica.',
@@ -725,7 +725,7 @@ export const CATEGORIES = [
         id: 'great-plains-toad',
         subtype: 'amphibian',
         name: 'Great Plains Toad',
-        image: 'assets/field-guide/sd-wildlife/great-plains-toad.webp',
+        image: '/assets/field-guide/sd-wildlife/great-plains-toad.webp',
         clues: [
           'A large, bumpy toad (2-4 inches) with symmetrical dark green blotches outlined by light borders on a gray-tan body.',
           'Emerges at night after rain. Males produce an incredibly loud, high-pitched metallic trill that carries half a mile.',
@@ -737,7 +737,7 @@ export const CATEGORIES = [
         id: 'eastern-cottontail',
         subtype: 'mammal',
         name: 'Eastern Cottontail Rabbit',
-        image: 'assets/field-guide/sd-wildlife/eastern-cottontail.webp',
+        image: '/assets/field-guide/sd-wildlife/eastern-cottontail.webp',
         clues: [
           'A small grayish-brown rabbit with a distinctive white powder-puff tail — the most common rabbit in eastern SD.',
           'Large hind feet, long ears, and brown eyes. Sits motionless to avoid detection, then bolts in a zigzag pattern.',
@@ -749,7 +749,7 @@ export const CATEGORIES = [
         id: 'red-fox',
         subtype: 'mammal',
         name: 'Red Fox',
-        image: 'assets/field-guide/sd-wildlife/red-fox.webp',
+        image: '/assets/field-guide/sd-wildlife/red-fox.webp',
         clues: [
           'A medium-sized canid with a luxurious orange-red coat, black legs, and a distinctive white-tipped bushy tail.',
           'Pointed ears, a narrow snout, and amber eyes. Pounces on prey from above in a characteristic leaping dive.',
@@ -767,7 +767,7 @@ export const CATEGORIES = [
         id: 'mollisol',
         subtype: 'soil-order',
         name: 'Mollisol',
-        image: 'assets/field-guide/soil-types/mollisol.webp',
+        image: '/assets/field-guide/soil-types/mollisol.webp',
         clues: [
           'The dominant soil order across SD — formed under thousands of years of prairie grass growth.',
           'Profile shows a thick, very dark brown-to-black surface horizon (A horizon) often 12-24 inches deep.',
@@ -779,7 +779,7 @@ export const CATEGORIES = [
         id: 'sandy-loam',
         subtype: 'texture',
         name: 'Sandy Loam',
-        image: 'assets/field-guide/soil-types/sandy-loam.webp',
+        image: '/assets/field-guide/soil-types/sandy-loam.webp',
         clues: [
           'Feels gritty when rubbed between fingers — individual sand grains are visible to the naked eye.',
           'Light brown color, crumbles easily, and drains water quickly. Won\'t form a ribbon when squeezed.',
@@ -791,7 +791,7 @@ export const CATEGORIES = [
         id: 'clay-soil',
         subtype: 'texture',
         name: 'Clay Soil',
-        image: 'assets/field-guide/soil-types/clay-soil.webp',
+        image: '/assets/field-guide/soil-types/clay-soil.webp',
         clues: [
           'When dry, the surface cracks into a dramatic mosaic pattern of polygonal blocks.',
           'Feels slippery-smooth when wet, forms a long ribbon when squeezed between fingers. Extremely sticky.',
@@ -803,7 +803,7 @@ export const CATEGORIES = [
         id: 'soil-horizons',
         subtype: 'profile',
         name: 'Soil Horizons',
-        image: 'assets/field-guide/soil-types/soil-horizons.webp',
+        image: '/assets/field-guide/soil-types/soil-horizons.webp',
         clues: [
           'A vertical cross-section of earth showing distinct colored layers stacked like a layer cake.',
           'Dark topsoil (A horizon) sits above lighter subsoil (B horizon), over pale parent material (C horizon).',
@@ -815,7 +815,7 @@ export const CATEGORIES = [
         id: 'loess',
         subtype: 'parent-material',
         name: 'Loess',
-        image: 'assets/field-guide/soil-types/loess.webp',
+        image: '/assets/field-guide/soil-types/loess.webp',
         clues: [
           'A buff-to-tan deposit of very fine, wind-blown silt that blankets much of eastern SD.',
           'Feels silky-smooth — finer than sand but not sticky like clay. Often forms steep, vertical bluffs when eroded.',
@@ -827,7 +827,7 @@ export const CATEGORIES = [
         id: 'caliche',
         subtype: 'feature',
         name: 'Caliche Layer',
-        image: 'assets/field-guide/soil-types/caliche.webp',
+        image: '/assets/field-guide/soil-types/caliche.webp',
         clues: [
           'A hard, white-to-cream cemented layer found within the soil profile, often 1-3 feet below the surface.',
           'Made of calcium carbonate (lime) that dissolved in water and re-deposited. Fizzes vigorously when acid is applied.',
@@ -839,7 +839,7 @@ export const CATEGORIES = [
         id: 'soil-aggregate',
         subtype: 'structure',
         name: 'Soil Aggregates',
-        image: 'assets/field-guide/soil-types/soil-aggregate.webp',
+        image: '/assets/field-guide/soil-types/soil-aggregate.webp',
         clues: [
           'A handful of good soil crumbles into small, rounded clumps rather than dust or hard blocks.',
           'These pea-sized granules hold their shape even when wet — bound together by fungal hyphae and organic glues.',
@@ -851,7 +851,7 @@ export const CATEGORIES = [
         id: 'earthworm',
         subtype: 'biology',
         name: 'Earthworm Activity',
-        image: 'assets/field-guide/soil-types/earthworm.webp',
+        image: '/assets/field-guide/soil-types/earthworm.webp',
         clues: [
           'A segmented, pinkish-brown invertebrate tunneling through dark topsoil — nature\'s original tiller.',
           'Castings (worm poop) are visible as small granular mounds on the soil surface or lining burrow walls.',
@@ -863,7 +863,7 @@ export const CATEGORIES = [
         id: 'mycorrhizae',
         subtype: 'biology',
         name: 'Mycorrhizal Fungi',
-        image: 'assets/field-guide/soil-types/mycorrhizae.webp',
+        image: '/assets/field-guide/soil-types/mycorrhizae.webp',
         clues: [
           'A network of hair-thin white fungal threads (hyphae) visible on and around plant roots.',
           'Under a microscope, the fungi penetrate root cells, forming tree-shaped structures (arbuscules) where nutrients are exchanged.',
@@ -875,7 +875,7 @@ export const CATEGORIES = [
         id: 'gully-erosion',
         subtype: 'degradation',
         name: 'Gully Erosion',
-        image: 'assets/field-guide/soil-types/gully-erosion.webp',
+        image: '/assets/field-guide/soil-types/gully-erosion.webp',
         clues: [
           'A deep, V-shaped or U-shaped channel carved into farmland by concentrated water runoff.',
           'Too deep to drive across or fill with normal tillage — some exceed 6 feet deep and 10 feet wide.',
@@ -887,7 +887,7 @@ export const CATEGORIES = [
         id: 'healthy-vs-degraded',
         subtype: 'comparison',
         name: 'Healthy vs. Degraded Soil',
-        image: 'assets/field-guide/soil-types/healthy-vs-degraded.webp',
+        image: '/assets/field-guide/soil-types/healthy-vs-degraded.webp',
         clues: [
           'Two soil samples side by side: one dark, crumbly, and full of root fragments — the other pale, hard, and compacted.',
           'The healthy sample absorbs water quickly like a sponge. The degraded one sheds water and forms a crust.',
@@ -899,7 +899,7 @@ export const CATEGORIES = [
         id: 'prairie-roots',
         subtype: 'biology',
         name: 'Prairie Root Systems',
-        image: 'assets/field-guide/soil-types/prairie-roots.webp',
+        image: '/assets/field-guide/soil-types/prairie-roots.webp',
         clues: [
           'An excavated cross-section showing dense, fibrous roots extending many feet below the soil surface.',
           'Above ground, the grass may stand 3-4 feet tall — but below ground, roots extend 6-12 feet deep.',

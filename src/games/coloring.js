@@ -409,6 +409,7 @@ function loadPage(container, pageIndex) {
   const img = new Image()
   img.crossOrigin = 'anonymous'
   img.onload = () => {
+    if (!container.parentNode) return // screen was navigated away
     const panel = container.querySelector('.cc-canvas-panel')
     const pr = panel.getBoundingClientRect()
     const maxW = pr.width - 40
