@@ -24,6 +24,7 @@ function esc(str) {
 const preloadCache = []
 function preloadImage(src) {
   const img = new Image()
+  img.onerror = () => { img.onerror = null }
   img.src = src
   preloadCache.push(img)
   if (preloadCache.length > 4) preloadCache.shift()
@@ -510,13 +511,18 @@ function createGameplayScreen(players, selectedCategory) {
     // Load photo
     photoEl.style.display = ''
     placeholderEl.classList.remove('adv-fg-show')
-    photoEl.src = item.image
     photoEl.alt = 'Identify this'
+    photoEl.onload = () => {
+      if (!photoEl.isConnected) return
+      photoEl.onerror = null
+    }
     photoEl.onerror = () => {
+      if (!photoEl.isConnected) return
       photoEl.style.display = 'none'
       placeholderEl.classList.add('adv-fg-show')
       placeholderEl.textContent = '?'
     }
+    photoEl.src = item.image
 
     // Preload next image
     if (state.round + 1 < totalRounds) {

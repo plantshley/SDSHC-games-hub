@@ -245,6 +245,7 @@ function createGameplayScreen(players, rounds) {
 
   function updateTimerDisplay() {
     if (!timerFill || !timerText || !timerBar) return
+    if (!el.parentNode) { stopTimer(); return }
     const elapsed = (Date.now() - state.timerStart) / 1000
     const remaining = Math.max(0, TURN_TIME - elapsed)
     const seconds = Math.ceil(remaining)

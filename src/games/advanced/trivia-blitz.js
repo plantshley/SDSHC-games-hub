@@ -267,6 +267,7 @@ function createGameplayScreen(players, mode) {
   }
 
   function updateTimerDisplay() {
+    if (!el.parentNode) { stopTimer(); return }
     const elapsed = (Date.now() - state.timerStart) / 1000
     const remaining = Math.max(0, ROUND_TIME - elapsed)
     const seconds = Math.ceil(remaining)

@@ -16,6 +16,10 @@ export function typewriter(el, speed = 40) {
 
   let i = 0
   const interval = setInterval(() => {
+    if (!el.isConnected) {
+      clearInterval(interval)
+      return
+    }
     if (i < fullText.length) {
       textNode.textContent += fullText[i]
       i++
