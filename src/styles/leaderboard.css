@@ -1,0 +1,1056 @@
+/* ─── Leaderboard, Event Prompt, Admin Panel ─── */
+/* All selectors used only in advanced mode; scoped under [data-mode="advanced"]
+   where they target screen content. Modals/overlays mounted on body carry the
+   data-mode attribute explicitly. */
+
+/* ─── Leaderboard Button & Modal ─── */
+
+.adv-lb-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: var(--adv-glass);
+  backdrop-filter: blur(8px);
+  color: var(--adv-text-muted);
+  /* Noto Sans Symbols 2 first; nothing emoji-capable in the stack. The
+     variation selector U+FE0E in the textContent also forces text style. */
+  font-family: 'Noto Sans Symbols 2', sans-serif;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 5px;
+}
+
+.adv-lb-title {
+  font-family: 'Noto Sans Symbols 2', var(--font-title), sans-serif;
+}
+
+.adv-lb-btn:hover,
+.adv-lb-btn:active {
+  color: var(--adv-accent);
+  box-shadow: 0 0 12px var(--adv-glow);
+}
+
+/* In game topbars, the trophy button sits with the theme toggle on the right
+   edge — `margin-left: auto` separates it from the left cluster (back/title/?).
+   In the .adv-header (game-select/admin) we instead wrap the right items in
+   .adv-header-right so they cluster correctly there. */
+.adv-sw-intro-topbar .adv-lb-btn,
+.adv-sw-topbar .adv-lb-btn {
+  margin-left: auto;
+}
+
+.adv-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.adv-lb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.adv-lb-overlay.adv-lb-show {
+  opacity: 1;
+  pointer-events: auto;
+  backdrop-filter: blur(4px);
+}
+
+.adv-lb-card {
+  width: min(620px, 92vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--adv-surface);
+  border: 1px solid var(--adv-border);
+  border-radius: 16px;
+  box-shadow: 0 0 40px var(--adv-glow);
+  transform: scale(0.95);
+  transition: transform 0.25s ease;
+  overflow: hidden;
+}
+
+.adv-lb-show .adv-lb-card {
+  transform: scale(1);
+}
+
+.adv-lb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 12px;
+  border-bottom: 1px solid var(--adv-border);
+}
+
+.adv-lb-title {
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.2rem;
+  color: var(--adv-accent);
+  margin: 0;
+}
+
+.adv-lb-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--adv-glass);
+  color: var(--adv-text-muted);
+  font-family: var(--font-body), monospace;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.adv-lb-close:hover,
+.adv-lb-close:active {
+  color: var(--adv-accent);
+  box-shadow: 0 0 10px var(--adv-glow);
+}
+
+.adv-lb-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 16px 0;
+  border-bottom: 1px solid var(--adv-border);
+  background: var(--adv-bg);
+}
+
+.adv-lb-tab {
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--adv-text-muted);
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.adv-lb-tab:hover {
+  color: var(--adv-text);
+}
+
+.adv-lb-tab-active {
+  color: var(--adv-accent);
+  border-bottom-color: var(--adv-accent);
+}
+
+.adv-lb-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+  min-height: 200px;
+}
+
+.adv-lb-loading,
+.adv-lb-empty {
+  padding: 40px 20px;
+  text-align: center;
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+  color: var(--adv-text-muted);
+}
+
+.adv-lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+}
+
+.adv-lb-table thead th {
+  text-align: left;
+  padding: 10px 24px;
+  color: var(--adv-text-muted);
+  font-weight: normal;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--adv-border);
+}
+
+.adv-lb-table tbody td {
+  padding: 12px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--adv-text);
+}
+
+.adv-lb-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.adv-lb-table tbody tr:hover td {
+  background: rgba(56, 206, 188, 0.04);
+}
+
+.adv-lb-col-rank {
+  width: 50px;
+  color: var(--adv-accent);
+  font-weight: bold;
+}
+
+.adv-lb-col-pts,
+.adv-lb-col-games {
+  text-align: right;
+}
+
+.adv-lb-col-pts {
+  color: var(--adv-accent);
+}
+
+.adv-lb-footer {
+  padding: 12px 24px;
+  border-top: 1px solid var(--adv-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-body), monospace;
+  font-size: 0.75rem;
+  color: var(--adv-text-muted);
+}
+
+.adv-lb-admin-link {
+  color: var(--adv-text-muted);
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.adv-lb-admin-link:hover {
+  color: var(--adv-accent);
+  background: var(--adv-glass);
+}
+
+/* ─── Play Mode Screen ─── */
+
+.adv-play-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 80px;
+  gap: 40px;
+}
+
+.adv-pm-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 40px 56px;
+  background: var(--adv-surface);
+  border: 1px solid var(--adv-border);
+  border-radius: 20px;
+  box-shadow: 0 0 30px var(--adv-glow);
+  max-width: 640px;
+  text-align: center;
+}
+
+.adv-pm-heading {
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.8rem;
+  color: var(--adv-accent);
+  margin: 0;
+}
+
+.adv-pm-sub {
+  font-family: var(--font-body), monospace;
+  font-size: 1rem;
+  color: var(--adv-text);
+  margin: 0;
+}
+
+.adv-pm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 8px;
+}
+
+.adv-pm-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 24px;
+  border: 2px solid var(--adv-border);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--adv-text);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.adv-pm-btn:hover,
+.adv-pm-btn:active {
+  border-color: var(--adv-accent);
+  box-shadow: 0 0 15px var(--adv-glow);
+}
+
+.adv-pm-btn-primary {
+  border-color: var(--adv-accent);
+}
+
+.adv-pm-btn-title {
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.2rem;
+  color: var(--adv-accent);
+}
+
+.adv-pm-btn-desc {
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  color: var(--adv-text-muted);
+  line-height: 1.4;
+}
+
+/* ─── Roster Setup Screen ─── */
+
+.adv-roster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 80px;
+  gap: 32px;
+}
+
+.adv-roster-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 36px 48px;
+  background: var(--adv-surface);
+  border: 1px solid var(--adv-border);
+  border-radius: 20px;
+  box-shadow: 0 0 30px var(--adv-glow);
+  width: min(640px, 90vw);
+}
+
+.adv-roster-sub {
+  font-family: var(--font-body), monospace;
+  font-size: 1rem;
+  color: var(--adv-text);
+  margin: 0;
+}
+
+.adv-roster-add {
+  display: flex;
+  gap: 10px;
+}
+
+.adv-roster-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid var(--adv-border);
+  border-radius: 10px;
+  background: var(--adv-bg);
+  color: var(--adv-text);
+  font-family: var(--font-body), monospace;
+  font-size: 0.95rem;
+  outline: none;
+  min-width: 0;
+}
+
+.adv-roster-input:focus {
+  border-color: var(--adv-accent);
+}
+
+.adv-roster-add-btn {
+  padding: 12px 20px;
+  border: 2px solid var(--adv-accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--adv-accent);
+  font-family: var(--font-title), sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.adv-roster-add-btn:hover,
+.adv-roster-add-btn:active {
+  background: rgba(56, 206, 188, 0.1);
+  box-shadow: 0 0 12px var(--adv-glow);
+}
+
+.adv-roster-error {
+  font-family: var(--font-body), monospace;
+  font-size: 0.8rem;
+  color: #ff7d7d;
+  margin: -10px 0 0;
+  min-height: 1em;
+}
+
+.adv-roster-error:empty {
+  display: none;
+}
+
+.adv-roster-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.adv-roster-empty {
+  padding: 16px;
+  text-align: center;
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  color: var(--adv-text-muted);
+}
+
+.adv-roster-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--adv-bg);
+  border-radius: 10px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+}
+
+.adv-roster-name {
+  flex: 1;
+  color: var(--adv-text);
+  font-weight: 500;
+}
+
+.adv-roster-status {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.adv-roster-status-pending {
+  background: rgba(255, 186, 107, 0.15);
+  color: #ffba6b;
+}
+
+.adv-roster-status-approved {
+  background: rgba(184, 232, 74, 0.15);
+  color: #b8e84a;
+}
+
+.adv-roster-remove {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--adv-glass);
+  color: var(--adv-text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.adv-roster-remove:hover {
+  color: #ff7d7d;
+}
+
+.adv-roster-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.adv-roster-continue {
+  padding: 14px 36px;
+  border: 2px solid var(--adv-accent);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--adv-accent);
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.adv-roster-continue:hover,
+.adv-roster-continue:active {
+  background: rgba(56, 206, 188, 0.1);
+  box-shadow: 0 0 15px var(--adv-glow);
+}
+
+.adv-roster-hint {
+  font-family: var(--font-body), monospace;
+  font-size: 0.75rem;
+  color: var(--adv-text-muted);
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─── Admin Panel ─── */
+
+/* Admin overrides .screen's flex-centering so content top-aligns. The screen
+   itself scrolls. The .screen base sets will-change: transform, which would
+   make `position: fixed` descendants anchor to .adv-admin instead of the
+   viewport — so we explicitly clear it here. Plus a transparent bg so the
+   gradient sphere bg (which the base rule paints over) shows through. */
+.adv-admin {
+  display: block;
+  align-items: stretch;
+  padding: 28px 60px 80px;
+  overflow-y: auto;
+  position: absolute;
+  inset: 0;
+  will-change: auto;
+  background: transparent;
+}
+
+.adv-admin .adv-gradient-bg {
+  position: fixed;
+  inset: 0;
+}
+
+/* Sticky header — transparent so it sits cleanly on the gradient bg, no card. */
+.adv-admin .adv-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 12px 0;
+  margin: 0 0 16px;
+  background: transparent;
+}
+
+.adv-admin-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--adv-glass);
+  backdrop-filter: blur(8px);
+  color: var(--adv-text-muted);
+  font-family: var(--font-body), monospace;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.adv-admin-close:hover,
+.adv-admin-close:active {
+  color: var(--adv-accent);
+  box-shadow: 0 0 12px var(--adv-glow);
+}
+
+.adv-admin-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.adv-admin-section {
+  background: var(--adv-surface);
+  border: 1px solid var(--adv-border);
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+
+.adv-admin-section-title {
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.1rem;
+  color: var(--adv-accent);
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adv-admin-badge {
+  font-family: var(--font-body), monospace;
+  font-size: 0.75rem;
+  background: var(--adv-accent);
+  color: var(--adv-bg);
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.adv-admin-badge:empty {
+  display: none;
+}
+
+.adv-admin-section-content {
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+}
+
+.adv-admin-empty {
+  padding: 16px 4px;
+  color: var(--adv-text-muted);
+  font-size: 0.85rem;
+}
+
+.adv-admin-active-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.adv-admin-active-inline {
+  color: var(--adv-text-muted);
+  font-size: 0.85rem;
+}
+
+.adv-admin-active-inline strong {
+  color: var(--adv-accent);
+}
+
+/* Single-row event creator: name | radio "now" | radio "schedule for" | datetime | button */
+.adv-admin-event-creator-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px solid var(--adv-border);
+}
+
+/* Event-name input takes the remaining width so the row fills the card. */
+.adv-admin-event-creator-row #new-event-name {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
+.adv-admin-event-creator-row .adv-admin-datetime {
+  flex: 0 0 240px;
+  min-width: 240px;
+}
+
+/* Larger Create event button — keeps the original primary look from before
+   the table-button shrink. Distinct class so the smaller .adv-admin-btn rule
+   doesn't dominate it. */
+.adv-admin-btn-create {
+  padding: 8px 16px;
+  border: 2px solid var(--adv-accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--adv-accent);
+  font-family: var(--font-title), sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.adv-admin-btn-create:hover,
+.adv-admin-btn-create:active {
+  background: rgba(56, 206, 188, 0.1);
+  box-shadow: 0 0 15px var(--adv-glow);
+}
+
+/* Fixed-width dropdown so the row layout doesn't shift when the active event
+   changes (e.g. "— None (casual mode)" vs a short or long event name). */
+.adv-admin-active-row .adv-admin-select#active-event-select {
+  flex: 0 0 357px;
+  min-width: 357px;
+  max-width: 357px;
+}
+
+.adv-admin-label {
+  color: var(--adv-text-muted);
+  font-size: 0.85rem;
+  min-width: 90px;
+}
+
+.adv-admin-input,
+.adv-admin-select {
+  padding: 8px 12px;
+  border: 1px solid var(--adv-border);
+  border-radius: 8px;
+  background: var(--adv-bg);
+  color: var(--adv-text);
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+  outline: none;
+  flex: 1;
+  min-width: 200px;
+}
+
+.adv-admin-input:focus,
+.adv-admin-select:focus {
+  border-color: var(--adv-accent);
+}
+
+.adv-admin-search {
+  margin-bottom: 10px;
+  max-width: 320px;
+}
+
+.adv-admin-active-status {
+  padding: 10px 14px;
+  background: var(--adv-bg);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: var(--adv-text);
+  margin: 10px 0;
+}
+
+.adv-admin-btn {
+  padding: 4px 8px;
+  border: 1px solid var(--adv-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--adv-text);
+  font-family: var(--font-body), monospace;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.adv-admin-btn:hover,
+.adv-admin-btn:active {
+  border-color: var(--adv-accent);
+  color: var(--adv-accent);
+}
+
+.adv-admin-btn-primary {
+  border-color: var(--adv-accent);
+  color: var(--adv-accent);
+}
+
+.adv-admin-btn-good:hover,
+.adv-admin-btn-good:active {
+  border-color: #6dd400;
+  color: #b8e84a;
+}
+
+.adv-admin-btn-warn:hover,
+.adv-admin-btn-warn:active {
+  border-color: #e89c4a;
+  color: #ffba6b;
+}
+
+.adv-admin-btn-danger:hover,
+.adv-admin-btn-danger:active {
+  border-color: #e85a5a;
+  color: #ff7d7d;
+}
+
+.adv-admin-btn-link {
+  background: transparent;
+  border: none;
+  color: var(--adv-text-muted);
+  font-family: var(--font-body), monospace;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 8px;
+}
+
+.adv-admin-btn-link:hover {
+  color: var(--adv-accent);
+}
+
+.adv-admin-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+/* Use flex so the row always fills 100% width of its list; auto-sized middle
+   children stay in their natural order, and the actions wrapper sits at the
+   right edge. This guarantees the right edge of every row aligns regardless
+   of how many middle items each section's row has. */
+.adv-admin-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  background: var(--adv-bg);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.adv-admin-row > .adv-admin-row-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.adv-admin-row > .adv-admin-row-actions {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.adv-admin-row-name {
+  color: var(--adv-text);
+  font-weight: 500;
+}
+
+.adv-admin-row-faint {
+  color: var(--adv-text-muted);
+  font-weight: normal;
+}
+
+.adv-admin-row-meta {
+  color: var(--adv-text-muted);
+  font-size: 0.75rem;
+}
+
+.adv-admin-row-status {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.adv-admin-status-approved {
+  background: rgba(184, 232, 74, 0.15);
+  color: #b8e84a;
+}
+
+.adv-admin-status-pending {
+  background: rgba(255, 186, 107, 0.15);
+  color: #ffba6b;
+}
+
+.adv-admin-status-hidden {
+  background: rgba(255, 125, 125, 0.12);
+  color: #ff7d7d;
+}
+
+.adv-admin-row-points {
+  color: var(--adv-accent);
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+.adv-admin-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.adv-admin-flash {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 12px 24px;
+  background: var(--adv-accent);
+  color: var(--adv-bg);
+  border-radius: 10px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 250;
+}
+
+.adv-admin-flash-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ─── Player Intro: Team Input Row (paired with name) ─── */
+
+.adv-team-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.15);
+  /* Allow content to shape height — feedback line is rendered as a sibling
+     so it always sits below the team input within this row. */
+}
+
+.adv-team-line-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adv-team-line-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 24px;
+}
+
+.adv-team-label {
+  font-family: var(--font-body), monospace;
+  font-size: 0.7rem;
+  color: var(--adv-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 50px;
+}
+
+.adv-team-input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 12px;
+  border: 2px solid var(--adv-border);
+  border-radius: 8px;
+  background: var(--adv-bg);
+  color: var(--adv-text);
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.adv-team-input:focus {
+  border-color: var(--adv-accent);
+}
+
+/* Feedback line sits BELOW the team input within the row, indented to align
+   with it. No fixed margin-left auto so it can't overflow the card. */
+.adv-team-feedback {
+  font-family: var(--font-body), monospace;
+  font-size: 0.7rem;
+  padding-left: 82px;
+  min-height: 0.9em;
+  white-space: normal;
+}
+
+.adv-team-feedback:empty {
+  display: none;
+}
+
+.adv-team-feedback-approved {
+  color: #b8e84a;
+}
+
+.adv-team-feedback-pending {
+  color: #ffba6b;
+}
+
+.adv-team-feedback-error {
+  color: #ff7d7d;
+}
+
+/* ─── Event Creator (admin) ─── */
+
+.adv-admin-event-creator {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.adv-admin-event-when {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.adv-admin-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  color: var(--adv-text);
+  cursor: pointer;
+}
+
+.adv-admin-radio input[type="radio"] {
+  accent-color: var(--adv-accent);
+}
+
+.adv-admin-datetime {
+  flex: 1;
+  max-width: 240px;
+}
+
+/* ─── Game-select team-mode banner (inline next to title, no card) ─── */
+
+.adv-game-select-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  color: var(--adv-text);
+  margin-left: 16px;
+}
+
+.adv-game-select-banner-text strong {
+  color: var(--adv-accent);
+}
+
+.adv-gs-banner-count {
+  color: var(--adv-text-muted);
+  font-size: 0.8rem;
+}
+
+.adv-game-select-banner-btn {
+  padding: 5px 10px;
+  border: 1px solid var(--adv-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--adv-text);
+  font-family: var(--font-body), monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.adv-game-select-banner-btn:hover,
+.adv-game-select-banner-btn:active {
+  border-color: var(--adv-accent);
+  color: var(--adv-accent);
+}
+
+/* ─── Team-mode loading placeholder ─── */
+
+.adv-team-loading {
+  padding: 12px;
+  text-align: center;
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  color: var(--adv-text-muted);
+}

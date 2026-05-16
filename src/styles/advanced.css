@@ -163,7 +163,7 @@
   justify-content: space-between;
   width: 100%;
   max-width: 1400px;
-  margin: -10px;
+  margin: -5px;
 }
 
 .adv-header-left {
@@ -201,16 +201,20 @@
 
 .adv-theme-toggle {
   font-family: var(--font-body), monospace;
-  font-size: 1.4rem;
-  padding: 8px 16px;
+  font-size: 1.5rem;
+  padding: 0px 0px;
   border: none;
-  border-radius: 10px;
+  border-radius: 50px;
   background: var(--adv-glass);
   backdrop-filter: blur(8px);
   color: var(--adv-text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 1;
+  height: 38px;
+  width: 38px;
+  text-align: center;
+  justify-content: center;
 }
 
 .adv-theme-toggle:hover,
@@ -289,15 +293,15 @@
 /* ─── Help Button & Overlay ─── */
 
 .adv-help-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border: none;
   border-radius: 50%;
   background: var(--adv-glass);
   backdrop-filter: blur(8px);
   color: var(--adv-text-muted);
   font-family: var(--font-title), sans-serif;
-  font-size: 1rem;
+  font-size: 1.25rem;
   cursor: pointer;
   transition: all 0.2s;
   line-height: 1;
@@ -561,9 +565,9 @@
   z-index: 10;
 }
 
-.adv-sw-intro-topbar .adv-sw-intro-title {
-  flex: 1;
-}
+/* Title no longer takes flex:1 — the right-cluster (leaderboard + theme) is
+   pushed to the right edge via `margin-left: auto` on .adv-lb-btn instead.
+   This lets the help (?) button sit immediately after the title on the left. */
 
 .adv-sw-intro-title {
   font-family: var(--font-title), sans-serif;
@@ -594,12 +598,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   padding: 24px 30px;
   background: var(--adv-surface);
   border: 2px solid var(--adv-border);
   border-radius: 16px;
   width: 100%;
+  margin-top: -5px;
 }
 
 .adv-sw-setup-label {
@@ -641,12 +646,17 @@
   text-align: center;
 }
 
+/* Player name rows flow into a responsive grid. With 1-2 players, one
+   column. With 3-4, the grid auto-fits into two columns so the setup card
+   doesn't grow tall enough to push the description / Start button off
+   screen. Each row keeps a comfortable min width via the minmax(). */
 .adv-sw-names {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px 16px;
   width: 100%;
-  max-width: 300px;
+  max-width: 600px;
+  justify-content: center;
 }
 
 .adv-sw-name-row {
@@ -680,7 +690,7 @@
 }
 
 .adv-sw-start-btn {
-  padding: 16px 60px;
+  padding: 12px 40px;
   border: 2px solid var(--adv-accent);
   border-radius: 12px;
   background: transparent;
@@ -689,6 +699,7 @@
   font-size: 1.4rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin-top: -10px;
 }
 
 .adv-sw-start-btn:hover,
@@ -728,7 +739,6 @@
   font-family: var(--font-title), sans-serif;
   font-size: 1.3rem;
   color: var(--adv-accent);
-  flex: 1;
   text-shadow: 0 0 20px var(--adv-glow);
 }
 
@@ -2664,17 +2674,18 @@
 .adv-cn-setup-columns {
   display: flex;
   gap: 24px;
-  width: 100%;
+  width: 130%;
   align-items: flex-start;
   justify-items: center;
 }
 
 .adv-cn-setup-columns .adv-sw-player-setup {
   flex: 0 0 auto;
-  width: 350px;
-  height: 350px;
+  /* Wider so 2-col grid fits at 3-4 players. Use min-height (not height) so
+     the card grows with content instead of clipping it. */
+  width: 600px;
+  min-height: 300px;
   margin-left: 20px;
-  
 }
 
 .adv-cn-topic-column {
@@ -2684,6 +2695,7 @@
   align-items: flex-start;
   gap: 12px;
   padding: 24px 20px;
+  margin-top: -5px;
 }
 
 /* Topic picker grid — 2 columns, left-aligned */

@@ -11,9 +11,18 @@ import {
 import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
+import { createLeaderboardButton } from '../../utils/leaderboard-modal.js'
+import { renderTeamPlayerRows } from '../../utils/team-input.js'
+import { recordScores } from '../../utils/leaderboard-api.js'
+import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
 import { trackGameStart, trackGameComplete, trackGameQuit } from '../../utils/analytics.js'
+
+function genRunId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  return `run_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
+}
 
 // ─── INTRO SCREEN ───
 
@@ -22,27 +31,17 @@ function createIntroScreen() {
   el.className = 'screen adv-jp-intro'
 
   let playerCount = 1
-  let players = [{ name: 'Player 1', color: PLAYER_COLORS[0] }]
+  let players = [{ name: 'Player 1', color: PLAYER_COLORS[0], teamId: null, teamName: '', teamStatus: null }]
 
   function renderNames() {
     const container = el.querySelector('#adv-jp-names')
     if (!container) return
-    container.innerHTML = players.map((p, i) => `
-      <div class="adv-sw-name-row">
-        <span class="adv-sw-name-dot" style="background: ${p.color}"></span>
-        <input class="adv-sw-name-input" data-idx="${i}" value="${p.name}" maxlength="16" spellcheck="false" />
-      </div>
-    `).join('')
-    container.querySelectorAll('.adv-sw-name-input').forEach(input => {
-      input.addEventListener('input', () => {
-        players[parseInt(input.dataset.idx)].name = input.value || `Player ${parseInt(input.dataset.idx) + 1}`
-      })
-    })
+    renderTeamPlayerRows(container, players)
   }
 
   function updateCount(delta) {
     playerCount = Math.max(1, Math.min(4, playerCount + delta))
-    while (players.length < playerCount) players.push({ name: `Player ${players.length + 1}`, color: PLAYER_COLORS[players.length] })
+    while (players.length < playerCount) players.push({ name: `Player ${players.length + 1}`, color: PLAYER_COLORS[players.length], teamId: null, teamName: '', teamStatus: null })
     while (players.length > playerCount) players.pop()
     el.querySelector('#adv-jp-count').textContent = playerCount
     renderNames()
@@ -71,6 +70,7 @@ function createIntroScreen() {
   addGradientBackground(el, 'jeopardy')
   const introTopbar = el.querySelector('.adv-sw-intro-topbar')
   introTopbar.appendChild(createHelpButton('Soil Jeopardy', RULES))
+  introTopbar.appendChild(createLeaderboardButton())
   introTopbar.appendChild(createThemeToggle())
   typewriter(el.querySelector('.adv-sw-intro-desc'))
 
@@ -109,6 +109,7 @@ function createGameplayScreen(players) {
   }
 
   const state = {
+    runId: genRunId(),
     players: players.map(p => ({ ...p, score: 0 })),
     currentPlayer: Math.floor(Math.random() * players.length),
     phase: 'board', // board | question | daily-double | feedback | complete
@@ -189,6 +190,7 @@ function createGameplayScreen(players) {
   addGradientBackground(el, 'jeopardy')
   const jpTopbar = el.querySelector('.adv-sw-topbar')
   jpTopbar.appendChild(createHelpButton('Soil Jeopardy', RULES))
+  jpTopbar.appendChild(createLeaderboardButton())
   jpTopbar.appendChild(createThemeToggle())
 
   // ── DOM refs ──
@@ -454,6 +456,12 @@ function createGameplayScreen(players) {
   function showCompletion(fromQuit = false, skipImpact = false) {
     state.phase = 'complete'
     trackGameComplete('adv-jeopardy', 'advanced', { playerCount: state.players.length, score: Math.max(...state.players.map(p => p.score)) })
+    recordScores({
+      gameId: 'adv-jeopardy',
+      runId: state.runId,
+      entries: state.players.map(p => ({ playerName: p.name, teamId: p.teamId, points: p.score })),
+      eventId: getScoreEventId(),
+    }).catch(err => console.error('recordScores failed', err))
 
     const afterImpact = () => {
       let heading

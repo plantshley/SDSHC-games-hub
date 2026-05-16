@@ -1,0 +1,196 @@
+/**
+ * Advanced Mode — Event Roster setup.
+ *
+ * Reached after picking Team Play. Lets the player(s) register the team(s)
+ * that will play at this kiosk during the event. New names create teams as
+ * `pending` and add them to the event roster as `pending` — admin approves
+ * them from the admin panel. The dropdown on game intros sources from the
+ * (full) event roster regardless of per-roster approval status, so teams can
+ * play immediately even before admin gets to approving them; their scores
+ * just don't appear on the public event leaderboard until approval.
+ *
+ * Approved teams from prior events (in the global teams registry) show up in
+ * the autocomplete suggestions so returning teams don't get duplicated.
+ */
+
+import { navigate, navigateRaw } from '../router.js'
+import {
+  getActiveEventId,
+  getEventById,
+  getOrCreateTeam,
+  addTeamToEventRoster,
+  removeTeamFromEventRoster,
+  getEventRoster,
+  listApprovedTeams,
+} from '../utils/leaderboard-api.js'
+import { addGradientBackground } from '../utils/gradient-bg.js'
+import { createThemeToggle } from '../utils/theme-toggle.js'
+import { isClean } from '../utils/profanity.js'
+
+const DATALIST_ID = 'adv-roster-datalist'
+
+export function createAdvancedRosterScreen() {
+  const screen = document.createElement('div')
+  screen.className = 'screen adv-roster'
+
+  const eventId = getActiveEventId()
+
+  screen.innerHTML = `
+    <div class="adv-header">
+      <div class="adv-header-left">
+        <button class="adv-back-btn" id="adv-roster-back">${'←'} Back</button>
+        <h1 class="adv-title">Team Roster</h1>
+      </div>
+      <div class="adv-header-right"></div>
+    </div>
+
+    <div class="adv-roster-card">
+      <p class="adv-roster-sub" id="adv-roster-sub">…</p>
+
+      <div class="adv-roster-add">
+        <input class="adv-roster-input" id="adv-roster-input" list="${DATALIST_ID}" maxlength="40"
+          placeholder="School / team name" spellcheck="false" />
+        <button class="adv-roster-add-btn" id="adv-roster-add">+ Add team</button>
+      </div>
+      <p class="adv-roster-error" id="adv-roster-error"></p>
+
+      <ul class="adv-roster-list" id="adv-roster-list"></ul>
+
+      <div class="adv-roster-actions">
+        <button class="adv-roster-continue" id="adv-roster-continue">Start playing ${'→'}</button>
+      </div>
+      <p class="adv-roster-hint">
+        New names go through admin approval before showing on the event leaderboard.
+        You can keep adding teams later from the game-select screen.
+      </p>
+    </div>
+  `
+
+  addGradientBackground(screen, 'game-select')
+  screen.querySelector('.adv-header-right').appendChild(createThemeToggle())
+
+  // Set up the shared datalist of previously-approved teams so returning teams
+  // surface as autocomplete suggestions instead of getting created fresh.
+  ensureDatalist()
+
+  // The Back button returns to wherever the user came from. Coming from
+  // "Manage roster" on game-select sets a sessionStorage hint; otherwise we
+  // assume the player just chose Team Play and go back to the prompt.
+  const returnTo = sessionStorage.getItem('sdshc-roster-return')
+  sessionStorage.removeItem('sdshc-roster-return')
+  screen.querySelector('#adv-roster-back').addEventListener('pointerdown', () => {
+    if (returnTo === 'game-select') {
+      navigate('game-select')
+    } else {
+      navigateRaw('advanced/play-mode')
+    }
+  })
+
+  const input = screen.querySelector('#adv-roster-input')
+  const addBtn = screen.querySelector('#adv-roster-add')
+  const errorEl = screen.querySelector('#adv-roster-error')
+
+  function showError(msg) {
+    errorEl.textContent = msg || ''
+  }
+
+  async function handleAdd() {
+    const val = input.value.trim()
+    if (!val) {
+      showError('Enter a school or team name.')
+      input.focus()
+      return
+    }
+    if (!isClean(val)) {
+      showError('That name isn\'t allowed — try another.')
+      return
+    }
+    showError('')
+    try {
+      const result = await getOrCreateTeam(val)
+      await addTeamToEventRoster(eventId, result.teamId)
+      input.value = ''
+      ensureDatalist()
+      renderRoster()
+      input.focus()
+    } catch (err) {
+      console.error('roster add failed', err)
+      showError('Could not add team. Try again.')
+    }
+  }
+
+  addBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault()
+    handleAdd()
+  })
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleAdd()
+    }
+  })
+
+  screen.querySelector('#adv-roster-continue').addEventListener('pointerdown', () => {
+    navigate('game-select')
+  })
+
+  async function renderRoster() {
+    const list = screen.querySelector('#adv-roster-list')
+    const roster = eventId ? await getEventRoster(eventId) : []
+    if (roster.length === 0) {
+      list.innerHTML = `<li class="adv-roster-empty">No teams added yet. Add at least one to start playing.</li>`
+      return
+    }
+    list.innerHTML = roster.map(r => `
+      <li class="adv-roster-row" data-id="${r.teamId}">
+        <span class="adv-roster-name">${escapeHtml(r.teamName)}</span>
+        <span class="adv-roster-status adv-roster-status-${r.rosterStatus}">${r.rosterStatus}</span>
+        <button class="adv-roster-remove" data-id="${r.teamId}" title="Remove">${'✕'}</button>
+      </li>
+    `).join('')
+    list.querySelectorAll('.adv-roster-remove').forEach(btn => {
+      btn.addEventListener('pointerdown', async (e) => {
+        e.preventDefault()
+        const id = btn.dataset.id
+        await removeTeamFromEventRoster(eventId, id)
+        renderRoster()
+      })
+    })
+  }
+
+  // Header subtitle with event name
+  ;(async () => {
+    const ev = eventId ? await getEventById(eventId) : null
+    const sub = screen.querySelector('#adv-roster-sub')
+    if (ev && sub) sub.innerHTML = `Joining: <strong>${escapeHtml(ev.name)}</strong>`
+    else if (sub) sub.textContent = ''
+  })()
+
+  renderRoster()
+
+  return screen
+}
+
+async function ensureDatalist() {
+  let dl = document.getElementById(DATALIST_ID)
+  if (!dl) {
+    dl = document.createElement('datalist')
+    dl.id = DATALIST_ID
+    document.body.appendChild(dl)
+  }
+  const teams = await listApprovedTeams()
+  dl.innerHTML = teams.map(t => `<option value="${escapeAttr(t.name)}">`).join('')
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+function escapeAttr(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+}

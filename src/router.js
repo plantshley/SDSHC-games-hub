@@ -84,6 +84,15 @@ function parseRoute(path) {
     const parts = path.split('/')
     return { screen: 'game', gameId: parts[1], level: parseInt(parts[2] || '0', 10) }
   }
+  if (path === 'play-mode') {
+    return { screen: 'play-mode' }
+  }
+  if (path === 'roster') {
+    return { screen: 'roster' }
+  }
+  if (path === 'admin') {
+    return { screen: 'admin' }
+  }
   return { screen: 'splash' }
 }
 

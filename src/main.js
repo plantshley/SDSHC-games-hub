@@ -5,6 +5,7 @@ import './styles/games.css'
 import './styles/intro.css'
 import './styles/theme.css'
 import './styles/advanced.css'
+import './styles/leaderboard.css'
 
 import { initRouter, onRoute, navigate, navigateRaw } from './router.js'
 import { initIdleTimer, clearProgress, setIdleTimeout } from './idle-timer.js'
@@ -14,8 +15,12 @@ import { createSplashScreen } from './screens/splash.js'
 import { createGradeSelectScreen } from './screens/grade-select.js'
 import { createGameSelectScreen } from './screens/game-select.js'
 import { createAdvancedGameSelectScreen } from './screens/advanced-game-select.js'
+import { createAdvancedPlayModeScreen, getPlayMode, clearPlayMode } from './screens/advanced-play-mode.js'
+import { createAdvancedRosterScreen } from './screens/advanced-roster.js'
+import { createAdvancedAdminScreen } from './screens/advanced-admin.js'
 import { getGameById } from './data/game-registry.js'
 import { getAdvancedGameById } from './data/advanced-game-registry.js'
+import { getActiveEventId } from './utils/leaderboard-api.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -64,8 +69,10 @@ function handleRoute(route) {
     setIdleTimeout(300_000)
   }
 
-  // Intro screen (no mode)
+  // Intro screen (no mode). Clear play-mode session choice so each fresh
+  // entry to Advanced Mode re-prompts (team vs casual).
   if (route.screen === 'intro') {
+    clearPlayMode()
     switchScreen(createIntroScreen())
     return
   }
@@ -93,7 +100,27 @@ function handleRoute(route) {
   if (route.mode === 'advanced') {
     switch (route.screen) {
       case 'game-select':
+        // If an event is active and the player hasn't chosen a play mode this
+        // session, redirect to the play-mode prompt first.
+        if (getActiveEventId() && !getPlayMode()) {
+          navigateRaw('advanced/play-mode')
+          return
+        }
         switchScreen(createAdvancedGameSelectScreen())
+        break
+      case 'play-mode':
+        switchScreen(createAdvancedPlayModeScreen())
+        break
+      case 'roster':
+        // Roster only makes sense in team mode with an active event.
+        if (!getActiveEventId() || getPlayMode() !== 'team') {
+          navigate('game-select')
+          return
+        }
+        switchScreen(createAdvancedRosterScreen())
+        break
+      case 'admin':
+        switchScreen(createAdvancedAdminScreen())
         break
       case 'game':
         handleAdvancedGame(route)
