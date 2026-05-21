@@ -66,7 +66,7 @@ function handleRoute(route) {
   if (route.mode === 'kid') {
     setIdleTimeout(120_000)
   } else if (route.mode === 'advanced') {
-    setIdleTimeout(300_000)
+    setIdleTimeout(600_000)
   }
 
   // Intro screen (no mode). Clear play-mode session choice so each fresh

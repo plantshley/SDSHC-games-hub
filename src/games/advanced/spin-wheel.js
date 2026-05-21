@@ -327,7 +327,7 @@ function createGameplayScreen(players) {
 
     function frame() {
       state.ang += state.angVel
-      state.angVel *= 0.97
+      state.angVel *= 0.96
       drawWheel()
 
       if (state.angVel < 0.003) {

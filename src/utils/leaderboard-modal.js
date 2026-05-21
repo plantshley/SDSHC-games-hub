@@ -124,9 +124,10 @@ async function showLeaderboardModal() {
       <table class="adv-lb-table">
         <thead>
           <tr>
-            <th class="adv-lb-col-rank">#</th>
+            <th class="adv-lb-col-rank">Rank</th>
             <th class="adv-lb-col-team">Team</th>
-            <th class="adv-lb-col-pts">Points</th>
+            <th class="adv-lb-col-pts" title="Score normalized across games so each game counts fairly.">Score<span class="adv-lb-col-sub">(Normalized)</span></th>
+            <th class="adv-lb-col-raw" title="Total raw points actually earned in games.">Raw</th>
             <th class="adv-lb-col-games">Games</th>
           </tr>
         </thead>
@@ -135,7 +136,8 @@ async function showLeaderboardModal() {
             <tr>
               <td class="adv-lb-col-rank">${i + 1}</td>
               <td class="adv-lb-col-team">${escapeHtml(r.teamName)}</td>
-              <td class="adv-lb-col-pts">${r.points}</td>
+              <td class="adv-lb-col-pts">${r.normPoints}</td>
+              <td class="adv-lb-col-raw">${r.points}</td>
               <td class="adv-lb-col-games">${r.gamesPlayed}</td>
             </tr>
           `).join('')}

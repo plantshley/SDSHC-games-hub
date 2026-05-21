@@ -39,6 +39,48 @@ function preloadImage(src) {
   if (preloadCache.length > 4) preloadCache.shift()
 }
 
+// Questions per level (and per category in All mode), tuned so every player gets
+// an equal number of turns: 6 for 3 players, 4 for 1 / 2 / 4 players.
+function questionsPerLevel(playerCount) {
+  return playerCount === 3 ? 6 : 4
+}
+
+// An item may carry multiple photos (variants). Returns its image list.
+function itemImages(item) {
+  return item.images && item.images.length ? item.images : [item.image]
+}
+
+// Tracks image srcs already shown, per category, across replays within this page
+// session. Lets "Play Again" exhaust unused photos before repeating any.
+const usedImagesByCategory = {}
+
+// Pick up to `count` items from a pool, preferring items whose photos haven't been
+// shown yet this session, and choose a specific (preferably unused) photo for each.
+function pickItems(poolItems, count, catId) {
+  const used = usedImagesByCategory[catId] || (usedImagesByCategory[catId] = new Set())
+  const poolImgs = poolItems.flatMap(itemImages)
+  // Whole pool exhausted -> free its photos so they can cycle again.
+  if (poolImgs.length > 0 && poolImgs.every(src => used.has(src))) {
+    poolImgs.forEach(src => used.delete(src))
+  }
+  const withUnused = []
+  const allUsed = []
+  poolItems.forEach(it => {
+    (itemImages(it).some(src => !used.has(src)) ? withUnused : allUsed).push(it)
+  })
+  shuffleArray(withUnused)
+  shuffleArray(allUsed)
+  const ordered = [...withUnused, ...allUsed].slice(0, Math.min(count, poolItems.length))
+  return ordered.map(it => {
+    const imgs = itemImages(it)
+    const unused = imgs.filter(src => !used.has(src))
+    const pool = unused.length ? unused : imgs
+    const chosen = pool[Math.floor(Math.random() * pool.length)]
+    used.add(chosen)
+    return { ...it, chosenImage: chosen }
+  })
+}
+
 // ─── INTRO SCREEN ───
 
 function createIntroScreen() {
@@ -146,34 +188,51 @@ function createGameplayScreen(players, selectedCategory) {
   // Build flat items array (sequential play order)
   let items = []
   const categoryOrder = []
+  const categoryProgress = {}
+  const count = questionsPerLevel(players.length)
+  let isLeveled = false
 
   if (selectedCategory === 'all') {
-    // 4 random items per category, grouped by category
+    // `count` random items per category, grouped by category
     CATEGORIES.forEach(cat => {
-      const shuffled = shuffleArray([...cat.items])
-      const picked = shuffled.slice(0, 4)
+      const picked = pickItems(cat.items, count, cat.id)
       picked.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
       categoryOrder.push(cat.id)
+      categoryProgress[cat.id] = { answered: 0, total: picked.length }
     })
   } else {
     const cat = CATEGORIES.find(c => c.id === selectedCategory)
     if (!cat) { navigate('game-select'); return document.createElement('div') }
-    const shuffled = shuffleArray([...cat.items])
-    shuffled.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
     categoryOrder.push(cat.id)
+    // Categories whose items carry a `difficulty` play as numbered levels of
+    // rising difficulty; others fall back to a single shuffled round.
+    if (cat.items.some(it => it.difficulty)) {
+      isLeveled = true
+      const maxLevel = cat.items.reduce((m, it) => Math.max(m, it.difficulty || 1), 1)
+      for (let lvl = 1; lvl <= maxLevel; lvl++) {
+        const band = cat.items.filter(it => (it.difficulty || 1) === lvl)
+        if (band.length === 0) continue
+        const picked = pickItems(band, count, cat.id)
+        picked.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title, level: lvl }))
+      }
+    } else {
+      const picked = pickItems(cat.items, cat.items.length, cat.id)
+      picked.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
+    }
+    categoryProgress[cat.id] = { answered: 0, total: items.length }
   }
 
   const totalRounds = items.length
   const isMultiplayer = players.length > 1
   let cancelled = false
 
-  // Category progress tracking
-  const categoryProgress = {}
-  if (selectedCategory === 'all') {
-    CATEGORIES.forEach(cat => { categoryProgress[cat.id] = { answered: 0, total: 4 } })
-  } else {
-    const cat = CATEGORIES.find(c => c.id === selectedCategory)
-    if (cat) categoryProgress[cat.id] = { answered: 0, total: cat.items.length }
+  // Pending staggered clue/significance reveals from the feedback phase. The clue
+  // DOM nodes are reused each round, so these must be cancelled when advancing —
+  // otherwise tapping "Next" early lets them fire on the next question's clues.
+  let clueRevealTimers = []
+  function clearClueRevealTimers() {
+    clueRevealTimers.forEach(clearTimeout)
+    clueRevealTimers = []
   }
 
   const state = {
@@ -342,6 +401,9 @@ function createGameplayScreen(players, selectedCategory) {
     const notFromCat = remaining.filter(it => it.categoryId !== catId)
 
     if (fromCat.length === 0) return
+    // Nothing else to reorder (e.g. single-category / leveled mode) — don't
+    // re-render the current round, which would reset clue progress.
+    if (notFromCat.length === 0) return
 
     // Reorder: put this category's items first, then the rest
     items = [...items.slice(0, state.round), ...fromCat, ...notFromCat]
@@ -396,28 +458,48 @@ function createGameplayScreen(players, selectedCategory) {
       return
     }
 
-    // Check if we crossed a category boundary -> show impact
     const prevItem = items[state.round - 1]
     const nextItem = items[state.round]
+
+    const proceed = () => {
+      if (isMultiplayer) showTurnPopup(() => showRound())
+      else showRound()
+    }
+
+    // Crossed a category boundary (All mode) -> show category impact fact
     if (selectedCategory === 'all' && prevItem.categoryId !== nextItem.categoryId) {
       if (IMPACT_MESSAGES[prevItem.categoryId] && !state.shownImpactIds.has(prevItem.categoryId)) {
         state.shownImpactIds.add(prevItem.categoryId)
-        showCategoryImpact(prevItem.categoryId, () => {
-          if (isMultiplayer) {
-            showTurnPopup(() => showRound())
-          } else {
-            showRound()
-          }
-        })
+        showCategoryImpact(prevItem.categoryId, proceed)
         return
       }
     }
 
-    if (isMultiplayer) {
-      showTurnPopup(() => showRound())
-    } else {
-      showRound()
+    // Crossed into a new level (leveled category mode) -> announce the level
+    if (isLeveled && nextItem.level !== prevItem.level) {
+      showLevelPopup(nextItem.level, proceed)
+      return
     }
+
+    proceed()
+  }
+
+  // ── Level Popup ──
+
+  function showLevelPopup(level, onDone) {
+    const popup = document.createElement('div')
+    popup.className = 'adv-sw-turn-popup adv-fg-level-popup'
+    popup.innerHTML = `
+      <div class="adv-fg-level-content">
+        <span class="adv-fg-level-badge">Level ${level}</span>
+      </div>
+    `
+    mainEl.appendChild(popup)
+    requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
+    setTimeout(() => {
+      popup.classList.remove('adv-sw-popup-show')
+      setTimeout(() => { popup.remove(); onDone() }, 300)
+    }, 1500)
   }
 
   // ── Turn Popup ──
@@ -446,39 +528,37 @@ function createGameplayScreen(players, selectedCategory) {
   function generateChoices(currentItem) {
     const catId = currentItem.categoryId
     const subtype = currentItem.subtype
+    const difficulty = currentItem.difficulty || 0
     const catExtras = EXTRA_DISTRACTORS[catId] || {}
+    const cat = CATEGORIES.find(c => c.id === catId)
 
-    // Extra distractors: prefer same subtype, then other subtypes in this category
-    const sameTypeExtras = (catExtras[subtype] || []).slice()
-    const otherTypeExtras = Object.entries(catExtras)
-      .filter(([st]) => st !== subtype)
-      .flatMap(([, names]) => names)
+    // Distractor name pools, split by whether they share the item's subtype.
+    const sameTypeExtras = shuffleArray((catExtras[subtype] || []).slice())
+    const otherTypeExtras = shuffleArray(
+      Object.entries(catExtras).filter(([st]) => st !== subtype).flatMap(([, names]) => names),
+    )
+    const inGame = cat ? cat.items.filter(it => it.id !== currentItem.id && !state.answeredIds.has(it.id)) : []
+    const sameTypeItems = shuffleArray(inGame.filter(it => it.subtype === subtype).map(it => it.name))
+    const otherTypeItems = shuffleArray(inGame.filter(it => it.subtype !== subtype).map(it => it.name))
 
-    shuffleArray(sameTypeExtras)
-    shuffleArray(otherTypeExtras)
+    // Difficulty shapes how confusable the choices are:
+    //   1   -> lean on cross-type options so the answer stands out (easiest)
+    //   3+  -> same-subtype look-alikes only (hardest)
+    //   2 / untagged -> balanced, same-type first (original behavior)
+    let pref
+    if (difficulty >= 3) {
+      pref = [...sameTypeExtras, ...sameTypeItems, ...otherTypeExtras, ...otherTypeItems]
+    } else if (difficulty === 1) {
+      pref = [...otherTypeItems, ...otherTypeExtras, ...sameTypeExtras, ...sameTypeItems]
+    } else {
+      pref = [...sameTypeExtras, ...otherTypeExtras, ...sameTypeItems, ...otherTypeItems]
+    }
 
     const distractorNames = []
-    // Fill from same-subtype extras first (most tricky)
-    for (const name of sameTypeExtras) {
+    for (const name of pref) {
       if (distractorNames.length >= 3) break
+      if (name === currentItem.name || distractorNames.includes(name)) continue
       distractorNames.push(name)
-    }
-    // Then other-subtype extras from the same category
-    for (const name of otherTypeExtras) {
-      if (distractorNames.length >= 3) break
-      distractorNames.push(name)
-    }
-    // Fallback: unanswered in-game items from same category
-    if (distractorNames.length < 3) {
-      const cat = CATEGORIES.find(c => c.id === catId)
-      if (cat) {
-        const inGame = cat.items.filter(it => it.id !== currentItem.id && !state.answeredIds.has(it.id))
-        shuffleArray(inGame)
-        for (const it of inGame) {
-          if (distractorNames.length >= 3) break
-          distractorNames.push(it.name)
-        }
-      }
     }
 
     const options = [currentItem.name, ...distractorNames]
@@ -494,13 +574,20 @@ function createGameplayScreen(players, selectedCategory) {
   function showRound() {
     state.phase = 'viewing'
     state.cluesRevealed = 0
+    clearClueRevealTimers()
     updateTurnDisplay()
 
     const item = items[state.round]
     state.playedCategories.add(item.categoryId)
 
     // Update topbar + sidebar
-    el.querySelector('#adv-fg-round-counter').textContent = `Q${state.round + 1} of ${totalRounds}`
+    if (isLeveled && item.level) {
+      const levelTotal = items.filter(it => it.level === item.level).length
+      const qInLevel = items.slice(0, state.round).filter(it => it.level === item.level).length + 1
+      el.querySelector('#adv-fg-round-counter').textContent = `Level ${item.level} · Q${qInLevel} of ${levelTotal}`
+    } else {
+      el.querySelector('#adv-fg-round-counter').textContent = `Q${state.round + 1} of ${totalRounds}`
+    }
     highlightCategory(item.categoryId)
 
     // Generate choices
@@ -522,11 +609,12 @@ function createGameplayScreen(players, selectedCategory) {
       placeholderEl.classList.add('adv-fg-show')
       placeholderEl.textContent = '?'
     }
-    photoEl.src = item.image
+    photoEl.src = item.chosenImage || item.image
 
     // Preload next image
     if (state.round + 1 < totalRounds) {
-      preloadImage(items[state.round + 1].image)
+      const next = items[state.round + 1]
+      preloadImage(next.chosenImage || next.image)
     }
 
     // Set clues — all start hidden, player taps "Show Clue" to reveal first
@@ -620,18 +708,21 @@ function createGameplayScreen(players, selectedCategory) {
         category: item.categoryTitle,
         clue: item.clues[0],
         significance: item.significance,
-        image: item.image,
+        image: item.chosenImage || item.image,
       })
     }
 
-    // Reveal remaining clues with staggered fade-in, then significance
+    // Reveal remaining clues with staggered fade-in, then significance.
+    // Track the timers so advancing early (showRound) can cancel them.
     const hiddenClues = clueEls.filter(c => c.classList.contains('adv-fg-clue-hidden'))
-    hiddenClues.forEach((c, i) => setTimeout(() => c.classList.remove('adv-fg-clue-hidden'), (i + 1) * 600))
+    hiddenClues.forEach((c, i) => {
+      clueRevealTimers.push(setTimeout(() => c.classList.remove('adv-fg-clue-hidden'), (i + 1) * 600))
+    })
 
     // Show significance after all clues are revealed
     const sigDelay = (hiddenClues.length + 1) * 600
     significanceEl.textContent = `Significance: ${item.significance}`
-    setTimeout(() => significanceEl.classList.remove('adv-fg-clue-hidden'), sigDelay)
+    clueRevealTimers.push(setTimeout(() => significanceEl.classList.remove('adv-fg-clue-hidden'), sigDelay))
 
     // Replace controls with Next/Finish button (reuse More Clues button styling)
     ptsEl.style.display = 'none'
@@ -639,9 +730,13 @@ function createGameplayScreen(players, selectedCategory) {
     moreCluesBtn.style.display = ''
     moreCluesBtn.classList.add('adv-fg-next-mode')
 
-    // Swap handler: remove old revealClue, add advance
+    // Swap handler: remove old revealClue, add advance.
+    // `advanced` makes this idempotent — a fast double-tap on the touchscreen
+    // can't advance the round twice (which could overrun the items array).
+    let advanced = false
     const nextHandler = () => {
-      if (cancelled || state.phase === 'complete') return
+      if (cancelled || advanced || state.phase === 'complete') return
+      advanced = true
       moreCluesBtn.removeEventListener('pointerdown', nextHandler)
       moreCluesBtn.classList.remove('adv-fg-next-mode')
 
@@ -961,7 +1056,13 @@ function createGameplayScreen(players, selectedCategory) {
   updateScores()
   updateCategoryProgress()
 
-  if (isMultiplayer) {
+  if (isLeveled) {
+    const firstName = state.players[state.currentPlayer].name
+    setTimeout(() => showLevelPopup(items[0].level, () => {
+      if (isMultiplayer) showTurnPopup(() => showRound(), `${firstName} goes first!`)
+      else showRound()
+    }), 400)
+  } else if (isMultiplayer) {
     const firstName = state.players[state.currentPlayer].name
     setTimeout(() => showTurnPopup(() => showRound(), `${firstName} goes first!`), 400)
   } else {

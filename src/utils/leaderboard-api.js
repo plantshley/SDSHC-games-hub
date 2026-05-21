@@ -24,6 +24,8 @@
  * to statewide visibility, and vice versa.
  */
 
+import { getGamePar } from '../data/advanced-game-registry.js'
+
 const K_TEAMS = 'sdshc-lb-teams'
 const K_EVENTS = 'sdshc-lb-events'
 const K_SCORES = 'sdshc-lb-scores'
@@ -460,7 +462,9 @@ export async function deleteScore(id) {
  * @param {Object} args
  * @param {'event'|'month'|'all'} args.scope
  * @param {string} [args.eventId] - required when scope === 'event'
- * @returns {Promise<Array<{ teamId, teamName, points, gamesPlayed }>>}
+ * @returns {Promise<Array<{ teamId, teamName, normPoints, points, gamesPlayed }>>}
+ *   `normPoints` is the per-game-normalized total (the headline ranking metric);
+ *   `points` is the raw sum (shown alongside). Rows are sorted by normPoints.
  */
 export async function getLeaderboard({ scope, eventId } = {}) {
   const teamsData = getTeamsRaw()
@@ -501,15 +505,26 @@ export async function getLeaderboard({ scope, eventId } = {}) {
       teamId: s.teamId,
       teamName: t ? t.name : '(deleted)',
       points: 0,
+      normPoints: 0,
       gamesPlayed: 0,
       runs: new Set(),
     }
     row.points += s.points
+    // Per-game normalization: a run worth ~par scores ~100. Negative runs
+    // (e.g. Word game wrong-solve penalties) floor at 0 so they can't drag a
+    // team's normalized total below what they earned elsewhere.
+    row.normPoints += Math.max(0, s.points) / getGamePar(s.gameId) * 100
     row.runs.add(s.runId)
     agg.set(s.teamId, row)
   }
 
   return [...agg.values()]
-    .map(r => ({ teamId: r.teamId, teamName: r.teamName, points: r.points, gamesPlayed: r.runs.size }))
-    .sort((a, b) => b.points - a.points)
+    .map(r => ({
+      teamId: r.teamId,
+      teamName: r.teamName,
+      normPoints: Math.round(r.normPoints),
+      points: r.points,
+      gamesPlayed: r.runs.size,
+    }))
+    .sort((a, b) => b.normPoints - a.normPoints || b.points - a.points)
 }

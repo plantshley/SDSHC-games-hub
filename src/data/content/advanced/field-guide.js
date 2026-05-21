@@ -16,6 +16,7 @@ export const CATEGORIES = [
       {
         id: 'pasque-flower',
         subtype: 'flower',
+        difficulty: 1,
         name: 'Pasque Flower',
         image: '/assets/field-guide/native-plants/pasque-flower.webp',
         clues: [
@@ -28,8 +29,12 @@ export const CATEGORIES = [
       {
         id: 'purple-coneflower',
         subtype: 'flower',
+        difficulty: 1,
         name: 'Purple Coneflower',
-        image: '/assets/field-guide/native-plants/purple-coneflower.webp',
+        images: [
+          '/assets/field-guide/native-plants/purple-coneflower.webp',
+          '/assets/field-guide/native-plants/purple-coneflower-2.webp',
+        ],
         clues: [
           'A prairie wildflower with drooping pink-to-purple petals around a spiny center cone.',
           'The central cone is copper-orange and prickly to the touch. Stems are rough and stiff-haired.',
@@ -40,6 +45,7 @@ export const CATEGORIES = [
       {
         id: 'black-eyed-susan',
         subtype: 'flower',
+        difficulty: 1,
         name: 'Black-Eyed Susan',
         image: '/assets/field-guide/native-plants/black-eyed-susan.webp',
         clues: [
@@ -52,8 +58,12 @@ export const CATEGORIES = [
       {
         id: 'big-bluestem',
         subtype: 'grass',
+        difficulty: 2,
         name: 'Big Bluestem',
-        image: '/assets/field-guide/native-plants/big-bluestem.webp',
+        images: [
+          '/assets/field-guide/native-plants/big-bluestem.webp',
+          '/assets/field-guide/native-plants/big-bluestem-2.webp',
+        ],
         clues: [
           'Called the "King of the Prairie" — this native grass towers 6-8 feet tall.',
           'Its most distinctive feature is a three-branched seed head that resembles a turkey\'s foot.',
@@ -64,8 +74,12 @@ export const CATEGORIES = [
       {
         id: 'little-bluestem',
         subtype: 'grass',
+        difficulty: 2,
         name: 'Little Bluestem',
-        image: '/assets/field-guide/native-plants/little-bluestem.webp',
+        images: [
+          '/assets/field-guide/native-plants/little-bluestem.webp',
+          '/assets/field-guide/native-plants/little-bluestem-2.webp',
+        ],
         clues: [
           'A shorter, more delicate native grass cousin, typically 2-4 feet tall.',
           'In fall, it transforms to brilliant copper-red with fluffy white cottony seed tufts catching the light.',
@@ -76,8 +90,12 @@ export const CATEGORIES = [
       {
         id: 'prairie-coneflower',
         subtype: 'flower',
+        difficulty: 2,
         name: 'Prairie Coneflower',
-        image: '/assets/field-guide/native-plants/prairie-coneflower.webp',
+        images: [
+          '/assets/field-guide/native-plants/prairie-coneflower.webp',
+          '/assets/field-guide/native-plants/prairie-coneflower-2.webp',
+        ],
         clues: [
           'Also called "Mexican Hat" — its flower looks like a tiny sombrero.',
           'The central cone is unusually tall and elongated (up to 2 inches), with petals drooping below it.',
@@ -88,6 +106,7 @@ export const CATEGORIES = [
       {
         id: 'bur-oak',
         subtype: 'tree',
+        difficulty: 2,
         name: 'Bur Oak',
         image: '/assets/field-guide/native-plants/bur-oak.webp',
         clues: [
@@ -100,6 +119,7 @@ export const CATEGORIES = [
       {
         id: 'cottonwood',
         subtype: 'tree',
+        difficulty: 1,
         name: 'Eastern Cottonwood',
         image: '/assets/field-guide/native-plants/cottonwood.webp',
         clues: [
@@ -112,6 +132,7 @@ export const CATEGORIES = [
       {
         id: 'ponderosa-pine',
         subtype: 'tree',
+        difficulty: 1,
         name: 'Ponderosa Pine',
         image: '/assets/field-guide/native-plants/ponderosa-pine.webp',
         clues: [
@@ -124,8 +145,12 @@ export const CATEGORIES = [
       {
         id: 'prairie-rose',
         subtype: 'shrub',
+        difficulty: 2,
         name: 'Prairie Rose',
-        image: '/assets/field-guide/native-plants/prairie-rose.webp',
+        images: [
+          '/assets/field-guide/native-plants/prairie-rose.webp',
+          '/assets/field-guide/native-plants/prairie-rose-2.webp',
+        ],
         clues: [
           'A small, shrubby wild rose found in nearly every county in South Dakota.',
           'Simple five-petaled pink flowers with a yellow center bloom May through August.',
@@ -136,6 +161,7 @@ export const CATEGORIES = [
       {
         id: 'switchgrass',
         subtype: 'grass',
+        difficulty: 2,
         name: 'Switchgrass',
         image: '/assets/field-guide/native-plants/switchgrass.webp',
         clues: [
@@ -148,6 +174,7 @@ export const CATEGORIES = [
       {
         id: 'indian-grass',
         subtype: 'grass',
+        difficulty: 3,
         name: 'Indian Grass',
         image: '/assets/field-guide/native-plants/indian-grass.webp',
         clues: [
@@ -156,6 +183,340 @@ export const CATEGORIES = [
           'Grows 4-7 feet tall. Seed heads shimmer gold in late summer sun. Each spikelet has a twisted, bent awn.',
         ],
         significance: 'One of the "big four" tallgrass prairie grasses. Deep roots build soil organic matter and sequester carbon for centuries.',
+      },
+      {
+        id: 'annual-sunflower',
+        subtype: 'flower',
+        difficulty: 1,
+        name: 'Annual Sunflower',
+        image: '/assets/field-guide/native-plants/annual-sunflower.webp',
+        clues: [
+          'A tall, coarse annual with large golden-yellow ray petals around a dark brown-to-purple center disk, reaching 3-9 feet on rough, hairy stems.',
+          'Wild plants produce several flower heads per plant, each 3-6 inches across — smaller and more branched than the familiar crop sunflower. Blooms July through September.',
+          'Helianthus annuus — native to the Great Plains and one of the few crops domesticated in North America; all parts were used by Indigenous peoples for food, oil, and dye.',
+        ],
+        significance: 'Its taproot penetrates compacted soil and its biomass adds organic matter back to the prairie. Dense seed heads feed birds and small mammals into fall, supporting the soil food web.',
+      },
+      {
+        id: 'prickly-pear',
+        subtype: 'cactus',
+        difficulty: 1,
+        name: 'Prickly Pear',
+        image: '/assets/field-guide/native-plants/prickly-pear.webp',
+        clues: [
+          'Flat, fleshy oval pads — modified stems — sprawl in low mats near the ground, armed with large fixed spines and clusters of tiny, hair-like glochids that embed painfully in skin.',
+          'In early summer, waxy bright-yellow flowers up to 3 inches wide open on the pad edges; by fall they ripen into dark red, barrel-shaped fruits.',
+          'Opuntia polyacantha — the most widespread cactus in North America, it survives dry SD prairie by storing water in its thick pads and shriveling to endure hard winters.',
+        ],
+        significance: 'Low-growing mats intercept rainfall, reduce runoff, and slow wind erosion on bare or overgrazed rangeland, while its deep roots stabilize sandy, gravelly soils in drought-prone western SD.',
+      },
+      {
+        id: 'milkweed',
+        subtype: 'flower',
+        difficulty: 2,
+        name: 'Common Milkweed',
+        image: '/assets/field-guide/native-plants/milkweed.webp',
+        clues: [
+          'A robust perennial 3-4 feet tall with large, oval opposite leaves and rounded ball-like clusters of fragrant, pinkish-purple star-shaped flowers in midsummer.',
+          'Stems and leaves ooze a thick white milky sap when broken — a defensive latex that makes the plant toxic to most insects. Blooms June through August.',
+          'Asclepias syriaca — after flowering, produces warty, canoe-shaped seed pods that split open in fall to release hundreds of seeds, each trailing a silky white plume.',
+        ],
+        significance: 'The sole host plant for monarch butterfly larvae on the Great Plains and a major nectar source for native bees. Its spreading rhizome roots stabilize disturbed soils and resist erosion.',
+      },
+      {
+        id: 'goldenrod',
+        subtype: 'flower',
+        difficulty: 2,
+        name: 'Goldenrod',
+        images: [
+          '/assets/field-guide/native-plants/goldenrod.webp',
+          '/assets/field-guide/native-plants/goldenrod-2.webp',
+        ],
+        clues: [
+          'A stout prairie perennial 3-5 feet tall with stiff, hairy stems and a broad, flat-topped cluster of tiny bright yellow flowers at the top.',
+          'Unlike other goldenrods with arching plume-like sprays, stiff goldenrod holds its flower cluster in a distinctive flat dome shape. Blooms August through October.',
+          'Solidago rigida — identified by its unusually large, rough, gray-green leaves, the lowest reaching up to 12 inches long and clasping the stem.',
+        ],
+        significance: 'One of the most important late-season nectar sources on the prairie, feeding 100+ species of native bees and butterflies after most plants finish. Its deep taproots anchor soil and add organic matter.',
+      },
+      {
+        id: 'prairie-smoke',
+        subtype: 'flower',
+        difficulty: 2,
+        name: 'Prairie Smoke',
+        image: '/assets/field-guide/native-plants/prairie-smoke.webp',
+        clues: [
+          'A low-growing perennial with fern-like, deeply divided leaves in a ground-hugging rosette, topped by nodding, reddish-pink to maroon bell-shaped flowers in spring.',
+          'Each stem carries exactly three nodding, bud-like blooms that never fully open — they mature into wispy, feathery plumes up to 3 inches long that catch the wind like rising smoke.',
+          'Geum triflorum — also called "Old Man\'s Whiskers" for its shaggy seed plumes; one of the very first prairie wildflowers to bloom each spring, often in April.',
+        ],
+        significance: 'A hallmark of intact, undisturbed upland prairie — its presence signals healthy native soil. Its early ground cover and fibrous roots help prevent erosion during the vulnerable spring thaw.',
+      },
+      {
+        id: 'yucca',
+        subtype: 'shrub',
+        difficulty: 2,
+        name: 'Soapweed Yucca',
+        image: '/assets/field-guide/native-plants/yucca.webp',
+        clues: [
+          'A spiky rosette of stiff, sword-like evergreen leaves — narrow, blue-green, up to 2 feet long — with sharp tips and thread-like fibers fraying from the white leaf margins.',
+          'In early summer it sends up a single stout stalk 3-5 feet tall bearing a cluster of large, creamy white, bell-shaped flowers, each 2-3 inches wide.',
+          'Yucca glauca — a fixture of dry prairie knolls and exposed ridges in western SD, pollinated almost exclusively by the yucca moth in one of nature\'s most specialized partnerships.',
+        ],
+        significance: 'Its taproot can reach 20 feet deep with lateral roots extending up to 30 feet, anchoring loose, dry soils against erosion on the droughty slopes and sandy prairie of western South Dakota.',
+      },
+      {
+        id: 'dotted-gayfeather',
+        subtype: 'flower',
+        difficulty: 2,
+        name: 'Dotted Gayfeather',
+        images: [
+          '/assets/field-guide/native-plants/dotted-gayfeather.webp',
+          '/assets/field-guide/native-plants/dotted-gayfeather-2.webp',
+        ],
+        clues: [
+          'An upright perennial sending up narrow, bottle-brush spikes of rosy-purple flowers on slender stems crowded with thin, grass-like leaves covered in tiny resin dots.',
+          'Unlike most flowers, it blooms from the top of the spike downward — the tip stays in peak color while the base is still in bud. Blooms July through October on dry prairies.',
+          'Liatris punctata — named for the glandular dots (puncta) on its leaves; grows from one of the deepest taproots of any prairie plant, reaching 4-16 feet into the soil.',
+        ],
+        significance: 'That extraordinary taproot breaks through compacted subsoil, opening channels for deep water infiltration that recharge groundwater. It is also a key nectar source for migrating monarchs in late summer.',
+      },
+      {
+        id: 'scarlet-globemallow',
+        subtype: 'flower',
+        difficulty: 3,
+        name: 'Scarlet Globemallow',
+        images: [
+          '/assets/field-guide/native-plants/scarlet-globemallow.webp',
+          '/assets/field-guide/native-plants/scarlet-globemallow-2.webp',
+        ],
+        clues: [
+          'A low, spreading prairie plant (4-16 inches tall) blanketed in tiny silvery-gray hairs, with bright orange-red cup-shaped flowers clustered along the stems.',
+          'Flowers in dense short clusters from May through July; the five petals form a small bowl roughly half an inch across, salmon-orange to brick-red.',
+          'Sphaeralcea coccinea — the deeply palmately-lobed leaves and dense star-shaped hairs covering the whole plant (stems, leaves, and sepals) are its definitive field mark.',
+        ],
+        significance: 'Its deep woody taproot (3+ feet) and rhizomes stabilize bare, overgrazed, and disturbed prairie soils in low-rainfall areas. It is used in native seed mixes for arid-site erosion control.',
+      },
+      {
+        id: 'maximilian-sunflower',
+        subtype: 'flower',
+        difficulty: 3,
+        name: 'Maximilian Sunflower',
+        image: '/assets/field-guide/native-plants/maximilian-sunflower.webp',
+        clues: [
+          'A tall native perennial sunflower (3-9 feet) with bright yellow flower heads clustered all the way up and down each stem rather than just at the top.',
+          'Its long, narrow leaves — up to 10 inches near the base — fold lengthwise along the midrib and arch slightly, giving the plant a distinctly pleated look.',
+          'Helianthus maximiliani — a true prairie perennial (unlike the annual common sunflower) that spreads by rhizomes into large colonies; named for Prince Maximilian of Wied.',
+        ],
+        significance: 'Its rhizomatous roots, reaching 15 feet deep, are exceptionally effective at anchoring soil and preventing erosion on slopes and stream banks. NRCS includes it in prairie restoration seed mixes.',
+      },
+      {
+        id: 'purple-prairie-clover',
+        subtype: 'flower',
+        difficulty: 3,
+        name: 'Purple Prairie Clover',
+        image: '/assets/field-guide/native-plants/purple-prairie-clover.webp',
+        clues: [
+          'A slender prairie perennial (8-35 inches) with fine, pinnately compound leaves and a narrow cylindrical flower spike of vivid magenta-purple.',
+          'The tiny flowers do not open all at once — a bright ring of blooms encircles the bottom of the cone and climbs upward over weeks, fringed with five protruding golden anthers.',
+          'Dalea purpurea — despite the name it is not a true clover, but a legume with a woody taproot 5-6 feet deep and root nodules that fix atmospheric nitrogen.',
+        ],
+        significance: 'As a nitrogen-fixing legume with a deep taproot, it enriches soil fertility naturally and anchors topsoil against erosion — a keystone species in native prairie restoration seed mixes.',
+      },
+      {
+        id: 'spiderwort',
+        subtype: 'flower',
+        difficulty: 3,
+        name: 'Western Spiderwort',
+        image: '/assets/field-guide/native-plants/spiderwort.webp',
+        clues: [
+          'A clump-forming prairie perennial with long, arching, grass-like leaves and vivid blue-to-violet three-petaled flowers about an inch wide, clustered at the stem tips.',
+          'Each flower opens for only a single morning — wilting to a jelly-like droplet by afternoon — but the plant keeps producing new buds, extending bloom from May through July.',
+          'Tradescantia occidentalis — its six yellow-tipped stamens are lined with delicate, thread-like purple hairs visible to the naked eye, a definitive trait of the genus.',
+        ],
+        significance: 'A critical early-to-mid-season pollen source for native bumblebees and specialist prairie bees. Its fibrous roots bind sandy and dry-loam prairie soils prone to wind erosion.',
+      },
+      {
+        id: 'heath-aster',
+        subtype: 'flower',
+        difficulty: 3,
+        name: 'Heath Aster',
+        image: '/assets/field-guide/native-plants/heath-aster.webp',
+        clues: [
+          'A bushy, wiry-stemmed perennial that erupts in late summer and fall into a cloud of dozens of tiny white daisy-like flowers, each barely half an inch across.',
+          'The leaves are exceptionally small and needle-like (resembling heath foliage), densely crowding the many branching stems. Blooms August through October.',
+          'Symphyotrichum ericoides — each flower head has 12-20 narrow white ray florets surrounding yellow centers that turn reddish with age.',
+        ],
+        significance: 'A critical last food source for bees and migrating monarchs fueling up for winter, and its dense fibrous roots stabilize dry, sandy, poor prairie soils where few other plants persist.',
+      },
+      {
+        id: 'leadplant',
+        subtype: 'shrub',
+        difficulty: 3,
+        name: 'Leadplant',
+        image: '/assets/field-guide/native-plants/leadplant.webp',
+        clues: [
+          'A knee-high, multi-stemmed prairie shrub whose compound leaves are densely covered in fine white hairs, giving the whole plant a dusty, lead-gray cast.',
+          'In midsummer, its branch tips erupt in 2-6 inch spikes of tiny purple-blue flowers with bright orange-yellow anthers — a vivid contrast against the silvery foliage.',
+          'Amorpha canescens — finding leadplant is a strong indicator of undisturbed, healthy prairie that has not been heavily plowed or overgrazed.',
+        ],
+        significance: 'As a legume it fixes atmospheric nitrogen into the soil, and its roots extend up to 16 feet deep, pumping nutrients and organic matter into the subsoil of intact SD prairies.',
+      },
+      {
+        id: 'buffalo-grass',
+        subtype: 'grass',
+        difficulty: 3,
+        name: 'Buffalo Grass',
+        image: '/assets/field-guide/native-plants/buffalo-grass.webp',
+        clues: [
+          'A low, mat-forming warm-season grass, only 4-6 inches tall, with soft gray-green to blue-green blades that curl as they dry.',
+          'It spreads aggressively by surface runners (stolons) that root at the tips, stitching the ground into a dense, tight sod.',
+          'Bouteloua dactyloides — the classic shortgrass of the Great Plains, the grass bison grazed down to the roots for millennia.',
+        ],
+        significance: 'Its dense sod is rated superior for erosion control, and its wiry roots penetrate 4-6 feet deep, anchoring topsoil against wind and water on western SD rangeland.',
+      },
+      {
+        id: 'western-wheatgrass',
+        subtype: 'grass',
+        difficulty: 3,
+        name: 'Western Wheatgrass',
+        image: '/assets/field-guide/native-plants/western-wheatgrass.webp',
+        clues: [
+          'South Dakota\'s official state grass — a sturdy, erect cool-season grass 1-2 feet tall, with distinctly stiff, blue-gray leaves coated in a waxy bloom.',
+          'It spreads by strong creeping rhizomes underground, forming a tough sod that dominates ridge tops and mixed-grass prairie across the state.',
+          'Pascopyrum smithii — the wheat-like seed spike and silvery-blue leaf color together are the giveaway; no other SD native grass combines both traits.',
+        ],
+        significance: 'Its vigorous rhizomes make it a top choice for erosion control and reclamation, and it tolerates alkaline and saline soils where most grasses fail, protecting vulnerable cropland edges.',
+      },
+      {
+        id: 'eastern-red-cedar',
+        subtype: 'tree',
+        difficulty: 3,
+        name: 'Eastern Red Cedar',
+        image: '/assets/field-guide/native-plants/eastern-red-cedar.webp',
+        clues: [
+          'A dense, pyramid-shaped native evergreen — technically a juniper — with sharp awl-like needles on young growth and tight, overlapping scales on mature branches.',
+          'The bark peels off in long, shreddy reddish-brown strips, and the heartwood inside is a deep brick red with a sharp, familiar cedar scent.',
+          'Juniperus virginiana — its small, waxy, blue-purple berry-like cones are the definitive ID clue and a critical winter food for cedar waxwings and many other birds.',
+        ],
+        significance: 'Where it encroaches into SD grasslands unchecked by fire, it shades out native grasses and its dense litter suppresses germination, converting productive prairie soil into low-diversity woodland.',
+      },
+      {
+        id: 'phlox',
+        subtype: 'flower',
+        difficulty: 3,
+        name: 'Hood\'s Phlox',
+        image: '/assets/field-guide/native-plants/phlox.webp',
+        clues: [
+          'One of the earliest prairie wildflowers to bloom, forming dense, mossy cushion-mats only 2-4 inches tall that turn white to pale lavender each April.',
+          'Up close, the tiny stiff leaves are needle-like and sharply pointed, giving the mat a spiny, almost moss-like texture; each flower flares from a slender tube into five flat lobes.',
+          'Phlox hoodii — a native of dry, rocky, and sandy western SD prairies and badlands, one of the most drought-adapted members of the phlox family.',
+        ],
+        significance: 'Its dense mat shields bare soil from wind and water erosion in early spring, and it offers one of the first nectar sources of the season for queen bumblebees emerging from dormancy.',
+      },
+      {
+        id: 'western-wallflower',
+        subtype: 'flower',
+        difficulty: 4,
+        name: 'Western Wallflower',
+        image: '/assets/field-guide/native-plants/western-wallflower.webp',
+        clues: [
+          'A showy mustard-family wildflower with tight, rounded clusters of four-petaled bright yellow to orange flowers atop a single erect stem.',
+          'Blooms spring through early summer on dry sandy or gravelly soils; the narrow, grayish-green leaves are covered with tiny flat hairs and crowd the stem below the flower head.',
+          'Erysimum capitatum — after flowering it makes long, stiffly erect, four-angled seedpods (up to 4 inches) held nearly parallel to the stem, a classic mustard-family trait.',
+        ],
+        significance: 'One of the earliest substantial nectar sources on dry mixed-grass prairies, it forms a critical spring bridge for bees and butterflies between the dormant season and summer blooms.',
+      },
+      {
+        id: 'shell-leaf-penstemon',
+        subtype: 'flower',
+        difficulty: 4,
+        name: 'Shell-leaf Penstemon',
+        image: '/assets/field-guide/native-plants/shell-leaf-penstemon.webp',
+        clues: [
+          'A tall, striking prairie wildflower (up to 3 feet) with large tubular lavender-to-pink-purple flowers and smooth, waxy blue-green stems and leaves that stand out before it even blooms.',
+          'The opposite leaves clasp directly around the smooth stem with no leaf stalk, are oval with smooth margins, and carry a blue-green waxy bloom that gives the plant a succulent look.',
+          'Penstemon grandiflorus — its tubular flowers reach nearly 2 inches long, the largest of any native penstemon, with magenta nectar guides inside the throat.',
+        ],
+        significance: 'It blooms in the critical gap between spring and summer wildflowers, offering large nectar tubes for long-tongued native bees — including imperiled bumble bee species — on dry sandy prairie soils.',
+      },
+      {
+        id: 'white-beardtongue',
+        subtype: 'flower',
+        difficulty: 4,
+        name: 'White Penstemon',
+        image: '/assets/field-guide/native-plants/white-beardtongue.webp',
+        clues: [
+          'A dry-prairie perennial (8-24 inches) with a narrow spike of small white, two-lipped tubular flowers — one of the few penstemons in white rather than purple or pink.',
+          'Blooms April through July on sandy, silty, or gravelly prairie; the lance-shaped leaves and stems are covered in fine short hairs, becoming sticky near the flower spike.',
+          'Penstemon albidus — look inside the white tube for prominent red-magenta nectar guide lines, alongside four stamens with dark anthers.',
+        ],
+        significance: 'A characteristic indicator of native, undisturbed mixed-grass prairie, providing early-season nectar for native bees on dry upland soils that store significant long-term carbon below ground.',
+      },
+      {
+        id: 'milkvetch',
+        subtype: 'flower',
+        difficulty: 4,
+        name: 'Prairie Milkvetch',
+        image: '/assets/field-guide/native-plants/milkvetch.webp',
+        clues: [
+          'A low, somewhat sprawling prairie perennial (up to 12 inches) in the pea family, with small clusters of purple to pink-purple pea-shaped flowers above finely divided compound leaves.',
+          'The oval flower cluster holds up to 15 blooms, each with a slightly reflexed banner petal; blooms May through August on dry to moist mixed-grass prairies and open slopes.',
+          'Astragalus agrestis — its small oval seed pods are dark-colored, white-hairy, and papery when dry, distinct from the larger pods of other prairie legumes.',
+        ],
+        significance: 'Like all legumes, prairie milkvetch harbors nitrogen-fixing rhizobia bacteria in its root nodules, quietly enriching native prairie soils and reducing the need for synthetic inputs nearby.',
+      },
+      {
+        id: 'timpsila',
+        subtype: 'flower',
+        difficulty: 4,
+        name: 'Timpsila',
+        image: '/assets/field-guide/native-plants/timpsila.webp',
+        clues: [
+          'A hairy, knee-high prairie legume with palmate leaves divided into five leaflets and a dense terminal spike of small blue-purple flowers in early summer.',
+          'The whole plant — stems, leaves, flower stalks — is covered in coarse hairs; after flowering it detaches and tumbles away, leaving a prized starchy tuber underground.',
+          'Pediomelum esculentum — the Lakota word "timpsila" names this plant, the most important wild plant food of the Plains tribes, eaten raw, boiled, roasted, or dried for winter.',
+        ],
+        significance: 'As a nitrogen-fixing legume, timpsila improves the prairie soils it grows in, and its tuber helped sustain the Plains peoples and the ecological communities of undisturbed native grassland.',
+      },
+      {
+        id: 'wavyleaf-thistle',
+        subtype: 'flower',
+        difficulty: 4,
+        name: 'Wavyleaf Thistle',
+        image: '/assets/field-guide/native-plants/wavyleaf-thistle.webp',
+        clues: [
+          'A native Great Plains thistle (2-5 feet tall) with a gray-green look from dense white hairs covering its deeply lobed, spine-tipped, strongly wavy-edged leaves.',
+          'Large, solitary pink-to-lavender flower heads (up to 2 inches across) sit atop the stems in summer — much bigger than the small clustered heads of the invasive Canada thistle.',
+          'Cirsium undulatum — unlike invasive Canada thistle, this true native has a deep taproot rather than spreading rhizomes; removing it can open a niche for the very weed it resembles.',
+        ],
+        significance: 'A native thistle whose nectar and pollen are an invaluable late-summer food source for bees and butterflies when wildflowers grow scarce, supporting the pollinators that prairies and crops depend on.',
+      },
+      {
+        id: 'prairie-junegrass',
+        subtype: 'grass',
+        difficulty: 4,
+        name: 'Prairie Junegrass',
+        image: '/assets/field-guide/native-plants/prairie-junegrass.webp',
+        clues: [
+          'A compact, tufted cool-season bunchgrass, typically 1-2 feet tall, one of the first grasses to green up in early spring on dry SD prairies.',
+          'Its seedhead starts as a narrow, dense, silvery-green spike — almost glistening — then opens into a loose plume as it matures and dries to buff by midsummer.',
+          'Koeleria macrantha — the shiny, lustrous sheen of its fresh seedhead is unmistakable and sets it apart from other native bunchgrasses in its June bloom window.',
+        ],
+        significance: 'Its fibrous root system holds sandy and dry soils in place, and it is a standard component of native seed mixes used to revegetate disturbed and mined lands across the northern Great Plains.',
+      },
+      {
+        id: 'ball-cactus',
+        subtype: 'cactus',
+        difficulty: 4,
+        name: 'Ball Cactus',
+        image: '/assets/field-guide/native-plants/ball-cactus.webp',
+        clues: [
+          'A small, globe-shaped or short-cylindrical cactus, usually under 6 inches tall, growing singly or in tight clusters low to the ground on dry rocky prairie and hillsides.',
+          'Its surface is covered in knob-like tubercles, each tipped with a starburst of 10-40 white radial spines and a few darker, stouter central spines.',
+          'Escobaria vivipara — in summer, vivid pink-magenta funnel-shaped flowers bloom in a crown at the top of the stem, the brightest splash of color on the shortgrass prairie.',
+        ],
+        significance: 'By surviving on thin, rocky soils where little else grows, it adds organic matter to nutrient-poor ground as it decomposes, and its low profile helps keep fragile prairie soils from eroding in high winds.',
       },
     ],
   },
@@ -915,10 +1276,11 @@ export const CATEGORIES = [
 
 export const EXTRA_DISTRACTORS = {
   'native-plants': {
-    flower: ['Wild Bergamot', 'Goldenrod', 'Prairie Smoke', 'Blazing Star', 'Prairie Clover', 'Milkweed', 'Blanket Flower', 'Spiderwort', 'Harebell'],
-    grass: ['Blue Grama Grass', 'Side-Oats Grama', 'Buffalo Grass', 'Prairie Dropseed', 'Needle-and-Thread Grass', 'Western Wheatgrass'],
-    tree: ['American Elm', 'Green Ash', 'Chokecherry', 'Wild Plum', 'Paper Birch', 'Hackberry', 'Box Elder', 'Red Cedar'],
-    shrub: ['Leadplant', 'Silver Buffaloberry', 'Western Snowberry', 'Smooth Sumac', 'Skunkbush Sumac'],
+    flower: ['Wild Bergamot', 'Blanket Flower', 'Harebell', 'Blue Flax', 'Evening Primrose', 'White Prairie Clover', 'Gumweed', 'Wild Onion', 'Prairie Larkspur', 'Hoary Vervain'],
+    grass: ['Blue Grama Grass', 'Side-Oats Grama', 'Prairie Dropseed', 'Needle-and-Thread Grass', 'Green Needlegrass', 'Sand Dropseed', 'Sandberg Bluegrass', 'Prairie Cordgrass'],
+    tree: ['American Elm', 'Green Ash', 'Chokecherry', 'Wild Plum', 'Paper Birch', 'Hackberry', 'Box Elder', 'Quaking Aspen', 'Black Walnut'],
+    shrub: ['Silver Buffaloberry', 'Western Snowberry', 'Smooth Sumac', 'Skunkbush Sumac', 'Silver Sagebrush', 'Rabbitbrush', 'Golden Currant', 'Common Juniper'],
+    cactus: ['Plains Prickly Pear', 'Brittle Prickly Pear', 'Hedgehog Cactus', 'Claret Cup Cactus'],
   },
   'cover-crops': {
     legume: ['Austrian Winter Pea', 'Red Clover', 'Sweet Clover', 'Cowpea', 'Sunn Hemp', 'Alfalfa', 'Dry Edible Bean', 'Lentil'],
@@ -975,6 +1337,7 @@ export const RULES = [
   'Tap one of four answer choices to guess.',
   'Correct answers earn points based on clues used (400 / 300 / 200 / 100 pts).',
   'Wrong answers earn 0 points. The correct answer is shown.',
+  'Pick a single category to play numbered levels that get trickier as you advance.',
   'After completing a category, a brief soil health fact is revealed.',
   'Player with the most points wins!',
 ]

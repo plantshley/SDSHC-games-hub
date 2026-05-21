@@ -179,7 +179,7 @@
 
 .adv-lb-table thead th {
   text-align: left;
-  padding: 10px 24px;
+  padding: 10px 16px;
   color: var(--adv-text-muted);
   font-weight: normal;
   font-size: 0.75rem;
@@ -189,7 +189,7 @@
 }
 
 .adv-lb-table tbody td {
-  padding: 12px 24px;
+  padding: 12px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: var(--adv-text);
 }
@@ -203,18 +203,33 @@
 }
 
 .adv-lb-col-rank {
-  width: 50px;
+  width: 60px;
   color: var(--adv-accent);
   font-weight: bold;
 }
 
+.adv-lb-col-sub {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: normal;
+  letter-spacing: 0.03em;
+  opacity: 0.7;
+  margin-top: 1px;
+}
+
 .adv-lb-col-pts,
+.adv-lb-col-raw,
 .adv-lb-col-games {
   text-align: right;
 }
 
 .adv-lb-col-pts {
   color: var(--adv-accent);
+  font-weight: bold;
+}
+
+.adv-lb-col-raw {
+  color: var(--adv-text-muted);
 }
 
 .adv-lb-footer {

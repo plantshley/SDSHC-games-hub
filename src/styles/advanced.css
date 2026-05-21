@@ -1120,6 +1120,25 @@
   border-radius: 50%;
 }
 
+.adv-fg-level-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 56px;
+  border: 2px solid var(--adv-accent);
+  border-radius: 14px;
+  background: var(--adv-surface);
+  box-shadow: 0 0 40px var(--adv-glow);
+}
+
+.adv-fg-level-badge {
+  font-family: var(--font-title), sans-serif;
+  font-size: 2rem;
+  letter-spacing: 2px;
+  color: var(--adv-accent);
+  text-shadow: 0 0 16px var(--adv-glow);
+}
+
 /* ─── Impact Overlay ─── */
 
 [data-mode="advanced"] .screen > .adv-sw-impact-overlay {
