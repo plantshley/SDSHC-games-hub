@@ -140,7 +140,6 @@ async function renderTeamModeRows(container, players, eventId, { maxNameLen, nam
   container.querySelectorAll('.adv-team-input').forEach(input => {
     const idx = parseInt(input.dataset.idx)
     const fb = container.querySelector(`.adv-team-feedback[data-idx="${idx}"]`)
-    let debounceTimer = null
 
     const resolveTeam = async () => {
       const val = input.value.trim()
@@ -180,15 +179,17 @@ async function renderTeamModeRows(container, players, eventId, { maxNameLen, nam
       }
     }
 
+    // Resolve/create only on commit — tapping out (blur), Enter, or picking a
+    // datalist option (change). Resolving on every keystroke would spawn a
+    // pending team for each partial name ("P", "Pi", "Pie", …), flooding the
+    // admin queue. While typing we just clear stale feedback; the team isn't
+    // registered (and "awaiting approval" doesn't show) until the field commits.
     input.addEventListener('input', () => {
-      clearTimeout(debounceTimer)
-      debounceTimer = setTimeout(resolveTeam, 500)
+      fb.className = 'adv-team-feedback'
+      fb.textContent = ''
     })
     input.addEventListener('change', resolveTeam)
-    input.addEventListener('blur', () => {
-      clearTimeout(debounceTimer)
-      resolveTeam()
-    })
+    input.addEventListener('blur', resolveTeam)
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault()

@@ -26,6 +26,7 @@ import {
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle } from '../utils/theme-toggle.js'
 import { isClean } from '../utils/profanity.js'
+import { createColorSwatchPicker, deriveTeamColors } from '../utils/team-colors.js'
 
 const DATALIST_ID = 'adv-roster-datalist'
 
@@ -52,6 +53,7 @@ export function createAdvancedRosterScreen() {
           placeholder="School / team name" spellcheck="false" />
         <button class="adv-roster-add-btn" id="adv-roster-add">+ Add team</button>
       </div>
+      <div class="adv-roster-colors" id="adv-roster-colors"></div>
       <p class="adv-roster-error" id="adv-roster-error"></p>
 
       <ul class="adv-roster-list" id="adv-roster-list"></ul>
@@ -89,6 +91,17 @@ export function createAdvancedRosterScreen() {
   const input = screen.querySelector('#adv-roster-input')
   const addBtn = screen.querySelector('#adv-roster-add')
   const errorEl = screen.querySelector('#adv-roster-error')
+  const colorsHost = screen.querySelector('#adv-roster-colors')
+
+  // Mount a fresh swatch picker, seeded with a random pair so each team a
+  // player adds gets distinct colors unless they deliberately pick.
+  let colorPicker = null
+  function mountColorPicker() {
+    colorsHost.innerHTML = ''
+    colorPicker = createColorSwatchPicker(deriveTeamColors(genLocalSeed()))
+    colorsHost.appendChild(colorPicker.el)
+  }
+  mountColorPicker()
 
   function showError(msg) {
     errorEl.textContent = msg || ''
@@ -107,9 +120,10 @@ export function createAdvancedRosterScreen() {
     }
     showError('')
     try {
-      const result = await getOrCreateTeam(val)
+      const result = await getOrCreateTeam(val, colorPicker.getValue())
       await addTeamToEventRoster(eventId, result.teamId)
       input.value = ''
+      mountColorPicker()
       ensureDatalist()
       renderRoster()
       input.focus()
@@ -143,6 +157,7 @@ export function createAdvancedRosterScreen() {
     }
     list.innerHTML = roster.map(r => `
       <li class="adv-roster-row" data-id="${r.teamId}">
+        <span class="adv-roster-color" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>
         <span class="adv-roster-name">${escapeHtml(r.teamName)}</span>
         <span class="adv-roster-status adv-roster-status-${r.rosterStatus}">${r.rosterStatus}</span>
         <button class="adv-roster-remove" data-id="${r.teamId}" title="Remove">${'✕'}</button>
@@ -180,6 +195,10 @@ async function ensureDatalist() {
   }
   const teams = await listApprovedTeams()
   dl.innerHTML = teams.map(t => `<option value="${escapeAttr(t.name)}">`).join('')
+}
+
+function genLocalSeed() {
+  return `${Date.now()}_${Math.random()}`
 }
 
 function escapeHtml(s) {

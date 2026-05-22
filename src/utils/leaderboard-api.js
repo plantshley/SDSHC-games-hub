@@ -5,7 +5,7 @@
  * calls without touching any caller. Function signatures are frozen.
  *
  * Keys:
- *   sdshc-lb-teams        { schemaVersion, teams: [{ id, name, normalized, status, createdAt }] }
+ *   sdshc-lb-teams        { schemaVersion, teams: [{ id, name, normalized, status, color1, color2, createdAt }] }
  *   sdshc-lb-events       { events: [{ id, name, startedAt, endedAt|null, status }] }
  *   sdshc-lb-scores       { scores: [ScoreEntry] }
  *   sdshc-lb-active-event eventId|null (per-kiosk)
@@ -25,6 +25,7 @@
  */
 
 import { getGamePar } from '../data/advanced-game-registry.js'
+import { deriveTeamColors, getTeamColors } from './team-colors.js'
 
 const K_TEAMS = 'sdshc-lb-teams'
 const K_EVENTS = 'sdshc-lb-events'
@@ -94,10 +95,16 @@ export function getKioskId() {
  * Look up a team by name. Returns its current record if found (in any status),
  * else creates one with status "pending" and returns it.
  *
+ * Optional `colors` sets the team's accent pair on creation (manual pick from
+ * the roster screen). When omitted — e.g. a player just typing a new name on a
+ * game intro — a deterministic pair is auto-derived from the new team's id.
+ * An existing team is returned unchanged; its colors are never overwritten here.
+ *
  * @param {string} name
+ * @param {{ color1: string, color2: string }} [colors]
  * @returns {Promise<{ teamId: string, status: 'pending'|'approved'|'hidden', name: string }>}
  */
-export async function getOrCreateTeam(name) {
+export async function getOrCreateTeam(name, colors) {
   const cleaned = String(name || '').trim()
   if (!cleaned) throw new Error('Team name required')
 
@@ -108,11 +115,15 @@ export async function getOrCreateTeam(name) {
     return { teamId: existing.id, status: existing.status, name: existing.name }
   }
 
+  const id = genId()
+  const picked = colors && colors.color1 && colors.color2 ? colors : deriveTeamColors(id)
   const newTeam = {
-    id: genId(),
+    id,
     name: cleaned,
     normalized: norm,
     status: 'pending',
+    color1: picked.color1,
+    color2: picked.color2,
     createdAt: Date.now(),
     createdByKiosk: getKioskId(),
   }
@@ -157,6 +168,10 @@ export async function renameTeam(id, newName) {
     return mergeTeams(id, collision.id)
   }
   return updateTeam(id, { name: cleaned, normalized: norm })
+}
+
+export async function setTeamColors(id, color1, color2) {
+  return updateTeam(id, { color1, color2 })
 }
 
 function updateTeam(id, patch) {
@@ -378,11 +393,14 @@ export async function getEventRoster(eventId) {
   const teamMap = new Map(teams.map(t => [t.id, t]))
   return (ev.roster || []).map(r => {
     const t = teamMap.get(r.teamId)
+    const colors = getTeamColors(t)
     return {
       teamId: r.teamId,
       teamName: t ? t.name : '(deleted team)',
       rosterStatus: r.status,
       teamStatus: t ? t.status : 'hidden',
+      color1: colors.color1,
+      color2: colors.color2,
       addedAt: r.addedAt,
     }
   })
@@ -462,9 +480,10 @@ export async function deleteScore(id) {
  * @param {Object} args
  * @param {'event'|'month'|'all'} args.scope
  * @param {string} [args.eventId] - required when scope === 'event'
- * @returns {Promise<Array<{ teamId, teamName, normPoints, points, gamesPlayed }>>}
+ * @returns {Promise<Array<{ teamId, teamName, normPoints, points, gamesPlayed, color1, color2 }>>}
  *   `normPoints` is the per-game-normalized total (the headline ranking metric);
- *   `points` is the raw sum (shown alongside). Rows are sorted by normPoints.
+ *   `points` is the raw sum (shown alongside). `color1`/`color2` are the team's
+ *   accent pair (stored or auto-derived). Rows are sorted by normPoints.
  */
 export async function getLeaderboard({ scope, eventId } = {}) {
   const teamsData = getTeamsRaw()
@@ -519,12 +538,17 @@ export async function getLeaderboard({ scope, eventId } = {}) {
   }
 
   return [...agg.values()]
-    .map(r => ({
-      teamId: r.teamId,
-      teamName: r.teamName,
-      normPoints: Math.round(r.normPoints),
-      points: r.points,
-      gamesPlayed: r.runs.size,
-    }))
+    .map(r => {
+      const colors = getTeamColors(teamMap.get(r.teamId))
+      return {
+        teamId: r.teamId,
+        teamName: r.teamName,
+        normPoints: Math.round(r.normPoints),
+        points: r.points,
+        gamesPlayed: r.runs.size,
+        color1: colors.color1,
+        color2: colors.color2,
+      }
+    })
     .sort((a, b) => b.normPoints - a.normPoints || b.points - a.points)
 }

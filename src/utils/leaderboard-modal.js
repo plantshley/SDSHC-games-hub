@@ -51,10 +51,12 @@ async function showLeaderboardModal() {
     if (app.dataset.theme) overlay.dataset.theme = app.dataset.theme
   }
 
+  // Event view leads with the top-3 podium (a single shared session, so a
+  // "winner" reads well); All-Time uses bars (statewide, ongoing, easier to
+  // scan a long list).
   const tabs = []
-  if (activeEvent) tabs.push({ key: 'event', label: activeEvent.name })
-  tabs.push({ key: 'month', label: 'This Month' })
-  tabs.push({ key: 'all', label: 'All-Time' })
+  if (activeEvent) tabs.push({ key: 'event', label: activeEvent.name, scope: 'event', style: 'combo' })
+  tabs.push({ key: 'all', label: 'All-Time', scope: 'all', style: 'bars' })
 
   overlay.innerHTML = `
     <div class="adv-lb-card">
@@ -105,45 +107,18 @@ async function showLeaderboardModal() {
   const body = overlay.querySelector('#adv-lb-body')
 
   async function renderTab(key) {
+    const tab = tabs.find(t => t.key === key) || tabs[0]
     body.innerHTML = `<div class="adv-lb-loading">Loading…</div>`
-    let rows
-    if (key === 'event') {
-      rows = await getLeaderboard({ scope: 'event', eventId: activeEventId })
-    } else if (key === 'month') {
-      rows = await getLeaderboard({ scope: 'month' })
-    } else {
-      rows = await getLeaderboard({ scope: 'all' })
-    }
+    const rows = await getLeaderboard(
+      tab.scope === 'event' ? { scope: 'event', eventId: activeEventId } : { scope: 'all' }
+    )
 
     if (!rows.length) {
       body.innerHTML = `<div class="adv-lb-empty">No scores yet for this view.</div>`
       return
     }
 
-    body.innerHTML = `
-      <table class="adv-lb-table">
-        <thead>
-          <tr>
-            <th class="adv-lb-col-rank">Rank</th>
-            <th class="adv-lb-col-team">Team</th>
-            <th class="adv-lb-col-pts" title="Score normalized across games so each game counts fairly.">Score<span class="adv-lb-col-sub">(Normalized)</span></th>
-            <th class="adv-lb-col-raw" title="Total raw points actually earned in games.">Raw</th>
-            <th class="adv-lb-col-games">Games</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map((r, i) => `
-            <tr>
-              <td class="adv-lb-col-rank">${i + 1}</td>
-              <td class="adv-lb-col-team">${escapeHtml(r.teamName)}</td>
-              <td class="adv-lb-col-pts">${r.normPoints}</td>
-              <td class="adv-lb-col-raw">${r.points}</td>
-              <td class="adv-lb-col-games">${r.gamesPlayed}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `
+    body.innerHTML = renderStyle(tab.style, rows)
   }
 
   overlay.querySelectorAll('.adv-lb-tab').forEach(tabBtn => {
@@ -156,6 +131,144 @@ async function showLeaderboardModal() {
   })
 
   renderTab(tabs[0].key)
+}
+
+/* ─── Leaderboard render styles ─── */
+
+function renderStyle(style, rows) {
+  switch (style) {
+    case 'bars': return renderBars(rows)
+    case 'rows': return renderColoredTable(rows)
+    case 'podium': return renderPodium(rows) + renderRestTable(rows.slice(3), 4, false)
+    case 'combo': return renderPodium(rows) + renderRestTable(rows.slice(3), 4, true)
+    default: return renderPlainTable(rows)
+  }
+}
+
+function tableHead() {
+  return `
+    <thead>
+      <tr>
+        <th class="adv-lb-col-rank">Rank</th>
+        <th class="adv-lb-col-team">Team</th>
+        <th class="adv-lb-col-pts" title="Score normalized across games so each game counts fairly.">Score<span class="adv-lb-col-sub">(Normalized)</span></th>
+        <th class="adv-lb-col-raw" title="Total raw points actually earned in games.">Raw</th>
+        <th class="adv-lb-col-games">Games</th>
+      </tr>
+    </thead>
+  `
+}
+
+function renderPlainTable(rows) {
+  return `
+    <table class="adv-lb-table">
+      ${tableHead()}
+      <tbody>
+        ${rows.map((r, i) => `
+          <tr>
+            <td class="adv-lb-col-rank">${i + 1}</td>
+            <td class="adv-lb-col-team">${escapeHtml(r.teamName)}</td>
+            <td class="adv-lb-col-pts">${r.normPoints}</td>
+            <td class="adv-lb-col-raw">${r.points}</td>
+            <td class="adv-lb-col-games">${r.gamesPlayed}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+// Table with each row tinted by its team's accent colors (left bar + dot).
+function renderColoredTable(rows) {
+  return `
+    <table class="adv-lb-table adv-lb-table-tinted">
+      ${tableHead()}
+      <tbody>
+        ${rows.map((r, i) => `
+          <tr style="--team-c1: ${r.color1}; --team-c2: ${r.color2}">
+            <td class="adv-lb-col-rank">${i + 1}</td>
+            <td class="adv-lb-col-team"><span class="adv-lb-team-dot" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>${escapeHtml(r.teamName)}</td>
+            <td class="adv-lb-col-pts">${r.normPoints}</td>
+            <td class="adv-lb-col-raw">${r.points}</td>
+            <td class="adv-lb-col-games">${r.gamesPlayed}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+// Horizontal bars: length proportional to the leader, filled with team colors.
+function renderBars(rows) {
+  const max = rows[0]?.normPoints || 1
+  return `
+    <div class="adv-lb-bars">
+      ${rows.map((r, i) => {
+        const pct = Math.max(2, Math.round((r.normPoints / max) * 100))
+        return `
+          <div class="adv-lb-bar-row">
+            <span class="adv-lb-bar-rank" style="color: ${r.color1}">${i + 1}</span>
+            <div class="adv-lb-bar-main">
+              <div class="adv-lb-bar-labels">
+                <span class="adv-lb-bar-team">${escapeHtml(r.teamName)}</span>
+                <span class="adv-lb-bar-meta">${r.points} raw · ${r.gamesPlayed} ${r.gamesPlayed === 1 ? 'game' : 'games'}</span>
+              </div>
+              <div class="adv-lb-bar-track">
+                <div class="adv-lb-bar-fill" style="width: ${pct}%; background: linear-gradient(90deg, ${r.color1}, ${r.color2})"></div>
+              </div>
+            </div>
+            <span class="adv-lb-bar-value">${r.normPoints}</span>
+          </div>
+        `
+      }).join('')}
+    </div>
+  `
+}
+
+// Top-3 podium. Visual order 2 · 1 · 3, with first place tallest.
+function renderPodium(rows) {
+  const top = rows.slice(0, 3)
+  const order = top.length === 1 ? [0] : top.length === 2 ? [1, 0] : [1, 0, 2]
+  return `
+    <div class="adv-lb-podium">
+      ${order.map(idx => {
+        const r = top[idx]
+        if (!r) return ''
+        const place = idx + 1
+        return `
+          <div class="adv-lb-podium-col adv-lb-podium-${place}" style="--team-c1: ${r.color1}; --team-c2: ${r.color2}">
+            <div class="adv-lb-podium-card">
+              <span class="adv-lb-podium-team">${escapeHtml(r.teamName)}</span>
+              <span class="adv-lb-podium-score">${r.normPoints}</span>
+              <span class="adv-lb-podium-raw">${r.points} raw</span>
+            </div>
+            <div class="adv-lb-podium-base">${place}</div>
+          </div>
+        `
+      }).join('')}
+    </div>
+  `
+}
+
+// Compact list for ranks below the podium. `tinted` adds team-color accents.
+function renderRestTable(rows, startRank, tinted) {
+  if (!rows.length) return ''
+  return `
+    <table class="adv-lb-table ${tinted ? 'adv-lb-table-tinted' : ''}" style="margin-top: 8px;">
+      ${tableHead()}
+      <tbody>
+        ${rows.map((r, i) => `
+          <tr ${tinted ? `style="--team-c1: ${r.color1}; --team-c2: ${r.color2}"` : ''}>
+            <td class="adv-lb-col-rank">${startRank + i}</td>
+            <td class="adv-lb-col-team">${tinted ? `<span class="adv-lb-team-dot" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>` : ''}${escapeHtml(r.teamName)}</td>
+            <td class="adv-lb-col-pts">${r.normPoints}</td>
+            <td class="adv-lb-col-raw">${r.points}</td>
+            <td class="adv-lb-col-games">${r.gamesPlayed}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
 }
 
 function escapeHtml(s) {

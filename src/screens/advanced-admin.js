@@ -36,10 +36,12 @@ import {
   addTeamToEventRoster,
   removeTeamFromEventRoster,
   approveTeamForEvent,
+  setTeamColors,
 } from '../utils/leaderboard-api.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle } from '../utils/theme-toggle.js'
 import { clearPlayMode } from './advanced-play-mode.js'
+import { getTeamColors, openColorPopover } from '../utils/team-colors.js'
 
 export function createAdvancedAdminScreen() {
   const screen = document.createElement('div')
@@ -234,17 +236,21 @@ export function createAdvancedAdminScreen() {
     }
     el.innerHTML = `
       <ul class="adv-admin-list">
-        ${teams.map(t => `
+        ${teams.map(t => {
+          const c = getTeamColors(t)
+          return `
           <li class="adv-admin-row" data-id="${t.id}">
+            <span class="adv-admin-row-color" style="background: linear-gradient(135deg, ${c.color1}, ${c.color2})"></span>
             <span class="adv-admin-row-name">${escapeHtml(t.name)}</span>
             <span class="adv-admin-row-meta">created ${formatDate(t.createdAt)}</span>
             <span class="adv-admin-row-actions">
               <button class="adv-admin-btn adv-admin-btn-good" data-act="approve">Approve statewide</button>
+              <button class="adv-admin-btn" data-act="colors">Colors</button>
               <button class="adv-admin-btn" data-act="rename">Rename</button>
               <button class="adv-admin-btn adv-admin-btn-danger" data-act="remove">Remove</button>
             </span>
           </li>
-        `).join('')}
+        `}).join('')}
       </ul>
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
@@ -265,6 +271,12 @@ export function createAdvancedAdminScreen() {
           await renameTeam(id, next.trim())
           await renderPending(); await renderTeams(); await renderRoster()
         }
+      })
+      row.querySelector('[data-act="colors"]').addEventListener('pointerdown', () => {
+        openColorPopover(getTeamColors(teams.find(t => t.id === id)), async ({ color1, color2 }) => {
+          await setTeamColors(id, color1, color2)
+          await renderPending(); await renderTeams(); await renderRoster()
+        })
       })
     })
   }
@@ -313,17 +325,26 @@ export function createAdvancedAdminScreen() {
           await deleteTeam(id)
           await renderTeams(); await renderPending(); await renderRoster(); await renderScores()
         })
+        row.querySelector('[data-act="colors"]')?.addEventListener('pointerdown', () => {
+          openColorPopover(getTeamColors(teams.find(t => t.id === id)), async ({ color1, color2 }) => {
+            await setTeamColors(id, color1, color2)
+            await renderTeams(); await renderPending(); await renderRoster()
+          })
+        })
       })
     }
   }
 
   function teamRowHtml(t) {
+    const c = getTeamColors(t)
     return `
       <li class="adv-admin-row" data-id="${t.id}">
+        <span class="adv-admin-row-color" style="background: linear-gradient(135deg, ${c.color1}, ${c.color2})"></span>
         <span class="adv-admin-row-name">${escapeHtml(t.name)}</span>
         <span class="adv-admin-row-status adv-admin-status-${t.status}">${t.status}</span>
         <span class="adv-admin-row-actions">
           ${t.status !== 'approved' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="approve">Approve</button>` : ''}
+          <button class="adv-admin-btn" data-act="colors">Colors</button>
           <button class="adv-admin-btn" data-act="rename">Rename</button>
           <button class="adv-admin-btn adv-admin-btn-danger" data-act="delete">Delete</button>
         </span>
