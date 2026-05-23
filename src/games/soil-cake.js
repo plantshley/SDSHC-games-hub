@@ -176,7 +176,18 @@ function createGameplayScreen() {
     initDecorations(el)
   })
 
-  el.querySelector('#sc-game-home').addEventListener('pointerdown', () => navigate('game-select/sprouts'))
+  el.querySelector('#sc-game-home').addEventListener('pointerdown', () => {
+    const parent = el.parentNode
+    const intro = createIntroScreen()
+    el.classList.remove('active')
+    el.classList.add('exiting')
+    el.addEventListener('animationend', () => el.remove(), { once: true })
+    setTimeout(() => { if (el.parentNode) el.remove() }, 400)
+    parent.appendChild(intro)
+    intro.offsetHeight
+    intro.classList.add('active', 'entering')
+    intro.addEventListener('animationend', () => intro.classList.remove('entering'), { once: true })
+  })
   return el
 }
 

@@ -587,7 +587,7 @@ function createGameplayScreen(players) {
 
   function confirmBack() {
     if (state.questionsRemaining === totalCells) {
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
       return
     }
     state.phase = 'confirm'
@@ -610,7 +610,7 @@ function createGameplayScreen(players) {
       setTimeout(() => { popup.remove(); state.phase = 'board' }, 300)
     })
     popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
     })
   }
 

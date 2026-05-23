@@ -349,7 +349,7 @@ function createWordToImageScreen(level, levelIdx) {
   // Home + quit buttons
   el.querySelector('#dd-game-home').addEventListener('pointerdown', () => {
     clearTimeout(instrTimer)
-    navigate('game-select/meadow')
+    transitionTo(el, createIntroScreen())
   })
   el.querySelector('#dd-quit').addEventListener('pointerdown', () => {
     clearTimeout(instrTimer)
@@ -567,7 +567,7 @@ function createWordToPositionScreen(level, levelIdx) {
   // Home + quit buttons
   el.querySelector('#dd-game-home').addEventListener('pointerdown', () => {
     clearTimeout(instrTimer)
-    navigate('game-select/meadow')
+    transitionTo(el, createIntroScreen())
   })
   el.querySelector('#dd-quit').addEventListener('pointerdown', () => {
     clearTimeout(instrTimer)

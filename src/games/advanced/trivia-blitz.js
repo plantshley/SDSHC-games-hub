@@ -160,7 +160,7 @@ function createGameplayScreen(players, mode) {
     <div class="adv-sw-body">
       <div class="adv-sw-sidebar">
         ${mode === 'topic' ? `
-          <span class="adv-sw-sidebar-heading">Rounds</span>
+          <span class="adv-sw-sidebar-heading">Topics / Rounds</span>
           <div class="adv-tb-rounds" id="adv-tb-rounds">
             ${ROUNDS.map((r, i) => `
               <button class="adv-tb-round-btn ${i === 0 ? 'adv-tb-round-current' : 'adv-tb-round-locked'}" data-round="${i}">
@@ -211,7 +211,10 @@ function createGameplayScreen(players, mode) {
 
         ${mode === 'topic' ? `
           <div class="adv-tb-sidebar-btns">
-            <button class="adv-sw-quit-btn" id="adv-tb-skip">Skip Round</button>
+            <div class="adv-fg-nav-row">
+              <button class="adv-fg-nav-btn" id="adv-tb-prev" disabled>← Previous</button>
+              <button class="adv-fg-nav-btn" id="adv-tb-skip">Skip Topic →</button>
+            </div>
             <button class="adv-sw-quit-btn" id="adv-tb-quit">Quit</button>
           </div>
         ` : `
@@ -372,7 +375,7 @@ function createGameplayScreen(players, mode) {
     questionText.textContent = q.text
 
     if (state.mode === 'topic') {
-      counterText.textContent = `Round ${state.currentRound + 1}: ${ROUNDS[state.currentRound].title} — Q${state.questionIdx + 1}/${state.roundQuestions.length}`
+      counterText.textContent = `Topic ${state.currentRound + 1}: ${ROUNDS[state.currentRound].title} — Q${state.questionIdx + 1}/${state.roundQuestions.length}`
     } else {
       counterText.textContent = `Question ${state.endlessAnswered + 1}`
     }
@@ -595,6 +598,10 @@ function createGameplayScreen(players, mode) {
       else if (state.roundScores[i]) btn.classList.add('adv-tb-round-complete')
       else btn.classList.add('adv-tb-round-locked')
     })
+    const prevBtn = el.querySelector('#adv-tb-prev')
+    if (prevBtn) prevBtn.disabled = state.currentRound <= 0
+    const skipNavBtn = el.querySelector('#adv-tb-skip')
+    if (skipNavBtn) skipNavBtn.disabled = state.currentRound >= ROUNDS.length - 1
   }
 
   // ── Impact Overlay ──
@@ -785,7 +792,7 @@ function createGameplayScreen(players, mode) {
     const hasProgress = mode === 'topic'
       ? state.currentRound > 0 || state.questionIdx > 0
       : state.endlessAnswered > 0
-    if (!hasProgress) { stopTimer(); navigate('game-select'); return }
+    if (!hasProgress) { stopTimer(); transitionTo(el, createIntroScreen()); return }
 
     const popup = document.createElement('div')
     popup.className = 'adv-sw-completion-overlay'
@@ -807,7 +814,7 @@ function createGameplayScreen(players, mode) {
       setTimeout(() => { popup.remove(); if (!endlessSolo) startTimer() }, 300)
     })
     popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
     })
   }
 
@@ -824,15 +831,21 @@ function createGameplayScreen(players, mode) {
   })
 
   if (mode === 'topic') {
+    const prevBtn = el.querySelector('#adv-tb-prev')
+    if (prevBtn) {
+      prevBtn.addEventListener('pointerdown', () => {
+        if (state.currentRound <= 0) return
+        stopTimer()
+        startRound(state.currentRound - 1)
+      })
+    }
+
     const skipBtn = el.querySelector('#adv-tb-skip')
     if (skipBtn) {
       skipBtn.addEventListener('pointerdown', () => {
+        if (state.currentRound >= ROUNDS.length - 1) return
         stopTimer()
-        if (state.currentRound < ROUNDS.length - 1) {
-          startRound(state.currentRound + 1)
-        } else {
-          showCompletion(true)
-        }
+        startRound(state.currentRound + 1)
       })
     }
 

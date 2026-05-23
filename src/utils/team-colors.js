@@ -25,6 +25,8 @@ export const TEAM_PALETTE = [
   '#6bd968', // green
   '#4d96ff', // blue
   '#ff9f43', // orange
+  '#eaeaea', // white
+  '#141414', // black
   '#787878', // grey
   '#835915', // brown
 
@@ -80,16 +82,18 @@ export function createColorSwatchPicker(initial, onChange) {
   const el = document.createElement('div')
   el.className = 'adv-color-picker'
   el.innerHTML = `
-    <div class="adv-color-row" data-slot="color1">
-      <span class="adv-color-label">Primary</span>
-      <div class="adv-color-swatches">
-        ${TEAM_PALETTE.map(c => `<button type="button" class="adv-color-swatch" data-color="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}
+    <div class="adv-color-rows">
+      <div class="adv-color-row" data-slot="color1">
+        <span class="adv-color-label">Primary</span>
+        <div class="adv-color-swatches">
+          ${TEAM_PALETTE.map(c => `<button type="button" class="adv-color-swatch" data-color="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}
+        </div>
       </div>
-    </div>
-    <div class="adv-color-row" data-slot="color2">
-      <span class="adv-color-label">Secondary</span>
-      <div class="adv-color-swatches">
-        ${TEAM_PALETTE.map(c => `<button type="button" class="adv-color-swatch" data-color="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}
+      <div class="adv-color-row" data-slot="color2">
+        <span class="adv-color-label">Secondary</span>
+        <div class="adv-color-swatches">
+          ${TEAM_PALETTE.map(c => `<button type="button" class="adv-color-swatch" data-color="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}
+        </div>
       </div>
     </div>
     <div class="adv-color-preview">

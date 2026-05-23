@@ -260,7 +260,7 @@ function createGameplayScreen(levelIdx) {
   // Home + quit
   el.querySelector('#db-game-home').addEventListener('pointerdown', () => {
     clearTimeout(instrTimerRef.id)
-    navigate('game-select/sprouts')
+    transitionTo(el, createIntroScreen())
   })
   el.querySelector('#db-quit').addEventListener('pointerdown', () => {
     clearTimeout(instrTimerRef.id)

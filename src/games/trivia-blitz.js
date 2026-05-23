@@ -600,7 +600,7 @@ function createGameplayScreen(mode) {
   el.querySelector('#tb-game-home').addEventListener('pointerdown', () => {
     stopTimer()
     clearSVGCache()
-    navigate('game-select/guardians')
+    transitionTo(el, createIntroScreen())
   })
 
   choiceButtons.forEach((btn, i) => {

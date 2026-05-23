@@ -294,7 +294,7 @@ function createGameplayScreen(levelIdx) {
   // Home + quit buttons
   el.querySelector('#fm-game-home').addEventListener('pointerdown', () => {
     clearTimeout(instrTimerRef.id)
-    navigate('game-select/guardians')
+    transitionTo(el, createIntroScreen())
   })
   el.querySelector('#fm-quit').addEventListener('pointerdown', () => {
     clearTimeout(instrTimerRef.id)

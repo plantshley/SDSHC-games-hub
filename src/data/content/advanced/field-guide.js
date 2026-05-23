@@ -527,6 +527,7 @@ export const CATEGORIES = [
       {
         id: 'cereal-rye',
         subtype: 'grain',
+        difficulty: 3,
         name: 'Cereal Rye',
         image: '/assets/field-guide/cover-crops/cereal-rye.webp',
         clues: [
@@ -539,6 +540,7 @@ export const CATEGORIES = [
       {
         id: 'oilseed-radish',
         subtype: 'brassica',
+        difficulty: 4,
         name: 'Oilseed Radish',
         image: '/assets/field-guide/cover-crops/oilseed-radish.webp',
         clues: [
@@ -551,6 +553,7 @@ export const CATEGORIES = [
       {
         id: 'crimson-clover',
         subtype: 'legume',
+        difficulty: 3,
         name: 'Crimson Clover',
         image: '/assets/field-guide/cover-crops/crimson-clover.webp',
         clues: [
@@ -563,6 +566,7 @@ export const CATEGORIES = [
       {
         id: 'hairy-vetch',
         subtype: 'legume',
+        difficulty: 4,
         name: 'Hairy Vetch',
         image: '/assets/field-guide/cover-crops/hairy-vetch.webp',
         clues: [
@@ -575,6 +579,7 @@ export const CATEGORIES = [
       {
         id: 'winter-oats',
         subtype: 'grain',
+        difficulty: 2,
         name: 'Oats (Cover Crop)',
         image: '/assets/field-guide/cover-crops/winter-oats.webp',
         clues: [
@@ -587,6 +592,7 @@ export const CATEGORIES = [
       {
         id: 'turnips',
         subtype: 'brassica',
+        difficulty: 2,
         name: 'Turnips',
         image: '/assets/field-guide/cover-crops/turnips.webp',
         clues: [
@@ -599,6 +605,7 @@ export const CATEGORIES = [
       {
         id: 'corn',
         subtype: 'grain',
+        difficulty: 1,
         name: 'Corn',
         image: '/assets/field-guide/cover-crops/corn.webp',
         clues: [
@@ -611,6 +618,7 @@ export const CATEGORIES = [
       {
         id: 'soybeans',
         subtype: 'legume',
+        difficulty: 1,
         name: 'Soybeans',
         image: '/assets/field-guide/cover-crops/soybeans.webp',
         clues: [
@@ -623,6 +631,7 @@ export const CATEGORIES = [
       {
         id: 'winter-wheat',
         subtype: 'grain',
+        difficulty: 2,
         name: 'Winter Wheat',
         image: '/assets/field-guide/cover-crops/winter-wheat.webp',
         clues: [
@@ -635,6 +644,7 @@ export const CATEGORIES = [
       {
         id: 'sunflower',
         subtype: 'oilseed',
+        difficulty: 1,
         name: 'Sunflower',
         image: '/assets/field-guide/cover-crops/sunflower.webp',
         clues: [
@@ -647,6 +657,7 @@ export const CATEGORIES = [
       {
         id: 'grain-sorghum',
         subtype: 'grain',
+        difficulty: 4,
         name: 'Grain Sorghum',
         image: '/assets/field-guide/cover-crops/grain-sorghum.webp',
         clues: [
@@ -659,6 +670,7 @@ export const CATEGORIES = [
       {
         id: 'field-pea',
         subtype: 'legume',
+        difficulty: 3,
         name: 'Field Pea',
         image: '/assets/field-guide/cover-crops/field-pea.webp',
         clues: [
@@ -677,6 +689,7 @@ export const CATEGORIES = [
       {
         id: 'no-till',
         subtype: 'field-management',
+        difficulty: 2,
         name: 'No-Till Farming',
         image: '/assets/field-guide/conservation-practices/no-till-farming.webp',
         clues: [
@@ -689,6 +702,7 @@ export const CATEGORIES = [
       {
         id: 'contour-farming',
         subtype: 'field-management',
+        difficulty: 3,
         name: 'Contour Farming',
         image: '/assets/field-guide/conservation-practices/contour-farming.webp',
         clues: [
@@ -701,6 +715,7 @@ export const CATEGORIES = [
       {
         id: 'terracing',
         subtype: 'water-management',
+        difficulty: 2,
         name: 'Terracing',
         image: '/assets/field-guide/conservation-practices/terracing.webp',
         clues: [
@@ -713,6 +728,7 @@ export const CATEGORIES = [
       {
         id: 'grassed-waterway',
         subtype: 'water-management',
+        difficulty: 3,
         name: 'Grassed Waterway',
         image: '/assets/field-guide/conservation-practices/grassed-waterway.webp',
         clues: [
@@ -725,6 +741,7 @@ export const CATEGORIES = [
       {
         id: 'riparian-buffer',
         subtype: 'vegetation-based',
+        difficulty: 4,
         name: 'Riparian Buffer',
         image: '/assets/field-guide/conservation-practices/riparian-buffer.webp',
         clues: [
@@ -737,6 +754,7 @@ export const CATEGORIES = [
       {
         id: 'windbreak',
         subtype: 'vegetation-based',
+        difficulty: 1,
         name: 'Windbreak',
         image: '/assets/field-guide/conservation-practices/windbreak.webp',
         clues: [
@@ -749,6 +767,7 @@ export const CATEGORIES = [
       {
         id: 'cover-cropping',
         subtype: 'field-management',
+        difficulty: 1,
         name: 'Cover Cropping',
         image: '/assets/field-guide/conservation-practices/cover-cropping.webp',
         clues: [
@@ -761,6 +780,7 @@ export const CATEGORIES = [
       {
         id: 'strip-cropping',
         subtype: 'field-management',
+        difficulty: 4,
         name: 'Strip Cropping',
         image: '/assets/field-guide/conservation-practices/strip-cropping.webp',
         clues: [
@@ -773,6 +793,7 @@ export const CATEGORIES = [
       {
         id: 'crop-rotation',
         subtype: 'field-management',
+        difficulty: 1,
         name: 'Crop Rotation',
         image: '/assets/field-guide/conservation-practices/crop-rotation.webp',
         clues: [
@@ -785,6 +806,7 @@ export const CATEGORIES = [
       {
         id: 'grazing-management',
         subtype: 'vegetation-based',
+        difficulty: 4,
         name: 'Grazing Management',
         image: '/assets/field-guide/conservation-practices/grazing-management.webp',
         clues: [
@@ -797,6 +819,7 @@ export const CATEGORIES = [
       {
         id: 'wetland-restoration',
         subtype: 'water-management',
+        difficulty: 3,
         name: 'Wetland Restoration',
         image: '/assets/field-guide/conservation-practices/wetland-restoration.webp',
         clues: [
@@ -809,6 +832,7 @@ export const CATEGORIES = [
       {
         id: 'pollinator-habitat',
         subtype: 'vegetation-based',
+        difficulty: 2,
         name: 'Pollinator Habitat',
         image: '/assets/field-guide/conservation-practices/pollinator-habitat.webp',
         clues: [
@@ -827,6 +851,7 @@ export const CATEGORIES = [
       {
         id: 'row-crop-planter',
         subtype: 'planting',
+        difficulty: 2,
         name: 'Row Crop Planter',
         image: '/assets/field-guide/farm-equipment/row-crop-planter.webp',
         clues: [
@@ -839,6 +864,7 @@ export const CATEGORIES = [
       {
         id: 'no-till-drill',
         subtype: 'planting',
+        difficulty: 3,
         name: 'No-Till Drill',
         image: '/assets/field-guide/farm-equipment/no-till-drill.webp',
         clues: [
@@ -851,6 +877,7 @@ export const CATEGORIES = [
       {
         id: 'combine-harvester',
         subtype: 'harvesting',
+        difficulty: 1,
         name: 'Combine Harvester',
         image: '/assets/field-guide/farm-equipment/combine-harvester.webp',
         clues: [
@@ -863,6 +890,7 @@ export const CATEGORIES = [
       {
         id: 'grain-cart',
         subtype: 'harvesting',
+        difficulty: 2,
         name: 'Grain Cart',
         image: '/assets/field-guide/farm-equipment/grain-cart.webp',
         clues: [
@@ -875,6 +903,7 @@ export const CATEGORIES = [
       {
         id: 'strip-till-rig',
         subtype: 'tillage',
+        difficulty: 4,
         name: 'Strip-Till Rig',
         image: '/assets/field-guide/farm-equipment/strip-till-rig.webp',
         clues: [
@@ -887,6 +916,7 @@ export const CATEGORIES = [
       {
         id: 'roller-crimper',
         subtype: 'specialty',
+        difficulty: 4,
         name: 'Roller Crimper',
         image: '/assets/field-guide/farm-equipment/roller-crimper.webp',
         clues: [
@@ -899,6 +929,7 @@ export const CATEGORIES = [
       {
         id: 'cover-crop-interseeder',
         subtype: 'planting',
+        difficulty: 4,
         name: 'Cover Crop Interseeder',
         image: '/assets/field-guide/farm-equipment/cover-crop-interseeder.webp',
         clues: [
@@ -911,6 +942,7 @@ export const CATEGORIES = [
       {
         id: 'agricultural-drone',
         subtype: 'specialty',
+        difficulty: 2,
         name: 'Agricultural Drone',
         image: '/assets/field-guide/farm-equipment/agricultural-drone.webp',
         clues: [
@@ -923,6 +955,7 @@ export const CATEGORIES = [
       {
         id: 'manure-spreader',
         subtype: 'specialty',
+        difficulty: 3,
         name: 'Manure Spreader',
         image: '/assets/field-guide/farm-equipment/manure-spreader.webp',
         clues: [
@@ -935,6 +968,7 @@ export const CATEGORIES = [
       {
         id: 'soil-sampler',
         subtype: 'specialty',
+        difficulty: 3,
         name: 'Soil Sampler',
         image: '/assets/field-guide/farm-equipment/soil-sampler.webp',
         clues: [
@@ -947,6 +981,7 @@ export const CATEGORIES = [
       {
         id: 'center-pivot',
         subtype: 'water-management',
+        difficulty: 1,
         name: 'Center Pivot Irrigation',
         image: '/assets/field-guide/farm-equipment/center-pivot.webp',
         clues: [
@@ -959,6 +994,7 @@ export const CATEGORIES = [
       {
         id: 'grain-bin',
         subtype: 'storage',
+        difficulty: 1,
         name: 'Grain Bin',
         image: '/assets/field-guide/farm-equipment/grain-bin.webp',
         clues: [
@@ -977,6 +1013,7 @@ export const CATEGORIES = [
       {
         id: 'ring-necked-pheasant',
         subtype: 'bird',
+        difficulty: 2,
         name: 'Ring-necked Pheasant',
         image: '/assets/field-guide/sd-wildlife/ring-necked-pheasant.webp',
         clues: [
@@ -989,6 +1026,7 @@ export const CATEGORIES = [
       {
         id: 'american-bison',
         subtype: 'mammal',
+        difficulty: 1,
         name: 'American Bison',
         image: '/assets/field-guide/sd-wildlife/american-bison.webp',
         clues: [
@@ -1001,6 +1039,7 @@ export const CATEGORIES = [
       {
         id: 'prairie-dog',
         subtype: 'mammal',
+        difficulty: 3,
         name: 'Black-tailed Prairie Dog',
         image: '/assets/field-guide/sd-wildlife/prairie-dog.webp',
         clues: [
@@ -1013,6 +1052,7 @@ export const CATEGORIES = [
       {
         id: 'monarch-butterfly',
         subtype: 'insect',
+        difficulty: 2,
         name: 'Monarch Butterfly',
         image: '/assets/field-guide/sd-wildlife/monarch-butterfly.webp',
         clues: [
@@ -1025,6 +1065,7 @@ export const CATEGORIES = [
       {
         id: 'western-meadowlark',
         subtype: 'bird',
+        difficulty: 3,
         name: 'Western Meadowlark',
         image: '/assets/field-guide/sd-wildlife/western-meadowlark.webp',
         clues: [
@@ -1037,6 +1078,7 @@ export const CATEGORIES = [
       {
         id: 'white-tailed-deer',
         subtype: 'mammal',
+        difficulty: 1,
         name: 'White-tailed Deer',
         image: '/assets/field-guide/sd-wildlife/white-tailed-deer.webp',
         clues: [
@@ -1049,6 +1091,7 @@ export const CATEGORIES = [
       {
         id: 'pronghorn',
         subtype: 'mammal',
+        difficulty: 4,
         name: 'Pronghorn',
         image: '/assets/field-guide/sd-wildlife/pronghorn.webp',
         clues: [
@@ -1061,6 +1104,7 @@ export const CATEGORIES = [
       {
         id: 'bald-eagle',
         subtype: 'bird',
+        difficulty: 1,
         name: 'Bald Eagle',
         image: '/assets/field-guide/sd-wildlife/bald-eagle.webp',
         clues: [
@@ -1073,6 +1117,7 @@ export const CATEGORIES = [
       {
         id: 'painted-lady',
         subtype: 'insect',
+        difficulty: 4,
         name: 'Painted Lady Butterfly',
         image: '/assets/field-guide/sd-wildlife/painted-lady.webp',
         clues: [
@@ -1085,6 +1130,7 @@ export const CATEGORIES = [
       {
         id: 'great-plains-toad',
         subtype: 'amphibian',
+        difficulty: 4,
         name: 'Great Plains Toad',
         image: '/assets/field-guide/sd-wildlife/great-plains-toad.webp',
         clues: [
@@ -1097,6 +1143,7 @@ export const CATEGORIES = [
       {
         id: 'eastern-cottontail',
         subtype: 'mammal',
+        difficulty: 3,
         name: 'Eastern Cottontail Rabbit',
         image: '/assets/field-guide/sd-wildlife/eastern-cottontail.webp',
         clues: [
@@ -1109,6 +1156,7 @@ export const CATEGORIES = [
       {
         id: 'red-fox',
         subtype: 'mammal',
+        difficulty: 2,
         name: 'Red Fox',
         image: '/assets/field-guide/sd-wildlife/red-fox.webp',
         clues: [
@@ -1127,6 +1175,7 @@ export const CATEGORIES = [
       {
         id: 'mollisol',
         subtype: 'soil-order',
+        difficulty: 3,
         name: 'Mollisol',
         image: '/assets/field-guide/soil-types/mollisol.webp',
         clues: [
@@ -1139,6 +1188,7 @@ export const CATEGORIES = [
       {
         id: 'sandy-loam',
         subtype: 'texture',
+        difficulty: 2,
         name: 'Sandy Loam',
         image: '/assets/field-guide/soil-types/sandy-loam.webp',
         clues: [
@@ -1151,6 +1201,7 @@ export const CATEGORIES = [
       {
         id: 'clay-soil',
         subtype: 'texture',
+        difficulty: 1,
         name: 'Clay Soil',
         image: '/assets/field-guide/soil-types/clay-soil.webp',
         clues: [
@@ -1163,6 +1214,7 @@ export const CATEGORIES = [
       {
         id: 'soil-horizons',
         subtype: 'profile',
+        difficulty: 2,
         name: 'Soil Horizons',
         image: '/assets/field-guide/soil-types/soil-horizons.webp',
         clues: [
@@ -1175,6 +1227,7 @@ export const CATEGORIES = [
       {
         id: 'loess',
         subtype: 'parent-material',
+        difficulty: 4,
         name: 'Loess',
         image: '/assets/field-guide/soil-types/loess.webp',
         clues: [
@@ -1187,6 +1240,7 @@ export const CATEGORIES = [
       {
         id: 'caliche',
         subtype: 'feature',
+        difficulty: 4,
         name: 'Caliche Layer',
         image: '/assets/field-guide/soil-types/caliche.webp',
         clues: [
@@ -1199,6 +1253,7 @@ export const CATEGORIES = [
       {
         id: 'soil-aggregate',
         subtype: 'structure',
+        difficulty: 4,
         name: 'Soil Aggregates',
         image: '/assets/field-guide/soil-types/soil-aggregate.webp',
         clues: [
@@ -1211,6 +1266,7 @@ export const CATEGORIES = [
       {
         id: 'earthworm',
         subtype: 'biology',
+        difficulty: 1,
         name: 'Earthworm Activity',
         image: '/assets/field-guide/soil-types/earthworm.webp',
         clues: [
@@ -1223,6 +1279,7 @@ export const CATEGORIES = [
       {
         id: 'mycorrhizae',
         subtype: 'biology',
+        difficulty: 3,
         name: 'Mycorrhizal Fungi',
         image: '/assets/field-guide/soil-types/mycorrhizae.webp',
         clues: [
@@ -1235,6 +1292,7 @@ export const CATEGORIES = [
       {
         id: 'gully-erosion',
         subtype: 'degradation',
+        difficulty: 1,
         name: 'Gully Erosion',
         image: '/assets/field-guide/soil-types/gully-erosion.webp',
         clues: [
@@ -1247,6 +1305,7 @@ export const CATEGORIES = [
       {
         id: 'healthy-vs-degraded',
         subtype: 'comparison',
+        difficulty: 2,
         name: 'Healthy vs. Degraded Soil',
         image: '/assets/field-guide/soil-types/healthy-vs-degraded.webp',
         clues: [
@@ -1259,6 +1318,7 @@ export const CATEGORIES = [
       {
         id: 'prairie-roots',
         subtype: 'biology',
+        difficulty: 3,
         name: 'Prairie Root Systems',
         image: '/assets/field-guide/soil-types/prairie-roots.webp',
         clues: [
@@ -1286,7 +1346,7 @@ export const EXTRA_DISTRACTORS = {
     legume: ['Austrian Winter Pea', 'Red Clover', 'Sweet Clover', 'Cowpea', 'Sunn Hemp', 'Alfalfa', 'Dry Edible Bean', 'Lentil'],
     grain: ['Barley', 'Pearl Millet', 'Annual Ryegrass', 'Triticale', 'Proso Millet', 'Oat'],
     oilseed: ['Safflower', 'Canola', 'Flax', 'Camelina', 'Mustard'],
-    brassica: ['Kale', 'Ethiopian Cabbage', 'Forage Radish', 'Rape'],
+    brassica: ['Kale', 'Ethiopian Cabbage', 'Forage Radish', 'Rutabaga'],
     broadleaf: ['Buckwheat', 'Phacelia', 'Chicory'],
   },
   'conservation-practices': {

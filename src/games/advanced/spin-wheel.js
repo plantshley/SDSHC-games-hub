@@ -914,7 +914,7 @@ function createGameplayScreen(players) {
   function confirmBack() {
     if (state.phase === 'ready' && Object.values(state.categoryProgress).every(cp => cp.answered === 0)) {
       cleanup()
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
       return
     }
     const popup = document.createElement('div')
@@ -937,7 +937,7 @@ function createGameplayScreen(players) {
     })
     popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
       cleanup()
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
     })
   }
 

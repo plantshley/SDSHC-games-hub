@@ -511,7 +511,7 @@ function createGameScreen() {
 
   // ─── Home button ───
   el.querySelector('#fw-game-home').addEventListener('pointerdown', () => {
-    navigate('game-select/guardians')
+    transitionTo(el, createIntroScreen())
   })
 
   return el

@@ -63,7 +63,7 @@ export function createAdvancedRosterScreen() {
       </div>
       <p class="adv-roster-hint">
         New names go through admin approval before showing on the event leaderboard.
-        You can keep adding teams later from the game-select screen.
+        You can keep adding teams later.
       </p>
     </div>
   `

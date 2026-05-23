@@ -176,7 +176,7 @@ function createGameScreen() {
   el.querySelector('#dtd-game-home').addEventListener('pointerdown', () => {
     clearTimeout(pendingCompleteTimer)
     clearTimeout(pendingLevelTimer)
-    navigate('game-select/sprouts')
+    transitionTo(el, createIntroScreen())
   })
 
   el.querySelector('#dtd-back-levels').addEventListener('pointerdown', () => {

@@ -244,7 +244,7 @@ function createGameplayScreen() {
     initCanvasActions(el)
   })
 
-  el.querySelector('#cc-game-home').addEventListener('pointerdown', () => navigate('game-select/sprouts'))
+  el.querySelector('#cc-game-home').addEventListener('pointerdown', () => transitionTo(el, createIntroScreen()))
   return el
 }
 

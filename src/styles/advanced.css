@@ -545,13 +545,7 @@
 }
 
 .adv-fg-intro .adv-sw-intro-inner {
-  gap: 20px;
   padding-bottom: 20px;
-}
-
-.adv-fg-intro .adv-sw-player-setup {
-  padding: 16px 30px;
-  gap: 12px;
 }
 
 .adv-sw-intro-topbar {
@@ -652,7 +646,7 @@
    screen. Each row keeps a comfortable min width via the minmax(). */
 .adv-sw-names {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 8px 16px;
   width: 100%;
   max-width: 600px;
@@ -1137,6 +1131,97 @@
   letter-spacing: 2px;
   color: var(--adv-accent);
   text-shadow: 0 0 16px var(--adv-glow);
+}
+
+/* Sidebar level indicator (leveled category mode) */
+.adv-fg-levels {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.adv-fg-level-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border: 1px solid var(--adv-border);
+  border-radius: 8px;
+  background: var(--adv-surface);
+  font-family: var(--font-body), monospace;
+  font-size: 0.85rem;
+  color: var(--adv-text);
+  opacity: 0.45;
+  cursor: pointer;
+  transition: opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.adv-fg-level-pill:hover {
+  opacity: 1;
+  border-color: var(--adv-accent);
+}
+
+.adv-fg-level-num {
+  letter-spacing: 0.5px;
+}
+
+.adv-fg-level-check {
+  color: var(--adv-accent-secondary);
+  font-weight: bold;
+  opacity: 0;
+}
+
+.adv-fg-level-pill.adv-fg-level-active {
+  opacity: 1;
+  border-color: var(--adv-accent);
+  box-shadow: 0 0 12px var(--adv-glow);
+}
+
+.adv-fg-level-pill.adv-fg-level-done {
+  opacity: 1;
+  border-color: var(--adv-accent-secondary);
+}
+
+.adv-fg-level-pill.adv-fg-level-done .adv-fg-level-check {
+  opacity: 1;
+}
+
+/* Previous / Skip navigation row (above Quit) */
+.adv-fg-nav-row {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.adv-fg-nav-row + .adv-fg-quit-btn {
+  margin-top: 8px;
+}
+
+.adv-fg-nav-btn {
+  flex: 1;
+  padding: 8px 6px;
+  border: 1px solid var(--adv-border);
+  border-radius: 8px;
+  background: none;
+  color: var(--adv-text);
+  font-family: var(--font-body), monospace;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.adv-fg-nav-btn:hover,
+.adv-fg-nav-btn:active {
+  border-color: var(--adv-accent);
+  box-shadow: 0 0 8px var(--adv-glow);
+}
+
+.adv-fg-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+  border-color: var(--adv-border);
+  box-shadow: none;
 }
 
 /* ─── Impact Overlay ─── */
@@ -2283,13 +2368,12 @@
 /* ─── Field Guide Game ─── */
 /* ═══════════════════════════════════════════════ */
 
-/* Intro: category picker label */
-.adv-fg-cat-label {
-  font-family: var(--font-body), monospace;
-  font-size: 1rem;
-  color: var(--adv-text);
-  min-width: 220px;
-  text-align: center;
+/* Intro: "All: Randomized" topic button — distinguished with the secondary accent */
+.adv-fg-randomized-btn.selected {
+  border-color: var(--adv-accent-secondary);
+  background: rgba(184, 232, 74, 0.15);
+  color: var(--adv-accent-secondary);
+  box-shadow: 0 0 8px rgba(184, 232, 74, 0.2);
 }
 
 .adv-fg-game {
@@ -2682,7 +2766,8 @@
 }
 
 /* Connections intro overrides */
-.adv-cn-intro .adv-sw-intro-inner {
+.adv-cn-intro .adv-sw-intro-inner,
+.adv-fg-intro .adv-sw-intro-inner {
   max-width: 820px;
   gap: 20px;
   padding-top: 50px;
@@ -2702,7 +2787,7 @@
   flex: 0 0 auto;
   /* Wider so 2-col grid fits at 3-4 players. Use min-height (not height) so
      the card grows with content instead of clipping it. */
-  width: 600px;
+  width: 550px;
   min-height: 300px;
   margin-left: 20px;
 }

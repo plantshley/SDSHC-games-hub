@@ -917,7 +917,7 @@ function createGameplayScreen(players, rounds) {
   function confirmBack() {
     // No progress — leave immediately
     const hasProgress = state.currentRound > 0 || state.solvedGroups.length > 0 || state.mistakesThisRound > 0
-    if (!hasProgress) { cleanup(); navigate('game-select'); return }
+    if (!hasProgress) { cleanup(); transitionTo(el, createIntroScreen()); return }
 
     stopTimer()
     const prevPhase = state.phase
@@ -945,7 +945,7 @@ function createGameplayScreen(players, rounds) {
     })
     popup.querySelector('#adv-cn-leave').addEventListener('pointerdown', () => {
       cleanup()
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
     })
   }
 

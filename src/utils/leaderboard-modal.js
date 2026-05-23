@@ -217,7 +217,7 @@ function renderBars(rows) {
                 <div class="adv-lb-bar-fill" style="width: ${pct}%; background: linear-gradient(90deg, ${r.color1}, ${r.color2})"></div>
               </div>
             </div>
-            <span class="adv-lb-bar-value">${r.normPoints}</span>
+            <span class="adv-lb-bar-value" style="color: ${r.color2}">${r.normPoints}</span>
           </div>
         `
       }).join('')}
@@ -240,7 +240,7 @@ function renderPodium(rows) {
             <div class="adv-lb-podium-card">
               <span class="adv-lb-podium-team">${escapeHtml(r.teamName)}</span>
               <span class="adv-lb-podium-score">${r.normPoints}</span>
-              <span class="adv-lb-podium-raw">${r.points} raw</span>
+              <span class="adv-lb-podium-raw">${r.points} raw · ${r.gamesPlayed} ${r.gamesPlayed === 1 ? 'game' : 'games'}</span>
             </div>
             <div class="adv-lb-podium-base">${place}</div>
           </div>

@@ -362,7 +362,7 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
   // Home + quit
   el.querySelector('#oo-game-home').addEventListener('pointerdown', () => {
     stopTimer()
-    navigate('game-select/meadow')
+    transitionTo(el, createIntroScreen())
   })
   el.querySelector('#oo-quit').addEventListener('pointerdown', () => {
     stopTimer()

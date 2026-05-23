@@ -825,7 +825,7 @@ function createGameplayScreen(players) {
   el.querySelector('#sw-game-home').addEventListener('pointerdown', () => {
     cancelAnimationFrame(state.spinFrame)
     clearTimeout(state.feedbackTimeout)
-    navigate('game-select/meadow')
+    transitionTo(el, createIntroScreen())
   })
 
   spinBtn.addEventListener('pointerdown', () => {

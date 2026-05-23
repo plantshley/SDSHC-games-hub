@@ -187,6 +187,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--adv-border);
+  white-space: nowrap;
 }
 
 .adv-lb-table tbody td {
@@ -210,12 +211,12 @@
 }
 
 .adv-lb-col-sub {
-  display: block;
+  display: inline;
   font-size: 0.62rem;
   font-weight: normal;
   letter-spacing: 0.03em;
   opacity: 0.7;
-  margin-top: 1px;
+  margin-left: 4px;
 }
 
 .adv-lb-col-pts,
@@ -359,8 +360,8 @@
 .adv-roster-card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 36px 48px;
+  gap: 10px;
+  padding: 24px 40px;
   background: var(--adv-surface);
   border: 1px solid var(--adv-border);
   border-radius: 20px;
@@ -368,6 +369,11 @@
   width: min(640px, 90vw);
   /* Header pins to the top; auto block margins center the card below it. */
   margin: auto 0;
+  /* Never exceed the viewport (header + screen padding allowance) — the team
+     list inside flexes and scrolls instead of the card overflowing the screen. */
+  max-height: calc(100vh - 220px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .adv-roster-sub {
@@ -384,7 +390,7 @@
 
 .adv-roster-input {
   flex: 1;
-  padding: 12px 16px;
+  padding: 9px 14px;
   border: 2px solid var(--adv-border);
   border-radius: 10px;
   background: var(--adv-bg);
@@ -436,8 +442,10 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: 320px;
+  gap: 4px;
+  /* Flex to fill whatever height the capped card leaves, then scroll. */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -452,12 +460,12 @@
 .adv-roster-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 2px 12px;
   background: var(--adv-bg);
-  border-radius: 10px;
+  border-radius: 8px;
   font-family: var(--font-body), monospace;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .adv-roster-name {
@@ -485,8 +493,8 @@
 }
 
 .adv-roster-remove {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: none;
   border-radius: 50%;
   background: var(--adv-glass);
@@ -502,7 +510,7 @@
 .adv-roster-actions {
   display: flex;
   justify-content: center;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .adv-roster-continue {
@@ -1082,36 +1090,46 @@
 
 .adv-color-picker {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
   width: 100%;
+}
+
+.adv-color-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .adv-color-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .adv-color-label {
   font-family: var(--font-body), monospace;
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--adv-text-muted);
-  min-width: 72px;
+  /* Fixed (not min-) width so "Secondary" can't push its swatch row right of
+     the "Primary" row — keeps each color column exactly aligned. */
+  width: 64px;
+  flex-shrink: 0;
 }
 
 .adv-color-swatches {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  gap: 5px;
+  flex-wrap: nowrap;
 }
 
 .adv-color-swatch {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
@@ -1130,23 +1148,37 @@
 }
 
 .adv-color-preview {
+  /* Stretch to the full height of the two color rows so align-items: center
+     puts the PILL exactly at their vertical center; the caption is floated
+     below it (absolute) so it doesn't shove the pill upward. */
+  align-self: stretch;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 2px;
+  margin-left: auto;
 }
 
 .adv-color-preview-chip {
-  width: 40px;
-  height: 16px;
-  border-radius: 8px;
+  width: 44px;
+  /* Match the swatch circle height. */
+  height: 22px;
+  border-radius: 11px;
+  margin-top: -8px
 }
 
 .adv-color-preview-text {
+  position: absolute;
+  top: calc(50% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
   font-family: var(--font-body), monospace;
-  font-size: 0.7rem;
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--adv-text-muted);
 }
+
 
 /* ─── Color popover (admin) ─── */
 
@@ -1170,7 +1202,10 @@
 }
 
 .adv-color-card {
-  width: min(380px, 92vw);
+  /* Size to the picker's intrinsic width (two swatch rows + preview) so the
+     swatches never run off the card; capped to the viewport on small screens. */
+  width: fit-content;
+  max-width: 94vw;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1203,7 +1238,7 @@
 /* ─── Color chips on roster / admin rows ─── */
 
 .adv-roster-colors {
-  padding: 6px 2px 2px;
+  padding: 10px 0 12px;
 }
 
 .adv-roster-color,
@@ -1224,15 +1259,15 @@
 
 .adv-lb-team-dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 15px;
+  height: 15px;
   border-radius: 3px;
   margin-right: 8px;
   vertical-align: middle;
 }
 
 .adv-lb-table-tinted tbody tr {
-  box-shadow: inset 3px 0 0 var(--team-c1);
+  box-shadow: inset 6px 0 0 var(--team-c1);
 }
 
 .adv-lb-table-tinted tbody tr:hover td {
@@ -1261,7 +1296,7 @@
   font-family: var(--font-body), monospace;
   font-weight: bold;
   color: var(--adv-accent);
-  font-size: 0.9rem;
+  font-size: 1.15rem;
 }
 
 .adv-lb-bar-main {
@@ -1298,7 +1333,7 @@
   min-width: 42px;
   text-align: right;
   font-family: var(--font-body), monospace;
-  font-size: 0.9rem;
+  font-size: 1.15rem;
   font-weight: bold;
   color: var(--adv-accent);
   margin-left: -10px

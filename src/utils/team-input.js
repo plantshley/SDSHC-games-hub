@@ -185,6 +185,11 @@ async function renderTeamModeRows(container, players, eventId, { maxNameLen, nam
     // admin queue. While typing we just clear stale feedback; the team isn't
     // registered (and "awaiting approval" doesn't show) until the field commits.
     input.addEventListener('input', () => {
+      // Persist the raw text immediately so a re-render (e.g. tapping "+ add
+      // player") keeps what was typed. The team itself isn't created until the
+      // field commits (blur/Enter/datalist pick), so partial names typed
+      // letter-by-letter don't each spawn a pending team in the admin queue.
+      players[idx].teamName = input.value.trim()
       fb.className = 'adv-team-feedback'
       fb.textContent = ''
     })
@@ -207,6 +212,11 @@ async function renderTeamModeRows(container, players, eventId, { maxNameLen, nam
         fb.className = 'adv-team-feedback adv-team-feedback-pending'
         fb.textContent = '↻ awaiting approval'
       }
+    } else if (players[idx].teamName) {
+      // Row was rebuilt with typed text that hadn't committed yet (e.g. the
+      // field was focused when another player was added). Commit it now so the
+      // team is saved instead of silently dropped.
+      resolveTeam()
     }
   })
 }

@@ -814,7 +814,7 @@ function createGameplayScreen(players, totalRounds) {
 
   function confirmBack() {
     if (state.wordsCompleted === 0 && state.guessedLetters.size === 0) {
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
       return
     }
     const popup = document.createElement('div')
@@ -836,7 +836,7 @@ function createGameplayScreen(players, totalRounds) {
       setTimeout(() => popup.remove(), 300)
     })
     popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
     })
   }
 

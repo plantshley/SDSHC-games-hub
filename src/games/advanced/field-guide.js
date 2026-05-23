@@ -81,21 +81,53 @@ function pickItems(poolItems, count, catId) {
   })
 }
 
+// Like pickItems, but the pool spans multiple categories (used by "All: Random Shuffle").
+// Entries are { it, cat }; image-exhaustion is tracked under each item's own
+// category so it stays consistent with single/grouped plays in the same session.
+function pickItemsPooled(entries, count) {
+  const usedFor = cat => usedImagesByCategory[cat.id] || (usedImagesByCategory[cat.id] = new Set())
+  const allImgs = entries.flatMap(({ it }) => itemImages(it))
+  // Whole band exhausted -> free its photos (per their categories) so they cycle.
+  if (allImgs.length > 0 && entries.every(({ it, cat }) => itemImages(it).every(s => usedFor(cat).has(s)))) {
+    entries.forEach(({ it, cat }) => itemImages(it).forEach(s => usedFor(cat).delete(s)))
+  }
+  const withUnused = []
+  const allUsed = []
+  entries.forEach(e => {
+    (itemImages(e.it).some(s => !usedFor(e.cat).has(s)) ? withUnused : allUsed).push(e)
+  })
+  shuffleArray(withUnused)
+  shuffleArray(allUsed)
+  const ordered = [...withUnused, ...allUsed].slice(0, Math.min(count, entries.length))
+  return ordered.map(({ it, cat }) => {
+    const imgs = itemImages(it)
+    const used = usedFor(cat)
+    const unused = imgs.filter(s => !used.has(s))
+    const pool = unused.length ? unused : imgs
+    const chosen = pool[Math.floor(Math.random() * pool.length)]
+    used.add(chosen)
+    return { ...it, categoryId: cat.id, categoryTitle: cat.title, chosenImage: chosen }
+  })
+}
+
+// Questions per topic in grouped multi-topic play. Targets ~30 total while keeping
+// each topic's count a multiple of the player count so every player gets equal
+// turns within a topic. (pickItems caps this at a topic's available photos.)
+function groupedCount(playerCount, topicCount) {
+  const ideal = 30 / topicCount
+  return Math.max(playerCount, Math.round(ideal / playerCount) * playerCount)
+}
+
 // ─── INTRO SCREEN ───
 
 function createIntroScreen() {
   const el = document.createElement('div')
-  el.className = 'screen adv-fg-intro'
+  el.className = 'screen adv-sw-intro adv-fg-intro'
 
   let playerCount = 1
   let players = [{ name: 'Player 1', color: PLAYER_COLORS[0], teamId: null, teamName: '', teamStatus: null }]
-
-  // Category picker state
-  const categoryOptions = [
-    { id: 'all', title: 'All Categories' },
-    ...CATEGORIES.map(c => ({ id: c.id, title: c.title })),
-  ]
-  let categoryIdx = 0
+  let selectedTopics = new Set()
+  let randomized = false
 
   function renderNames() {
     const container = el.querySelector('#adv-fg-names')
@@ -114,14 +146,29 @@ function createIntroScreen() {
     renderNames()
   }
 
-  function updateCategoryDisplay() {
-    const label = el.querySelector('#adv-fg-cat-label')
-    if (label) label.textContent = categoryOptions[categoryIdx].title
+  function updateStartBtn() {
+    const btn = el.querySelector('#adv-fg-start')
+    if (!btn) return
+    const n = selectedTopics.size
+    let label, disabled = false
+    if (randomized) label = 'Start Game (Randomized)'
+    else if (n === 0) { label = 'Select Topics to Start'; disabled = true }
+    else if (n === 1) label = 'Start Game'
+    else label = `Start Game (${n} topics)`
+    btn.textContent = label
+    btn.disabled = disabled
+    btn.style.opacity = disabled ? '0.4' : '1'
   }
 
-  function cycleCategory(delta) {
-    categoryIdx = (categoryIdx + delta + categoryOptions.length) % categoryOptions.length
-    updateCategoryDisplay()
+  function renderTopics() {
+    el.querySelectorAll('.adv-cn-topic-card[data-id]').forEach(card => {
+      card.classList.toggle('selected', !randomized && selectedTopics.has(card.dataset.id))
+    })
+    const allBtn = el.querySelector('#adv-fg-all')
+    if (allBtn) allBtn.classList.toggle('selected', !randomized && selectedTopics.size === CATEGORIES.length)
+    const randBtn = el.querySelector('#adv-fg-randomized')
+    if (randBtn) randBtn.classList.toggle('selected', randomized)
+    updateStartBtn()
   }
 
   el.innerHTML = `
@@ -133,26 +180,28 @@ function createIntroScreen() {
 
       <p class="adv-sw-intro-desc">${INSTRUCTIONS.intro}</p>
 
-      <div class="adv-sw-player-setup">
-        <span class="adv-sw-setup-label">Players</span>
-        <div class="adv-sw-picker-row">
-          <button class="adv-sw-picker-btn" id="adv-fg-minus">\u2212</button>
-          <span class="adv-sw-picker-count" id="adv-fg-count">1</span>
-          <button class="adv-sw-picker-btn" id="adv-fg-plus">+</button>
+      <div class="adv-cn-setup-columns">
+        <div class="adv-sw-player-setup">
+          <span class="adv-sw-setup-label">Players</span>
+          <div class="adv-sw-picker-row">
+            <button class="adv-sw-picker-btn" id="adv-fg-minus">\u2212</button>
+            <span class="adv-sw-picker-count" id="adv-fg-count">1</span>
+            <button class="adv-sw-picker-btn" id="adv-fg-plus">+</button>
+          </div>
+          <div class="adv-sw-names" id="adv-fg-names"></div>
         </div>
-        <div class="adv-sw-names" id="adv-fg-names"></div>
+
+        <div class="adv-cn-topic-column">
+          <span class="adv-sw-setup-label">Topics</span>
+          <div class="adv-cn-topic-picker">
+            ${CATEGORIES.map(c => `<button class="adv-cn-topic-card" data-id="${c.id}">${esc(c.title)}</button>`).join('')}
+            <button class="adv-cn-topic-card adv-cn-topic-all" id="adv-fg-all">All: Grouped</button>
+            <button class="adv-cn-topic-card adv-fg-randomized-btn" id="adv-fg-randomized">All: Random Shuffle</button>
+          </div>
+        </div>
       </div>
 
-      <div class="adv-sw-player-setup">
-        <span class="adv-sw-setup-label">Category</span>
-        <div class="adv-sw-picker-row">
-          <button class="adv-sw-picker-btn" id="adv-fg-cat-prev">\u2190</button>
-          <span class="adv-fg-cat-label" id="adv-fg-cat-label">All Categories</span>
-          <button class="adv-sw-picker-btn" id="adv-fg-cat-next">\u2192</button>
-        </div>
-      </div>
-
-      <button class="adv-sw-start-btn" id="adv-fg-start">Start Game</button>
+      <button class="adv-sw-start-btn" id="adv-fg-start" disabled>Select Topics to Start</button>
     </div>
   `
 
@@ -166,13 +215,48 @@ function createIntroScreen() {
   el.querySelector('#adv-fg-back').addEventListener('pointerdown', () => navigate('game-select'))
   el.querySelector('#adv-fg-minus').addEventListener('pointerdown', () => updateCount(-1))
   el.querySelector('#adv-fg-plus').addEventListener('pointerdown', () => updateCount(1))
-  el.querySelector('#adv-fg-cat-prev').addEventListener('pointerdown', () => cycleCategory(-1))
-  el.querySelector('#adv-fg-cat-next').addEventListener('pointerdown', () => cycleCategory(1))
+
+  el.querySelectorAll('.adv-cn-topic-card[data-id]').forEach(card => {
+    card.addEventListener('pointerdown', () => {
+      randomized = false
+      const id = card.dataset.id
+      if (selectedTopics.has(id)) selectedTopics.delete(id)
+      else selectedTopics.add(id)
+      renderTopics()
+    })
+  })
+
+  el.querySelector('#adv-fg-all').addEventListener('pointerdown', () => {
+    randomized = false
+    if (selectedTopics.size === CATEGORIES.length) selectedTopics.clear()
+    else CATEGORIES.forEach(c => selectedTopics.add(c.id))
+    renderTopics()
+  })
+
+  el.querySelector('#adv-fg-randomized').addEventListener('pointerdown', () => {
+    randomized = !randomized
+    if (randomized) selectedTopics.clear()
+    renderTopics()
+  })
+
   el.querySelector('#adv-fg-start').addEventListener('pointerdown', () => {
-    const selectedCat = categoryOptions[categoryIdx].id
+    let selection
+    if (randomized) {
+      selection = { mode: 'randomized', topicIds: CATEGORIES.map(c => c.id) }
+    } else if (selectedTopics.size === 0) {
+      return
+    } else if (selectedTopics.size === 1) {
+      selection = { mode: 'single', topicIds: [...selectedTopics] }
+    } else {
+      selection = { mode: 'grouped', topicIds: [...selectedTopics] }
+    }
+    const titles = selection.topicIds.map(id => {
+      const c = CATEGORIES.find(cc => cc.id === id)
+      return c ? c.title : id
+    })
     trackGameStart('adv-field-guide', 'advanced', { playerCount: players.length })
-    trackTopicSelect('adv-field-guide', [categoryOptions[categoryIdx].title])
-    transitionTo(el, createGameplayScreen(players, selectedCat))
+    trackTopicSelect('adv-field-guide', randomized ? ['All: Random Shuffle'] : titles)
+    transitionTo(el, createGameplayScreen(players, selection))
   })
 
   setTimeout(() => renderNames(), 0)
@@ -181,38 +265,50 @@ function createIntroScreen() {
 
 // ─── GAMEPLAY SCREEN ───
 
-function createGameplayScreen(players, selectedCategory) {
+function createGameplayScreen(players, selection) {
   const el = document.createElement('div')
   el.className = 'screen adv-fg-game'
+
+  // Selection: { mode: 'single' | 'grouped' | 'randomized', topicIds: [...] }
+  const mode = selection.mode
+  const isSingle = mode === 'single'
+  const isGrouped = mode === 'grouped'
+  const isRandomized = mode === 'randomized'
+  const selCats = selection.topicIds.map(id => CATEGORIES.find(c => c.id === id)).filter(Boolean)
+  if (selCats.length === 0) { navigate('game-select'); return document.createElement('div') }
 
   // Build flat items array (sequential play order)
   let items = []
   const categoryOrder = []
   const categoryProgress = {}
-  const count = questionsPerLevel(players.length)
   let isLeveled = false
 
-  if (selectedCategory === 'all') {
-    // `count` random items per category, grouped by category
-    CATEGORIES.forEach(cat => {
-      const picked = pickItems(cat.items, count, cat.id)
-      picked.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
-      categoryOrder.push(cat.id)
-      categoryProgress[cat.id] = { answered: 0, total: picked.length }
-    })
-  } else {
-    const cat = CATEGORIES.find(c => c.id === selectedCategory)
-    if (!cat) { navigate('game-select'); return document.createElement('div') }
+  if (isRandomized) {
+    // One pool of every item across all topics, banded by difficulty into levels.
+    // Each question is a random topic; harder levels = less-recognizable items.
+    isLeveled = true
+    const pool = []
+    selCats.forEach(cat => cat.items.forEach(it => pool.push({ it, cat })))
+    const maxLevel = pool.reduce((m, { it }) => Math.max(m, it.difficulty || 1), 1)
+    const perLevel = questionsPerLevel(players.length)
+    for (let lvl = 1; lvl <= maxLevel; lvl++) {
+      const band = pool.filter(({ it }) => (it.difficulty || 1) === lvl)
+      if (band.length === 0) continue
+      pickItemsPooled(band, perLevel).forEach(item => items.push({ ...item, level: lvl }))
+    }
+  } else if (isSingle) {
+    const cat = selCats[0]
     categoryOrder.push(cat.id)
-    // Categories whose items carry a `difficulty` play as numbered levels of
-    // rising difficulty; others fall back to a single shuffled round.
+    const perLevel = questionsPerLevel(players.length)
+    // Topics whose items carry a `difficulty` play as numbered levels of rising
+    // difficulty; any without fall back to a single shuffled round.
     if (cat.items.some(it => it.difficulty)) {
       isLeveled = true
       const maxLevel = cat.items.reduce((m, it) => Math.max(m, it.difficulty || 1), 1)
       for (let lvl = 1; lvl <= maxLevel; lvl++) {
         const band = cat.items.filter(it => (it.difficulty || 1) === lvl)
         if (band.length === 0) continue
-        const picked = pickItems(band, count, cat.id)
+        const picked = pickItems(band, perLevel, cat.id)
         picked.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title, level: lvl }))
       }
     } else {
@@ -220,6 +316,15 @@ function createGameplayScreen(players, selectedCategory) {
       picked.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
     }
     categoryProgress[cat.id] = { answered: 0, total: items.length }
+  } else {
+    // Grouped: questions per topic scaled by player + topic count, grouped by topic.
+    const perTopic = groupedCount(players.length, selCats.length)
+    selCats.forEach(cat => {
+      const picked = pickItems(cat.items, perTopic, cat.id)
+      picked.forEach(item => items.push({ ...item, categoryId: cat.id, categoryTitle: cat.title }))
+      categoryOrder.push(cat.id)
+      categoryProgress[cat.id] = { answered: 0, total: picked.length }
+    })
   }
 
   const totalRounds = items.length
@@ -234,6 +339,10 @@ function createGameplayScreen(players, selectedCategory) {
     clueRevealTimers.forEach(clearTimeout)
     clueRevealTimers = []
   }
+
+  // The active "Next"/"Finish" handler on the more-clues button (set during
+  // feedback). Tracked so manual navigation can detach a stale one.
+  let nextBtnHandler = null
 
   const state = {
     runId: genRunId(),
@@ -250,10 +359,41 @@ function createGameplayScreen(players, selectedCategory) {
     shownImpactIds: new Set(),
   }
 
-  // Determine which categories to show in sidebar
-  const visibleCategories = selectedCategory === 'all'
-    ? CATEGORIES
-    : CATEGORIES.filter(c => c.id === selectedCategory)
+  // Determine which topics to show in the sidebar. Randomized shows a single
+  // static "All Topics" entry (its progress is the level pills); single & grouped
+  // show their selected topic(s). Only grouped lets you tap to jump between them.
+  const visibleCategories = isRandomized
+    ? [{ id: '__all__', title: 'All Topics' }]
+    : selCats
+
+  // Level metadata for the sidebar indicator (leveled mode only).
+  // Each entry: { level, total, endIdx } where endIdx is the last item index.
+  const levels = []
+  if (isLeveled) {
+    items.forEach((it, idx) => {
+      let lv = levels.find(l => l.level === it.level)
+      if (!lv) { lv = { level: it.level, total: 0, endIdx: idx }; levels.push(lv) }
+      lv.total++
+      lv.endIdx = idx
+    })
+  }
+
+  // Navigable segments for Previous / Skip: one per level (leveled mode) or one
+  // per category (all-categories mode). Each is a contiguous range of `items`.
+  const navSegments = []
+  if (isLeveled) {
+    levels.forEach(lv => navSegments.push({ startIdx: lv.endIdx - lv.total + 1, endIdx: lv.endIdx }))
+  } else if (isGrouped) {
+    let seg = null
+    items.forEach((it, idx) => {
+      if (!seg || seg.catId !== it.categoryId) {
+        seg = { catId: it.categoryId, startIdx: idx, endIdx: idx }
+        navSegments.push(seg)
+      }
+      seg.endIdx = idx
+    })
+  }
+  const showNav = navSegments.length > 1
 
   // ── Build DOM ──
 
@@ -272,18 +412,29 @@ function createGameplayScreen(players, selectedCategory) {
 
     <div class="adv-sw-body">
       <div class="adv-sw-sidebar">
-        <span class="adv-sw-sidebar-heading">Categories</span>
+        <span class="adv-sw-sidebar-heading">Topics</span>
         <div class="adv-sw-categories" id="adv-fg-categories">
           ${visibleCategories.map(cat => {
             const prog = categoryProgress[cat.id]
             return `
-              <div class="adv-sw-cat-btn adv-sw-cat-choosable" data-cat="${cat.id}">
-                <span class="adv-sw-cat-title">${cat.title}</span>
+              <div class="adv-sw-cat-btn${isGrouped ? ' adv-sw-cat-choosable' : ''}" data-cat="${cat.id}">
+                <span class="adv-sw-cat-title">${esc(cat.title)}</span>
                 <span class="adv-sw-cat-count" id="adv-fg-cat-${cat.id}">${prog ? `0/${prog.total}` : ''}</span>
               </div>
             `
           }).join('')}
         </div>
+
+        ${isLeveled ? `
+          <div class="adv-fg-levels" id="adv-fg-levels">
+            ${levels.map(lv => `
+              <div class="adv-fg-level-pill" id="adv-fg-level-${lv.level}">
+                <span class="adv-fg-level-num">Level ${lv.level}</span>
+                <span class="adv-fg-level-check">✓</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
 
         <div class="adv-sw-sidebar-divider"></div>
 
@@ -386,33 +537,63 @@ function createGameplayScreen(players, selectedCategory) {
     })
   }
 
+  // ── Level Indicator ──
+
+  function updateLevelIndicator() {
+    if (!isLeveled) return
+    const curLevel = items[state.round] ? items[state.round].level : null
+    levels.forEach(lv => {
+      const pill = el.querySelector(`#adv-fg-level-${lv.level}`)
+      if (!pill) return
+      // "Done" only when every question in the level was actually answered —
+      // skipping past a level (state.round advancing) must NOT mark it complete.
+      const startIdx = lv.endIdx - lv.total + 1
+      let answered = 0
+      for (let i = startIdx; i <= lv.endIdx; i++) {
+        if (state.answeredIds.has(items[i].id)) answered++
+      }
+      pill.classList.toggle('adv-fg-level-active', lv.level === curLevel)
+      pill.classList.toggle('adv-fg-level-done', answered >= lv.total)
+    })
+  }
+
   // ── Jump to Category ──
   // User can tap a sidebar category to skip ahead to items from that category.
   // Reorders the remaining items so that category's unplayed items come next.
 
+  // ── Navigation (Previous / Skip, level pills, category buttons) ──
+
+  // Jump straight to a round, abandoning the current question. Used by all the
+  // manual navigation controls. Keeps the current player's turn (facilitator
+  // override rather than a normal turn advance).
+  function goToRound(idx) {
+    if (cancelled || state.phase === 'complete' || state.phase === 'init') return
+    state.round = Math.max(0, Math.min(totalRounds - 1, idx))
+    showRound()
+  }
+
+  function currentSegmentIdx() {
+    return navSegments.findIndex(s => state.round >= s.startIdx && state.round <= s.endIdx)
+  }
+
+  function goToSegment(targetIdx) {
+    if (targetIdx < 0 || targetIdx >= navSegments.length) return
+    goToRound(navSegments[targetIdx].startIdx)
+  }
+
+  function updateNavButtons() {
+    if (!showNav) return
+    const cur = currentSegmentIdx()
+    const prevBtn = el.querySelector('#adv-fg-nav-prev')
+    const skipBtn = el.querySelector('#adv-fg-nav-skip')
+    if (prevBtn) prevBtn.disabled = cur <= 0
+    if (skipBtn) skipBtn.disabled = cur >= navSegments.length - 1
+  }
+
+  // Tap a sidebar category (all mode) to jump to that category's block.
   function jumpToCategory(catId) {
-    if (state.phase !== 'viewing' && state.phase !== 'feedback') return
-    const prog = categoryProgress[catId]
-    if (!prog || prog.answered >= prog.total) return
-
-    // Find the first unplayed item from this category in the remaining queue
-    const remaining = items.slice(state.round)
-    const fromCat = remaining.filter(it => it.categoryId === catId)
-    const notFromCat = remaining.filter(it => it.categoryId !== catId)
-
-    if (fromCat.length === 0) return
-    // Nothing else to reorder (e.g. single-category / leveled mode) — don't
-    // re-render the current round, which would reset clue progress.
-    if (notFromCat.length === 0) return
-
-    // Reorder: put this category's items first, then the rest
-    items = [...items.slice(0, state.round), ...fromCat, ...notFromCat]
-
-    // If currently in feedback (waiting for Next), just let them tap Next
-    // to see the newly-reordered items. If viewing, load the new round.
-    if (state.phase === 'viewing') {
-      showRound()
-    }
+    const segIdx = navSegments.findIndex(s => items[s.startIdx].categoryId === catId)
+    if (segIdx >= 0) goToSegment(segIdx)
   }
 
   // ── Turn Display ──
@@ -466,8 +647,8 @@ function createGameplayScreen(players, selectedCategory) {
       else showRound()
     }
 
-    // Crossed a category boundary (All mode) -> show category impact fact
-    if (selectedCategory === 'all' && prevItem.categoryId !== nextItem.categoryId) {
+    // Crossed a topic boundary (grouped mode) -> show that topic's impact fact
+    if (isGrouped && prevItem.categoryId !== nextItem.categoryId) {
       if (IMPACT_MESSAGES[prevItem.categoryId] && !state.shownImpactIds.has(prevItem.categoryId)) {
         state.shownImpactIds.add(prevItem.categoryId)
         showCategoryImpact(prevItem.categoryId, proceed)
@@ -575,6 +756,12 @@ function createGameplayScreen(players, selectedCategory) {
     state.phase = 'viewing'
     state.cluesRevealed = 0
     clearClueRevealTimers()
+    // Detach any stale Next/Finish handler (e.g. navigating mid-feedback).
+    if (nextBtnHandler) {
+      moreCluesBtn.removeEventListener('pointerdown', nextBtnHandler)
+      nextBtnHandler = null
+      moreCluesBtn.classList.remove('adv-fg-next-mode')
+    }
     updateTurnDisplay()
 
     const item = items[state.round]
@@ -588,7 +775,9 @@ function createGameplayScreen(players, selectedCategory) {
     } else {
       el.querySelector('#adv-fg-round-counter').textContent = `Q${state.round + 1} of ${totalRounds}`
     }
-    highlightCategory(item.categoryId)
+    highlightCategory(isRandomized ? '__all__' : item.categoryId)
+    updateLevelIndicator()
+    updateNavButtons()
 
     // Generate choices
     const { options, correctIdx } = generateChoices(item)
@@ -680,8 +869,9 @@ function createGameplayScreen(players, selectedCategory) {
     const isCorrect = btnIdx === state.correctIdx
     const buttons = answersEl.querySelectorAll('.adv-fg-answer-btn')
 
-    // Update category progress
-    if (categoryProgress[item.categoryId]) {
+    // Update category progress (skip if this item was already answered, e.g.
+    // revisited via the Previous button — avoids over-counting).
+    if (categoryProgress[item.categoryId] && !state.answeredIds.has(item.id)) {
       categoryProgress[item.categoryId].answered++
       updateCategoryProgress()
     }
@@ -691,6 +881,7 @@ function createGameplayScreen(players, selectedCategory) {
 
     // Track this item as answered (correct or not) so it won't appear as a distractor
     state.answeredIds.add(item.id)
+    updateLevelIndicator()
 
     if (isCorrect) {
       buttons[btnIdx].classList.add('adv-fg-correct')
@@ -738,10 +929,12 @@ function createGameplayScreen(players, selectedCategory) {
       if (cancelled || advanced || state.phase === 'complete') return
       advanced = true
       moreCluesBtn.removeEventListener('pointerdown', nextHandler)
+      nextBtnHandler = null
       moreCluesBtn.classList.remove('adv-fg-next-mode')
 
-      // Check if this is the last item in a single-category game
-      if (state.round + 1 >= totalRounds && selectedCategory !== 'all') {
+      // Last item of a single-topic game -> show that topic's impact, then finish.
+      // (Grouped/randomized end via advanceTurn -> showCompletion's impact overlay.)
+      if (state.round + 1 >= totalRounds && isSingle) {
         const catId = item.categoryId
         if (IMPACT_MESSAGES[catId] && !state.shownImpactIds.has(catId)) {
           state.shownImpactIds.add(catId)
@@ -754,6 +947,7 @@ function createGameplayScreen(players, selectedCategory) {
 
       advanceTurn()
     }
+    nextBtnHandler = nextHandler
     moreCluesBtn.addEventListener('pointerdown', nextHandler)
   }
 
@@ -996,7 +1190,7 @@ function createGameplayScreen(players, selectedCategory) {
   function confirmBack() {
     if (state.round === 0 && state.phase === 'viewing' && state.cluesRevealed === 0) {
       cancelled = true
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
       return
     }
     const popup = document.createElement('div')
@@ -1019,7 +1213,7 @@ function createGameplayScreen(players, selectedCategory) {
     })
     popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
       cancelled = true
-      navigate('game-select')
+      transitionTo(el, createIntroScreen())
     })
   }
 
@@ -1035,13 +1229,41 @@ function createGameplayScreen(players, selectedCategory) {
     })
   })
 
-  // Category click handlers — tap to jump to that category's items
-  el.querySelectorAll('.adv-sw-cat-btn').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
-      if (state.phase !== 'viewing') return
-      jumpToCategory(btn.dataset.cat)
+  // Category click handlers (grouped mode only) — tap to jump to that topic's block
+  if (isGrouped) {
+    el.querySelectorAll('.adv-sw-cat-btn').forEach(btn => {
+      btn.addEventListener('pointerdown', () => jumpToCategory(btn.dataset.cat))
+    })
+  }
+
+  // Level pills (leveled mode) — tap to jump to any level, even ahead
+  el.querySelectorAll('.adv-fg-level-pill').forEach(pill => {
+    pill.addEventListener('pointerdown', () => {
+      const lvNum = parseInt(pill.id.replace('adv-fg-level-', ''), 10)
+      const segIdx = navSegments.findIndex(s => items[s.startIdx].level === lvNum)
+      if (segIdx >= 0) goToSegment(segIdx)
     })
   })
+
+  // Previous / Skip navigation row (above Quit), shown only when there is more
+  // than one segment to move between (levels, or categories in All mode).
+  if (showNav) {
+    const navRow = document.createElement('div')
+    navRow.className = 'adv-fg-nav-row'
+    navRow.innerHTML = `
+      <button class="adv-fg-nav-btn" id="adv-fg-nav-prev">← Previous</button>
+      <button class="adv-fg-nav-btn" id="adv-fg-nav-skip">${isLeveled ? 'Skip Level →' : 'Next Topic →'}</button>
+    `
+    el.querySelector('.adv-sw-sidebar').appendChild(navRow)
+    navRow.querySelector('#adv-fg-nav-prev').addEventListener('pointerdown', () => {
+      const cur = currentSegmentIdx()
+      if (cur > 0) goToSegment(cur - 1)
+    })
+    navRow.querySelector('#adv-fg-nav-skip').addEventListener('pointerdown', () => {
+      const cur = currentSegmentIdx()
+      if (cur >= 0 && cur < navSegments.length - 1) goToSegment(cur + 1)
+    })
+  }
 
   // Quit button in sidebar
   const quitBtn = document.createElement('button')
@@ -1055,6 +1277,8 @@ function createGameplayScreen(players, selectedCategory) {
   updateTurnDisplay()
   updateScores()
   updateCategoryProgress()
+  updateLevelIndicator()
+  updateNavButtons()
 
   if (isLeveled) {
     const firstName = state.players[state.currentPlayer].name
