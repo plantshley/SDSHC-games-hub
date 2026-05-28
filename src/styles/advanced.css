@@ -576,6 +576,7 @@
   color: var(--adv-text-muted);
   line-height: 1.6;
   text-align: center;
+  margin-bottom: 5px;
 }
 
 .adv-sw-intro-desc .typing-cursor {
@@ -598,7 +599,7 @@
   border: 2px solid var(--adv-border);
   border-radius: 16px;
   width: 100%;
-  margin-top: -5px;
+  margin-top: 0px;
 }
 
 .adv-sw-setup-label {
@@ -693,7 +694,7 @@
   font-size: 1.4rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: -10px;
+  margin-top: 10px;
 }
 
 .adv-sw-start-btn:hover,
@@ -2798,8 +2799,9 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
-  padding: 24px 20px;
-  margin-top: -5px;
+  padding: 0px 20px;
+  margin-top: 20px;
+  height: 100%;
 }
 
 /* Topic picker grid — 2 columns, left-aligned */
