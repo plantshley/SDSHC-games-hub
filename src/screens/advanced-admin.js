@@ -192,8 +192,8 @@ export function createAdvancedAdminScreen() {
         ${roster.map(r => `
           <li class="adv-admin-row" data-id="${r.teamId}">
             <span class="adv-admin-row-name">${escapeHtml(r.teamName)}</span>
-            <span class="adv-admin-row-status adv-admin-status-${r.rosterStatus}">${r.rosterStatus} (event)</span>
-            <span class="adv-admin-row-status adv-admin-status-${r.teamStatus}">${r.teamStatus} (statewide)</span>
+            ${rosterStatusPill(r.rosterStatus, 'Event')}
+            ${rosterStatusPill(r.teamStatus, 'Statewide')}
             <span class="adv-admin-row-actions">
               ${r.rosterStatus !== 'approved'
                 ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="approve-event">Approve for event</button>`
@@ -217,7 +217,9 @@ export function createAdvancedAdminScreen() {
         await approveTeam(id)
         await renderRoster(); await renderPending(); await renderTeams()
       })
-      row.querySelector('[data-act="remove"]')?.addEventListener('pointerdown', async () => {
+      // `click`, not `pointerdown` — mobile browsers suppress confirm/prompt
+      // when called from pointerdown (treated like a blocked popup).
+      row.querySelector('[data-act="remove"]')?.addEventListener('click', async () => {
         if (!window.confirm('Remove this team from the event roster? Their event scores will no longer count.')) return
         await removeTeamFromEventRoster(activeId, id)
         await renderRoster()
@@ -259,12 +261,12 @@ export function createAdvancedAdminScreen() {
         await approveTeam(id)
         await renderPending(); await renderTeams(); await renderRoster()
       })
-      row.querySelector('[data-act="remove"]').addEventListener('pointerdown', async () => {
+      row.querySelector('[data-act="remove"]').addEventListener('click', async () => {
         if (!window.confirm('Remove this team AND all its score entries? This cannot be undone.')) return
         await deleteTeam(id)
         await renderPending(); await renderTeams(); await renderRoster(); await renderScores()
       })
-      row.querySelector('[data-act="rename"]').addEventListener('pointerdown', async () => {
+      row.querySelector('[data-act="rename"]').addEventListener('click', async () => {
         const cur = row.querySelector('.adv-admin-row-name').textContent
         const next = window.prompt('Rename team to:', cur)
         if (next && next.trim()) {
@@ -312,7 +314,7 @@ export function createAdvancedAdminScreen() {
         row.querySelector('[data-act="approve"]')?.addEventListener('pointerdown', async () => {
           await approveTeam(id); await renderTeams(); await renderPending(); await renderRoster()
         })
-        row.querySelector('[data-act="rename"]')?.addEventListener('pointerdown', async () => {
+        row.querySelector('[data-act="rename"]')?.addEventListener('click', async () => {
           const cur = row.querySelector('.adv-admin-row-name').textContent
           const next = window.prompt('Rename team to (merges if name matches another team):', cur)
           if (next && next.trim()) {
@@ -320,7 +322,7 @@ export function createAdvancedAdminScreen() {
             await renderTeams(); await renderPending(); await renderRoster()
           }
         })
-        row.querySelector('[data-act="delete"]')?.addEventListener('pointerdown', async () => {
+        row.querySelector('[data-act="delete"]')?.addEventListener('click', async () => {
           if (!window.confirm('Delete this team AND all its score entries? This cannot be undone.')) return
           await deleteTeam(id)
           await renderTeams(); await renderPending(); await renderRoster(); await renderScores()
@@ -391,7 +393,7 @@ export function createAdvancedAdminScreen() {
         await reopenEvent(id)
         await renderEvents(); await renderActiveEvent()
       })
-      row.querySelector('[data-act="delete"]')?.addEventListener('pointerdown', async () => {
+      row.querySelector('[data-act="delete"]')?.addEventListener('click', async () => {
         if (!window.confirm('Delete this event AND all its tagged scores? This cannot be undone.')) return
         await deleteEvent(id)
         await renderEvents(); await renderActiveEvent(); await renderScores(); await renderRoster()
@@ -428,7 +430,7 @@ export function createAdvancedAdminScreen() {
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
       const id = row.dataset.id
-      row.querySelector('[data-act="delete"]')?.addEventListener('pointerdown', async () => {
+      row.querySelector('[data-act="delete"]')?.addEventListener('click', async () => {
         if (!window.confirm('Delete this score entry?')) return
         await deleteScore(id)
         await renderScores()
@@ -457,6 +459,17 @@ export function createAdvancedAdminScreen() {
   renderScores()
 
   return screen
+}
+
+// Roster pills show only a mark + scope label (Event / Statewide). The status
+// word itself ("approved"/"pending") is encoded in the mark + color, so the
+// pill stays narrow enough to sit beside the team name on a phone-width row.
+//   approved → ✓ (check)   pending → … (waiting)   hidden → ✕ (x)
+function rosterStatusPill(status, scope) {
+  const marks = { approved: '✓', pending: '○', hidden: '✕' }
+  const mark = marks[status] || '·'
+  const title = `${status} (${scope.toLowerCase()})`
+  return `<span class="adv-admin-row-status adv-admin-status-${status}" title="${title}">${mark} ${scope}</span>`
 }
 
 function escapeHtml(s) {

@@ -8,7 +8,7 @@ import './styles/advanced.css'
 import './styles/leaderboard.css'
 
 import { initRouter, onRoute, navigate, navigateRaw } from './router.js'
-import { initIdleTimer, clearProgress, setIdleTimeout } from './idle-timer.js'
+import { initIdleTimer, clearProgress, setIdleTimeout, disableIdleTimer, enableIdleTimer } from './idle-timer.js'
 import { trackIdleTimeout, trackGameStart } from './utils/analytics.js'
 import { createIntroScreen } from './screens/intro.js'
 import { createSplashScreen } from './screens/splash.js'
@@ -62,11 +62,18 @@ function handleRoute(route) {
     delete app.dataset.mode
   }
 
-  // Configure idle timer based on mode
-  if (route.mode === 'kid') {
+  // Configure idle timer. Admin page disables it entirely so an admin working
+  // on a phone (typing, color picking) isn't kicked back to intro mid-task.
+  if (route.mode === 'advanced' && route.screen === 'admin') {
+    disableIdleTimer()
+  } else if (route.mode === 'kid') {
+    enableIdleTimer()
     setIdleTimeout(120_000)
   } else if (route.mode === 'advanced') {
+    enableIdleTimer()
     setIdleTimeout(600_000)
+  } else {
+    enableIdleTimer()
   }
 
   // Intro screen (no mode). Clear play-mode session choice so each fresh

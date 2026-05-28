@@ -1434,3 +1434,202 @@
 .adv-lb-podium-1 .adv-lb-podium-base { height: 72px; }
 .adv-lb-podium-2 .adv-lb-podium-base { height: 54px; }
 .adv-lb-podium-3 .adv-lb-podium-base { height: 40px; }
+
+/* ─── Admin Panel: phone-adaptive layout (≤600px) ───
+   Admin is the only page intended to be opened on a personal device, so this
+   is the only mobile breakpoint in the project. Stacks rows that are wide-row
+   on desktop, shrinks header/title, releases the fixed-width select and
+   datetime inputs, and wraps row actions below the team/event name. */
+@media (max-width: 600px) {
+  .adv-admin {
+    padding: 12px 12px 60px;
+  }
+
+  .adv-admin .adv-header {
+    padding: 8px 0;
+    margin: 0 0 12px;
+    gap: 10px;
+  }
+
+  .adv-admin .adv-header-left {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .adv-admin .adv-back-btn {
+    font-size: 0.85rem;
+    padding: 8px 14px;
+  }
+
+  .adv-admin .adv-title {
+    font-size: 1.5rem;
+    text-shadow: none;
+  }
+
+  .adv-admin-section {
+    padding: 14px 14px;
+    border-radius: 12px;
+  }
+
+  .adv-admin-section-title {
+    font-size: 0.95rem;
+    margin: 0 0 12px;
+  }
+
+  /* Active-event row + event creator row: stack vertically. */
+  .adv-admin-active-row,
+  .adv-admin-event-creator-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .adv-admin-active-row .adv-admin-select#active-event-select,
+  .adv-admin-event-creator-row #new-event-name,
+  .adv-admin-event-creator-row .adv-admin-datetime {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .adv-admin-active-inline {
+    text-align: left;
+    font-size: 0.8rem;
+  }
+
+  .adv-admin-label {
+    min-width: 0;
+  }
+
+  .adv-admin-input,
+  .adv-admin-select {
+    min-width: 0;
+    width: 100%;
+    /* Roomier tap target on touch devices. */
+    font-size: 0.95rem;
+    padding: 10px 12px;
+  }
+
+  .adv-admin-search {
+    max-width: none;
+  }
+
+  .adv-admin-btn-create {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+  }
+
+  /* List rows: keep the color dot + name + status on one line, drop actions
+     onto a second line below. Two-line rows instead of four. */
+  .adv-admin-row {
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    padding: 8px 10px;
+    align-items: center;
+  }
+
+  .adv-admin-row > .adv-admin-row-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.85rem;
+    /* Truncate long team names so the status pill stays on the same line. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Shrink status pills + meta so name + all chips fit on line 1 even when
+     a row has two pills (roster) or a date + status (events). */
+  .adv-admin-row-status {
+    flex: 0 0 auto;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    letter-spacing: 0.03em;
+  }
+
+  .adv-admin-row-meta {
+    flex: 0 0 auto;
+    font-size: 0.65rem;
+  }
+
+  .adv-admin-row-points {
+    flex: 0 0 auto;
+  }
+
+  .adv-admin-row > .adv-admin-row-actions {
+    flex: 1 1 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  /* Compact buttons — keep tap targets reasonable but stop them dominating
+     each row. ~32px tall, sized to text. */
+  .adv-admin-btn {
+    font-size: 0.72rem;
+    padding: 6px 10px;
+    min-height: 30px;
+  }
+
+  /* Drop the per-list height cap so the page scrolls as one document on
+     phones rather than nesting scroll regions inside scroll regions. */
+  .adv-admin-list {
+    max-height: none;
+  }
+
+  /* Radios in the creator row sit inline rather than each on its own line. */
+  .adv-admin-event-creator-row .adv-admin-radio {
+    font-size: 0.9rem;
+  }
+
+  /* Color popover: tighter padding so it fits comfortably on a narrow card. */
+  .adv-color-card {
+    padding: 16px 16px;
+    gap: 10px;
+    /* On desktop the card sizes to the picker's intrinsic width via fit-content,
+       which assumed swatches don't wrap. On phones we let swatches wrap, so
+       size the card to the available width instead. */
+    width: 100%;
+    max-width: 94vw;
+    box-sizing: border-box;
+  }
+
+  /* Stack the picker so label sits above the swatches, and swatches wrap onto
+     multiple rows instead of overflowing the card. */
+  .adv-color-picker {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .adv-color-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .adv-color-label {
+    width: auto;
+  }
+
+  .adv-color-swatches {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Slightly larger swatches now that they have room to wrap, so they're
+     easier to tap on a phone. */
+  .adv-color-swatch {
+    width: 26px;
+    height: 26px;
+  }
+
+  /* Preview pill: pin to start of the card width, not floating right. */
+  .adv-color-preview {
+    align-self: flex-start;
+    margin-left: 0;
+  }
+}
