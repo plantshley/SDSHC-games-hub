@@ -1,5 +1,6 @@
 import { navigate } from '../router.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/planting-sim.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Planting Simulation Game
@@ -114,6 +115,7 @@ function createGameplayScreen(levelIdx) {
 function createThreeSisters(level, levelIdx) {
   const el = document.createElement('div')
   el.className = 'screen ps-game ps-three-sisters'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   const shuffled = [...level.plants].sort(() => Math.random() - 0.5)
   const plantsHtml = shuffled.map(p => `
@@ -298,6 +300,7 @@ function spawnFoliage(wrapper) {
 function createPollinatorGarden(level, levelIdx) {
   const el = document.createElement('div')
   el.className = 'screen ps-game ps-pollinator'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   const itemsHtml = level.items.map(item => `
     <div class="ps-deco-item" data-item-id="${item.id}" data-plant-type="${item.zoneType}" title="${item.name}">
@@ -602,6 +605,7 @@ function createBloomElement(fillColor) {
 function createYearInBloom(level, levelIdx) {
   const el = document.createElement('div')
   el.className = 'screen ps-game ps-year-in-bloom'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   // Panel flowers with name labels
   const shuffled = [...level.flowers].sort(() => Math.random() - 0.5)

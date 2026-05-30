@@ -1,5 +1,6 @@
 import { navigate } from '../router.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/farm-manager.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Game 9: Farm Manager Simulator — Harvest Guardians
@@ -121,6 +122,7 @@ function createGameplayScreen(levelIdx) {
   const level = LEVELS[levelIdx]
   const el = document.createElement('div')
   el.className = 'screen fm-game'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   let answered = false
 

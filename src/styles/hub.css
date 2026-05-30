@@ -678,3 +678,210 @@
   font-size: 28px;
   color: var(--color-text-light);
 }
+
+/* === RESPONSIVE — Kid shell ===
+ * All rules below live inside @media (max-width: …) blocks. Kiosk 1920×1080
+ * is untouched by construction. */
+
+/* ─── Laptop / tablet landscape ─── */
+@media (max-width: 1279px) {
+  .splash-title {
+    font-size: clamp(2.5rem, 8vw, 96px);
+  }
+  .splash-subtitle {
+    font-size: clamp(1.2rem, 3vw, 36px);
+  }
+  .grade-content {
+    margin-bottom: 120px;
+  }
+  .game-grid-wrapper {
+    margin-top: -40px;
+    padding: 0 24px 24px;
+  }
+  .game-grid.cols-4,
+  .game-grid.cols-3 {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    width: 100%;
+    max-width: 980px;
+  }
+}
+
+/* Shrink kid game-select title + tighten header padding on narrow viewports.
+   The typing animation sets white-space: nowrap which forces overflow if the
+   font is too large. The original 40px side padding leaves big empty gutters
+   on phones. */
+@media (max-width: 1279px) {
+  .game-select-header {
+    padding: 16px 20px;
+    gap: 16px;
+  }
+  .game-select-title {
+    font-size: clamp(1.8rem, 6vw, 48px);
+    /* Allow the title to ellipse instead of breaking layout if name doesn't
+       fit (e.g. "Harvest Guardians" on phones). */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .game-select-title .typing-text {
+    /* Override the strict nowrap so long names wrap into 2 lines instead of
+       overflowing the viewport on phones. The typing animation finishes in
+       2s either way. */
+    white-space: normal;
+  }
+}
+
+@media (max-width: 599px) {
+  .game-select-header {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .home-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .game-select-title {
+    font-size: clamp(1.4rem, 8vw, 2rem);
+  }
+}
+
+/* ─── Tablet portrait / large phone landscape ─── */
+@media (max-width: 899px) {
+  .splash-content {
+    gap: 24px;
+    padding: 24px 16px;
+  }
+  .splash-title {
+    font-size: clamp(2rem, 9vw, 4rem);
+  }
+  .splash-subtitle {
+    font-size: clamp(1rem, 4vw, 1.6rem);
+  }
+  .grade-content {
+    margin-bottom: 60px;
+    gap: 20px;
+    padding: 16px;
+  }
+  .grade-buttons {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .tier-btn {
+    width: min(320px, 90vw);
+  }
+  .tier-btn-inner {
+    padding: 18px 16px 14px;
+  }
+  .tier-btn .tier-icon {
+    width: 60px;
+    height: 60px;
+  }
+  .tier-btn .tier-title {
+    font-size: 1.2rem;
+  }
+  .tier-btn .tier-grades {
+    font-size: 0.85rem;
+  }
+  /* Speech bubble: center properly when tier buttons stack. */
+  .speech-bubble {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .game-grid-wrapper {
+    margin-top: 0;
+    padding: 16px 12px;
+  }
+  .game-grid.cols-4,
+  .game-grid.cols-3 {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .game-card-icon {
+    width: 60px;
+    height: 60px;
+  }
+  .game-card-title {
+    font-size: 0.95rem;
+    min-height: 2.4em;
+  }
+  .game-card-inner {
+    padding: 14px 10px 10px;
+  }
+}
+
+/* Landscape phone: tier buttons stay horizontal so all 3 fit in the limited
+   vertical space; shrink them instead of stacking. Decorative animals/foliage
+   hidden to free up vertical room. */
+@media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
+  .grade-content {
+    margin-bottom: 20px;
+    gap: 14px;
+  }
+  .grade-buttons {
+    flex-direction: row;
+    gap: 12px;
+    flex-wrap: nowrap;
+  }
+  .tier-btn {
+    width: 32%;
+    min-width: 0;
+  }
+  .tier-btn-inner {
+    padding: 10px 8px 8px;
+  }
+  .tier-btn .tier-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .tier-btn .tier-title {
+    font-size: 0.9rem;
+  }
+  .tier-btn .tier-grades {
+    font-size: 0.7rem;
+  }
+  .character-area,
+  .character-wave,
+  .speech-bubble,
+  .walking-animal,
+  .fixed-animal,
+  .foliage-decor {
+    display: none;
+  }
+}
+
+/* ─── Phone — hide decorative sprites + animals for room ─── */
+@media (max-width: 599px) {
+  .foliage-decor,
+  .walking-animal,
+  .fixed-animal,
+  .game-select-decor,
+  .corner-character {
+    display: none;
+  }
+  .character-area {
+    height: 180px;
+  }
+  .character-wave {
+    height: 96px;
+  }
+  .speech-bubble {
+    bottom: 160px;
+    padding: 12px 18px;
+    max-width: 86vw;
+    white-space: normal;
+    text-align: center;
+  }
+  .speech-bubble-text {
+    font-size: 0.95rem;
+  }
+  .grade-content {
+    margin-bottom: 200px;
+  }
+  .splash-title {
+    font-size: clamp(1.8rem, 10vw, 3rem);
+  }
+  .game-grid.cols-4,
+  .game-grid.cols-3 {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+}

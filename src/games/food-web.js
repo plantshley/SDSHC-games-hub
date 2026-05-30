@@ -1,5 +1,6 @@
 import { navigate } from '../router.js'
 import { ORGANISMS, QUIZ_QUESTIONS, INSTRUCTIONS } from '../data/content/food-web.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Game 11: Soil Food Web Builder — Harvest Guardians
@@ -112,6 +113,9 @@ function createIntroScreen() {
 function createGameScreen() {
   const el = document.createElement('div')
   el.className = 'screen fw-game'
+  // Food-web uses hardcoded zone pixel widths — gate at tablet width instead
+  // of trying to compress further.
+  mountNarrowGate(el, { wide: true, onBack: () => navigate('grade-select') })
 
   const placedSet = new Set()
   let quizStarted = false

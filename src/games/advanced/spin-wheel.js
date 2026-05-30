@@ -19,6 +19,7 @@ import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
 import { trackGameStart, trackGameComplete, trackGameQuit, trackTopicSelect } from '../../utils/analytics.js'
+import { mountNarrowGate } from '../../utils/narrow-gate.js'
 
 function genRunId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
@@ -121,6 +122,7 @@ function createIntroScreen() {
 function createGameplayScreen(players) {
   const el = document.createElement('div')
   el.className = 'screen adv-sw-game'
+  mountNarrowGate(el)
 
   const state = {
     runId: genRunId(),
@@ -234,13 +236,30 @@ function createGameplayScreen(players) {
   const mainPanel = el.querySelector('#adv-sw-main')
 
   // ── Canvas DPR scaling ──
-  const WHEEL_CSS_SIZE = 420
+  // Wheel is 420px on the kiosk. On smaller viewports we shrink to fit the
+  // wheel area and redraw whenever the area resizes (orientation change,
+  // sidebar collapse, etc).
+  let WHEEL_CSS_SIZE = 420
   const dpr = window.devicePixelRatio || 1
-  canvas.width = WHEEL_CSS_SIZE * dpr
-  canvas.height = WHEEL_CSS_SIZE * dpr
-  canvas.style.width = WHEEL_CSS_SIZE + 'px'
-  canvas.style.height = WHEEL_CSS_SIZE + 'px'
-  ctx.scale(dpr, dpr)
+
+  function applyCanvasSize(size) {
+    // Floor 220, cap 700. The kiosk wheel-area has no explicit width override
+    // (the responsive width:100% rule only fires ≤899px), so the area
+    // content-sizes to the canvas itself on kiosk — meaning the observed
+    // rect.width stays ~420 there and the cap never engages. Tablet/desktop-
+    // narrow viewports do get width:100% via the responsive block and can
+    // grow up to 700 here.
+    WHEEL_CSS_SIZE = Math.max(220, Math.min(700, Math.floor(size)))
+    canvas.width = WHEEL_CSS_SIZE * dpr
+    canvas.height = WHEEL_CSS_SIZE * dpr
+    canvas.style.width = WHEEL_CSS_SIZE + 'px'
+    canvas.style.height = WHEEL_CSS_SIZE + 'px'
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.scale(dpr, dpr)
+  }
+
+  // Kiosk-safe default until the wheel area is laid out.
+  applyCanvasSize(420)
 
   // ── Wheel Drawing ──
 
@@ -290,12 +309,14 @@ function createGameplayScreen(players) {
       ctx.lineWidth = 2
       ctx.stroke()
 
-      // Label
+      // Label — font size scales with the wheel so labels stay proportionate
+      // at small canvas sizes and don't get oversized at the larger 700px cap.
       ctx.save()
       ctx.translate(cx, cy)
       ctx.rotate(startAngle + sliceArc / 2)
       ctx.fillStyle = isLight ? '#1a2a2e' : '#e0e0e0'
-      ctx.font = 'bold 18px "JetBrains Mono", monospace'
+      const labelPx = Math.max(10, Math.min(16, Math.round(WHEEL_CSS_SIZE * 0.028)))
+      ctx.font = `bold ${labelPx}px "JetBrains Mono", monospace`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       const label = WHEEL_SLICES[i] === 'steal' ? 'STEAL' : WHEEL_SLICES[i] === 'wild' ? 'WILD' : WHEEL_SLICES[i].toString()
@@ -316,6 +337,26 @@ function createGameplayScreen(players) {
   // Redraw wheel when theme changes (stored ref for cleanup)
   const onThemeChange = () => drawWheel()
   window.addEventListener('theme-change', onThemeChange)
+
+  // Resize the canvas to fit its container. Only fires when the wheel area
+  // actually changes size (orientation flip, sidebar collapse, window resize).
+  // The 420 default in applyCanvasSize keeps the kiosk render identical.
+  const wheelResizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const rect = entry.contentRect
+      // Reserve ~140px below the wheel for pointer + spin button + spun value.
+      // Reserve ~120px below the wheel for pointer + spin button + spun
+      // value text. Cap at 540 on tablet+ so the wheel doesn't dominate at
+      // the expense of the question area below it.
+      const target = Math.min(rect.width, Math.max(160, rect.height - 120), 700)
+      const next = Math.max(220, Math.floor(target))
+      if (next !== WHEEL_CSS_SIZE) {
+        applyCanvasSize(next)
+        drawWheel()
+      }
+    }
+  })
+  wheelResizeObserver.observe(wheelArea)
 
   // ── Spin ──
 
@@ -907,6 +948,7 @@ function createGameplayScreen(players) {
     cancelAnimationFrame(state.spinFrame)
     clearTimeout(state.feedbackTimeout)
     window.removeEventListener('theme-change', onThemeChange)
+    wheelResizeObserver.disconnect()
   }
 
   // ── Confirm Back ──

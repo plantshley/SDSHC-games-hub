@@ -1,5 +1,6 @@
 import { navigate } from '../router.js'
 import { PAGES, PALETTE, DECORATIONS, INSTRUCTIONS } from '../data/content/coloring.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Soil Critter Coloring Game
@@ -150,6 +151,7 @@ function transitionTo(oldEl, newEl) {
 function createGameplayScreen() {
   const el = document.createElement('div')
   el.className = 'screen cc-game'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   const paletteHtml = PALETTE.map(c => `
     <button class="cc-color-swatch" data-color="${c.hex}" title="${c.name}">

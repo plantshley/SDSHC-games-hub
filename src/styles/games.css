@@ -7289,3 +7289,103 @@
   border-right-color: var(--color-meadow-dark);
   color: #fff;
 }
+
+/* ================================================================
+ * RESPONSIVE — Kid Game Intros (shared chrome across all 11 games)
+ * All games use the same {prefix}-intro-{header,title,character,decor}
+ * naming, so this block targets the lot via combined selectors.
+ * Kiosk view stays untouched (only max-width queries below).
+ * ================================================================ */
+
+/* Tablet + below: shrink headers, scale characters, compact buttons */
+@media (max-width: 899px) {
+  /* Home button + headers */
+  .home-btn {
+    width: 44px;
+    height: 44px;
+  }
+  [class*="-intro-header"] {
+    padding: 12px 14px !important;
+    gap: 12px;
+  }
+  [class*="-intro-title"] {
+    font-size: clamp(1.4rem, 5vw, 2.5rem) !important;
+  }
+  /* Speech bubbles + character figures */
+  [class*="-speech-bubble"],
+  [class*="-speech-text"] {
+    font-size: 0.95rem;
+    max-width: 86vw;
+  }
+  [class*="-intro-character"] {
+    height: 96px !important;
+    width: auto !important;
+  }
+  /* Enter buttons across games */
+  .sc-enter-btn,
+  .dtd-enter-btn,
+  .db-enter-btn,
+  .cc-enter-btn,
+  .ps-enter-btn,
+  .sw-enter-btn,
+  .tb-enter-btn,
+  .oo-enter-btn,
+  .dd-enter-btn,
+  .fm-enter-btn,
+  .fw-enter-btn {
+    padding: 12px 22px !important;
+    font-size: 1rem !important;
+  }
+}
+
+/* Phone: hide decorative foliage, further shrink */
+@media (max-width: 599px) {
+  [class*="-intro-decor"],
+  [class*="-intro-ground"] {
+    display: none !important;
+  }
+  [class*="-intro-header"] {
+    padding: 10px 12px !important;
+  }
+  [class*="-intro-title"] {
+    font-size: clamp(1.2rem, 6vw, 1.8rem) !important;
+  }
+  [class*="-intro-character"] {
+    height: 80px !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Kid Gameplay Screens
+ * Game-specific compaction so headers + content fit on phones in
+ * landscape (the only orientation we support for gameplay).
+ * ================================================================ */
+
+@media (max-width: 899px) {
+  /* Generic game header pattern: home-btn + title at top */
+  [class*="-game-header"],
+  [class*="-game-topbar"] {
+    padding: 10px 12px !important;
+    gap: 10px;
+  }
+  [class*="-game-title"] {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* Landscape phone: gameplay screens need to scroll vertically and shrink
+   chrome so the play area takes most of the viewport. */
+@media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
+  [class*="-game-header"],
+  [class*="-game-topbar"] {
+    padding: 6px 10px !important;
+    min-height: 0 !important;
+  }
+  [class*="-game-title"] {
+    font-size: 0.95rem !important;
+  }
+  .home-btn {
+    width: 36px;
+    height: 36px;
+  }
+}

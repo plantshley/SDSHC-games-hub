@@ -1,6 +1,7 @@
 import { navigate } from '../router.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/trivia-blitz.js'
 import { processAssetSVG, clearSVGCache } from '../utils/svg-recolor.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Soil Health Trivia Blitz
@@ -85,6 +86,7 @@ function createIntroScreen() {
 function createGameplayScreen(mode) {
   const el = document.createElement('div')
   el.className = 'screen tb-game'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   const state = {
     mode,

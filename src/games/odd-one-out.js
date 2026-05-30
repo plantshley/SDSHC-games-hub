@@ -1,5 +1,6 @@
 import { navigate } from '../router.js'
 import { LEVELS, ROUND_TIME, INSTRUCTIONS } from '../data/content/odd-one-out.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Game 7: Odd One Out — Meadow Makers
@@ -109,6 +110,7 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
   const round = level.rounds[roundIdx]
   const el = document.createElement('div')
   el.className = 'screen oo-game'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   let answered = false
   let score = totalScore

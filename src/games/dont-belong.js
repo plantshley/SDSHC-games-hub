@@ -1,5 +1,6 @@
 import { navigate } from '../router.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/dont-belong.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Game 3: Things That Don't Belong — Little Sprouts
@@ -120,6 +121,7 @@ function createGameplayScreen(levelIdx) {
   const level = LEVELS[levelIdx]
   const el = document.createElement('div')
   el.className = 'screen db-game'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   let answered = false
 

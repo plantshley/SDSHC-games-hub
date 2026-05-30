@@ -26,6 +26,13 @@ const app = document.getElementById('app')
 let currentScreen = null
 
 function switchScreen(newScreenEl) {
+  // Sweep any orphaned old screens first — defensive cleanup so animation
+  // hiccups (interrupted transitions, missed animationend events) can't
+  // leave previous screen DOM stacked behind the new one.
+  Array.from(app.querySelectorAll('.screen')).forEach(s => {
+    if (s !== currentScreen) s.remove()
+  })
+
   if (currentScreen) {
     currentScreen.classList.remove('active')
     currentScreen.classList.add('exiting')

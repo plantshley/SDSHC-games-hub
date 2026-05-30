@@ -18,6 +18,7 @@ import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
 import { trackGameStart, trackGameComplete, trackGameQuit, trackTopicSelect } from '../../utils/analytics.js'
+import { mountNarrowGate } from '../../utils/narrow-gate.js'
 
 function genRunId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
@@ -268,6 +269,7 @@ function createIntroScreen() {
 function createGameplayScreen(players, selection) {
   const el = document.createElement('div')
   el.className = 'screen adv-fg-game'
+  mountNarrowGate(el)
 
   // Selection: { mode: 'single' | 'grouped' | 'randomized', topicIds: [...] }
   const mode = selection.mode

@@ -3,6 +3,7 @@ import {
   CATEGORIES, WHEEL_SLICES, WIN_THRESHOLD, PLANT_STAGES,
   PLAYER_NAMES, PLAYER_COLORS, INSTRUCTIONS,
 } from '../data/content/spin-wheel.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Spin the Soil Wheel
@@ -153,6 +154,7 @@ function createIntroScreen() {
 function createGameplayScreen(players) {
   const el = document.createElement('div')
   el.className = 'screen sw-game'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   const state = {
     players: players.map(p => ({ ...p, score: 0 })),

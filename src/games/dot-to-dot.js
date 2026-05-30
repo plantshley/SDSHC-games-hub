@@ -1,5 +1,6 @@
 import { navigate } from '../router.js'
 import { LEVELS } from '../data/content/dot-to-dot.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Dot-to-Dot ("What Does Soil Make?") — Little Sprouts
@@ -124,6 +125,7 @@ function createGameScreen() {
   const level = LEVELS[currentLevelIdx]
   const el = document.createElement('div')
   el.className = 'screen dtd-game'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   const navHtml = level.puzzles.map((p, i) => `
     <button class="dtd-page-nav-item${i === currentPuzzleIdx ? ' active' : ''}" data-idx="${i}">

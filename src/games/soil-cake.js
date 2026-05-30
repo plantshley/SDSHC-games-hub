@@ -1,5 +1,6 @@
 import { navigate } from '../router.js'
 import { HORIZONS, INSTRUCTIONS } from '../data/content/soil-cake.js'
+import { mountNarrowGate } from '../utils/narrow-gate.js'
 
 /**
  * Soil Cake Game
@@ -116,6 +117,7 @@ let cakeContainerEl = null
 function createGameplayScreen() {
   const el = document.createElement('div')
   el.className = 'screen soil-cake-game'
+  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
 
   const shuffled = [...HORIZONS].sort(() => Math.random() - 0.5)
   const colorsHtml = shuffled.map(h => `
