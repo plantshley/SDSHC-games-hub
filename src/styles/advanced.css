@@ -3237,8 +3237,13 @@
        safe area. */
     padding: 8px 20px 0;
     box-sizing: border-box;
-    margin-bottom: 20px;
-    max-width: none;
+    /* Cap grid width so flex-wrap produces exactly 3 cards per row
+       (3 × 270 cards + 2 × 30 gap + 2 × 20 padding = 910). margin: 0 auto
+       centers the absolutely-positioned grid because both left and right
+       are 0. Result: 2 rows × 3 columns on landscape tablet, laptop, and
+       desktop sub-kiosk widths, matching the kiosk layout. */
+    margin: 0 auto 20px;
+    max-width: 940px;
     align-content: flex-start;
   }
   .adv-game-select .adv-game-grid::after {
