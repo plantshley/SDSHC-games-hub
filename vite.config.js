@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 const BASE = '/SDSHC-games-hub/'
 
@@ -27,5 +28,36 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
-  plugins: [rewriteAssetUrls],
+  plugins: [
+    rewriteAssetUrls,
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg,JPG}']
+      },
+      devOptions: {
+        enabled: true
+      },
+      manifest: {
+        name: 'SDSHC Games Hub',
+        short_name: 'SDSHC Games',
+        description: 'Interactive educational games for SDSHC',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
+        icons: [
+          {
+            src: 'assets/sdshc-logo.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'assets/sdshc-logo.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
+  ],
 })
