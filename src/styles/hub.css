@@ -716,18 +716,79 @@
     gap: 16px;
   }
   .game-select-title {
-    font-size: clamp(1.8rem, 6vw, 48px);
-    /* Allow the title to ellipse instead of breaking layout if name doesn't
-       fit (e.g. "Harvest Guardians" on phones). */
+    font-size: clamp(1.4rem, 5vw, 40px);
+    /* Hard nowrap + ellipsis so the typing animation always advances on a
+       single row instead of wrapping mid-type and then snapping back. */
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .game-select-title .typing-text {
-    /* Override the strict nowrap so long names wrap into 2 lines instead of
-       overflowing the viewport on phones. The typing animation finishes in
-       2s either way. */
-    white-space: normal;
+    white-space: nowrap;
+  }
+}
+
+/* ─── Kid backgrounds: stay viewport-sized during internal screen scroll.
+   At ≤1919, base.css drops .screen's will-change to `opacity` only, so a
+   position: fixed child of .screen actually attaches to the viewport
+   (no transform containing-block trap). Without this, the absolute-inset
+   bg sticks to the element box but the element box scrolls, revealing the
+   dark page color below. */
+@media (max-width: 1919px) {
+  .splash-bg {
+    position: fixed;
+  }
+  /* .grade-screen's bg is set on the element directly. Replace it with a
+     fixed pseudo-element so scrolling can never reveal the dark page. */
+  .grade-screen {
+    background-image: none;
+  }
+  .grade-screen::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: url('/assets/gifs/pixel-farm-scene3.gif') center / cover no-repeat #2a3a1e;
+    z-index: 0;
+    pointer-events: none;
+  }
+  /* Existing ::before is the dim overlay — re-pin it to viewport too so it
+     covers the same area as the fixed bg. */
+  .grade-screen::before {
+    position: fixed;
+    z-index: 1;
+  }
+  .grade-content,
+  .character-area {
+    position: relative;
+    z-index: 5;
+  }
+  /* grade-back-btn must stay absolute top:12/left:12 (per base rule). The
+     earlier rule pulled it to position:relative which made flex centering
+     re-center it on every responsive size. Keep its base positioning and
+     just raise z-index above the fixed bg pseudo-elements. */
+  .grade-back-btn {
+    z-index: 20;
+  }
+  /* Kid game-select base rule has overflow:hidden which blocks vertical
+     scroll on narrow viewports. Allow it. */
+  .game-select-screen {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  /* The grass-tile background is set as a repeating image on the absolute
+     .game-select-bg child; when the screen scrolls, the child scrolls
+     with it and the area below reveals the dark page bg. Pin it to the
+     viewport so it always tiles behind whatever content is on screen. */
+  .game-select-bg {
+    position: fixed !important;
+    inset: 0 !important;
+  }
+  /* The kiosk nudge that shoves the grid up by 100px overflows the top on
+     scrollable viewports. Reset at any non-kiosk size so scroll starts at
+     the first card. */
+  .game-grid-wrapper {
+    margin-top: 0 !important;
   }
 }
 
@@ -760,7 +821,17 @@
   .grade-content {
     margin-bottom: 60px;
     gap: 20px;
-    padding: 16px;
+    /* Top padding clears the absolute home button (top:12, ~44px tall +
+       12px gap) so the first tier card never layers behind it on portrait. */
+    padding: 72px 16px 16px;
+  }
+  /* Anchor grade-content at the top of the screen so its 72px top padding
+     actually keeps cards below the home button. Without this, the screen's
+     base `justify-content: center` plus the bottom margin-+-character-area
+     pulled the whole content block up by ~55px, so the first card landed
+     behind the home button despite the padding. */
+  .grade-screen {
+    justify-content: flex-start !important;
   }
   .grade-buttons {
     flex-direction: column;
@@ -811,7 +882,8 @@
 
 /* Landscape phone: tier buttons stay horizontal so all 3 fit in the limited
    vertical space; shrink them instead of stacking. Decorative animals/foliage
-   hidden to free up vertical room. */
+   hidden to free up vertical room. Buttons are forced to equal-height squares
+   so all 3 tiles align regardless of label length. */
 @media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
   .grade-content {
     margin-bottom: 20px;
@@ -821,23 +893,40 @@
     flex-direction: row;
     gap: 12px;
     flex-wrap: nowrap;
+    align-items: stretch;
   }
   .tier-btn {
     width: 32%;
     min-width: 0;
+    aspect-ratio: 1 / 1;
+    display: flex;
+  }
+  .tier-btn-outer {
+    flex: 1 1 auto;
+    display: flex;
   }
   .tier-btn-inner {
+    flex: 1 1 auto;
     padding: 10px 8px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
   .tier-btn .tier-icon {
     width: 36px;
     height: 36px;
   }
   .tier-btn .tier-title {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    line-height: 1.1;
+    text-align: center;
   }
   .tier-btn .tier-grades {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
+    line-height: 1.1;
+    text-align: center;
   }
   .character-area,
   .character-wave,
@@ -880,8 +969,75 @@
   .splash-title {
     font-size: clamp(1.8rem, 10vw, 3rem);
   }
+}
+
+/* Tablet portrait: two-column grid, cards capped so they don't bloat. */
+@media (max-width: 899px) and (orientation: portrait) and (min-width: 600px) {
   .game-grid.cols-4,
   .game-grid.cols-3 {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 220px));
+    justify-content: center;
+    gap: 18px;
+  }
+  .game-card-icon {
+    width: 60px;
+    height: 60px;
+  }
+  .game-card-inner {
+    padding: 14px 14px 12px;
+  }
+  .game-card-title {
+    font-size: 1rem;
+    min-height: 0;
+  }
+}
+
+/* Mobile portrait: single column, cards capped to ~220px (not full-width). */
+@media (max-width: 599px) and (orientation: portrait) {
+  .game-grid.cols-4,
+  .game-grid.cols-3 {
+    grid-template-columns: minmax(0, 220px);
+    justify-content: center;
+    gap: 14px;
+  }
+  .game-card-icon {
+    width: 52px;
+    height: 52px;
+  }
+  .game-card-inner {
+    padding: 12px 12px 10px;
+  }
+  .game-card-title {
+    font-size: 0.95rem;
+    min-height: 0;
+  }
+  .game-card-levels {
+    font-size: 0.75rem;
+  }
+}
+
+/* Landscape phone: cards much smaller so all visible without huge scroll. */
+@media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
+  .game-grid-wrapper {
+    padding: 8px 12px 12px;
+    margin-top: 0;
+  }
+  .game-grid.cols-4,
+  .game-grid.cols-3 {
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+  }
+  .game-card-icon {
+    width: 40px;
+    height: 40px;
+  }
+  .game-card-inner {
+    padding: 8px 6px 8px;
+    gap: 6px;
+  }
+  .game-card-title {
+    font-size: 0.75rem;
+    line-height: 1.1;
+    min-height: 0;
   }
 }
