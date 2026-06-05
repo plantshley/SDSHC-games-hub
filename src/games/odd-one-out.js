@@ -110,7 +110,7 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
   const round = level.rounds[roundIdx]
   const el = document.createElement('div')
   el.className = 'screen oo-game'
-  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
+  mountNarrowGate(el, { onBack: () => navigate('grade-select'), rotatePrompt: true })
 
   let answered = false
   let score = totalScore

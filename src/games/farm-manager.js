@@ -122,7 +122,7 @@ function createGameplayScreen(levelIdx) {
   const level = LEVELS[levelIdx]
   const el = document.createElement('div')
   el.className = 'screen fm-game'
-  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
+  mountNarrowGate(el, { onBack: () => navigate('grade-select'), rotatePrompt: true })
 
   let answered = false
 

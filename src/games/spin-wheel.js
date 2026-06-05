@@ -154,7 +154,7 @@ function createIntroScreen() {
 function createGameplayScreen(players) {
   const el = document.createElement('div')
   el.className = 'screen sw-game'
-  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
+  mountNarrowGate(el, { onBack: () => navigate('grade-select'), rotatePrompt: true })
 
   const state = {
     players: players.map(p => ({ ...p, score: 0 })),

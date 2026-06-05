@@ -8,6 +8,15 @@
  * The gate itself is CSS-driven: `display: none` by default; the responsive
  * media queries in base.css flip it to `display: flex` at the gating
  * breakpoint (≤ 599px default, ≤ 899px when `wide: true`).
+ *
+ * Opt-in: pass `rotatePrompt: true` to also append a dismissible
+ * "rotate to landscape" prompt that activates only on tablet portrait
+ * (600–1279px, portrait orientation). Below 600px the hard narrow-gate
+ * already covers the screen so the prompt would never fire there.
+ * Currently used by planting-sim, spin-wheel, odd-one-out, drag-drop,
+ * farm-manager, and trivia-blitz — the games with the busiest landscape
+ * layouts. Dismissal is per-render (not persisted), so navigating between
+ * these games re-prompts.
  */
 
 import { navigate } from '../router.js'
@@ -34,16 +43,36 @@ function buildGate(opts) {
   return gate
 }
 
+function buildRotatePrompt() {
+  const prompt = document.createElement('div')
+  prompt.className = 'rotate-prompt'
+  prompt.innerHTML = `
+    <div class="rotate-prompt-icon" aria-hidden="true">⟳</div>
+    <div class="rotate-prompt-title">Rotate for the best view</div>
+    <div class="rotate-prompt-msg">This game is laid out for landscape. Rotate your device to landscape — or continue in portrait.</div>
+    <button type="button" class="rotate-prompt-dismiss">Continue in portrait</button>
+  `
+  prompt.querySelector('.rotate-prompt-dismiss').addEventListener('click', (e) => {
+    e.stopPropagation()
+    prompt.classList.add('rotate-prompt-dismissed')
+  })
+  return prompt
+}
+
 /**
  * Append a narrow-gate to `parent`, deferred to the next microtask so it
- * survives any synchronous `parent.innerHTML = ...` that follows.
+ * survives any synchronous `parent.innerHTML = ...` that follows. Pass
+ * `rotatePrompt: true` to also append the tablet-portrait rotate prompt.
  *
  * @param {HTMLElement} parent
- * @param {{ onBack?: () => void, message?: string, wide?: boolean }} [opts]
+ * @param {{ onBack?: () => void, message?: string, wide?: boolean, rotatePrompt?: boolean }} [opts]
  */
 export function mountNarrowGate(parent, opts = {}) {
   Promise.resolve().then(() => {
     parent.appendChild(buildGate(opts))
+    if (opts.rotatePrompt) {
+      parent.appendChild(buildRotatePrompt())
+    }
   })
 }
 
