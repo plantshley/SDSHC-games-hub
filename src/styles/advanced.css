@@ -4313,6 +4313,19 @@
   .adv-jp-cell {
     font-size: 0.85rem;
   }
+  /* Quit button: pin to the page's lower-right corner (same row as the score
+     chips) instead of drifting onto a board cell. The body scrolls on landscape
+     phone, so `absolute` (anchored to the scrolling body) landed mid-grid;
+     `fixed` anchors to the game screen — which fills the viewport here — so it
+     stays put in the corner. */
+  .adv-jp-quit-btn {
+    position: fixed;
+    bottom: 8px;
+    right: 20px;
+    margin: 0;
+    padding: 4px 12px;
+    z-index: 20;
+  }
   /* Field guide */
   .adv-fg-main {
     padding: 14px 12px 10px;

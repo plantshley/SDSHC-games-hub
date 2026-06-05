@@ -1718,6 +1718,18 @@
   .adv-lb-podium-col {
     width: 100%;
   }
+  /* Color swatches: keep them a single horizontal row of round circles.
+     flex-shrink:0 stops them squishing into ovals; trimmed size + gap let all
+     14 fit across the narrower card without wrapping onto a second line. */
+  .adv-color-swatches {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  .adv-color-swatch {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+  }
 }
 
 /* Landscape phone: card needs to fit a much shorter viewport — let it scroll
@@ -1734,7 +1746,76 @@
   .adv-lb-footer {
     flex-shrink: 0;
   }
-}
+
+  /* Roster — short landscape viewport. The `calc(100vh - 220px)` cap left only
+     ~180px, so with overflow:hidden everything below the name input + Add button
+     got clipped. Let the whole card grow much taller and scroll as one unit,
+     with smaller type and tighter padding/spacing so more fits. */
+  .adv-roster {
+    padding: 10px 16px 16px;
+    gap: 10px;
+  }
+  .adv-roster-card {
+    max-height: calc(100vh - 56px);
+    padding: 12px 16px;
+    gap: 6px;
+    overflow-y: auto;
+  }
+  .adv-roster-sub {
+    font-size: 0.78rem;
+  }
+  /* Keep the input + Add button on one row to save vertical space (the
+     max-width:899px block stacks them; this fires later, so it wins). */
+  .adv-roster-add {
+    flex-direction: row;
+    gap: 8px;
+  }
+  .adv-roster-input,
+  .adv-roster-add-btn {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+  .adv-roster-colors {
+    padding: 4px 0 6px;
+  }
+  /* Card scrolls now — don't nest a second scroll region in the list. */
+  .adv-roster-list {
+    flex: 0 0 auto;
+    overflow-y: visible;
+    gap: 3px;
+  }
+  .adv-roster-row {
+    padding: 3px 10px;
+    font-size: 0.75rem;
+  }
+  .adv-roster-status {
+    font-size: 0.62rem;
+    padding: 1px 6px;
+  }
+  .adv-roster-actions {
+    margin-top: 2px;
+  }
+  .adv-roster-continue {
+    padding: 9px 26px;
+    font-size: 0.92rem;
+  }
+  .adv-roster-hint {
+    font-size: 0.66rem;
+    line-height: 1.4;
+  }
+  /* Keep color swatches a single horizontal row of round circles on landscape
+     phones. Also overrides the ≤600px block (which stacks/wraps) for small
+     landscape phones, since this query is declared later. */
+  .adv-color-swatches {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  .adv-color-swatch {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+  }
 
 /* Phone — tighter still, single-column flows. */
 @media (max-width: 599px) {
