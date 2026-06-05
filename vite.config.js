@@ -32,6 +32,7 @@ export default defineConfig({
     rewriteAssetUrls,
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'script',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg,JPG}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024
