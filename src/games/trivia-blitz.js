@@ -86,7 +86,7 @@ function createIntroScreen() {
 function createGameplayScreen(mode) {
   const el = document.createElement('div')
   el.className = 'screen tb-game'
-  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
+  mountNarrowGate(el, { onBack: () => navigate('grade-select'), rotatePrompt: true })
 
   const state = {
     mode,

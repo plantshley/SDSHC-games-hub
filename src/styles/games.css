@@ -7389,3 +7389,1101 @@
     height: 36px;
   }
 }
+
+/* ================================================================
+ * RESPONSIVE — Kid game backgrounds (all 11 games)
+ * Each kid game uses a "*-game-bg" or "*-intro-bg" div with
+ * position: absolute; inset: 0 inside its .screen. With ≤1919's
+ * internal screen scroll the bg sticks to the element box but the
+ * element box scrolls, revealing the body's dark color underneath.
+ * Pinning to viewport solves this — only works because base.css
+ * drops .screen's will-change to opacity-only at ≤1919 (no transform
+ * containing-block trap).
+ * ================================================================ */
+@media (max-width: 1919px) {
+  [class*="-intro-bg"],
+  [class*="-game-bg"] {
+    position: fixed !important;
+    inset: 0 !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Kid game intro + gameplay shrinks on landscape phone
+ * Pulls fonts/padding/buttons in further than the ≤899 block so the
+ * kiosk-shaped chrome doesn't dominate the ~390px-tall viewport.
+ * Generic, prefix-agnostic selectors hit every kid game at once.
+ * ================================================================ */
+@media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
+  /* Intro chrome */
+  [class*="-intro-header"] {
+    padding: 6px 10px !important;
+    gap: 8px;
+  }
+  [class*="-intro-title"] {
+    font-size: clamp(1rem, 3.5vw, 1.4rem) !important;
+  }
+  [class*="-intro-body"],
+  [class*="-intro-center"] {
+    padding: 8px 12px !important;
+    gap: 10px !important;
+  }
+  [class*="-intro-character"] {
+    height: 64px !important;
+  }
+  [class*="-speech-bubble"],
+  [class*="-speech-text"] {
+    font-size: 0.78rem !important;
+    padding: 8px 12px !important;
+    max-width: 60vw;
+  }
+  /* Intro decor / ground sprites hidden — they push the enter-button
+     below the fold and overlap small viewports. Note: deliberately NOT
+     hiding [class*="-deco-item"] because that also matches the in-panel
+     decorations (sc-deco-item / cc-deco-item / ps-deco-item) that we
+     want to keep visible inside the gameplay side panel. */
+  [class*="-intro-decor"],
+  [class*="-intro-ground"],
+  [class*="-arrow-nudge"] {
+    display: none !important;
+  }
+  /* Enter buttons */
+  .sc-enter-btn,
+  .dtd-enter-btn,
+  .db-enter-btn,
+  .cc-enter-btn,
+  .ps-enter-btn,
+  .sw-enter-btn,
+  .tb-enter-btn,
+  .oo-enter-btn,
+  .dd-enter-btn,
+  .fm-enter-btn,
+  .fw-enter-btn {
+    padding: 8px 18px !important;
+    font-size: 0.85rem !important;
+  }
+  /* Gameplay body — tighten edges so canvas+panels share the limited
+     vertical space without overflow chrome. */
+  [class*="-game-body"] {
+    padding: 6px 10px 10px !important;
+    gap: 8px !important;
+  }
+  /* Generic side panel widths — kid games use 220–280px panels at kiosk;
+     compact to ~150–170px on landscape phone. */
+  .sc-panel,
+  .ps-panel,
+  .sw-panel,
+  .fm-panel,
+  .dd-panel,
+  .fw-panel,
+  .tb-panel,
+  .oo-panel {
+    width: 160px !important;
+    padding: 8px !important;
+  }
+  /* Generic panel headings + body text shrink. */
+  [class*="-panel-heading"],
+  [class*="-panel-title"] {
+    font-size: 0.8rem !important;
+  }
+  [class*="-panel-text"],
+  [class*="-panel-label"] {
+    font-size: 0.7rem !important;
+  }
+  /* Modal / completion / end-of-game popups */
+  [class*="-complete-modal"],
+  [class*="-end-modal"],
+  [class*="-result-modal"],
+  [class*="-celebration"] {
+    padding: 14px 16px !important;
+    max-width: 86vw !important;
+    font-size: 0.85rem;
+  }
+  [class*="-complete-title"],
+  [class*="-end-title"],
+  [class*="-result-title"] {
+    font-size: 1.1rem !important;
+  }
+  /* Hint / instruction overlays — drop heavy positioning so they flow
+     instead of stacking over the playfield. */
+  [class*="-hint"],
+  [class*="-instruction"],
+  [class*="-tip"] {
+    font-size: 0.75rem !important;
+    padding: 6px 10px !important;
+    max-width: 80vw !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Portrait phone + tablet portrait shell screens
+ * Kid game screens themselves are gated by .too-narrow-gate at ≤599,
+ * so this block only firms up the splash/grade-select/game-select
+ * shell experience.
+ * ================================================================ */
+@media (max-width: 899px) and (orientation: portrait) {
+  /* Intro decorations layering over body content — hide on portrait. */
+  [class*="-intro-decor"],
+  [class*="-intro-ground"],
+  [class*="-arrow-nudge"] {
+    display: none !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Tablet portrait gameplay: stack the row-flex game body
+ * into a column so the side panel sits above the canvas and the panel's
+ * full content (decorations, stickers, items) is visible without being
+ * crammed into 280px of horizontal space.
+ * ================================================================ */
+@media (max-width: 899px) and (orientation: portrait) and (min-width: 600px) {
+  [class*="-game-body"] {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 10px 14px !important;
+  }
+  /* Side panels become full-width rows above the canvas, content visible. */
+  .sc-panel,
+  .ps-panel,
+  .sw-panel,
+  .fm-panel,
+  .dd-panel,
+  .fw-panel,
+  .tb-panel,
+  .oo-panel,
+  .cc-panel,
+  .db-left-panel,
+  .db-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 auto !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+  }
+  /* Decoration grids inside panels — show all on portrait. */
+  .sc-panel-decos,
+  .cc-panel-decos {
+    grid-template-columns: repeat(6, 1fr) !important;
+  }
+  /* Planting-sim level wrappers also become column. */
+  .ps-yib-left,
+  .ps-poll-left {
+    width: 100% !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Landscape phone gameplay deep tightening
+ * Builds on the earlier ≤899 landscape-phone block. These rules push
+ * fonts/buttons/canvases further down to actually fit the ~390px-tall
+ * viewport without overflow.
+ * ================================================================ */
+@media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
+  /* Add the panels the earlier block missed. Note: cc-panel intentionally
+     omitted — user feedback was that the coloring side panel looked worse
+     when squeezed; let it use the base 280px width with internal scroll. */
+  .db-left-panel,
+  .db-panel {
+    width: 150px !important;
+    padding: 6px !important;
+  }
+  /* Coloring side panel: keep base width, just allow it to scroll if its
+     content exceeds the viewport. Stickers + colors stay readable. */
+  .cc-panel {
+    overflow-y: auto !important;
+  }
+  /* Stretch left-panel children to match canvas height — fixes the
+     "side panel taller, canvas scrolls" complaint on dont-belong + oo. */
+  [class*="-game-body"] {
+    align-items: stretch !important;
+  }
+  /* Generic sidebar font/control compaction (lower than the earlier 0.7rem). */
+  [class*="-panel"] {
+    font-size: 0.6rem !important;
+  }
+  [class*="-panel-heading"],
+  [class*="-panel-title"] {
+    font-size: 0.65rem !important;
+    margin-bottom: 4px !important;
+  }
+  [class*="-color-btn"],
+  [class*="-swatch-label"],
+  [class*="-panel-label"],
+  [class*="-panel-text"] {
+    font-size: 0.55rem !important;
+  }
+  [class*="-swatch"] {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  [class*="-quit-btn"] {
+    padding: 4px 8px !important;
+    font-size: 0.6rem !important;
+  }
+  /* Side panel character figures — too tall vs viewport. */
+  [class*="-game-character"],
+  [class*="-panel-creature-img"] {
+    height: 50px !important;
+    margin: 4px 0 !important;
+  }
+  /* In-panel speech bubbles (db-game-speech, etc.) shrink fully —
+     remove min-heights so they don't push the panel taller than canvas. */
+  [class*="-game-speech"] {
+    min-height: 0 !important;
+    padding: 6px 8px !important;
+    font-size: 0.6rem !important;
+    max-width: 100% !important;
+  }
+  /* Floating overlay-bottom hints (soil cake / coloring / planting):
+     reposition to a narrow right-edge vertical strip so the hint covers
+     only the rightmost slice of the canvas instead of layering over the
+     content. */
+  .sc-overlay-bottom,
+  .cc-overlay-bottom,
+  .ps-three-sisters .ps-overlay-bottom {
+    top: 0 !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    width: 110px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: space-between !important;
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+  .sc-instructions,
+  .cc-instructions,
+  .ps-three-sisters .ps-instructions {
+    max-width: 100% !important;
+    margin-right: 0 !important;
+    padding: 6px 8px !important;
+    font-size: 0.55rem !important;
+    height: auto !important;
+  }
+  .sc-instructions p,
+  .cc-instructions p,
+  .ps-three-sisters .ps-instructions p {
+    font-size: 0.55rem !important;
+    line-height: 1.25 !important;
+  }
+  .sc-game-character,
+  .cc-game-character,
+  .ps-three-sisters .ps-game-character {
+    height: 36px !important;
+    align-self: center;
+  }
+  /* Year-in-bloom + pollinator hint overlays — match the 160px column,
+     keep hint text legible (0.7rem), shrink the character so the overlay
+     panel is shorter (it was eating most of the vertical room). */
+  .ps-yib-left .ps-yib-overlay,
+  .ps-poll-left .ps-yib-overlay,
+  .ps-poll-left .ps-poll-overlay,
+  .ps-yib-overlay,
+  .ps-poll-overlay {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 4px 6px !important;
+    gap: 4px !important;
+  }
+  .ps-yib-left .ps-yib-overlay .ps-instructions,
+  .ps-poll-left .ps-yib-overlay .ps-instructions,
+  .ps-poll-left .ps-poll-overlay .ps-instructions {
+    font-size: 0.7rem !important;
+    padding: 2px 4px !important;
+  }
+  .ps-yib-left .ps-yib-overlay .ps-instructions p,
+  .ps-poll-left .ps-yib-overlay .ps-instructions p,
+  .ps-poll-left .ps-poll-overlay .ps-instructions p {
+    font-size: 0.7rem !important;
+    line-height: 1.25 !important;
+  }
+  .ps-yib-left .ps-yib-overlay .ps-game-character,
+  .ps-poll-left .ps-yib-overlay .ps-game-character,
+  .ps-yib-overlay .ps-game-character,
+  .ps-poll-overlay .ps-game-character {
+    height: 24px !important;
+  }
+  /* Drag-drop + farm-manager: shrink the outer LEFT panel container from
+     280px down to 160px so it matches the inner .dd-panel / .fm-panel
+     width. Earlier rules sized only the inner panel, leaving a ~120px
+     dead gap between the left column and the right canvas. Collapsing the
+     outer container lets the canvas expand to fill the freed space. */
+  .dd-left-panel,
+  .fm-left-panel {
+    width: 160px !important;
+    flex: 0 0 160px !important;
+  }
+  /* Bottom slots (panel-bottom) of the left column now match the new
+     160px container width — they used to be 280px. */
+  .dd-panel-bottom,
+  .fm-panel-bottom {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  /* Hint panel widths now match the new 160px container — previously 150px
+     left a small misaligned offset. Box-sizing so padding doesn't push out. */
+  .dd-game-body .dd-instructions,
+  .fm-game-body .fm-instructions,
+  .dd-instructions,
+  .fm-instructions {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 0.55rem !important;
+    padding: 6px 8px !important;
+    line-height: 1.25 !important;
+  }
+  /* Drag-drop word items (the small "ORGANISMS / NUTRIENTS / PLANT" pills
+     in the side panel) — drop to 0.55rem and tighter padding so they fit
+     comfortably in the 160px column. */
+  .dd-word-item,
+  .dd-word {
+    padding: 4px 8px !important;
+    font-size: 0.55rem !important;
+    min-height: 0 !important;
+    line-height: 1.15 !important;
+  }
+  /* Drag-drop right canvas (the image grid): reduce massive 35px padding
+     to 8px so cards have room. Card labels stay at the smaller font. */
+  .dd-image-grid {
+    padding: 8px !important;
+    gap: 6px !important;
+  }
+  /* Farm-manager scenario text + practice cards — base font is 16px
+     (kiosk size) and overrides the panel inheritance. Force down to 0.6rem. */
+  .fm-scenario-text,
+  .fm-scenario-title,
+  .fm-scenario-section {
+    font-size: 0.6rem !important;
+    line-height: 1.25 !important;
+  }
+  .fm-practice-card,
+  .fm-practice-btn,
+  .fm-option-card,
+  .fm-option-btn {
+    padding: 6px !important;
+    font-size: 0.55rem !important;
+    line-height: 1.2 !important;
+    min-height: 0 !important;
+  }
+  .fm-practice-grid,
+  .fm-options-grid {
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+  /* Planting sim flower / pollinator items — explicit 2-col grid inside
+     the .ps-panel with items capped at ~56px so they never trigger
+     horizontal scroll inside the 160px column. */
+  .ps-year-in-bloom .ps-panel-decos,
+  .ps-pollinator .ps-panel-decos,
+  .ps-yib-flower-grid,
+  .ps-poll-item-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+  }
+  .ps-deco-item.ps-yib-flower-item,
+  .ps-deco-item.ps-poll-flower-item,
+  .ps-year-in-bloom .ps-deco-item,
+  .ps-pollinator .ps-deco-item {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 60px !important;
+    padding: 2px !important;
+    box-sizing: border-box !important;
+  }
+  .ps-deco-item.ps-yib-flower-item img,
+  .ps-deco-item.ps-poll-flower-item img,
+  .ps-year-in-bloom .ps-deco-item img,
+  .ps-pollinator .ps-deco-item img {
+    max-width: 36px !important;
+    max-height: 36px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .ps-yib-item-label,
+  .ps-poll-item-label {
+    font-size: 0.45rem !important;
+    line-height: 1.1 !important;
+  }
+  /* Soil cake decorations: 4-col grid with smaller items so the 8-deco
+     palette fits inside the 160px panel without horizontal scroll. */
+  .sc-panel-decos {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+  }
+  .sc-deco-item {
+    width: 100% !important;
+    max-width: 30px !important;
+    height: 30px !important;
+    padding: 2px !important;
+  }
+  .sc-deco-emoji {
+    font-size: 18px !important;
+  }
+  /* Coloring panel — narrower (170px), circular swatches, smaller mode
+     buttons, stickers in a 3-col grid that fits the panel. */
+  .cc-panel {
+    width: 170px !important;
+    padding: 8px !important;
+  }
+  .cc-palette {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+  }
+  /* Outer swatch button: explicit square + center the inner circle. The
+     `[class*="-swatch"]` rule earlier in this block sets 18×18 which is
+     too small + caused the inner circle to render asymmetric (height 100%
+     of parent, width squished to fit content-box). Override here. */
+  .cc-color-swatch {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 2px !important;
+    box-sizing: border-box !important;
+  }
+  .cc-swatch-circle {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+    border-width: 1px !important;
+  }
+  .cc-mode-row {
+    gap: 3px !important;
+  }
+  .cc-mode-btn {
+    padding: 4px 4px !important;
+    font-size: 0.55rem !important;
+    min-height: 0 !important;
+    border-bottom-width: 2px !important;
+    flex: 1 !important;
+  }
+  .cc-mode-emoji {
+    font-size: 0.85rem !important;
+  }
+  .cc-mode-label {
+    font-size: 0.55rem !important;
+  }
+  /* 4x4 sticker grid — 16 stickers total fit exactly. Smaller items
+     so they don't blow out the narrowed 170px panel. */
+  .cc-panel-decos {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+  }
+  .cc-deco-item {
+    width: 100% !important;
+    max-width: 32px !important;
+    height: 32px !important;
+    padding: 1px !important;
+  }
+  .cc-deco-item img,
+  .cc-deco-item svg {
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+  /* Coloring nav buttons (prev/next) — the real class is .cc-skip-btn.
+     Base font is 18px which the prior .cc-prev-btn / .cc-next-btn selectors
+     never matched. Shrink hard so the panel doesn't dedicate ~60px to
+     two giant Prev/Next pills. */
+  .cc-skip-btn,
+  .cc-nav-btns .cc-skip-btn {
+    font-size: 0.55rem !important;
+    padding: 4px 6px !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+  .cc-nav-btns {
+    gap: 4px !important;
+  }
+  /* Odd-one-out: 2x2 grid; collapse the left-panel container to 160px so
+     the canvas fills the freed gap; make the .oo-panel scroll. */
+  .oo-left-panel {
+    width: 160px !important;
+    flex: 0 0 160px !important;
+  }
+  .oo-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+  }
+  .oo-item-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-rows: minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+  /* Drag-drop hint panel: column-flex so instructions takes full width
+     and the character sits below, much smaller — overall panel height
+     shrinks dramatically. Then constrain panel-bottom to its natural
+     height and let .dd-panel grow to fill the rest, so the words list
+     isn't crammed into a tiny scroll-box. */
+  .dd-panel-bottom {
+    flex-direction: column !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    padding: 6px !important;
+    gap: 4px !important;
+  }
+  .dd-game-character {
+    height: 28px !important;
+    width: auto !important;
+  }
+  .dd-panel {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+  }
+  /* Tighter word + hint text. User wanted both smaller. */
+  .dd-word-item,
+  .dd-word,
+  .dd-word-label {
+    padding: 3px 6px !important;
+    font-size: 0.5rem !important;
+    line-height: 1.1 !important;
+  }
+  .dd-instructions,
+  .dd-game-body .dd-instructions,
+  .dd-instructions p,
+  #dd-instruction-text {
+    font-size: 0.45rem !important;
+    line-height: 1.2 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  /* Drag-drop right canvas items: the actual text element is
+     `.dd-card-description` (NOT `.dd-image-label` — that's a label that
+     gets filled when the card matches a word). Prior rounds missed this
+     class so the cards still rendered at 13px. Hard cap to 0.5rem. */
+  .dd-image-card {
+    padding: 3px !important;
+  }
+  .dd-card-description,
+  .dd-card-label,
+  .dd-image-card .dd-card-description,
+  .dd-image-card .dd-card-label {
+    font-size: 0.5rem !important;
+    line-height: 1.1 !important;
+  }
+  /* Drag-drop Quit button: lives inside .dd-panel as a sibling of the
+     words list. Was 41.8px tall — shrink and add breathing room above. */
+  .dd-quit-btn {
+    padding: 4px 8px !important;
+    font-size: 0.55rem !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin-top: 8px !important;
+    flex-shrink: 0 !important;
+  }
+  /* Cap the hint panel max-height so the words panel (with flex: 1) can
+     actually expand vertically. Without this cap the column flex was
+     letting the bottom hint take any size it wanted. */
+  .dd-panel-bottom {
+    max-height: 80px !important;
+  }
+  /* Don't-belong items: currently 329px wide × 98px tall — way too
+     squat. Make them actual squares via aspect-ratio with placement
+     so they fit a 2×2 grid in the available canvas. */
+  .db-item-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    place-items: center !important;
+    padding: 8px !important;
+    gap: 8px !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .db-item-card {
+    aspect-ratio: 1 / 1 !important;
+    width: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+  /* Odd-one-out: keep the prompt text + creature, just strip the white
+     speech-bubble background so it sits cleanly on the side panel.
+     (Earlier `display: none` removed the text entirely — wrong fix.) */
+  .oo-panel .db-speech-bubble,
+  .oo-panel .db-game-speech {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 4px !important;
+  }
+  /* Hide just the bubble tail / pseudo arrow if present. */
+  .oo-panel .db-speech-bubble::before,
+  .oo-panel .db-speech-bubble::after,
+  .oo-panel .db-game-speech::before,
+  .oo-panel .db-game-speech::after {
+    display: none !important;
+  }
+  /* Planting sim: make the .ps-panel (flowers/items grid container) match
+     the hint overlay's width exactly. Both already sit in a 160px column
+     but the panel had a thicker border / asymmetric padding; force them to
+     identical 100% widths with shared box-sizing. */
+  .ps-yib-left .ps-panel,
+  .ps-poll-left .ps-panel,
+  .ps-yib-left .ps-yib-overlay,
+  .ps-poll-left .ps-yib-overlay,
+  .ps-poll-left .ps-poll-overlay {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Year-in-bloom + pollinator instruction bar at the top: base CSS has
+     padding-left ~260px to clear the kiosk's 280px side panel. On mobile
+     landscape the side panel is only 160px, so that huge left padding
+     forces the instruction to wrap onto a second line and squeezes the
+     gameplay area below. Pull padding back to symmetric, shrink the font. */
+  .ps-yib-instr-bar,
+  .ps-poll-instr-bar {
+    padding: 4px 12px !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+  }
+  .ps-yib-instr-bar p,
+  .ps-poll-instr-bar p,
+  #ps-yib-instr,
+  #ps-poll-instr {
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+  }
+  /* Coloring sticker emojis — base 33px is too chunky on mobile. Shrink
+     to match the smaller 32px deco-item box from the 4×4 grid. */
+  .cc-deco-emoji,
+  .sc-deco-emoji {
+    font-size: 16px !important;
+    line-height: 1 !important;
+  }
+  /* Don't-belong: shrink the side panel to 130px so the canvas has more
+     room. Width-fix the OUTER .db-left-panel in the horizontal flex row;
+     keep the INNER .db-panel as a flex-1 column child so its height fills
+     the available vertical space (the prior `flex: 0 0 130px` on BOTH
+     collapsed the inner panel's height to 130px). */
+  .db-left-panel {
+    width: 130px !important;
+    flex: 0 0 130px !important;
+  }
+  .db-panel {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+  .db-item-grid {
+    grid-template-columns: repeat(2, minmax(0, 200px)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    justify-content: space-around !important;
+    align-content: center !important;
+    gap: 6px !important;
+    padding: 4px !important;
+  }
+  .db-item-card {
+    width: 100% !important;
+    max-width: 200px !important;
+    aspect-ratio: 1 / 1 !important;
+    max-height: 140px !important;
+    height: 100% !important;
+    padding: 4px !important;
+    min-height: 0 !important;
+  }
+  .db-item-img {
+    max-width: 90px !important;
+    max-height: 80px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .db-item-label {
+    font-size: 0.65rem !important;
+    line-height: 1.1 !important;
+    margin-top: 2px !important;
+  }
+  /* db speech bubble in the side panel — shrink padding so text fits the
+     130px column without being cut off. Also clear the base min-height
+     (125px) and max-width (80%) constraints so the bubble actually fits. */
+  .db-panel .db-speech-bubble,
+  .db-panel .db-game-speech {
+    padding: 6px 8px !important;
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* The base .db-panel has justify-content: center which (combined with
+     a quit button at the bottom that's `width: 100%`) splits the children
+     apart with empty space in the middle. Anchor everything to the top
+     and let natural gap handle spacing. */
+  .db-panel {
+    justify-content: flex-start !important;
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+  /* db hint character on side panel — shrink so it doesn't compete. */
+  .db-panel .db-game-character {
+    height: 40px !important;
+    width: auto !important;
+  }
+  /* db quit button: same shrink as other quits, NOT full width. */
+  .db-quit-btn {
+    width: auto !important;
+    padding: 4px 10px !important;
+    font-size: 0.6rem !important;
+    min-height: 0 !important;
+  }
+  /* The left column on yib + pollinator levels: allow internal scroll so
+     the overlay (which currently overflows the parent and disappears below
+     the viewport) is reachable; also collapse to 160px so the right canvas
+     fills the freed gap. overflow-x: hidden prevents the horizontal scroll
+     that appears when the vertical scrollbar consumes ~15px of content
+     width and child elements (sized 100%) push past the new content edge. */
+  .ps-yib-left,
+  .ps-poll-left {
+    width: 160px !important;
+    flex: 0 0 160px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-height: 0 !important;
+  }
+  /* Same fix for every side panel: kill horizontal scrollbars caused by
+     the vertical scrollbar consuming content width. */
+  .sc-panel,
+  .cc-panel,
+  .ps-panel,
+  .sw-panel,
+  .fm-panel,
+  .dd-panel,
+  .fw-panel,
+  .tb-panel,
+  .oo-panel,
+  .db-panel,
+  .db-left-panel,
+  .dd-left-panel,
+  .fm-left-panel,
+  .oo-left-panel {
+    overflow-x: hidden !important;
+  }
+  /* Hint creatures stay visible on landscape phone — earlier I'd hidden
+     them, but per user feedback they want them kept. Just keep them small
+     (the earlier .sc-game-character height: 36px rules above handle that). */
+  /* Drag-drop image cards: they're getting clipped vertically. Cap
+     image height + give the cards an explicit max-height so the grid
+     can fit two rows in the available canvas. */
+  .dd-image-grid {
+    grid-auto-rows: minmax(0, 1fr) !important;
+    gap: 6px !important;
+  }
+  .dd-image-card {
+    min-height: 0 !important;
+    padding: 4px !important;
+    font-size: 0.55rem !important;
+  }
+  .dd-image-card img,
+  .dd-image-card svg {
+    max-height: 50px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .dd-image-label,
+  .dd-image-card .dd-label {
+    font-size: 0.55rem !important;
+    line-height: 1.15 !important;
+  }
+  /* Speech bubbles in side panels — guarantee box-sizing so padding
+     doesn't push them beyond the 150–160px panel width. */
+  [class*="-game-speech"],
+  [class*="-panel-speech"] {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  /* dont-belong + odd-one-out item grid: items too big + cut off. */
+  .db-item-grid,
+  .oo-item-grid {
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  .db-item-card,
+  .oo-item-card {
+    min-height: 0 !important;
+    padding: 8px !important;
+    gap: 4px !important;
+  }
+  .db-item-img,
+  .oo-item-img,
+  .db-photo-grid .db-item-img,
+  .oo-photo-grid .oo-item-img {
+    width: auto !important;
+    max-width: 70px !important;
+    max-height: 70px !important;
+    height: auto !important;
+  }
+  .db-item-label,
+  .oo-item-label {
+    font-size: 0.65rem !important;
+  }
+  /* Level nav pills shrink. */
+  .db-level-nav,
+  .oo-level-nav,
+  .dd-level-nav,
+  .fm-level-nav,
+  .ps-level-nav,
+  .tb-level-nav {
+    padding-top: 4px !important;
+    padding-bottom: 0 !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    gap: 4px !important;
+  }
+  [class*="-level-nav-item"] {
+    padding: 2px 8px !important;
+  }
+  [class*="-level-nav-label"] {
+    font-size: 0.6rem !important;
+  }
+  /* Coloring undo/reset — stack vertically + smaller. The actual container
+     class is .cc-canvas-actions (NOT cc-action-row); .cc-action-btn is the
+     button class on both buttons. */
+  .cc-action-btn {
+    padding: 4px 8px !important;
+    font-size: 0.6rem !important;
+    width: 100% !important;
+  }
+  .cc-canvas-actions {
+    flex-direction: column !important;
+    gap: 4px !important;
+    align-items: stretch !important;
+  }
+  /* Spin wheel: `zoom` shrinks the whole wheel container (canvas + center
+     SPIN button + arrow + decorations) as one unit so they stay glued. */
+  .sw-wheel-container {
+    zoom: 0.5;
+  }
+  .sw-wheel-area {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  /* Category list: number badge (1, 2, 3…) hidden — eats horizontal space
+     without earning it on a 160px panel. Title + 0/N count shrunk. */
+  .sw-cat-num {
+    display: none !important;
+  }
+  .sw-cat-item {
+    padding: 4px 6px !important;
+    gap: 4px !important;
+  }
+  /* Category labels at 0.85rem to match the Quit button, allowed to wrap
+     to a second line (default white-space normal + overflow-wrap so long
+     names like "Soil Art & Culture" can break instead of being clipped). */
+  .sw-cat-title {
+    font-size: 0.85rem !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
+  }
+  .sw-cat-count {
+    font-size: 0.85rem !important;
+  }
+  .sw-panel-heading {
+    font-size: 0.85rem !important;
+  }
+  /* Player plant labels at bottom of canvas — match Quit button size. */
+  .sw-plant-name,
+  .sw-plant-score {
+    font-size: 0.85rem !important;
+  }
+  /* Quit button: user said the small 0.6rem was too small, push it back up. */
+  .sw-quit-btn,
+  [class*="-quit-btn"] {
+    padding: 6px 10px !important;
+    font-size: 0.85rem !important;
+  }
+  /* Right-canvas player sprouts beneath the wheel — shrink further. */
+  .sw-player-sprout,
+  .sw-player-sprouts img,
+  [class*="sprout-icon"] {
+    height: 20px !important;
+    width: auto !important;
+  }
+  .sw-player-sprout,
+  .sw-player-sprouts img,
+  [class*="sprout-icon"] {
+    height: 28px !important;
+    width: auto !important;
+  }
+  /* Spin wheel side-panel: make the whole panel scroll, not just the
+     categories list inside it. Correct class name is .sw-categories-list
+     (the earlier .sw-panel-categories / .sw-categories did not match). */
+  .sw-panel {
+    overflow-y: auto !important;
+  }
+  .sw-categories-list,
+  .sw-panel-categories,
+  .sw-categories {
+    overflow: visible !important;
+    max-height: none !important;
+    flex: 0 0 auto !important;
+  }
+  /* Trivia blitz: question + image compaction. */
+  .tb-question-text,
+  .tb-question {
+    font-size: 0.85rem !important;
+    line-height: 1.2 !important;
+  }
+  .tb-question-img,
+  .tb-question-image {
+    max-width: 50% !important;
+    max-height: 110px !important;
+    height: auto !important;
+  }
+  .tb-answer-btn,
+  .tb-answer {
+    padding: 5px 8px !important;
+    font-size: 0.65rem !important;
+  }
+  /* Farm manager: educational modal cap. */
+  .fm-info-modal,
+  .fm-explanation,
+  .fm-educational-modal,
+  .fm-result-card {
+    max-height: 80vh !important;
+    max-width: 86vw !important;
+    overflow-y: auto !important;
+    padding: 10px 12px !important;
+    font-size: 0.7rem !important;
+  }
+  /* Intro level buttons (multi-level games) — universal cap. */
+  [class*="-level-card"],
+  [class*="-level-btn"] {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+  }
+  [class*="-level-card-icon"] {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  [class*="-level-card-title"],
+  [class*="-level-btn"] {
+    font-size: 0.7rem !important;
+  }
+  /* Intro speech bubbles tighter cap so they don't push character off-screen. */
+  [class*="-speech-bubble"] {
+    max-width: 48vw !important;
+  }
+  /* Intro characters — keep visible at narrow widths. */
+  [class*="-intro-character"] {
+    height: 56px !important;
+    flex-shrink: 1 !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Kid game intro on portrait (mobile + tablet)
+ * Mobile portrait gates gameplay but intros still render; tablet portrait
+ * shows intros fully. User pointed out speech bubbles overflow, characters
+ * get clipped, level buttons too large.
+ * ================================================================ */
+@media (max-width: 899px) and (orientation: portrait) {
+  [class*="-intro-body"],
+  [class*="-intro-center"] {
+    flex-direction: column !important;
+    padding: 10px 14px !important;
+    gap: 12px !important;
+    align-items: center !important;
+  }
+  [class*="-intro-left"],
+  [class*="-intro-right"] {
+    width: 100% !important;
+    align-items: center !important;
+  }
+  [class*="-speech-bubble"] {
+    max-width: 86vw !important;
+  }
+  [class*="-intro-character"] {
+    height: 90px !important;
+    max-width: 80vw !important;
+    width: auto !important;
+  }
+  /* Level cards/buttons: 2-column grid that wraps nicely on phone portrait. */
+  [class*="-level-cards"],
+  [class*="-level-grid"],
+  [class*="-level-row"] {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    max-width: 90vw !important;
+  }
+  [class*="-level-card"],
+  [class*="-level-btn"] {
+    padding: 10px !important;
+    min-width: 0 !important;
+  }
+  [class*="-level-card-icon"] {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  [class*="-level-card-title"],
+  [class*="-level-btn"] {
+    font-size: 0.85rem !important;
+  }
+}
+
+/* Mobile portrait specifically — single column level buttons. */
+@media (max-width: 599px) and (orientation: portrait) {
+  [class*="-level-cards"],
+  [class*="-level-grid"],
+  [class*="-level-row"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Soil cake: cake artwork bigger on landscape tablet + desktop
+ * Cake is fixed pixel size; at narrower-than-kiosk widths it sat tiny in a
+ * vast canvas. Scale up so the cake fills the right side properly.
+ * ================================================================ */
+@media (min-width: 900px) and (max-width: 1919px) {
+  .sc-cake-wrapper {
+    margin-right: 40px !important;
+    transform: scale(1.2);
+    transform-origin: center;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — End-game / completion modals across kid games
+ * Cap height + width on mobile so they always fit the viewport.
+ * ================================================================ */
+@media (max-width: 899px) {
+  [class*="-completion-content"],
+  [class*="-completion-card"],
+  [class*="-complete-content"],
+  [class*="-end-content"],
+  [class*="-result-content"],
+  [class*="-celebration-content"] {
+    max-width: 86vw !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+    padding: 14px 16px !important;
+    font-size: 0.85rem !important;
+  }
+  [class*="-completion-title"],
+  [class*="-complete-title"],
+  [class*="-end-title"],
+  [class*="-result-title"],
+  [class*="-celebration-title"] {
+    font-size: 1.05rem !important;
+    margin-bottom: 6px !important;
+  }
+}

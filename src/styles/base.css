@@ -317,3 +317,82 @@ button {
     display: flex;
   }
 }
+
+/* Tablet-portrait rotate prompt — soft overlay shown when entering a game
+ * on a tablet held in portrait. Dismissible (sets sessionStorage so the
+ * user sees it at most once per session). Below 600px the hard narrow
+ * gate covers the screen so this prompt never competes with it. */
+.rotate-prompt {
+  position: absolute;
+  inset: 0;
+  z-index: 250;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 24px;
+  background: rgba(10, 10, 20, 0.92);
+  color: #e0e0e0;
+  font-family: var(--font-body), monospace;
+  text-align: center;
+}
+
+.rotate-prompt-icon {
+  font-size: 4rem;
+  color: #38cebc;
+  line-height: 1;
+  animation: rotate-prompt-spin 3s ease-in-out infinite;
+}
+
+@keyframes rotate-prompt-spin {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+}
+
+.rotate-prompt-title {
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.3rem;
+  color: #38cebc;
+  letter-spacing: 1px;
+}
+
+.rotate-prompt-msg {
+  font-size: 0.95rem;
+  max-width: 360px;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+.rotate-prompt-dismiss {
+  margin-top: 8px;
+  padding: 12px 28px;
+  border: 1px solid #38cebc;
+  border-radius: 4px;
+  background: transparent;
+  color: #38cebc;
+  font-family: var(--font-body), monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.rotate-prompt-dismiss:active {
+  background: rgba(56, 206, 188, 0.15);
+}
+
+/* `.rotate-prompt-dismissed` wins over the media-query display: flex so the
+ * prompt stays hidden even if orientation flips back to portrait after
+ * dismissal in the same session. */
+.rotate-prompt.rotate-prompt-dismissed {
+  display: none !important;
+}
+
+/* Activate on tablet portrait — 600 to 1279px wide in portrait orientation.
+ * Below 600px the hard narrow gate covers everything. Above 1279px we're on
+ * laptop/desktop, which is fine in any aspect ratio. */
+@media (min-width: 600px) and (max-width: 1279px) and (orientation: portrait) {
+  .rotate-prompt {
+    display: flex;
+  }
+}

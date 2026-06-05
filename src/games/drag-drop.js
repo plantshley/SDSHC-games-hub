@@ -147,7 +147,7 @@ function createGameplayScreen(levelIdx) {
 function createWordToImageScreen(level, levelIdx) {
   const el = document.createElement('div')
   el.className = 'screen dd-game'
-  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
+  mountNarrowGate(el, { onBack: () => navigate('grade-select'), rotatePrompt: true })
 
   const matchedSet = new Set()
   let dragging = false
@@ -369,7 +369,7 @@ function createWordToImageScreen(level, levelIdx) {
 function createWordToPositionScreen(level, levelIdx) {
   const el = document.createElement('div')
   el.className = 'screen dd-game'
-  mountNarrowGate(el, { onBack: () => navigate('grade-select') })
+  mountNarrowGate(el, { onBack: () => navigate('grade-select'), rotatePrompt: true })
 
   const matchedSet = new Set()
   let dragging = false
