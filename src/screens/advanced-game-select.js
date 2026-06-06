@@ -10,7 +10,7 @@ import { addGradientBackground } from '../utils/gradient-bg.js'
 import { getTheme, setTheme, createThemeToggle } from '../utils/theme-toggle.js'
 import { createLeaderboardButton } from '../utils/leaderboard-modal.js'
 import { getPlayMode } from './advanced-play-mode.js'
-import { getActiveEventId, getEventRoster, getEventById } from '../utils/leaderboard-api.js'
+import { getActiveEventId, warmLeaderboardCache } from '../utils/leaderboard-api.js'
 
 const BURST_COLORS = ['#38cebc', '#b8e84a', '#ff71ce', '#01cdfe', '#b967ff']
 
@@ -32,6 +32,12 @@ function spawnBurstParticles(container, x, y) {
 }
 
 export function createAdvancedGameSelectScreen() {
+  // Fire-and-forget: pre-load leaderboard data into the Firestore offline cache
+  // while we're (presumably) online, so a kiosk going offline for an event
+  // starts from the current cloud snapshot. No-op on the localStorage backend;
+  // failures (offline, blocked) are swallowed — purely opportunistic.
+  warmLeaderboardCache().catch(() => {})
+
   const screen = document.createElement('div')
   screen.className = 'screen adv-game-select'
 
@@ -51,12 +57,6 @@ export function createAdvancedGameSelectScreen() {
       <div class="adv-header-left">
         <button class="adv-back-btn">\u2190 Back</button>
         <h1 class="adv-title">Advanced Mode</h1>
-        ${playMode === 'team' && activeEventId ? `
-          <div class="adv-game-select-banner" id="adv-gs-banner">
-            <span class="adv-game-select-banner-text" id="adv-gs-banner-text">\u2026</span>
-            <button class="adv-game-select-banner-btn" id="adv-gs-manage-roster">Manage roster</button>
-          </div>
-        ` : ''}
       </div>
     </div>
 
@@ -75,9 +75,21 @@ export function createAdvancedGameSelectScreen() {
   // Add gradient sphere background
   addGradientBackground(screen, 'game-select')
 
-  // Cluster leaderboard button + theme toggle on the right
+  // Right cluster: (team mode) the manage-roster button to the LEFT of the
+  // leaderboard button, then leaderboard, then the theme toggle.
   const headerRight = document.createElement('div')
   headerRight.className = 'adv-header-right'
+  if (playMode === 'team' && activeEventId) {
+    const rosterBtn = document.createElement('button')
+    rosterBtn.className = 'adv-game-select-banner-btn'
+    rosterBtn.textContent = 'Manage roster'
+    rosterBtn.addEventListener('pointerdown', () => {
+      // Mark roster's Back as returning to game-select rather than play-mode
+      sessionStorage.setItem('sdshc-roster-return', 'game-select')
+      navigate('roster')
+    })
+    headerRight.appendChild(rosterBtn)
+  }
   headerRight.appendChild(createLeaderboardButton())
   headerRight.appendChild(createThemeToggle())
   screen.querySelector('.adv-header').appendChild(headerRight)
@@ -86,22 +98,6 @@ export function createAdvancedGameSelectScreen() {
   screen.querySelector('.adv-back-btn').addEventListener('pointerdown', () => {
     navigateRaw('intro')
   })
-
-  // Team-mode roster banner (populate event name + roster count, wire button)
-  if (playMode === 'team' && activeEventId) {
-    ;(async () => {
-      const [ev, roster] = await Promise.all([getEventById(activeEventId), getEventRoster(activeEventId)])
-      const text = screen.querySelector('#adv-gs-banner-text')
-      if (text && ev) {
-        text.innerHTML = `Event: <strong>${ev.name}</strong> · <span class="adv-gs-banner-count">${roster.length} team${roster.length === 1 ? '' : 's'} on roster</span>`
-      }
-    })()
-    screen.querySelector('#adv-gs-manage-roster').addEventListener('pointerdown', () => {
-      // Mark roster's Back as returning to game-select rather than play-mode
-      sessionStorage.setItem('sdshc-roster-return', 'game-select')
-      navigate('roster')
-    })
-  }
 
   // Game cards
   const cards = screen.querySelectorAll('.adv-game-card')

@@ -21,6 +21,7 @@ import { createAdvancedAdminScreen } from './screens/advanced-admin.js'
 import { getGameById } from './data/game-registry.js'
 import { getAdvancedGameById } from './data/advanced-game-registry.js'
 import { getActiveEventId } from './utils/leaderboard-api.js'
+import { warmOfflineCache, isWarmedForBuild } from './utils/offline-warmup.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
@@ -207,3 +208,15 @@ initIdleTimer(() => {
   clearProgress()
   navigateRaw('intro')
 })
+
+// Warm the offline media cache once per build, when online. Deferred and
+// fire-and-forget so it never competes with first render or blocks gameplay.
+// (The admin panel exposes a manual re-run with progress for kiosk setup.)
+if (navigator.onLine && !isWarmedForBuild()) {
+  const kick = () => warmOfflineCache().catch(() => {})
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(kick, { timeout: 5000 })
+  } else {
+    setTimeout(kick, 3000)
+  }
+}

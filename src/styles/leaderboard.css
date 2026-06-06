@@ -646,6 +646,53 @@
   font-size: 0.85rem;
 }
 
+/* ─── Offline readiness ─── */
+.adv-offline-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.adv-offline-status {
+  font-size: 0.9rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.adv-offline-ok {
+  color: var(--adv-accent-secondary);
+}
+
+.adv-offline-busy {
+  color: var(--adv-text);
+}
+
+.adv-offline-warn {
+  color: #ffba6b;
+}
+
+.adv-offline-bar {
+  margin-top: 10px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--adv-bg);
+  overflow: hidden;
+}
+
+.adv-offline-bar-fill {
+  height: 100%;
+  background: var(--adv-accent);
+  transition: width 0.2s ease;
+}
+
+.adv-admin-hint {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: var(--adv-text-muted);
+  line-height: 1.5;
+}
+
 .adv-admin-active-row {
   display: flex;
   gap: 14px;
@@ -916,6 +963,120 @@
 .adv-admin-flash-show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* ─── Admin sign-in gate (Firestore backend only) ─── */
+
+.adv-admin-gate {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 200;
+  background: rgba(10, 10, 20, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.adv-admin-gate-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(360px, 100%);
+  padding: 32px 28px;
+  background: var(--adv-surface);
+  border: 1px solid var(--adv-border);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.adv-admin-gate-title {
+  margin: 0;
+  font-family: var(--font-title), monospace;
+  font-size: 1.1rem;
+  color: var(--adv-text);
+}
+
+.adv-admin-gate-sub {
+  margin: 0;
+  font-family: var(--font-body), monospace;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--adv-text);
+  opacity: 0.65;
+}
+
+.adv-admin-gate-input {
+  padding: 12px 14px;
+  font-family: var(--font-body), monospace;
+  font-size: 1rem;
+  color: var(--adv-text);
+  background: var(--adv-bg);
+  border: 1px solid var(--adv-border);
+  border-radius: 10px;
+  outline: none;
+}
+
+.adv-admin-gate-input:focus {
+  border-color: var(--adv-accent);
+}
+
+.adv-admin-gate-btn {
+  padding: 12px 14px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--adv-bg);
+  background: var(--adv-accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.adv-admin-gate-btn:hover,
+.adv-admin-gate-btn:active {
+  filter: brightness(1.1);
+}
+
+.adv-admin-gate-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.adv-admin-gate-error {
+  min-height: 1.1em;
+  font-family: var(--font-body), monospace;
+  font-size: 0.82rem;
+  color: #ff7a7a;
+  text-align: center;
+}
+
+.adv-admin-gate-card.shake {
+  animation: adv-admin-gate-shake 0.4s;
+}
+
+@keyframes adv-admin-gate-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+.adv-admin-signout-btn {
+  padding: 8px 14px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.82rem;
+  color: var(--adv-text);
+  background: transparent;
+  border: 1px solid var(--adv-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.adv-admin-signout-btn:hover,
+.adv-admin-signout-btn:active {
+  border-color: var(--adv-accent);
 }
 
 /* ─── Player Intro: Team Input Row (paired with name) ─── */
@@ -1816,6 +1977,7 @@
     width: 18px;
     height: 18px;
   }
+}
 
 /* Phone — tighter still, single-column flows. */
 @media (max-width: 599px) {
@@ -1863,5 +2025,41 @@
   }
   .adv-roster-sub {
     font-size: 0.85rem;
+  }
+}
+
+/* ─── Admin screen: non-kiosk header (≤1919px) ───
+   Match the game-select header's left/right insets and frost the sticky
+   header so section cards don't show through as they scroll under it. Scoped
+   to ≤1919 so the 1920px kiosk view is untouched. The matching horizontal
+   pad values mirror .adv-game-select .adv-header: 20 / 16 / 14. */
+@media (max-width: 1919px) {
+  .adv-admin {
+    padding: 0 20px 80px;
+  }
+  .adv-admin .adv-header {
+    /* Neutralize the base .adv-header centering offsets so the bar spans the
+       full container width; the back/title/theme sit at the 20px inset. */
+    left: auto;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    padding: 12px 0;
+    margin: 0 0 16px;
+    background: color-mix(in srgb, var(--adv-bg) 82%, transparent);
+    backdrop-filter: blur(10px);
+  }
+}
+
+@media (max-width: 899px) {
+  .adv-admin {
+    padding: 0 16px 64px;
+  }
+}
+
+@media (max-width: 599px) {
+  .adv-admin {
+    padding: 0 14px 56px;
   }
 }

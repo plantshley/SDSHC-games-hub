@@ -134,8 +134,10 @@
   pointer-events: none;
 }
 
-/* Ensure screen content sits above the gradient bg */
-[data-mode="advanced"] .screen > *:not(.adv-gradient-bg):not(.adv-burst-particle):not(.too-narrow-gate) {
+/* Ensure screen content sits above the gradient bg. The admin sign-in gate is
+   a full-screen fixed overlay (like the gradient bg and narrow gate), so it's
+   excluded here to keep its own position: fixed and center on the viewport. */
+[data-mode="advanced"] .screen > *:not(.adv-gradient-bg):not(.adv-burst-particle):not(.too-narrow-gate):not(.adv-admin-gate) {
   position: relative;
   z-index: 1;
 }
@@ -3197,8 +3199,10 @@
   /* Game-select header pinned flush to viewport top. Transparent — no
      background, no border. Card grid uses an inner scroll container so
      nothing can ever reach this strip visually (see .adv-game-select +
-     .adv-game-grid rules below). */
-  .adv-header {
+     .adv-game-grid rules below).
+     Scoped to .adv-game-select so it does NOT hijack the admin screen's
+     header (which reuses .adv-header but wants position: sticky). */
+  .adv-game-select .adv-header {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -3415,8 +3419,9 @@
     gap: 18px;
   }
   /* Header padding tightened for narrow widths but still keeps breathing
-     room on left/right and a bit on top per user's ask. */
-  .adv-header {
+     room on left/right and a bit on top per user's ask. Scoped to
+     game-select so the admin header keeps its own padding. */
+  .adv-game-select .adv-header {
     height: auto;
     padding: 10px 16px !important;
     flex-wrap: nowrap;
@@ -3437,6 +3442,17 @@
     padding: 4px 8px;
     flex-shrink: 0;
     line-height: 1.2;
+  }
+  /* Let the title shrink/ellipsize instead of shoving the right-cluster
+     buttons (leaderboard / manage roster / theme) off-screen on portrait. */
+  .adv-game-select .adv-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .adv-game-select .adv-header-right {
+    flex-shrink: 0;
   }
   .adv-game-grid {
     gap: 16px;
@@ -3463,7 +3479,7 @@
     padding: 64px 10px 14px;
     gap: 14px;
   }
-  .adv-header {
+  .adv-game-select .adv-header {
     padding: 8px 14px !important;
   }
   .adv-game-grid {
