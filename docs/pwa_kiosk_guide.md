@@ -6,9 +6,11 @@ This document outlines the strategy and instructions for running the SDSHC Games
 
 A Progressive Web App (PWA) is a standard web application that uses modern browser features to act like a native desktop app. 
 By adding a "Service Worker" and a "Web App Manifest" to your Vite project:
-1. The browser is told to cache all of your HTML, CSS, JavaScript, and Image assets locally on the hard drive.
+1. The browser caches the app **shell** (HTML, CSS, JavaScript, fonts — ~1.7 MB) up front so it installs and updates in about a second. Media (sprites, photos, GIFs, diagrams — ~107 MB across 450 files) is cached **on demand** as the app uses it, plus an explicit one-tap "Cache for offline" step (see §3 and the checklist below) that bulk-downloads everything so the kiosk is fully offline-capable.
 2. The browser allows the user to "Install" the website, giving it a desktop shortcut and removing the browser's URL bar, tabs, and menus.
 3. When launched from the shortcut, the app intercepts all network requests and serves the files from the local cache instead of trying to fetch them from the internet. This allows the app to run completely offline.
+
+> **Why the split?** An earlier version precached all ~109 MB at install time. On phones (and flaky Wi-Fi) that install routinely failed to finish, so the service worker never activated and devices got stuck on a stale old build — which looked like "updates aren't applying" and broken mobile scrolling. Precaching only the small shell fixes that; the **"Cache for offline" warm-up** restores the full-offline guarantee on purpose, when you choose, while online.
 
 ## 2. Setup & Installation Steps
 
@@ -33,11 +35,13 @@ The update process is automatic, driven by the background Service Worker. The ap
 1. **You Push an Update:** You push new code to GitHub `main`. The GitHub Actions workflow ([.github/workflows/deploy.yml](../.github/workflows/deploy.yml)) builds `dist/` and deploys it to GitHub Pages automatically. (Note: Pages only deploys from `main` — work on a feature branch stays off the live site until merged.)
 2. **Kiosk Connects to Internet:** The advisor connects the kiosk to Wi-Fi (e.g., at home before an event).
 3. **Open the App:** The advisor opens the installed app **while online**.
-4. **Background Download + Auto-Activate:** The Service Worker detects the newer files on GitHub, downloads them in the background, then activates the new version and **reloads the page on its own**. The advisor doesn't have to click anything.
+4. **Background Download + Auto-Activate:** The Service Worker detects the newer files on GitHub, downloads them in the background, then activates the new version and **reloads the page on its own**. The advisor doesn't have to click anything. (Because only the small shell is precached, this now completes in seconds.)
 
 > ⚠️ **Caveat — the auto-reload can interrupt a game in progress.** Because activation triggers a page reload, if someone is mid-game when the new version finishes downloading, their run resets. In practice this lands during the at-home "connect to Wi-Fi and open it" step, so it's low-risk — but for that reason, **always do your update check at home before an event, never during one.** While the kiosk is offline at an event it cannot update, so no surprise reloads can happen there.
 
-> ✅ **Offline loading is confirmed working.** Tested by installing the PWA from the GitHub Pages URL, turning Wi-Fi off, and reopening — the app loads fully from cache. (This is the correct way to test offline; `npm run dev` is not a valid offline test.)
+> ⚠️ **After every update, re-run the offline warm-up.** A new build means new asset files, so the previous offline cache no longer covers it. After the kiosk auto-updates, go to Advanced Mode → Admin → **Offline readiness** and tap **"Cache for offline"** until it shows **"✓ All assets cached"**. (The app also kicks off this warm-up automatically in the background once per build whenever it's online, but confirm the ✓ before going offline.)
+
+> ✅ **Offline loading is confirmed working.** Tested by installing the PWA from the GitHub Pages URL, running the warm-up, turning Wi-Fi off, and reopening — the app loads fully from cache. (This is the correct way to test offline; `npm run dev` is not a valid offline test.)
 
 ## 4. Handling Firebase (Offline/Online Synchronization)
 
@@ -61,18 +65,19 @@ We use the Firebase Web SDK's **offline persistence** (an IndexedDB-backed local
 
 **Before the event (at home, online):**
 1. Connect the kiosk to Wi-Fi and open the installed app. Let it auto-update (Section 3).
-2. In Advanced Mode, **open the leaderboard (trophy icon) at least once** while online. This "warms" the local cache so the kiosk has the current cloud data to start from. *(If you set up the event from your laptop, also open it once on the actual kiosk.)*
-3. In the admin panel, create/confirm the event and set it active on the kiosk.
-4. Confirm you see existing teams/scores in the leaderboard — that proves the cache is populated.
+2. **Cache assets for offline:** Advanced Mode → Admin → **Offline readiness** → tap **"Cache for offline"** and wait for **"✓ All assets cached — ready to go offline."** This downloads every game asset (~107 MB) so games render with no Wi-Fi. *Required after each app update.*
+3. In Advanced Mode, **open the leaderboard (trophy icon) at least once** while online. This "warms" the local cache so the kiosk has the current cloud data to start from. *(If you set up the event from your laptop, also open it once on the actual kiosk.)*
+4. In the admin panel, create/confirm the event and set it active on the kiosk.
+5. Confirm you see existing teams/scores in the leaderboard — that proves the cache is populated.
 
 **During the event (offline is fine):**
-5. Let kids play normally. Scores accumulate in the local queue. Do **not** clear browser data or uninstall the app — that would wipe the unsynced queue. (The 120s/600s idle reset is safe; it only clears in-game progress, not the Firestore cache or queue.)
-6. Keep the kiosk on the same installed app the whole event; don't open the site in a separate browser tab.
+6. Let kids play normally. Scores accumulate in the local queue. Do **not** clear browser data or uninstall the app — that would wipe the unsynced queue. (The 120s/600s idle reset is safe; it only clears in-game progress, not the Firestore cache or queue.)
+7. Keep the kiosk on the same installed app the whole event; don't open the site in a separate browser tab.
 
 **After the event (back home, online):**
-7. Connect the kiosk to Wi-Fi and open the app. **Leave it open for a minute or two** so Firestore can flush the queued writes to the cloud. (Watch the leaderboard counts climb / settle.)
-8. Sign in to the admin panel and **approve the event's teams** so their scores appear on the statewide leaderboards.
-9. (If multiple kiosks ran) scan the team list for duplicate school names and **merge** them in admin.
+8. Connect the kiosk to Wi-Fi and open the app. **Leave it open for a minute or two** so Firestore can flush the queued writes to the cloud. (Watch the leaderboard counts climb / settle.)
+9. Sign in to the admin panel and **approve the event's teams** so their scores appear on the statewide leaderboards.
+10. (If multiple kiosks ran) scan the team list for duplicate school names and **merge** them in admin.
 
 > **One-line rule of thumb:** *Open the leaderboard once online before the event, and leave the app open online for a couple minutes after the event.* Those two moments are what guarantee a clean sync.
 

@@ -646,6 +646,53 @@
   font-size: 0.85rem;
 }
 
+/* ─── Offline readiness ─── */
+.adv-offline-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.adv-offline-status {
+  font-size: 0.9rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.adv-offline-ok {
+  color: var(--adv-accent-secondary);
+}
+
+.adv-offline-busy {
+  color: var(--adv-text);
+}
+
+.adv-offline-warn {
+  color: #ffba6b;
+}
+
+.adv-offline-bar {
+  margin-top: 10px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--adv-bg);
+  overflow: hidden;
+}
+
+.adv-offline-bar-fill {
+  height: 100%;
+  background: var(--adv-accent);
+  transition: width 0.2s ease;
+}
+
+.adv-admin-hint {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: var(--adv-text-muted);
+  line-height: 1.5;
+}
+
 .adv-admin-active-row {
   display: flex;
   gap: 14px;

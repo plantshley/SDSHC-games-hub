@@ -44,6 +44,7 @@ import { clearPlayMode } from './advanced-play-mode.js'
 import { getTeamColors, openColorPopover } from '../utils/team-colors.js'
 import { USE_FIRESTORE } from '../firebase/config.js'
 import { adminSignIn, adminSignOut, onAdminAuthChange } from '../firebase/auth.js'
+import { warmOfflineCache, onWarmupProgress } from '../utils/offline-warmup.js'
 
 export function createAdvancedAdminScreen() {
   const screen = document.createElement('div')
@@ -87,6 +88,11 @@ export function createAdvancedAdminScreen() {
       <section class="adv-admin-section" data-section="scores">
         <h2 class="adv-admin-section-title">Recent scores (last 50)</h2>
         <div class="adv-admin-section-content" id="sec-scores">Loading…</div>
+      </section>
+
+      <section class="adv-admin-section" data-section="offline">
+        <h2 class="adv-admin-section-title">Offline readiness</h2>
+        <div class="adv-admin-section-content" id="sec-offline">Loading…</div>
       </section>
     </div>
   `
@@ -452,6 +458,65 @@ export function createAdvancedAdminScreen() {
     }, 2200)
   }
 
+  // ─── Offline readiness ───
+  // The PWA precaches only the app shell; media is cached at runtime. Before an
+  // event the advisor must cache everything while online so games work offline.
+  // This row shows progress and offers a manual re-cache.
+  let offlineUnsub = null
+  function renderOffline() {
+    const el = screen.querySelector('#sec-offline')
+    if (!el) return
+
+    const paint = (st) => {
+      const live = screen.querySelector('#sec-offline')
+      if (!live) return
+      let statusText, statusClass
+      switch (st.status) {
+        case 'ready':
+          statusText = '✓ All assets cached — ready to go offline'
+          statusClass = 'adv-offline-ok'
+          break
+        case 'running':
+          statusText = `Caching assets… ${st.done} / ${st.total}`
+          statusClass = 'adv-offline-busy'
+          break
+        case 'partial':
+          statusText = `⚠ Cached ${st.done} / ${st.total} — ${st.error}. Retry while online.`
+          statusClass = 'adv-offline-warn'
+          break
+        case 'offline':
+          statusText = 'Offline — connect to Wi-Fi, then cache assets.'
+          statusClass = 'adv-offline-warn'
+          break
+        case 'error':
+          statusText = `⚠ Couldn't read asset list (${st.error}).`
+          statusClass = 'adv-offline-warn'
+          break
+        default:
+          statusText = 'Not cached yet for this version.'
+          statusClass = 'adv-offline-warn'
+      }
+      const pct = st.total ? Math.round((st.done / st.total) * 100) : 0
+      live.innerHTML = `
+        <div class="adv-offline-row">
+          <span class="adv-offline-status ${statusClass}">${statusText}</span>
+          <button class="adv-admin-btn" id="offline-cache-btn" ${st.status === 'running' ? 'disabled' : ''}>
+            ${st.status === 'running' ? 'Caching…' : 'Cache for offline'}
+          </button>
+        </div>
+        ${st.status === 'running' ? `<div class="adv-offline-bar"><div class="adv-offline-bar-fill" style="width:${pct}%"></div></div>` : ''}
+        <p class="adv-admin-hint">Do this at home, online, before each event — it downloads every game asset so the kiosk works with no Wi-Fi.</p>
+      `
+      live.querySelector('#offline-cache-btn').addEventListener('pointerdown', (e) => {
+        e.preventDefault()
+        warmOfflineCache({ force: true })
+      })
+    }
+
+    if (offlineUnsub) offlineUnsub()
+    offlineUnsub = onWarmupProgress(paint)
+  }
+
   function renderAll() {
     renderActiveEvent()
     renderRoster()
@@ -459,6 +524,7 @@ export function createAdvancedAdminScreen() {
     renderTeams()
     renderEvents()
     renderScores()
+    renderOffline()
   }
 
   // ─── Auth gate ───
