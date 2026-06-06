@@ -42,6 +42,8 @@ import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle } from '../utils/theme-toggle.js'
 import { clearPlayMode } from './advanced-play-mode.js'
 import { getTeamColors, openColorPopover } from '../utils/team-colors.js'
+import { USE_FIRESTORE } from '../firebase/config.js'
+import { adminSignIn, adminSignOut, onAdminAuthChange } from '../firebase/auth.js'
 
 export function createAdvancedAdminScreen() {
   const screen = document.createElement('div')
@@ -450,15 +452,143 @@ export function createAdvancedAdminScreen() {
     }, 2200)
   }
 
-  // Initial render of all sections
-  renderActiveEvent()
-  renderRoster()
-  renderPending()
-  renderTeams()
-  renderEvents()
-  renderScores()
+  function renderAll() {
+    renderActiveEvent()
+    renderRoster()
+    renderPending()
+    renderTeams()
+    renderEvents()
+    renderScores()
+  }
+
+  // ─── Auth gate ───
+  // localStorage backend has no remote writes to protect, so it renders
+  // straight away (Phase 1A behavior). The Firestore backend gates the whole
+  // panel behind an admin sign-in, since moderation writes require an
+  // authenticated session to pass the security rules.
+  if (!USE_FIRESTORE) {
+    renderAll()
+    return screen
+  }
+
+  const body = screen.querySelector('.adv-admin-body')
+  const headerRight = screen.querySelector('.adv-header-right')
+  const gate = buildSignInGate((password) => adminSignIn(password))
+  screen.appendChild(gate.el)
+
+  let signOutBtn = null
+  let rendered = false
+
+  function applyAuthState(signedIn) {
+    if (signedIn) {
+      gate.hide()
+      body.style.display = ''
+      if (!signOutBtn) {
+        signOutBtn = document.createElement('button')
+        signOutBtn.className = 'adv-admin-signout-btn'
+        signOutBtn.textContent = 'Sign out'
+        signOutBtn.addEventListener('pointerdown', () => adminSignOut())
+        headerRight.prepend(signOutBtn)
+      }
+      if (!rendered) {
+        renderAll()
+        rendered = true
+      }
+    } else {
+      body.style.display = 'none'
+      if (signOutBtn) {
+        signOutBtn.remove()
+        signOutBtn = null
+      }
+      rendered = false
+      gate.show()
+    }
+  }
+
+  // Locked by default until the first auth callback resolves the session.
+  body.style.display = 'none'
+  gate.show()
+
+  let seenConnected = false
+  let unsub = null
+  unsub = onAdminAuthChange((signedIn) => {
+    if (screen.isConnected) seenConnected = true
+    else if (seenConnected) {
+      // Screen was navigated away from — stop listening to avoid leaks.
+      if (unsub) unsub()
+      return
+    }
+    applyAuthState(signedIn)
+  })
 
   return screen
+}
+
+/**
+ * Password-only sign-in overlay. `onSubmit(password)` should return a promise
+ * that resolves on success (the auth listener then reveals the panel) or
+ * rejects with a Firebase auth error.
+ */
+function buildSignInGate(onSubmit) {
+  const el = document.createElement('div')
+  el.className = 'adv-admin-gate'
+  el.innerHTML = `
+    <form class="adv-admin-gate-card" novalidate>
+      <h2 class="adv-admin-gate-title">Admin sign-in</h2>
+      <p class="adv-admin-gate-sub">Enter the admin password to manage teams, events, and scores.</p>
+      <input class="adv-admin-gate-input" type="password" placeholder="Password" autocomplete="current-password" />
+      <button class="adv-admin-gate-btn" type="submit">Unlock</button>
+      <div class="adv-admin-gate-error" role="alert"></div>
+    </form>
+  `
+  const card = el.querySelector('.adv-admin-gate-card')
+  const input = el.querySelector('.adv-admin-gate-input')
+  const btn = el.querySelector('.adv-admin-gate-btn')
+  const error = el.querySelector('.adv-admin-gate-error')
+
+  el.querySelector('form').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const pw = input.value
+    if (!pw) {
+      input.focus()
+      return
+    }
+    btn.disabled = true
+    error.textContent = ''
+    try {
+      await onSubmit(pw)
+    } catch (err) {
+      error.textContent = friendlyAuthError(err)
+      card.classList.remove('shake')
+      void card.offsetWidth // reflow so the animation restarts each failure
+      card.classList.add('shake')
+      input.select()
+    } finally {
+      btn.disabled = false
+    }
+  })
+
+  return {
+    el,
+    show() {
+      el.style.display = 'flex'
+      setTimeout(() => input.focus(), 50)
+    },
+    hide() {
+      el.style.display = 'none'
+      input.value = ''
+      error.textContent = ''
+    },
+  }
+}
+
+function friendlyAuthError(err) {
+  const code = err && err.code ? err.code : ''
+  if (code.includes('wrong-password') || code.includes('invalid-credential')) return 'Incorrect password.'
+  if (code.includes('too-many-requests')) return 'Too many attempts. Wait a moment and try again.'
+  if (code.includes('network')) return 'Network error — check your connection and retry.'
+  if (code.includes('user-not-found')) return 'Admin account not found. Check Firebase setup.'
+  return 'Sign-in failed. Please try again.'
 }
 
 // Roster pills show only a mark + scope label (Event / Statewide). The status
