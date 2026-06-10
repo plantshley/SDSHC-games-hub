@@ -65,6 +65,14 @@ export function isWarmedForBuild() {
  */
 export async function warmOfflineCache({ force = false } = {}) {
   if (state.status === 'running') return { ...state }
+  // asset-manifest.json is emitted by the production build (and the service
+  // worker only exists there too). On the dev server the path falls back to
+  // index.html, so there's nothing to warm — say so instead of failing to parse.
+  if (import.meta.env.DEV) {
+    state = { status: 'dev', done: 0, total: 0, error: null }
+    emit()
+    return { ...state }
+  }
   if (!navigator.onLine) {
     state = { status: 'offline', done: 0, total: 0, error: null }
     emit()
@@ -80,7 +88,12 @@ export async function warmOfflineCache({ force = false } = {}) {
   try {
     const res = await fetch(`${import.meta.env.BASE_URL}asset-manifest.json`, { cache: 'no-cache' })
     if (!res.ok) throw new Error(`manifest HTTP ${res.status}`)
-    list = await res.json()
+    const text = await res.text()
+    try {
+      list = JSON.parse(text)
+    } catch {
+      throw new Error('asset list missing or not JSON — run a production build')
+    }
     if (!Array.isArray(list)) throw new Error('manifest not an array')
   } catch (err) {
     state = { status: 'error', done: 0, total: 0, error: String(err && err.message || err) }

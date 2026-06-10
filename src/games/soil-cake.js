@@ -241,9 +241,7 @@ function initCake(container) {
     canvas.height = fh
     ctx.drawImage(img, cx, cy, cw, ch, 0, 0, fw, fh)
 
-    // Remove all white, clean edges
     const fd = ctx.getImageData(0, 0, fw, fh)
-    //removeWhite(fd)
     ctx.putImageData(fd, 0, 0)
 
     // Size containers
@@ -275,57 +273,6 @@ function findBounds(data, w, h) {
     }
   }
   return { top, bottom: bot, left, right }
-}
-
-function removeWhite(imageData) {
-  const d = imageData.data
-  const w = imageData.width, h = imageData.height
-
-  // Simple approach: use luminance to set alpha.
-  // Dark pixels (lines) stay opaque, light pixels (background) become transparent.
-  // Anti-aliased edges get proportional alpha based on darkness.
-  // Pass 1: aggressively remove anything that isn't clearly a dark line
-  for (let i = 0; i < d.length; i += 4) {
-    const lum = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]
-    if (lum > 140) {
-      // Anything lighter than mid-gray → fully transparent
-      d[i+3] = 0
-    } else if (lum > 60) {
-      // Anti-aliased edge zone → proportional alpha, darken toward black
-      const t = (lum - 60) / 80 // 0 = dark, 1 = light
-      d[i+3] = Math.floor(255 * (1 - t))
-      // Force color to near-black to avoid gray fringe
-      d[i] = Math.floor(d[i] * 0.3)
-      d[i+1] = Math.floor(d[i+1] * 0.3)
-      d[i+2] = Math.floor(d[i+2] * 0.3)
-    }
-    // lum <= 60: dark lines, keep fully opaque
-  }
-
-  // Pass 2: expand dark lines by 1px outward for clean edges
-  const copy = new Uint8ClampedArray(d)
-  for (let y = 1; y < h - 1; y++) {
-    for (let x = 1; x < w - 1; x++) {
-      const i = (y * w + x) * 4
-      if (copy[i+3] < 40) {
-        // Check 8 neighbors for dark opaque pixels
-        let nearDark = false
-        for (let dy = -1; dy <= 1 && !nearDark; dy++) {
-          for (let dx = -1; dx <= 1 && !nearDark; dx++) {
-            if (dx === 0 && dy === 0) continue
-            const ni = ((y+dy)*w + (x+dx)) * 4
-            if (copy[ni+3] > 200) {
-              const nlum = 0.299 * copy[ni] + 0.587 * copy[ni+1] + 0.114 * copy[ni+2]
-              if (nlum < 60) nearDark = true
-            }
-          }
-        }
-        if (nearDark) {
-          d[i] = 30; d[i+1] = 25; d[i+2] = 20; d[i+3] = 200
-        }
-      }
-    }
-  }
 }
 
 function createLayerZones(container, layersDiv) {

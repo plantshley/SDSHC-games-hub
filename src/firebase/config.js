@@ -10,12 +10,12 @@
  * /firestore.rules), not by hiding these values. The admin PASSWORD is never
  * here; it lives hashed on Firebase's servers, set from the Console.
  *
- * ── Flipping the backend on ─────────────────────────────────────────────────
+ * ── Backend switch ──────────────────────────────────────────────────────────
  * `USE_FIRESTORE` selects which leaderboard data layer the app uses:
- *   false → localStorage (Phase 1A, current default — works with no config)
- *   true  → Firestore + offline persistence (Phase 1B)
- * Leave it false until the real config below is filled in and verified, then
- * set it to true. The leaderboard-api selector reads this flag.
+ *   true  → Firestore + offline persistence (Phase 1B — current, live)
+ *   false → localStorage only (Phase 1A fallback — works with no real config)
+ * The leaderboard-api selector reads this flag. If you ever need to demo without
+ * a Firebase project, set it to false.
  */
 
 export const firebaseConfig = {
@@ -35,10 +35,7 @@ export const firebaseConfig = {
  */
 export const ADMIN_EMAIL = 'admin@sdshc.local'
 
-/**
- * Master switch for the Firestore backend. Keep false until `firebaseConfig`
- * above is real, then flip to true to go live on Phase 1B.
- */
+/** Master switch for the Firestore backend (see "Backend switch" above). */
 export const USE_FIRESTORE = true
 
 /** True once the placeholder values have actually been replaced. */
