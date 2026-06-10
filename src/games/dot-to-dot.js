@@ -1,6 +1,7 @@
 import { navigate } from '../router.js'
 import { LEVELS } from '../data/content/dot-to-dot.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { onTap } from '../utils/tap.js'
 
 /**
  * Dot-to-Dot ("What Does Soil Make?") — Little Sprouts
@@ -104,12 +105,12 @@ function createIntroScreen() {
   }
   setTimeout(typeChar, 400)
 
-  el.querySelector('#dtd-intro-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#dtd-intro-home'), () => {
     navigate('game-select/sprouts')
   })
 
   el.querySelectorAll('.dtd-level-btn').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       currentLevelIdx = parseInt(btn.dataset.idx)
       currentPuzzleIdx = 0
       transitionTo(el, createGameScreen())
@@ -164,24 +165,24 @@ function createGameScreen() {
     </div>
   `
 
-  el.querySelector('#dtd-play-again').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#dtd-play-again'), () => {
     clearTimeout(pendingCompleteTimer)
     clearTimeout(pendingLevelTimer)
     transitionTo(el, createGameScreen())
   })
-  el.querySelector('#dtd-back-games').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#dtd-back-games'), () => {
     clearTimeout(pendingCompleteTimer)
     clearTimeout(pendingLevelTimer)
     navigate('game-select/sprouts')
   })
 
-  el.querySelector('#dtd-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#dtd-game-home'), () => {
     clearTimeout(pendingCompleteTimer)
     clearTimeout(pendingLevelTimer)
     transitionTo(el, createIntroScreen())
   })
 
-  el.querySelector('#dtd-back-levels').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#dtd-back-levels'), () => {
     clearTimeout(pendingCompleteTimer)
     clearTimeout(pendingLevelTimer)
     transitionTo(el, createIntroScreen())
@@ -493,7 +494,7 @@ function createGameScreen() {
   }
 
   // ─── Hit detection ───
-  overlay.addEventListener('pointerdown', e => {
+  onTap(overlay, e => {
     if (completed) return
     const rect = overlay.getBoundingClientRect()
     const px = e.clientX - rect.left
@@ -618,7 +619,7 @@ function createGameScreen() {
   }
 
   // ─── Nav pill switching ───
-  el.querySelector('#dtd-page-nav').addEventListener('pointerdown', e => {
+  onTap(el.querySelector('#dtd-page-nav'), e => {
     const btn = e.target.closest('.dtd-page-nav-item')
     if (!btn) return
     const idx = parseInt(btn.dataset.idx)

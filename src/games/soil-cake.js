@@ -1,6 +1,7 @@
 import { navigate } from '../router.js'
 import { HORIZONS, INSTRUCTIONS } from '../data/content/soil-cake.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { onTap } from '../utils/tap.js'
 
 /**
  * Soil Cake Game
@@ -65,8 +66,8 @@ function createIntroScreen() {
   }
   setTimeout(typeChar, 400)
 
-  el.querySelector('#sc-intro-home').addEventListener('pointerdown', () => navigate('game-select/sprouts'))
-  el.querySelector('#sc-enter').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#sc-intro-home'), () => navigate('game-select/sprouts'))
+  onTap(el.querySelector('#sc-enter'), () => {
     const parent = el.parentNode
     const gameplay = createGameplayScreen()
     el.classList.remove('active')
@@ -178,7 +179,7 @@ function createGameplayScreen() {
     initDecorations(el)
   })
 
-  el.querySelector('#sc-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#sc-game-home'), () => {
     const parent = el.parentNode
     const intro = createIntroScreen()
     el.classList.remove('active')
@@ -327,7 +328,7 @@ function createLayerZones(container, layersDiv) {
     div.dataset.layer = zone.id
     div.style.cssText = `position:absolute;left:0;right:0;top:${zone.top}%;height:${zone.bottom - zone.top}%;cursor:pointer;border-radius:8px;`
 
-    div.addEventListener('pointerdown', () => {
+    onTap(div, () => {
       if (!selectedColor || !selectedId) return
       const horizon = HORIZONS.find(h => h.id === selectedId)
       if (horizon && zone.id === horizon.id) {
@@ -373,7 +374,7 @@ function createLayerLabels(container, cakeHeight) {
 
 function initPalette(container) {
   container.querySelectorAll('.sc-color-btn').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       if (btn.classList.contains('selected')) {
         btn.classList.remove('selected')
         selectedColor = null

@@ -1,4 +1,5 @@
 import { navigate } from '../router.js'
+import { onTap } from '../utils/tap.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/farm-manager.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
 
@@ -86,8 +87,8 @@ function createIntroScreen() {
   }
   typingTimer = setTimeout(typeChar, 400)
 
-  el.querySelector('#fm-intro-home').addEventListener('pointerdown', () => navigate('game-select/guardians'))
-  el.querySelector('#fm-go-btn').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#fm-intro-home'), () => navigate('game-select/guardians'))
+  onTap(el.querySelector('#fm-go-btn'), () => {
     clearTimeout(typingTimer)
     transitionTo(el, createGameplayScreen(0))
   })
@@ -107,7 +108,7 @@ function buildLevelNavHtml(activeLevelIdx) {
 
 function wireLevelNav(el, currentLevelIdx, timerRef) {
   el.querySelectorAll('.fm-level-nav-item').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       const idx = parseInt(btn.dataset.level)
       if (idx === currentLevelIdx) return
       clearTimeout(timerRef.id)
@@ -234,7 +235,7 @@ function createGameplayScreen(levelIdx) {
     factModal.classList.add('fm-fact-visible')
   }
 
-  factContinueBtn.addEventListener('pointerdown', () => {
+  onTap(factContinueBtn, () => {
     factModal.classList.remove('fm-fact-visible')
     if (isLastLevel) {
       requestAnimationFrame(() => completionOverlay.classList.add('fm-show'))
@@ -245,12 +246,12 @@ function createGameplayScreen(levelIdx) {
     }
   })
 
-  el.querySelector('#fm-play-again').addEventListener('pointerdown', () => transitionTo(el, createGameplayScreen(0)))
-  el.querySelector('#fm-back-games').addEventListener('pointerdown', () => navigate('game-select/guardians'))
+  onTap(el.querySelector('#fm-play-again'), () => transitionTo(el, createGameplayScreen(0)))
+  onTap(el.querySelector('#fm-back-games'), () => navigate('game-select/guardians'))
 
   // ─── Option tap handlers ───
   el.querySelectorAll('.fm-option-card').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       if (answered) return
       if (factModal.classList.contains('fm-fact-visible')) return
 
@@ -294,11 +295,11 @@ function createGameplayScreen(levelIdx) {
   })
 
   // Home + quit buttons
-  el.querySelector('#fm-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#fm-game-home'), () => {
     clearTimeout(instrTimerRef.id)
     transitionTo(el, createIntroScreen())
   })
-  el.querySelector('#fm-quit').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#fm-quit'), () => {
     clearTimeout(instrTimerRef.id)
     transitionTo(el, createIntroScreen())
   })

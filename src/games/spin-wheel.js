@@ -1,4 +1,5 @@
 import { navigate } from '../router.js'
+import { onTap } from '../utils/tap.js'
 import {
   CATEGORIES, WHEEL_SLICES, WIN_THRESHOLD, PLANT_STAGES,
   PLAYER_NAMES, PLAYER_COLORS, INSTRUCTIONS,
@@ -130,15 +131,15 @@ function createIntroScreen() {
   }
   typingTimer = setTimeout(typeChar, 400)
 
-  el.querySelector('#sw-intro-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#sw-intro-home'), () => {
     clearTimeout(typingTimer)
     navigate('game-select/meadow')
   })
 
-  el.querySelector('#sw-minus').addEventListener('pointerdown', () => updateCount(-1))
-  el.querySelector('#sw-plus').addEventListener('pointerdown', () => updateCount(1))
+  onTap(el.querySelector('#sw-minus'), () => updateCount(-1))
+  onTap(el.querySelector('#sw-plus'), () => updateCount(1))
 
-  el.querySelector('#sw-start').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#sw-start'), () => {
     clearTimeout(typingTimer)
     transitionTo(el, createGameplayScreen(players))
   })
@@ -812,11 +813,11 @@ function createGameplayScreen(players) {
     canvasPanel.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('sw-show'))
 
-    overlay.querySelector('#sw-play-again').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#sw-play-again'), () => {
       cancelAnimationFrame(state.spinFrame)
       transitionTo(el, createIntroScreen())
     })
-    overlay.querySelector('#sw-go-home').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#sw-go-home'), () => {
       cancelAnimationFrame(state.spinFrame)
       navigate('game-select/meadow')
     })
@@ -824,19 +825,19 @@ function createGameplayScreen(players) {
 
   // ── Event Bindings ──
 
-  el.querySelector('#sw-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#sw-game-home'), () => {
     cancelAnimationFrame(state.spinFrame)
     clearTimeout(state.feedbackTimeout)
     transitionTo(el, createIntroScreen())
   })
 
-  spinBtn.addEventListener('pointerdown', () => {
+  onTap(spinBtn, () => {
     if (state.phase !== 'ready') return
     spinWheel()
   })
 
   el.querySelectorAll('.sw-cat-item').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       const catId = btn.dataset.cat
       if (state.phase === 'choosing-for-opponent') {
         // Wild Card: force next player's category
@@ -855,10 +856,10 @@ function createGameplayScreen(players) {
   })
 
   choiceButtons.forEach((btn, i) => {
-    btn.addEventListener('pointerdown', () => handleAnswer(i))
+    onTap(btn, () => handleAnswer(i))
   })
 
-  el.querySelector('#sw-quit').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#sw-quit'), () => {
     cancelAnimationFrame(state.spinFrame)
     clearTimeout(state.feedbackTimeout)
     showCompletion(true)

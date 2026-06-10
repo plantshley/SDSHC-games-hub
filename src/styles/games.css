@@ -8487,3 +8487,80 @@
     margin-bottom: 6px !important;
   }
 }
+
+/* ================================================================
+ * RESPONSIVE — Landscape phone: ACTUALLY let kid gameplay scroll.
+ * The per-element shrinking above still clipped the bottom of screens
+ * because each game body is `flex: 1` (exactly viewport height) with an
+ * internal `overflow: hidden` play area — so content that didn't fit got
+ * cut off with no way to scroll to it. Here we let the DOM-based game
+ * bodies size to their content so the absolutely-positioned .screen
+ * (which is `overflow-y: auto` at ≤1279) genuinely scrolls.
+ *
+ * Canvas games (coloring/dot-to-dot/soil-cake/spin-wheel) are intentionally
+ * excluded — their canvases are sized from the body/container height, so
+ * forcing content-height could collapse them. They keep the fit-in-place
+ * treatment from the blocks above.
+ * ================================================================ */
+@media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
+  /* Top-align the screen so scrollable content starts at the top, never
+     centered (which would push the top off-screen and clip it). */
+  .db-game,
+  .dd-game,
+  .fm-game,
+  .oo-game,
+  .ps-game,
+  .tb-game {
+    justify-content: flex-start !important;
+  }
+  /* Size the body to its content + add breathing room at the bottom so the
+     last row isn't flush against the viewport edge once it scrolls. */
+  .db-game-body,
+  .dd-game-body,
+  .fm-game-body,
+  .oo-game-body,
+  .ps-game-body,
+  .tb-game-body {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    align-items: flex-start !important;
+    padding-bottom: 16px !important;
+  }
+
+  /* dont-belong + odd-one-out share the card-grid play area. The base panel
+     uses overflow:hidden + a height:100% grid, which clipped the bottom row.
+     Unclip and let the grid take its natural height so all four cards show
+     (scrolling if needed). */
+  .db-canvas-panel,
+  .oo-canvas-panel {
+    overflow: visible !important;
+  }
+  .db-item-grid,
+  .oo-item-grid {
+    height: auto !important;
+    grid-template-rows: auto auto !important;
+    align-content: start !important;
+  }
+  .db-item-card,
+  .oo-item-card {
+    aspect-ratio: auto !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* Speech bubble: keep the hint text INSIDE the bubble. Let it grow to fit
+     its content (don't squish), wrap normally, and never clip. */
+  .db-panel .db-speech-bubble,
+  .db-panel .db-game-speech,
+  .oo-panel .db-speech-bubble,
+  .oo-panel .db-game-speech {
+    height: auto !important;
+    min-height: 0 !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.62rem !important;
+    line-height: 1.25 !important;
+  }
+}

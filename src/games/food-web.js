@@ -1,4 +1,5 @@
 import { navigate } from '../router.js'
+import { onTap } from '../utils/tap.js'
 import { ORGANISMS, QUIZ_QUESTIONS, INSTRUCTIONS } from '../data/content/food-web.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
 
@@ -100,8 +101,8 @@ function createIntroScreen() {
   }
   setTimeout(typeChar, 400)
 
-  el.querySelector('#fw-intro-home').addEventListener('pointerdown', () => navigate('game-select/guardians'))
-  el.querySelector('#fw-enter').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#fw-intro-home'), () => navigate('game-select/guardians'))
+  onTap(el.querySelector('#fw-enter'), () => {
     transitionTo(el, createGameScreen())
   })
 
@@ -209,7 +210,7 @@ function createGameScreen() {
     factModal.classList.add('fw-fact-visible')
   }
 
-  factContinueBtn.addEventListener('pointerdown', () => {
+  onTap(factContinueBtn, () => {
     factModal.classList.remove('fw-fact-visible')
     if (factDismissCallback) {
       factDismissCallback()
@@ -430,7 +431,7 @@ function createGameScreen() {
     `
 
     quizPanel.querySelectorAll('.fw-quiz-choice').forEach(btn => {
-      btn.addEventListener('pointerdown', () => handleAnswer(btn, qIdx))
+      onTap(btn, () => handleAnswer(btn, qIdx))
     })
   }
 
@@ -462,7 +463,7 @@ function createGameScreen() {
     `
     explEl.classList.add('fw-explanation-visible')
 
-    explEl.querySelector('#fw-quiz-next').addEventListener('pointerdown', () => {
+    onTap(explEl.querySelector('#fw-quiz-next'), () => {
       if (!el.parentNode) return
       clearHighlights()
       if (qIdx + 1 < shuffledQuiz.length) {
@@ -505,16 +506,16 @@ function createGameScreen() {
     const cr = canvas.getBoundingClientRect()
     spawnParticles(canvas, cr.width / 2, cr.height / 2, 28)
 
-    overlay.querySelector('#fw-replay-btn').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#fw-replay-btn'), () => {
       transitionTo(el, createGameScreen())
     })
-    overlay.querySelector('#fw-back-btn').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#fw-back-btn'), () => {
       navigate('game-select/guardians')
     })
   }
 
   // ─── Home button ───
-  el.querySelector('#fw-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#fw-game-home'), () => {
     transitionTo(el, createIntroScreen())
   })
 

@@ -1,6 +1,7 @@
 import { navigate } from '../router.js'
 import { PAGES, PALETTE, DECORATIONS, INSTRUCTIONS } from '../data/content/coloring.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { onTap } from '../utils/tap.js'
 
 /**
  * Soil Critter Coloring Game
@@ -122,10 +123,10 @@ function createIntroScreen() {
   }
   setTimeout(typeChar, 400)
 
-  el.querySelector('#cc-intro-home').addEventListener('pointerdown', () => navigate('game-select/sprouts'))
+  onTap(el.querySelector('#cc-intro-home'), () => navigate('game-select/sprouts'))
 
   el.querySelectorAll('.cc-page-btn').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       currentPageIndex = parseInt(btn.dataset.index)
       transitionTo(el, createGameplayScreen())
     })
@@ -246,7 +247,7 @@ function createGameplayScreen() {
     initCanvasActions(el)
   })
 
-  el.querySelector('#cc-game-home').addEventListener('pointerdown', () => transitionTo(el, createIntroScreen()))
+  onTap(el.querySelector('#cc-game-home'), () => transitionTo(el, createIntroScreen()))
   return el
 }
 
@@ -497,7 +498,7 @@ function updateUndoBtn(container) {
 }
 
 function initCanvasActions(container) {
-  container.querySelector('#cc-undo').addEventListener('pointerdown', () => {
+  onTap(container.querySelector('#cc-undo'), () => {
     if (undoStack.length === 0) return
     const prev = undoStack.pop()
     const canvas = container.querySelector('#cc-canvas')
@@ -512,7 +513,7 @@ function initCanvasActions(container) {
     updateUndoBtn(container)
   })
 
-  container.querySelector('#cc-reset').addEventListener('pointerdown', () => {
+  onTap(container.querySelector('#cc-reset'), () => {
     if (!originalImageData) return
     pushUndo(container)
     const canvas = container.querySelector('#cc-canvas')
@@ -622,7 +623,7 @@ function floodFill(ctx, startX, startY, fillHex) {
 
 function initFillMode(container) {
   const canvas = container.querySelector('#cc-canvas')
-  canvas.addEventListener('pointerdown', (e) => {
+  onTap(canvas, (e) => {
     if (paintMode) return
     if (!selectedColor) {
       container.querySelector('#cc-instruction-text').textContent = 'Pick a color first!'
@@ -757,7 +758,7 @@ function initPaintMode(container) {
 
 function initPalette(container) {
   container.querySelectorAll('.cc-color-swatch').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       if (btn.classList.contains('selected')) {
         btn.classList.remove('selected')
         selectedColor = null
@@ -774,7 +775,7 @@ function initPalette(container) {
 
 function initBrushSize(container) {
   container.querySelectorAll('.cc-brush-btn').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       container.querySelectorAll('.cc-brush-btn').forEach(b => b.classList.remove('active'))
       btn.classList.add('active')
       brushSize = parseInt(btn.dataset.size)
@@ -809,22 +810,22 @@ function initModeButtons(container) {
     }
   }
 
-  fillBtn.addEventListener('pointerdown', () => { paintMode = false; updateMode() })
-  paintBtn.addEventListener('pointerdown', () => { paintMode = true; updateMode() })
+  onTap(fillBtn, () => { paintMode = false; updateMode() })
+  onTap(paintBtn, () => { paintMode = true; updateMode() })
   updateMode()
 }
 
 // ─── NAVIGATION ───
 
 function initNavigation(container) {
-  container.querySelector('#cc-prev').addEventListener('pointerdown', () => {
+  onTap(container.querySelector('#cc-prev'), () => {
     if (currentPageIndex > 0) loadPage(container, currentPageIndex - 1)
   })
-  container.querySelector('#cc-next').addEventListener('pointerdown', () => {
+  onTap(container.querySelector('#cc-next'), () => {
     if (currentPageIndex < PAGES.length - 1) loadPage(container, currentPageIndex + 1)
   })
   container.querySelectorAll('.cc-page-nav-item').forEach(item => {
-    item.addEventListener('pointerdown', () => {
+    onTap(item, () => {
       const idx = parseInt(item.dataset.index)
       if (idx !== currentPageIndex) loadPage(container, idx)
     })

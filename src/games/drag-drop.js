@@ -1,4 +1,5 @@
 import { navigate } from '../router.js'
+import { onTap } from '../utils/tap.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/drag-drop.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
 
@@ -99,9 +100,9 @@ function createIntroScreen() {
   }
   typingTimer = setTimeout(typeChar, 400)
 
-  el.querySelector('#dd-intro-home').addEventListener('pointerdown', () => navigate('game-select/meadow'))
+  onTap(el.querySelector('#dd-intro-home'), () => navigate('game-select/meadow'))
   el.querySelectorAll('.dd-level-card').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       clearTimeout(typingTimer)
       const levelIdx = parseInt(card.dataset.level)
       transitionTo(el, createGameplayScreen(levelIdx))
@@ -123,7 +124,7 @@ function buildLevelNavHtml(activeLevelIdx) {
 
 function wireLevelNav(el, currentLevelIdx, instrTimer) {
   el.querySelectorAll('.dd-level-nav-item').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       const idx = parseInt(btn.dataset.level)
       if (idx === currentLevelIdx) return
       clearTimeout(instrTimer)
@@ -238,7 +239,7 @@ function createWordToImageScreen(level, levelIdx) {
     factModal.classList.add('dd-fact-visible')
   }
 
-  factContinueBtn.addEventListener('pointerdown', () => {
+  onTap(factContinueBtn, () => {
     factModal.classList.remove('dd-fact-visible')
     if (factDismissCallback) {
       factDismissCallback()
@@ -349,11 +350,11 @@ function createWordToImageScreen(level, levelIdx) {
   })
 
   // Home + quit buttons
-  el.querySelector('#dd-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#dd-game-home'), () => {
     clearTimeout(instrTimer)
     transitionTo(el, createIntroScreen())
   })
-  el.querySelector('#dd-quit').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#dd-quit'), () => {
     clearTimeout(instrTimer)
     transitionTo(el, createIntroScreen())
   })
@@ -460,7 +461,7 @@ function createWordToPositionScreen(level, levelIdx) {
     factModal.classList.add('dd-fact-visible')
   }
 
-  factContinueBtn.addEventListener('pointerdown', () => {
+  onTap(factContinueBtn, () => {
     factModal.classList.remove('dd-fact-visible')
     if (factDismissCallback) {
       factDismissCallback()
@@ -568,11 +569,11 @@ function createWordToPositionScreen(level, levelIdx) {
   })
 
   // Home + quit buttons
-  el.querySelector('#dd-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#dd-game-home'), () => {
     clearTimeout(instrTimer)
     transitionTo(el, createIntroScreen())
   })
-  el.querySelector('#dd-quit').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#dd-quit'), () => {
     clearTimeout(instrTimer)
     transitionTo(el, createIntroScreen())
   })
@@ -611,11 +612,11 @@ function showCompletion(container, levelIdx) {
   const cr = canvas.getBoundingClientRect()
   spawnParticles(canvas, cr.width / 2, cr.height / 2, 20)
 
-  overlay.querySelector('#dd-replay-btn').addEventListener('pointerdown', () => {
+  onTap(overlay.querySelector('#dd-replay-btn'), () => {
     transitionTo(container, createGameplayScreen(levelIdx))
   })
 
-  overlay.querySelector('#dd-next-btn').addEventListener('pointerdown', () => {
+  onTap(overlay.querySelector('#dd-next-btn'), () => {
     if (isLastLevel) {
       transitionTo(container, createIntroScreen())
     } else {
