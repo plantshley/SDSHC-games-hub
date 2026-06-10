@@ -15,7 +15,7 @@ import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { createLeaderboardButton } from '../../utils/leaderboard-modal.js'
 import { renderTeamPlayerRows } from '../../utils/team-input.js'
-import { recordScores } from '../../utils/leaderboard-api.js'
+import { recordScoresWithStatus } from '../../utils/score-save-status.js'
 import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
 import { shuffleArray, transitionTo } from '../../utils/game-helpers.js'
@@ -692,12 +692,12 @@ function createGameplayScreen(players, totalRounds) {
   function showCompletion(fromQuit = false) {
     state.phase = 'complete'
     trackGameComplete('adv-word-game', 'advanced', { playerCount: state.players.length, score: Math.max(...state.players.map(p => p.score)) })
-    recordScores({
+    recordScoresWithStatus({
       gameId: 'adv-word-game',
       runId: state.runId,
       entries: state.players.map(p => ({ playerName: p.name, teamId: p.teamId, points: p.score })),
       eventId: getScoreEventId(),
-    }).catch(err => console.error('recordScores failed', err))
+    })
 
     const afterImpact = () => {
       let heading

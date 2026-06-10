@@ -137,7 +137,7 @@ export const CATEGORIES = [
         image: '/assets/field-guide/native-plants/ponderosa-pine.webp',
         clues: [
           'The dominant tree of the Black Hills — tall, straight-trunked conifers that can exceed 100 feet.',
-          'Mature bark breaks into large, orange puzzle-piece scales. Long needles grow in bundles of 2 (occasionally 3).',
+          'Mature bark breaks into large, orange puzzle-piece scales. Long needles grow in bundles of 2 or 3 — often mixed on the same branch.',
           'Remarkable identifier: warm bark smells distinctly of vanilla or butterscotch.',
         ],
         significance: 'The most numerous tree in SD. Supports Black Hills forest soils with a distinct needle-litter soil layer.',
@@ -221,7 +221,7 @@ export const CATEGORIES = [
           'Stems and leaves ooze a thick white milky sap when broken — a defensive latex that makes the plant toxic to most insects. Blooms June through August.',
           'Asclepias syriaca — after flowering, produces warty, canoe-shaped seed pods that split open in fall to release hundreds of seeds, each trailing a silky white plume.',
         ],
-        significance: 'The sole host plant for monarch butterfly larvae on the Great Plains and a major nectar source for native bees. Its spreading rhizome roots stabilize disturbed soils and resist erosion.',
+        significance: 'A primary host plant for monarch butterfly larvae on the Great Plains and a major nectar source for native bees. Its spreading rhizome roots stabilize disturbed soils and resist erosion.',
       },
       {
         id: 'goldenrod',
@@ -308,7 +308,7 @@ export const CATEGORIES = [
           'Its long, narrow leaves — up to 10 inches near the base — fold lengthwise along the midrib and arch slightly, giving the plant a distinctly pleated look.',
           'Helianthus maximiliani — a true prairie perennial (unlike the annual common sunflower) that spreads by rhizomes into large colonies; named for Prince Maximilian of Wied.',
         ],
-        significance: 'Its rhizomatous roots, reaching 15 feet deep, are exceptionally effective at anchoring soil and preventing erosion on slopes and stream banks. NRCS includes it in prairie restoration seed mixes.',
+        significance: 'Its deep, spreading rhizome network is exceptionally effective at anchoring soil and preventing erosion on slopes and stream banks. NRCS includes it in prairie restoration seed mixes.',
       },
       {
         id: 'purple-prairie-clover',

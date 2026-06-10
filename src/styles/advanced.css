@@ -3101,6 +3101,52 @@
   to { opacity: 0; transform: translate(-50%, -60%) scale(1); }
 }
 
+/* ── Score-save status pill (src/utils/score-save-status.js) ──
+ * Appended to <body>, so it can't rely on [data-mode="advanced"] vars —
+ * uses literal colors. Fixed overlay; does not affect any existing layout. */
+.score-save-pill {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(12px);
+  z-index: 10000;
+  max-width: min(90vw, 460px);
+  padding: 11px 20px;
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-align: center;
+  color: #e0e0e0;
+  background: rgba(20, 20, 34, 0.96);
+  border: 1px solid #2a2a3e;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.score-save-pill.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.score-save-pill.saving { border-color: #38cebc; color: #cfeeea; }
+.score-save-pill.saved  { border-color: #6ee7b7; color: #c4f5dd; }
+.score-save-pill.queued { border-color: #b8e84a; color: #ecf6c4; }
+.score-save-pill.error  { border-color: #ff6193; color: #ffccdb; }
+
+/* Light theme (mirrored from #app onto the pill in score-save-status.js) */
+.score-save-pill[data-theme="light"] {
+  color: #2a2a3e;
+  background: rgba(255, 255, 255, 0.97);
+  border-color: #d6dae4;
+  box-shadow: 0 8px 28px rgba(20, 30, 60, 0.16);
+}
+.score-save-pill[data-theme="light"].saving { border-color: #1fa394; color: #0e5b53; }
+.score-save-pill[data-theme="light"].saved  { border-color: #1f9d63; color: #135a37; }
+.score-save-pill[data-theme="light"].queued { border-color: #7f9c1c; color: #45560f; }
+.score-save-pill[data-theme="light"].error  { border-color: #d63a72; color: #8a1840; }
+
 /* ================================================================
  * RESPONSIVE
  * All rules below live inside @media (max-width: …) blocks so the

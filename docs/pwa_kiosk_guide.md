@@ -6,7 +6,7 @@ This document outlines the strategy and instructions for running the SDSHC Games
 
 A Progressive Web App (PWA) is a standard web application that uses modern browser features to act like a native desktop app. 
 By adding a "Service Worker" and a "Web App Manifest" to your Vite project:
-1. The browser caches the app **shell** (HTML, CSS, JavaScript, fonts — ~1.7 MB) up front so it installs and updates in about a second. Media (sprites, photos, GIFs, diagrams — ~107 MB across 450 files) is cached **on demand** as the app uses it, plus an explicit one-tap "Cache for offline" step (see §3 and the checklist below) that bulk-downloads everything so the kiosk is fully offline-capable.
+1. The browser caches the app **shell** (HTML, CSS, JavaScript, fonts — ~1.7 MB) up front so it installs and updates in about a second. Media (sprites, photos, GIFs, diagrams — ~107 MB across 450 files) is cached **on demand** as the app uses it, plus an explicit one-tap "Cache for offline" step (see Section 3 and the checklist below) that bulk-downloads everything so the kiosk is fully offline-capable.
 2. The browser allows the user to "Install" the website, giving it a desktop shortcut and removing the browser's URL bar, tabs, and menus.
 3. When launched from the shortcut, the app intercepts all network requests and serves the files from the local cache instead of trying to fetch them from the internet. This allows the app to run completely offline.
 
@@ -45,7 +45,7 @@ The update process is automatic, driven by the background Service Worker. The ap
 
 ## 4. Handling Firebase (Offline/Online Synchronization)
 
-> **Status:** The leaderboard backend is being migrated from Phase 1A (`localStorage` only) to **Phase 1B (Firebase Firestore with offline persistence)**. See [.claude/plans/the-website-advanced-mode-fluttering-dove.md](../../.claude/plans/the-website-advanced-mode-fluttering-dove.md) for the full design.
+> **Status:** **Live.** The leaderboard backend runs on **Phase 1B (Firebase Firestore with offline persistence)** — `USE_FIRESTORE = true` in [src/firebase/config.js](../src/firebase/config.js). The `localStorage`-only Phase 1A layer remains as a fallback behind that flag. See [.claude/plans/the-website-advanced-mode-fluttering-dove.md](../../.claude/plans/the-website-advanced-mode-fluttering-dove.md) for the full design.
 
 ### The chosen model: Firestore offline persistence (one data layer, not two)
 

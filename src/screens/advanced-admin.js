@@ -489,6 +489,10 @@ export function createAdvancedAdminScreen() {
           statusText = 'Offline — connect to Wi-Fi, then cache assets.'
           statusClass = 'adv-offline-warn'
           break
+        case 'dev':
+          statusText = 'ℹ Offline caching runs in the production (deployed) build only — nothing to cache on the dev server.'
+          statusClass = 'adv-offline-warn'
+          break
         case 'error':
           statusText = `⚠ Couldn't read asset list (${st.error}).`
           statusClass = 'adv-offline-warn'

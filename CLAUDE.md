@@ -282,7 +282,7 @@ Every advanced game screen must use `flex-direction: column` layout with `paddin
 
 ## Leaderboard (Advanced Mode)
 
-A team/school competition system layered on Advanced Mode. Phase 1A (localStorage) and Phase 2 (par-normalized scoring) are implemented; Phase 1B (Firebase swap for cross-device sync + admin auth) is deferred. See [the-website-advanced-mode-fluttering-dove plan](../../.claude/plans/the-website-advanced-mode-fluttering-dove.md) for the full design.
+A team/school competition system layered on Advanced Mode. **All phases are live:** Phase 1A (data layer), Phase 1B (Firebase/Firestore backend + Firebase-Auth admin sign-in), and Phase 2 (par-normalized scoring). The backend is selected by `USE_FIRESTORE` in [src/firebase/config.js](src/firebase/config.js) — currently `true` (Firestore + offline persistence). Flip it to `false` to fall back to the localStorage layer. See [the-website-advanced-mode-fluttering-dove plan](../../.claude/plans/the-website-advanced-mode-fluttering-dove.md) for the full design.
 
 ### Flow
 
@@ -298,16 +298,18 @@ Session play-mode lives in `sessionStorage['sdshc-lb-play-mode']`. Returning to 
 
 ### Data layer
 
-[src/utils/leaderboard-api.js](src/utils/leaderboard-api.js) — single Promise-returning module. Same signatures will back Firestore in Phase 1B; nothing else needs to change. localStorage keys:
+[src/utils/leaderboard-api.js](src/utils/leaderboard-api.js) is a thin **backend selector**: it re-exports either `leaderboard-api.firestore.js` (when `USE_FIRESTORE`) or `leaderboard-api.local.js`. Both expose the identical Promise-returning surface, so callers never change. Every consumer imports from `leaderboard-api.js`, never the impls directly.
 
+**Firestore mode (live):** collections `/teams`, `/events`, `/scores`, plus `/admins/{uid}` (admin allow-list checked by `firestore.rules`) and `/config`. Offline persistence is `persistentLocalCache` + `persistentSingleTabManager` — **single browser tab only**. Writes made offline cache immediately and replay on reconnect; idempotency is by deterministic score doc ids `{runId}__{i}`.
+
+**Per-kiosk / session keys (used in both modes):**
 ```
-sdshc-lb-teams         { schemaVersion, teams: [{ id, name, normalized, status, color1, color2, createdAt }] }
-sdshc-lb-events        { events: [{ id, name, startedAt, endedAt|null, status, roster: [...] }] }
-sdshc-lb-scores        { scores: [{ id, runId, ts, gameId, playerName, teamId|null, points, eventId|null, kioskId }] }
-sdshc-lb-active-event  eventId|null (per-kiosk)
-sdshc-lb-kiosk-id      stable UUID
+sdshc-lb-active-event  eventId|null (per-kiosk, localStorage)
+sdshc-lb-kiosk-id      stable UUID (per-kiosk, localStorage)
 sdshc-lb-play-mode     "team" | "casual" (sessionStorage, see above)
 ```
+
+**localStorage mode only** (`USE_FIRESTORE = false`) additionally stores the full dataset under `sdshc-lb-teams` / `sdshc-lb-events` / `sdshc-lb-scores` (`{ schemaVersion, … }`). In Firestore mode those are superseded by the collections above.
 
 ### Team status model
 
@@ -324,11 +326,11 @@ Both columns are shown — **Score** (normalized, sorted) and **Raw** (actual po
 
 ### Admin (`#advanced/admin`)
 
-Phase 1A panel — no auth yet. Sections: active event, pending teams, all teams, events (start / end / reopen / delete), recent scores (with per-row delete), per-event roster moderation, team color picker. Idle timer is force-disabled here. Phase 1B will add a password sign-in at the top.
+Sections: active event, pending teams, all teams, events (start / schedule / end / reopen / delete), recent scores (with per-row delete), per-event roster moderation, team color picker, offline cache warm-up. Idle timer is force-disabled here. In Firestore mode the panel sits behind a **Firebase-Auth sign-in gate** (password only; the screen signs in as `ADMIN_EMAIL` under the hood and requires an `/admins/{uid}` doc per `firestore.rules`); session persists via `browserLocalPersistence`. In localStorage mode the panel renders with no auth.
 
 ### Game-side integration
 
-Every advanced game's intro renders player rows via `team-input.js`. In team mode, each row pairs a player-name input with a school/team dropdown sourced from the event's approved roster (free-typing a new name adds it as pending). In casual mode the team line is hidden and `teamId` stays null. On results, the game calls `recordScores({ gameId, entries, eventId: getScoreEventId() })` with a per-run UUID for idempotency.
+Every advanced game's intro renders player rows via `team-input.js`. In team mode, each row pairs a player-name input with a school/team dropdown sourced from the event's approved roster (free-typing a new name adds it as pending). In casual mode the team line is hidden and `teamId` stays null. On results, the game calls `recordScoresWithStatus({ gameId, runId, entries, eventId: getScoreEventId() })` ([src/utils/score-save-status.js](src/utils/score-save-status.js)) — a wrapper around `recordScores` that shows a small non-blocking save-status pill (saving / saved / saved-offline / failed) so players get feedback, with a per-run UUID for idempotency.
 
 ## Responsive Layout
 
