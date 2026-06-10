@@ -19,6 +19,9 @@
 const MOVE_THRESHOLD = 10 // px of movement that reclassifies a tap as a scroll
 
 export function onTap(el, handler) {
+  // Null-safe so callers can pass `container.querySelector(...)` for elements
+  // that may not be present (mirrors the old `?.addEventListener` pattern).
+  if (!el) return el
   let active = false
   let startX = 0
   let startY = 0

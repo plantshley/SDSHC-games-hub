@@ -114,6 +114,7 @@ let selectedColor = null
 let selectedId = null
 let filledLayers = new Set()
 let cakeContainerEl = null
+let canvasPanelEl = null
 
 function createGameplayScreen() {
   const el = document.createElement('div')
@@ -160,9 +161,9 @@ function createGameplayScreen() {
           <div class="sc-cake-container" id="sc-cake">
             <div class="sc-cake-layers" id="sc-layers"></div>
             <canvas id="sc-canvas"></canvas>
-            <div class="sc-dropped-decos" id="sc-dropped"></div>
           </div>
         </div>
+        <div class="sc-dropped-decos" id="sc-dropped"></div>
         <div class="sc-overlay-bottom">
           <div class="sc-instructions">
             <p id="sc-instruction-text">${INSTRUCTIONS.gameplay}</p>
@@ -200,6 +201,7 @@ function initCake(container) {
   const canvas = container.querySelector('#sc-canvas')
   const ctx = canvas.getContext('2d', { willReadFrequently: true })
   cakeContainerEl = container.querySelector('#sc-cake')
+  canvasPanelEl = container.querySelector('.sc-canvas-panel')
   const layersDiv = container.querySelector('#sc-layers')
 
   const img = new Image()
@@ -221,11 +223,16 @@ function initCake(container) {
     const cw = Math.min(img.width, b.right + pad) - cx
     const ch = Math.min(img.height, b.bottom + pad) - cy
 
-    // Scale cake to fit canvas panel with padding for labels + overlay
+    // Scale cake to fit canvas panel with room for labels + overlay. The
+    // reserved space shrinks on small screens — the fixed kiosk reserves
+    // (175/150) ate almost the whole panel on mobile, leaving a tiny cake.
     const panel = container.querySelector('.sc-canvas-panel')
     const pr = panel.getBoundingClientRect()
-    const maxW = pr.width - 175 // room for layer labels on left
-    const maxH = pr.height - 150 // room for overlay at bottom
+    const small = window.matchMedia('(max-width: 899px)').matches
+    const reserveW = small ? 64 : 175 // room for layer labels on left
+    const reserveH = small ? 56 : 150 // room for overlay at bottom
+    const maxW = pr.width - reserveW
+    const maxH = pr.height - reserveH
     const scale = Math.min(maxW / cw, maxH / ch)
     const fw = Math.floor(cw * scale)
     const fh = Math.floor(ch * scale)
@@ -244,8 +251,8 @@ function initCake(container) {
     cakeContainerEl.style.height = fh + 'px'
     layersDiv.style.width = fw + 'px'
     layersDiv.style.height = fh + 'px'
-    container.querySelector('#sc-dropped').style.width = fw + 'px'
-    container.querySelector('#sc-dropped').style.height = fh + 'px'
+    // #sc-dropped now covers the whole canvas panel (CSS inset:0) so
+    // decorations can be placed anywhere, not just on the cake — no sizing here.
 
     createLayerZones(container, layersDiv)
     createLayerLabels(container, fh)
@@ -427,8 +434,11 @@ function initDecorations(container) {
       dragging = false
       clone.remove()
       clone = null
-      if (!cakeContainerEl) return
-      const cr = cakeContainerEl.getBoundingClientRect()
+      // Decorations can be placed anywhere on the right canvas panel, not just
+      // on the cake image. Coordinates are relative to the canvas panel, which
+      // is what #sc-dropped now covers.
+      if (!canvasPanelEl) return
+      const cr = canvasPanelEl.getBoundingClientRect()
       if (e.clientX >= cr.left && e.clientX <= cr.right && e.clientY >= cr.top && e.clientY <= cr.bottom) {
         const em = document.createElement('span')
         em.className = 'sc-placed-deco'
@@ -469,9 +479,9 @@ function makePlacedDecoDraggable(el) {
     dragging = false
     el.style.zIndex = ''
     el.style.transform = 'translate(-50%, -50%) scale(1)'
-    // If dragged outside the cake, remove it
-    if (!cakeContainerEl) return
-    const cr = cakeContainerEl.getBoundingClientRect()
+    // If dragged outside the canvas panel entirely, remove it
+    if (!canvasPanelEl) return
+    const cr = canvasPanelEl.getBoundingClientRect()
     if (e.clientX < cr.left || e.clientX > cr.right || e.clientY < cr.top || e.clientY > cr.bottom) {
       el.remove()
     }
@@ -485,5 +495,6 @@ export function createSoilCakeGame() {
   selectedId = null
   filledLayers = new Set()
   cakeContainerEl = null
+  canvasPanelEl = null
   return createIntroScreen()
 }

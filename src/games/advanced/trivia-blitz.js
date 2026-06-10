@@ -5,6 +5,7 @@
  */
 
 import { navigate } from '../../router.js'
+import { onTap } from '../../utils/tap.js'
 import {
   ROUNDS, ROUND_TIME, PLAYER_COLORS, INSTRUCTIONS, IMPACT_MESSAGES, RULES,
 } from '../../data/content/advanced/trivia-blitz.js'
@@ -94,12 +95,12 @@ function createIntroScreen() {
   introTopbar.appendChild(createThemeToggle())
   typewriter(el.querySelector('.adv-sw-intro-desc'))
 
-  el.querySelector('#adv-tb-back').addEventListener('pointerdown', () => navigate('game-select'))
-  el.querySelector('#adv-tb-minus').addEventListener('pointerdown', () => updateCount(-1))
-  el.querySelector('#adv-tb-plus').addEventListener('pointerdown', () => updateCount(1))
+  onTap(el.querySelector('#adv-tb-back'), () => navigate('game-select'))
+  onTap(el.querySelector('#adv-tb-minus'), () => updateCount(-1))
+  onTap(el.querySelector('#adv-tb-plus'), () => updateCount(1))
 
   el.querySelectorAll('.adv-tb-mode-card').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       trackGameStart('adv-trivia-blitz', 'advanced', { playerCount: players.length })
       trackTopicSelect('adv-trivia-blitz', [card.dataset.mode === 'topic' ? 'Topic Mode' : 'Endless Shuffle'])
       transitionTo(el, createGameplayScreen(players, card.dataset.mode))
@@ -395,7 +396,7 @@ function createGameplayScreen(players, mode) {
     choicesContainer.dataset.correctBtn = correctShuffledIdx
 
     choicesContainer.querySelectorAll('.adv-sw-choice').forEach(btn => {
-      btn.addEventListener('pointerdown', () => handleAnswer(parseInt(btn.dataset.idx)))
+      onTap(btn, () => handleAnswer(parseInt(btn.dataset.idx)))
     })
   }
 
@@ -520,7 +521,7 @@ function createGameplayScreen(players, mode) {
       overlay.classList.remove('adv-sw-impact-show')
       setTimeout(() => { overlay.remove(); onDone() }, 300)
     }
-    overlay.addEventListener('pointerdown', dismiss)
+    onTap(overlay, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -582,7 +583,7 @@ function createGameplayScreen(players, mode) {
     el.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('adv-sw-popup-show'))
 
-    overlay.querySelector('#adv-tb-round-next').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#adv-tb-round-next'), () => {
       overlay.classList.remove('adv-sw-popup-show')
       setTimeout(() => overlay.remove(), 300)
       if (isLastRound) showCompletion()
@@ -640,7 +641,7 @@ function createGameplayScreen(players, mode) {
       overlay.classList.remove('adv-sw-impact-show')
       setTimeout(() => { overlay.remove(); onDone() }, 300)
     }
-    overlay.addEventListener('pointerdown', dismiss)
+    onTap(overlay, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -719,14 +720,14 @@ function createGameplayScreen(players, mode) {
     requestAnimationFrame(() => overlay.classList.add('adv-sw-popup-show'))
 
     if (hasMissed) {
-      overlay.querySelector('#adv-tb-review').addEventListener('pointerdown', () => {
+      onTap(overlay.querySelector('#adv-tb-review'), () => {
         showReviewOverlay(overlay)
       })
     }
-    overlay.querySelector('#adv-tb-again').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#adv-tb-again'), () => {
       transitionTo(el, createIntroScreen())
     })
-    overlay.querySelector('#adv-tb-home2').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#adv-tb-home2'), () => {
       navigate('game-select')
     })
   }
@@ -775,13 +776,13 @@ function createGameplayScreen(players, mode) {
 
     // Toggle category dropdowns
     reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
-      btn.addEventListener('pointerdown', () => {
+      onTap(btn, () => {
         btn.classList.toggle('adv-review-open')
         btn.nextElementSibling.classList.toggle('adv-review-items-open')
       })
     })
 
-    reviewEl.querySelector('#adv-tb-review-back').addEventListener('pointerdown', () => {
+    onTap(reviewEl.querySelector('#adv-tb-review-back'), () => {
       reviewEl.remove()
       parentOverlay.style.display = ''
     })
@@ -811,22 +812,22 @@ function createGameplayScreen(players, mode) {
     stopTimer()
     el.appendChild(popup)
     requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
-    popup.querySelector('#adv-confirm-stay').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-stay'), () => {
       popup.classList.remove('adv-sw-popup-show')
       setTimeout(() => { popup.remove(); if (!endlessSolo) startTimer() }, 300)
     })
-    popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-leave'), () => {
       transitionTo(el, createIntroScreen())
     })
   }
 
   // ── Event Bindings ──
 
-  el.querySelector('#adv-tb-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-tb-home'), () => {
     confirmBack()
   })
 
-  el.querySelector('#adv-tb-quit').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-tb-quit'), () => {
     stopTimer()
     trackGameQuit('adv-trivia-blitz', 'advanced', state.currentRound)
     showCompletion(true)
@@ -835,7 +836,7 @@ function createGameplayScreen(players, mode) {
   if (mode === 'topic') {
     const prevBtn = el.querySelector('#adv-tb-prev')
     if (prevBtn) {
-      prevBtn.addEventListener('pointerdown', () => {
+      onTap(prevBtn, () => {
         if (state.currentRound <= 0) return
         stopTimer()
         startRound(state.currentRound - 1)
@@ -844,7 +845,7 @@ function createGameplayScreen(players, mode) {
 
     const skipBtn = el.querySelector('#adv-tb-skip')
     if (skipBtn) {
-      skipBtn.addEventListener('pointerdown', () => {
+      onTap(skipBtn, () => {
         if (state.currentRound >= ROUNDS.length - 1) return
         stopTimer()
         startRound(state.currentRound + 1)
@@ -852,7 +853,7 @@ function createGameplayScreen(players, mode) {
     }
 
     el.querySelectorAll('.adv-tb-round-btn').forEach(btn => {
-      btn.addEventListener('pointerdown', () => {
+      onTap(btn, () => {
         const idx = parseInt(btn.dataset.round)
         if (idx > state.currentRound && !state.roundScores[idx]) return
         stopTimer()

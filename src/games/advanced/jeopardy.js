@@ -5,6 +5,7 @@
  */
 
 import { navigate } from '../../router.js'
+import { onTap } from '../../utils/tap.js'
 import {
   CATEGORIES, DAILY_DOUBLE_COUNT, PLAYER_COLORS, INSTRUCTIONS, IMPACT_MESSAGES, RULES,
 } from '../../data/content/advanced/jeopardy.js'
@@ -75,10 +76,10 @@ function createIntroScreen() {
   introTopbar.appendChild(createThemeToggle())
   typewriter(el.querySelector('.adv-sw-intro-desc'))
 
-  el.querySelector('#adv-jp-back').addEventListener('pointerdown', () => navigate('game-select'))
-  el.querySelector('#adv-jp-minus').addEventListener('pointerdown', () => updateCount(-1))
-  el.querySelector('#adv-jp-plus').addEventListener('pointerdown', () => updateCount(1))
-  el.querySelector('#adv-jp-start').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-jp-back'), () => navigate('game-select'))
+  onTap(el.querySelector('#adv-jp-minus'), () => updateCount(-1))
+  onTap(el.querySelector('#adv-jp-plus'), () => updateCount(1))
+  onTap(el.querySelector('#adv-jp-start'), () => {
     trackGameStart('adv-jeopardy', 'advanced', { playerCount: players.length })
     transitionTo(el, createGameplayScreen(players))
   })
@@ -207,7 +208,7 @@ function createGameplayScreen(players) {
   // ── Board Interaction ──
 
   el.querySelectorAll('.adv-jp-cell').forEach(cell => {
-    cell.addEventListener('pointerdown', () => {
+    onTap(cell, () => {
       if (state.phase !== 'board') return
       const ci = parseInt(cell.dataset.ci)
       const qi = parseInt(cell.dataset.qi)
@@ -233,7 +234,7 @@ function createGameplayScreen(players) {
     ddOverlay.style.display = 'flex'
 
     ddOverlay.querySelectorAll('.adv-jp-dd-btn').forEach(btn => {
-      btn.addEventListener('pointerdown', () => {
+      onTap(btn, () => {
         const wagerStr = btn.dataset.wager
         const currentScore = Math.max(state.players[state.currentPlayer].score, 100)
         state.ddWager = wagerStr === 'max' ? currentScore : Math.min(parseInt(wagerStr), currentScore)
@@ -268,7 +269,7 @@ function createGameplayScreen(players) {
     qChoices.dataset.correctBtn = correctShuffled
 
     qChoices.querySelectorAll('.adv-sw-choice').forEach(btn => {
-      btn.addEventListener('pointerdown', () => handleAnswer(parseInt(btn.dataset.idx), pointValue))
+      onTap(btn, () => handleAnswer(parseInt(btn.dataset.idx), pointValue))
     })
   }
 
@@ -417,7 +418,7 @@ function createGameplayScreen(players) {
       impactEl.classList.remove('adv-sw-impact-show')
       setTimeout(() => { impactEl.remove(); onDone() }, 300)
     }
-    impactEl.addEventListener('pointerdown', dismiss)
+    onTap(impactEl, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -449,7 +450,7 @@ function createGameplayScreen(players) {
       impactEl.classList.remove('adv-sw-impact-show')
       setTimeout(() => { impactEl.remove(); onDone() }, 300)
     }
-    impactEl.addEventListener('pointerdown', dismiss)
+    onTap(impactEl, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -510,14 +511,14 @@ function createGameplayScreen(players) {
       requestAnimationFrame(() => completionEl.classList.add('adv-sw-popup-show'))
 
       if (hasMissed) {
-        completionEl.querySelector('#adv-jp-review').addEventListener('pointerdown', () => {
+        onTap(completionEl.querySelector('#adv-jp-review'), () => {
           showReviewOverlay(completionEl)
         })
       }
-      completionEl.querySelector('#adv-jp-again').addEventListener('pointerdown', () => {
+      onTap(completionEl.querySelector('#adv-jp-again'), () => {
         transitionTo(el, createIntroScreen())
       })
-      completionEl.querySelector('#adv-jp-home2').addEventListener('pointerdown', () => {
+      onTap(completionEl.querySelector('#adv-jp-home2'), () => {
         navigate('game-select')
       })
     }
@@ -573,13 +574,13 @@ function createGameplayScreen(players) {
 
     // Toggle category dropdowns
     reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
-      btn.addEventListener('pointerdown', () => {
+      onTap(btn, () => {
         btn.classList.toggle('adv-review-open')
         btn.nextElementSibling.classList.toggle('adv-review-items-open')
       })
     })
 
-    reviewEl.querySelector('#adv-jp-review-back').addEventListener('pointerdown', () => {
+    onTap(reviewEl.querySelector('#adv-jp-review-back'), () => {
       reviewEl.remove()
       parentOverlay.style.display = ''
     })
@@ -607,25 +608,25 @@ function createGameplayScreen(players) {
     `
     el.appendChild(popup)
     requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
-    popup.querySelector('#adv-confirm-stay').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-stay'), () => {
       popup.classList.remove('adv-sw-popup-show')
       setTimeout(() => { popup.remove(); state.phase = 'board' }, 300)
     })
-    popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-leave'), () => {
       transitionTo(el, createIntroScreen())
     })
   }
 
   // ── Event Bindings ──
 
-  el.querySelector('#adv-jp-home').addEventListener('pointerdown', () => confirmBack())
+  onTap(el.querySelector('#adv-jp-home'), () => confirmBack())
 
   // Quit button in lower right corner
   const quitBtn = document.createElement('button')
   quitBtn.className = 'adv-sw-quit-btn adv-jp-quit-btn'
   quitBtn.textContent = 'Quit'
   el.querySelector('.adv-jp-body').appendChild(quitBtn)
-  quitBtn.addEventListener('pointerdown', () => { state.phase = 'complete'; trackGameQuit('adv-jeopardy', 'advanced', totalCells - state.questionsRemaining); showCompletion(true) })
+  onTap(quitBtn, () => { state.phase = 'complete'; trackGameQuit('adv-jeopardy', 'advanced', totalCells - state.questionsRemaining); showCompletion(true) })
 
   // ── Initialize ──
 

@@ -14,6 +14,7 @@
  */
 
 import { navigate } from '../router.js'
+import { onTap } from '../utils/tap.js'
 import {
   listOpenEvents,
   listEvents,
@@ -100,7 +101,7 @@ export function createAdvancedAdminScreen() {
   addGradientBackground(screen, 'game-select')
   screen.querySelector('.adv-header-right').appendChild(createThemeToggle())
 
-  screen.querySelector('#adv-admin-back').addEventListener('pointerdown', () => {
+  onTap(screen.querySelector('#adv-admin-back'), () => {
     navigate('game-select')
   })
 
@@ -147,7 +148,7 @@ export function createAdvancedAdminScreen() {
       await renderRoster()
     })
 
-    el.querySelector('#start-event-btn').addEventListener('pointerdown', async () => {
+    onTap(el.querySelector('#start-event-btn'), async () => {
       const input = el.querySelector('#new-event-name')
       const name = input.value.trim()
       if (!name) {
@@ -217,11 +218,11 @@ export function createAdvancedAdminScreen() {
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
       const id = row.dataset.id
-      row.querySelector('[data-act="approve-event"]')?.addEventListener('pointerdown', async () => {
+      onTap(row.querySelector('[data-act="approve-event"]'), async () => {
         await approveTeamForEvent(activeId, id)
         await renderRoster(); await renderPending()
       })
-      row.querySelector('[data-act="approve-statewide"]')?.addEventListener('pointerdown', async () => {
+      onTap(row.querySelector('[data-act="approve-statewide"]'), async () => {
         await approveTeam(id)
         await renderRoster(); await renderPending(); await renderTeams()
       })
@@ -265,7 +266,7 @@ export function createAdvancedAdminScreen() {
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
       const id = row.dataset.id
-      row.querySelector('[data-act="approve"]').addEventListener('pointerdown', async () => {
+      onTap(row.querySelector('[data-act="approve"]'), async () => {
         await approveTeam(id)
         await renderPending(); await renderTeams(); await renderRoster()
       })
@@ -282,7 +283,7 @@ export function createAdvancedAdminScreen() {
           await renderPending(); await renderTeams(); await renderRoster()
         }
       })
-      row.querySelector('[data-act="colors"]').addEventListener('pointerdown', () => {
+      onTap(row.querySelector('[data-act="colors"]'), () => {
         openColorPopover(getTeamColors(teams.find(t => t.id === id)), async ({ color1, color2 }) => {
           await setTeamColors(id, color1, color2)
           await renderPending(); await renderTeams(); await renderRoster()
@@ -319,7 +320,7 @@ export function createAdvancedAdminScreen() {
     function bindTeamRows() {
       list.querySelectorAll('.adv-admin-row').forEach(row => {
         const id = row.dataset.id
-        row.querySelector('[data-act="approve"]')?.addEventListener('pointerdown', async () => {
+        onTap(row.querySelector('[data-act="approve"]'), async () => {
           await approveTeam(id); await renderTeams(); await renderPending(); await renderRoster()
         })
         row.querySelector('[data-act="rename"]')?.addEventListener('click', async () => {
@@ -335,7 +336,7 @@ export function createAdvancedAdminScreen() {
           await deleteTeam(id)
           await renderTeams(); await renderPending(); await renderRoster(); await renderScores()
         })
-        row.querySelector('[data-act="colors"]')?.addEventListener('pointerdown', () => {
+        onTap(row.querySelector('[data-act="colors"]'), () => {
           openColorPopover(getTeamColors(teams.find(t => t.id === id)), async ({ color1, color2 }) => {
             await setTeamColors(id, color1, color2)
             await renderTeams(); await renderPending(); await renderRoster()
@@ -389,15 +390,15 @@ export function createAdvancedAdminScreen() {
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
       const id = row.dataset.id
-      row.querySelector('[data-act="open-now"]')?.addEventListener('pointerdown', async () => {
+      onTap(row.querySelector('[data-act="open-now"]'), async () => {
         await openScheduledEvent(id)
         await renderEvents(); await renderActiveEvent()
       })
-      row.querySelector('[data-act="end"]')?.addEventListener('pointerdown', async () => {
+      onTap(row.querySelector('[data-act="end"]'), async () => {
         await endEvent(id)
         await renderEvents(); await renderActiveEvent(); await renderRoster()
       })
-      row.querySelector('[data-act="reopen"]')?.addEventListener('pointerdown', async () => {
+      onTap(row.querySelector('[data-act="reopen"]'), async () => {
         await reopenEvent(id)
         await renderEvents(); await renderActiveEvent()
       })
@@ -507,7 +508,7 @@ export function createAdvancedAdminScreen() {
         ${st.status === 'running' ? `<div class="adv-offline-bar"><div class="adv-offline-bar-fill" style="width:${pct}%"></div></div>` : ''}
         <p class="adv-admin-hint">Do this at home, online, before each event — it downloads every game asset so the kiosk works with no Wi-Fi.</p>
       `
-      live.querySelector('#offline-cache-btn').addEventListener('pointerdown', (e) => {
+      onTap(live.querySelector('#offline-cache-btn'), (e) => {
         e.preventDefault()
         warmOfflineCache({ force: true })
       })
@@ -553,7 +554,7 @@ export function createAdvancedAdminScreen() {
         signOutBtn = document.createElement('button')
         signOutBtn.className = 'adv-admin-signout-btn'
         signOutBtn.textContent = 'Sign out'
-        signOutBtn.addEventListener('pointerdown', () => adminSignOut())
+        onTap(signOutBtn, () => adminSignOut())
         headerRight.prepend(signOutBtn)
       }
       if (!rendered) {

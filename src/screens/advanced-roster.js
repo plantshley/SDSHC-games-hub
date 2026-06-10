@@ -14,6 +14,7 @@
  */
 
 import { navigate, navigateRaw } from '../router.js'
+import { onTap } from '../utils/tap.js'
 import {
   getActiveEventId,
   getEventById,
@@ -80,7 +81,7 @@ export function createAdvancedRosterScreen() {
   // assume the player just chose Team Play and go back to the prompt.
   const returnTo = sessionStorage.getItem('sdshc-roster-return')
   sessionStorage.removeItem('sdshc-roster-return')
-  screen.querySelector('#adv-roster-back').addEventListener('pointerdown', () => {
+  onTap(screen.querySelector('#adv-roster-back'), () => {
     if (returnTo === 'game-select') {
       navigate('game-select')
     } else {
@@ -133,7 +134,7 @@ export function createAdvancedRosterScreen() {
     }
   }
 
-  addBtn.addEventListener('pointerdown', (e) => {
+  onTap(addBtn, (e) => {
     e.preventDefault()
     handleAdd()
   })
@@ -144,7 +145,7 @@ export function createAdvancedRosterScreen() {
     }
   })
 
-  screen.querySelector('#adv-roster-continue').addEventListener('pointerdown', () => {
+  onTap(screen.querySelector('#adv-roster-continue'), () => {
     navigate('game-select')
   })
 
@@ -164,7 +165,7 @@ export function createAdvancedRosterScreen() {
       </li>
     `).join('')
     list.querySelectorAll('.adv-roster-remove').forEach(btn => {
-      btn.addEventListener('pointerdown', async (e) => {
+      onTap(btn, async (e) => {
         e.preventDefault()
         const id = btn.dataset.id
         await removeTeamFromEventRoster(eventId, id)

@@ -3213,7 +3213,7 @@
     z-index: 100;
     margin: 0;
     padding: 10px 20px;
-    background: transparent;
+    background: transparent !important;
     border-bottom: none;
     box-sizing: border-box;
   }
