@@ -1247,6 +1247,38 @@
   color: var(--adv-text-muted);
 }
 
+/* ─── Player row add / remove animations (advanced game intros) ───
+   Applied to a single row when the +/- player picker grows or shrinks the
+   list, so existing rows stay put and only the changed one grows in / collapses
+   out. Used for both casual (.adv-sw-name-row) and team (.adv-team-row) rows. */
+@keyframes adv-row-grow-in {
+  from { opacity: 0; max-height: 0; transform: translateY(-4px); }
+  to   { opacity: 1; max-height: 140px; transform: none; }
+}
+@keyframes adv-row-collapse-out {
+  from { opacity: 1; max-height: 140px; }
+  to {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: -6px;
+  }
+}
+.adv-row-entering {
+  animation: adv-row-grow-in 220ms ease;
+  overflow: hidden;
+}
+.adv-row-removing {
+  animation: adv-row-collapse-out 200ms ease forwards;
+  overflow: hidden;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .adv-row-entering { animation: none; overflow: visible; }
+  .adv-row-removing { animation: none; }
+}
+
 /* ─── Team color picker (swatches) ─── */
 
 .adv-color-picker {
