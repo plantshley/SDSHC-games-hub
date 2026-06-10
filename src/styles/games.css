@@ -7812,10 +7812,17 @@
     min-height: 0 !important;
     border-bottom-width: 3px !important;
   }
-  /* Choice text much smaller (the cards themselves stay comfortably sized). */
+  /* Choice text: small, but slightly bigger than the first pass. */
   .fm-option-label {
-    font-size: 0.5rem !important;
-    line-height: 1.1 !important;
+    font-size: 0.6rem !important;
+    line-height: 1.15 !important;
+  }
+  /* Practice description (the dark caption over the farm image) — 15px is too
+     big and fills the canvas; shrink it down. */
+  .fm-practice-description {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+    padding: 8px 14px !important;
   }
   /* Planting sim flower / pollinator items — explicit 2-col grid inside
      the .ps-panel with items capped at ~56px so they never trigger
@@ -8413,13 +8420,11 @@
   .sw-plant-score {
     font-size: 0.85rem !important;
   }
-  /* Quit buttons: 0.6rem was too small but 0.85rem too big — settle at 0.65rem
-     across all games (matches the farm-manager quit fix). */
+  /* Quit button: user said the small 0.6rem was too small, push it back up. */
   .sw-quit-btn,
   [class*="-quit-btn"] {
-    padding: 4px 12px !important;
-    font-size: 0.65rem !important;
-    min-height: 0 !important;
+    padding: 6px 10px !important;
+    font-size: 0.85rem !important;
   }
   /* Right-canvas player sprouts beneath the wheel — shrink further. */
   .sw-player-sprout,
