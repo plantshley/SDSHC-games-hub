@@ -14,6 +14,8 @@
  * existed) looking consistent with no data migration.
  */
 
+import { onTap } from './tap.js'
+
 export const TEAM_PALETTE = [
   '#38cebc', // teal
   '#b8e84a', // yellow-green
@@ -116,7 +118,7 @@ export function createColorSwatchPicker(initial, onChange) {
   el.querySelectorAll('.adv-color-row').forEach(row => {
     const slot = row.dataset.slot
     row.querySelectorAll('.adv-color-swatch').forEach(sw => {
-      sw.addEventListener('pointerdown', (e) => {
+      onTap(sw, (e) => {
         e.preventDefault()
         e.stopPropagation()
         state[slot] = sw.dataset.color
@@ -173,14 +175,14 @@ export function openColorPopover(initial, onSave) {
     setTimeout(() => overlay.remove(), 200)
   }
 
-  overlay.addEventListener('pointerdown', (e) => {
+  onTap(overlay, (e) => {
     if (e.target === overlay) close()
   })
-  actions.querySelector('[data-act="cancel"]').addEventListener('pointerdown', (e) => {
+  onTap(actions.querySelector('[data-act="cancel"]'), (e) => {
     e.stopPropagation()
     close()
   })
-  actions.querySelector('[data-act="save"]').addEventListener('pointerdown', (e) => {
+  onTap(actions.querySelector('[data-act="save"]'), (e) => {
     e.stopPropagation()
     onSave(picker.getValue())
     close()

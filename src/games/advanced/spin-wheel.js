@@ -5,6 +5,7 @@
  */
 
 import { navigate } from '../../router.js'
+import { onTap } from '../../utils/tap.js'
 import {
   CATEGORIES, WHEEL_SLICES, WIN_THRESHOLD,
   PLAYER_COLORS, INSTRUCTIONS, IMPACT_MESSAGES, RULES,
@@ -104,10 +105,10 @@ function createIntroScreen() {
   introTopbar.appendChild(createThemeToggle())
   typewriter(el.querySelector('.adv-sw-intro-desc'))
 
-  el.querySelector('#adv-sw-back').addEventListener('pointerdown', () => navigate('game-select'))
-  el.querySelector('#adv-sw-minus').addEventListener('pointerdown', () => updateCount(-1))
-  el.querySelector('#adv-sw-plus').addEventListener('pointerdown', () => updateCount(1))
-  el.querySelector('#adv-sw-start').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-sw-back'), () => navigate('game-select'))
+  onTap(el.querySelector('#adv-sw-minus'), () => updateCount(-1))
+  onTap(el.querySelector('#adv-sw-plus'), () => updateCount(1))
+  onTap(el.querySelector('#adv-sw-start'), () => {
     trackGameStart('adv-spin-wheel', 'advanced', { playerCount: players.length })
     trackTopicSelect('adv-spin-wheel', CATEGORIES.map(c => c.title))
     transitionTo(el, createGameplayScreen(players))
@@ -497,7 +498,7 @@ function createGameplayScreen(players) {
     questionArea.dataset.correctBtn = correctShuffledIdx
 
     choicesContainer.querySelectorAll('.adv-sw-choice').forEach(btn => {
-      btn.addEventListener('pointerdown', () => handleAnswer(parseInt(btn.dataset.idx)))
+      onTap(btn, () => handleAnswer(parseInt(btn.dataset.idx)))
     })
   }
 
@@ -654,7 +655,7 @@ function createGameplayScreen(players) {
     requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
 
     popup.querySelectorAll('.adv-sw-steal-target').forEach(btn => {
-      btn.addEventListener('pointerdown', () => {
+      onTap(btn, () => {
         const targetIdx = parseInt(btn.dataset.idx)
         const stolen = Math.min(100, state.players[targetIdx].score)
         state.players[targetIdx].score -= stolen
@@ -762,7 +763,7 @@ function createGameplayScreen(players) {
       overlay.classList.remove('adv-sw-impact-show')
       setTimeout(() => { overlay.remove(); onDone() }, 300)
     }
-    overlay.addEventListener('pointerdown', dismiss)
+    onTap(overlay, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -801,7 +802,7 @@ function createGameplayScreen(players) {
       setTimeout(() => { overlay.remove(); onDone() }, 300)
     }
 
-    overlay.addEventListener('pointerdown', dismiss)
+    onTap(overlay, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -873,15 +874,15 @@ function createGameplayScreen(players) {
     requestAnimationFrame(() => overlay.classList.add('adv-sw-popup-show'))
 
     if (hasMissed) {
-      overlay.querySelector('#adv-sw-review').addEventListener('pointerdown', () => {
+      onTap(overlay.querySelector('#adv-sw-review'), () => {
         showReviewOverlay(overlay)
       })
     }
-    overlay.querySelector('#adv-sw-again').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#adv-sw-again'), () => {
       cleanup()
       transitionTo(el, createIntroScreen())
     })
-    overlay.querySelector('#adv-sw-home2').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#adv-sw-home2'), () => {
       cleanup()
       navigate('game-select')
     })
@@ -930,13 +931,13 @@ function createGameplayScreen(players) {
 
     // Toggle category dropdowns
     reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
-      btn.addEventListener('pointerdown', () => {
+      onTap(btn, () => {
         btn.classList.toggle('adv-review-open')
         btn.nextElementSibling.classList.toggle('adv-review-items-open')
       })
     })
 
-    reviewEl.querySelector('#adv-sw-review-back').addEventListener('pointerdown', () => {
+    onTap(reviewEl.querySelector('#adv-sw-review-back'), () => {
       reviewEl.remove()
       parentOverlay.style.display = ''
     })
@@ -973,11 +974,11 @@ function createGameplayScreen(players) {
     `
     el.appendChild(popup)
     requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
-    popup.querySelector('#adv-confirm-stay').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-stay'), () => {
       popup.classList.remove('adv-sw-popup-show')
       setTimeout(() => popup.remove(), 300)
     })
-    popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-leave'), () => {
       cleanup()
       transitionTo(el, createIntroScreen())
     })
@@ -985,11 +986,11 @@ function createGameplayScreen(players) {
 
   // ── Event Bindings ──
 
-  el.querySelector('#adv-sw-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-sw-home'), () => {
     confirmBack()
   })
 
-  spinBtn.addEventListener('pointerdown', (e) => {
+  onTap(spinBtn, (e) => {
     e.preventDefault()
     if (state.phase !== 'ready') return
     const rect = el.querySelector('.adv-sw-wheel-wrap').getBoundingClientRect()
@@ -999,7 +1000,7 @@ function createGameplayScreen(players) {
   })
 
   el.querySelectorAll('.adv-sw-cat-btn').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       const catId = btn.dataset.cat
       if (state.phase === 'choosing-for-opponent') {
         const prog = state.categoryProgress[catId]
@@ -1016,7 +1017,7 @@ function createGameplayScreen(players) {
     })
   })
 
-  el.querySelector('#adv-sw-quit').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-sw-quit'), () => {
     cleanup()
     trackGameQuit('adv-spin-wheel', 'advanced', Object.values(state.categoryProgress).reduce((sum, cp) => sum + cp.answered, 0))
     showCompletion(true)

@@ -1,6 +1,7 @@
 import { navigate } from '../router.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/dont-belong.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { onTap } from '../utils/tap.js'
 
 /**
  * Game 3: Things That Don't Belong — Little Sprouts
@@ -85,8 +86,8 @@ function createIntroScreen() {
   }
   typingTimer = setTimeout(typeChar, 400)
 
-  el.querySelector('#db-intro-home').addEventListener('pointerdown', () => navigate('game-select/sprouts'))
-  el.querySelector('#db-go-btn').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#db-intro-home'), () => navigate('game-select/sprouts'))
+  onTap(el.querySelector('#db-go-btn'), () => {
     clearTimeout(typingTimer)
     transitionTo(el, createGameplayScreen(0))
   })
@@ -106,7 +107,7 @@ function buildLevelNavHtml(activeLevelIdx) {
 
 function wireLevelNav(el, currentLevelIdx, timerRef) {
   el.querySelectorAll('.db-level-nav-item').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       const idx = parseInt(btn.dataset.level)
       if (idx === currentLevelIdx) return
       clearTimeout(timerRef.id)
@@ -204,7 +205,7 @@ function createGameplayScreen(levelIdx) {
 
   // ─── Item tap handlers ───
   el.querySelectorAll('.db-item-card').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       if (answered) return
 
       const itemId = card.dataset.itemId
@@ -256,15 +257,15 @@ function createGameplayScreen(levelIdx) {
   })
 
   // Completion overlay buttons
-  el.querySelector('#db-play-again').addEventListener('pointerdown', () => transitionTo(el, createGameplayScreen(0)))
-  el.querySelector('#db-back-games').addEventListener('pointerdown', () => navigate('game-select/sprouts'))
+  onTap(el.querySelector('#db-play-again'), () => transitionTo(el, createGameplayScreen(0)))
+  onTap(el.querySelector('#db-back-games'), () => navigate('game-select/sprouts'))
 
   // Home + quit
-  el.querySelector('#db-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#db-game-home'), () => {
     clearTimeout(instrTimerRef.id)
     transitionTo(el, createIntroScreen())
   })
-  el.querySelector('#db-quit').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#db-quit'), () => {
     clearTimeout(instrTimerRef.id)
     transitionTo(el, createIntroScreen())
   })

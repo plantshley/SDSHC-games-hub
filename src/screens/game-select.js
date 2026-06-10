@@ -1,5 +1,6 @@
 import { navigate } from '../router.js'
 import { getGamesForTier, TIER_META } from '../data/game-registry.js'
+import { onTap } from '../utils/tap.js'
 
 // Manual line breaks for game titles to ensure 2-line wrapping
 const TITLE_OVERRIDES = {
@@ -151,12 +152,12 @@ export function createGameSelectScreen(tier) {
   el.appendChild(createDecorations())
   addSparkles(el)
 
-  el.querySelector('.home-btn').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('.home-btn'), () => {
     navigate('grade-select')
   })
 
   el.querySelectorAll('.game-card').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       navigate(`game/${card.dataset.game}/0`)
     })
   })

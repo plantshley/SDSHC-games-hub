@@ -5,6 +5,7 @@
  */
 
 import { navigate } from '../../router.js'
+import { onTap } from '../../utils/tap.js'
 import {
   PUZZLES, DIFFICULTY_COLORS,
   PLAYER_COLORS, INSTRUCTIONS, RULES, IMPACT_MESSAGES,
@@ -143,12 +144,12 @@ function createIntroScreen() {
   introTopbar.appendChild(createThemeToggle())
   typewriter(el.querySelector('.adv-sw-intro-desc'))
 
-  el.querySelector('#adv-cn-back').addEventListener('pointerdown', () => navigate('game-select'))
-  el.querySelector('#adv-cn-minus').addEventListener('pointerdown', () => updateCount(-1))
-  el.querySelector('#adv-cn-plus').addEventListener('pointerdown', () => updateCount(1))
+  onTap(el.querySelector('#adv-cn-back'), () => navigate('game-select'))
+  onTap(el.querySelector('#adv-cn-minus'), () => updateCount(-1))
+  onTap(el.querySelector('#adv-cn-plus'), () => updateCount(1))
 
   el.querySelectorAll('.adv-cn-topic-card[data-id]').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       const id = card.dataset.id
       if (selectedTopics.has(id)) selectedTopics.delete(id)
       else selectedTopics.add(id)
@@ -156,8 +157,8 @@ function createIntroScreen() {
     })
   })
 
-  el.querySelector('#adv-cn-random').addEventListener('pointerdown', () => randomTopics())
-  el.querySelector('#adv-cn-all').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-cn-random'), () => randomTopics())
+  onTap(el.querySelector('#adv-cn-all'), () => {
     if (selectedTopics.size === PUZZLES.length) {
       selectedTopics.clear()
     } else {
@@ -166,7 +167,7 @@ function createIntroScreen() {
     renderTopics()
   })
 
-  el.querySelector('#adv-cn-start').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-cn-start'), () => {
     if (selectedTopics.size === 0) return
     const rounds = shuffleArray([...selectedTopics].map(id => PUZZLES.find(p => p.id === id)))
     trackGameStart('adv-connections', 'advanced', { playerCount: players.length })
@@ -318,7 +319,7 @@ function createGameplayScreen(players, rounds) {
     }).join('')
 
     gridEl.querySelectorAll('.adv-cn-tile').forEach(btn => {
-      btn.addEventListener('pointerdown', () => handleTileSelect(parseInt(btn.dataset.idx)))
+      onTap(btn, () => handleTileSelect(parseInt(btn.dataset.idx)))
     })
 
     // Update submit button
@@ -600,7 +601,7 @@ function createGameplayScreen(players, rounds) {
     `
     mainEl.appendChild(roundEnd)
 
-    roundEnd.querySelector('#adv-cn-round-next').addEventListener('pointerdown', () => {
+    onTap(roundEnd.querySelector('#adv-cn-round-next'), () => {
       roundEnd.remove()
 
       // Hide main panel content behind overlays
@@ -684,7 +685,7 @@ function createGameplayScreen(players, rounds) {
       overlay.classList.remove('adv-sw-impact-show')
       setTimeout(() => { overlay.remove(); onDone() }, 300)
     }
-    overlay.addEventListener('pointerdown', dismiss)
+    onTap(overlay, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -769,10 +770,10 @@ function createGameplayScreen(players, rounds) {
     el.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('adv-sw-popup-show'))
 
-    overlay.querySelector('#adv-cn-done').addEventListener('pointerdown', () => { cleanup(); navigate('game-select') })
-    overlay.querySelector('#adv-cn-again').addEventListener('pointerdown', () => { cleanup(); transitionTo(el, createIntroScreen()) })
+    onTap(overlay.querySelector('#adv-cn-done'), () => { cleanup(); navigate('game-select') })
+    onTap(overlay.querySelector('#adv-cn-again'), () => { cleanup(); transitionTo(el, createIntroScreen()) })
     if (hasMissed) {
-      overlay.querySelector('#adv-cn-review').addEventListener('pointerdown', () => showReviewOverlay(overlay))
+      onTap(overlay.querySelector('#adv-cn-review'), () => showReviewOverlay(overlay))
     }
   }
 
@@ -816,13 +817,13 @@ function createGameplayScreen(players, rounds) {
     requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
 
     reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
-      btn.addEventListener('pointerdown', () => {
+      onTap(btn, () => {
         btn.classList.toggle('adv-review-open')
         btn.nextElementSibling.classList.toggle('adv-review-items-open')
       })
     })
 
-    reviewEl.querySelector('#adv-cn-review-close').addEventListener('pointerdown', () => {
+    onTap(reviewEl.querySelector('#adv-cn-review-close'), () => {
       reviewEl.remove()
       parentOverlay.style.display = ''
     })
@@ -940,23 +941,23 @@ function createGameplayScreen(players, rounds) {
     el.appendChild(popup)
     requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
 
-    popup.querySelector('#adv-cn-stay').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-cn-stay'), () => {
       popup.remove()
       state.phase = prevPhase
       if (prevPhase === 'selecting') startTimer()
     })
-    popup.querySelector('#adv-cn-leave').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-cn-leave'), () => {
       cleanup()
       transitionTo(el, createIntroScreen())
     })
   }
 
   // Wire events
-  el.querySelector('#adv-cn-home').addEventListener('pointerdown', () => confirmBack())
-  el.querySelector('#adv-cn-deselect').addEventListener('pointerdown', () => deselectAll())
-  el.querySelector('#adv-cn-shuffle').addEventListener('pointerdown', () => shuffleBoard())
-  submitBtn.addEventListener('pointerdown', () => handleSubmit())
-  el.querySelector('#adv-cn-quit').addEventListener('pointerdown', () => { cleanup(); trackGameQuit('adv-connections', 'advanced', state.currentRound); showCompletion(true) })
+  onTap(el.querySelector('#adv-cn-home'), () => confirmBack())
+  onTap(el.querySelector('#adv-cn-deselect'), () => deselectAll())
+  onTap(el.querySelector('#adv-cn-shuffle'), () => shuffleBoard())
+  onTap(submitBtn, () => handleSubmit())
+  onTap(el.querySelector('#adv-cn-quit'), () => { cleanup(); trackGameQuit('adv-connections', 'advanced', state.currentRound); showCompletion(true) })
 
   // Initialize
   buildBoard()

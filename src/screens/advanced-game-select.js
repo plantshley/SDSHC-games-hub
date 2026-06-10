@@ -6,6 +6,7 @@
 
 import { navigateRaw, navigate } from '../router.js'
 import { getAllAdvancedGames } from '../data/advanced-game-registry.js'
+import { onTap } from '../utils/tap.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { getTheme, setTheme, createThemeToggle } from '../utils/theme-toggle.js'
 import { createLeaderboardButton } from '../utils/leaderboard-modal.js'
@@ -83,7 +84,7 @@ export function createAdvancedGameSelectScreen() {
     const rosterBtn = document.createElement('button')
     rosterBtn.className = 'adv-game-select-banner-btn'
     rosterBtn.textContent = 'Manage roster'
-    rosterBtn.addEventListener('pointerdown', () => {
+    onTap(rosterBtn, () => {
       // Mark roster's Back as returning to game-select rather than play-mode
       sessionStorage.setItem('sdshc-roster-return', 'game-select')
       navigate('roster')
@@ -95,7 +96,7 @@ export function createAdvancedGameSelectScreen() {
   screen.querySelector('.adv-header').appendChild(headerRight)
 
   // Back button
-  screen.querySelector('.adv-back-btn').addEventListener('pointerdown', () => {
+  onTap(screen.querySelector('.adv-back-btn'), () => {
     navigateRaw('intro')
   })
 
@@ -103,7 +104,7 @@ export function createAdvancedGameSelectScreen() {
   const cards = screen.querySelectorAll('.adv-game-card')
   cards.forEach(card => {
     card.style.touchAction = 'manipulation'
-    card.addEventListener('pointerdown', (e) => {
+    onTap(card, (e) => {
       e.preventDefault()
       card.classList.add('tapped')
       const rect = card.getBoundingClientRect()

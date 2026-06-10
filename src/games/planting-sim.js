@@ -1,6 +1,7 @@
 import { navigate } from '../router.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/planting-sim.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { onTap } from '../utils/tap.js'
 
 /**
  * Planting Simulation Game
@@ -76,9 +77,9 @@ function createIntroScreen() {
   }
   typingTimer = setTimeout(typeChar, 400)
 
-  el.querySelector('#ps-intro-home').addEventListener('pointerdown', () => navigate('game-select/meadow'))
+  onTap(el.querySelector('#ps-intro-home'), () => navigate('game-select/meadow'))
   el.querySelectorAll('.ps-level-card').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       clearTimeout(typingTimer)
       const levelIdx = parseInt(card.dataset.level)
       const parent = el.parentNode
@@ -269,7 +270,7 @@ function createThreeSisters(level, levelIdx) {
     })
   })
 
-  el.querySelector('#ps-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#ps-home'), () => {
     clearTimeout(panelTimer)
     backToIntro(el)
   })
@@ -510,7 +511,7 @@ function createPollinatorGarden(level, levelIdx) {
     })
   })
 
-  el.querySelector('#ps-home').addEventListener('pointerdown', () => backToIntro(el))
+  onTap(el.querySelector('#ps-home'), () => backToIntro(el))
   return el
 }
 
@@ -825,7 +826,7 @@ function createYearInBloom(level, levelIdx) {
     })
   })
 
-  el.querySelector('#ps-home').addEventListener('pointerdown', () => backToIntro(el))
+  onTap(el.querySelector('#ps-home'), () => backToIntro(el))
   return el
 }
 
@@ -852,11 +853,11 @@ function showCompletion(container, message, levelIdx) {
   container.querySelector('.ps-canvas-panel').appendChild(overlay)
   requestAnimationFrame(() => overlay.classList.add('ps-show'))
 
-  overlay.querySelector('#ps-replay-btn').addEventListener('pointerdown', () => {
+  onTap(overlay.querySelector('#ps-replay-btn'), () => {
     goToLevel(container, levelIdx)
   })
 
-  overlay.querySelector('#ps-next-btn').addEventListener('pointerdown', () => {
+  onTap(overlay.querySelector('#ps-next-btn'), () => {
     if (isLastLevel) {
       backToIntro(container)
     } else {

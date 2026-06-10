@@ -5,6 +5,7 @@
  */
 
 import { navigate } from '../../router.js'
+import { onTap } from '../../utils/tap.js'
 import {
   CATEGORIES, PLAYER_COLORS, INSTRUCTIONS, RULES, IMPACT_MESSAGES, EXTRA_DISTRACTORS,
 } from '../../data/content/advanced/field-guide.js'
@@ -213,12 +214,12 @@ function createIntroScreen() {
   introTopbar.appendChild(createThemeToggle())
   typewriter(el.querySelector('.adv-sw-intro-desc'))
 
-  el.querySelector('#adv-fg-back').addEventListener('pointerdown', () => navigate('game-select'))
-  el.querySelector('#adv-fg-minus').addEventListener('pointerdown', () => updateCount(-1))
-  el.querySelector('#adv-fg-plus').addEventListener('pointerdown', () => updateCount(1))
+  onTap(el.querySelector('#adv-fg-back'), () => navigate('game-select'))
+  onTap(el.querySelector('#adv-fg-minus'), () => updateCount(-1))
+  onTap(el.querySelector('#adv-fg-plus'), () => updateCount(1))
 
   el.querySelectorAll('.adv-cn-topic-card[data-id]').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       randomized = false
       const id = card.dataset.id
       if (selectedTopics.has(id)) selectedTopics.delete(id)
@@ -227,20 +228,20 @@ function createIntroScreen() {
     })
   })
 
-  el.querySelector('#adv-fg-all').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-fg-all'), () => {
     randomized = false
     if (selectedTopics.size === CATEGORIES.length) selectedTopics.clear()
     else CATEGORIES.forEach(c => selectedTopics.add(c.id))
     renderTopics()
   })
 
-  el.querySelector('#adv-fg-randomized').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-fg-randomized'), () => {
     randomized = !randomized
     if (randomized) selectedTopics.clear()
     renderTopics()
   })
 
-  el.querySelector('#adv-fg-start').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-fg-start'), () => {
     let selection
     if (randomized) {
       selection = { mode: 'randomized', topicIds: CATEGORIES.map(c => c.id) }
@@ -950,7 +951,7 @@ function createGameplayScreen(players, selection) {
       advanceTurn()
     }
     nextBtnHandler = nextHandler
-    moreCluesBtn.addEventListener('pointerdown', nextHandler)
+    onTap(moreCluesBtn, nextHandler)
   }
 
   // ── Category Impact ──
@@ -980,7 +981,7 @@ function createGameplayScreen(players, selection) {
       overlay.classList.remove('adv-sw-impact-show')
       setTimeout(() => { overlay.remove(); onDone() }, 300)
     }
-    overlay.addEventListener('pointerdown', dismiss)
+    onTap(overlay, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -1047,14 +1048,14 @@ function createGameplayScreen(players, selection) {
       requestAnimationFrame(() => overlay.classList.add('adv-sw-popup-show'))
 
       if (state.missedItems.length > 0) {
-        overlay.querySelector('#adv-fg-review').addEventListener('pointerdown', () => {
+        onTap(overlay.querySelector('#adv-fg-review'), () => {
           showReviewOverlay(overlay)
         })
       }
-      overlay.querySelector('#adv-fg-again').addEventListener('pointerdown', () => {
+      onTap(overlay.querySelector('#adv-fg-again'), () => {
         transitionTo(el, createIntroScreen())
       })
-      overlay.querySelector('#adv-fg-home2').addEventListener('pointerdown', () => {
+      onTap(overlay.querySelector('#adv-fg-home2'), () => {
         navigate('game-select')
       })
     }
@@ -1099,7 +1100,7 @@ function createGameplayScreen(players, selection) {
       overlay.classList.remove('adv-sw-impact-show')
       setTimeout(() => { overlay.remove(); onDone() }, 300)
     }
-    overlay.addEventListener('pointerdown', dismiss)
+    onTap(overlay, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -1115,7 +1116,7 @@ function createGameplayScreen(players, selection) {
     `
     parentEl.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('adv-fg-fullscreen-show'))
-    overlay.addEventListener('pointerdown', () => {
+    onTap(overlay, () => {
       overlay.classList.remove('adv-fg-fullscreen-show')
       setTimeout(() => overlay.remove(), 300)
     })
@@ -1167,7 +1168,7 @@ function createGameplayScreen(players, selection) {
     requestAnimationFrame(() => reviewEl.classList.add('adv-sw-popup-show'))
 
     reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
-      btn.addEventListener('pointerdown', () => {
+      onTap(btn, () => {
         btn.classList.toggle('adv-review-open')
         btn.nextElementSibling.classList.toggle('adv-review-items-open')
       })
@@ -1175,13 +1176,13 @@ function createGameplayScreen(players, selection) {
 
     // Thumbnail tap -> full-screen view
     reviewEl.querySelectorAll('.adv-fg-review-thumb').forEach(thumb => {
-      thumb.addEventListener('pointerdown', (e) => {
+      onTap(thumb, (e) => {
         e.stopPropagation()
         showFullScreenImage(thumb.dataset.fullsrc, thumb.alt, reviewEl)
       })
     })
 
-    reviewEl.querySelector('#adv-fg-review-back').addEventListener('pointerdown', () => {
+    onTap(reviewEl.querySelector('#adv-fg-review-back'), () => {
       reviewEl.remove()
       parentOverlay.style.display = ''
     })
@@ -1209,11 +1210,11 @@ function createGameplayScreen(players, selection) {
     `
     el.appendChild(popup)
     requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
-    popup.querySelector('#adv-confirm-stay').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-stay'), () => {
       popup.classList.remove('adv-sw-popup-show')
       setTimeout(() => popup.remove(), 300)
     })
-    popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-leave'), () => {
       cancelled = true
       transitionTo(el, createIntroScreen())
     })
@@ -1221,12 +1222,12 @@ function createGameplayScreen(players, selection) {
 
   // ── Event Bindings ──
 
-  el.querySelector('#adv-fg-home').addEventListener('pointerdown', () => confirmBack())
+  onTap(el.querySelector('#adv-fg-home'), () => confirmBack())
 
-  moreCluesBtn.addEventListener('pointerdown', () => revealClue())
+  onTap(moreCluesBtn, () => revealClue())
 
   answersEl.querySelectorAll('.adv-fg-answer-btn').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       handleAnswer(parseInt(btn.dataset.idx))
     })
   })
@@ -1234,13 +1235,13 @@ function createGameplayScreen(players, selection) {
   // Category click handlers (grouped mode only) — tap to jump to that topic's block
   if (isGrouped) {
     el.querySelectorAll('.adv-sw-cat-btn').forEach(btn => {
-      btn.addEventListener('pointerdown', () => jumpToCategory(btn.dataset.cat))
+      onTap(btn, () => jumpToCategory(btn.dataset.cat))
     })
   }
 
   // Level pills (leveled mode) — tap to jump to any level, even ahead
   el.querySelectorAll('.adv-fg-level-pill').forEach(pill => {
-    pill.addEventListener('pointerdown', () => {
+    onTap(pill, () => {
       const lvNum = parseInt(pill.id.replace('adv-fg-level-', ''), 10)
       const segIdx = navSegments.findIndex(s => items[s.startIdx].level === lvNum)
       if (segIdx >= 0) goToSegment(segIdx)
@@ -1257,11 +1258,11 @@ function createGameplayScreen(players, selection) {
       <button class="adv-fg-nav-btn" id="adv-fg-nav-skip">${isLeveled ? 'Skip Level →' : 'Next Topic →'}</button>
     `
     el.querySelector('.adv-sw-sidebar').appendChild(navRow)
-    navRow.querySelector('#adv-fg-nav-prev').addEventListener('pointerdown', () => {
+    onTap(navRow.querySelector('#adv-fg-nav-prev'), () => {
       const cur = currentSegmentIdx()
       if (cur > 0) goToSegment(cur - 1)
     })
-    navRow.querySelector('#adv-fg-nav-skip').addEventListener('pointerdown', () => {
+    onTap(navRow.querySelector('#adv-fg-nav-skip'), () => {
       const cur = currentSegmentIdx()
       if (cur >= 0 && cur < navSegments.length - 1) goToSegment(cur + 1)
     })
@@ -1272,7 +1273,7 @@ function createGameplayScreen(players, selection) {
   quitBtn.className = 'adv-fg-quit-btn'
   quitBtn.textContent = 'Quit'
   el.querySelector('.adv-sw-sidebar').appendChild(quitBtn)
-  quitBtn.addEventListener('pointerdown', () => { cancelled = true; trackGameQuit('adv-field-guide', 'advanced', state.round); showCompletion(true) })
+  onTap(quitBtn, () => { cancelled = true; trackGameQuit('adv-field-guide', 'advanced', state.round); showCompletion(true) })
 
   // ── Initialize ──
 

@@ -6,6 +6,7 @@
  */
 
 import { navigate } from '../../router.js'
+import { onTap } from '../../utils/tap.js'
 import {
   WORDS, MAX_WRONG, PLAYER_COLORS, INSTRUCTIONS, IMPACT_MESSAGES, RULES,
 } from '../../data/content/advanced/word-game.js'
@@ -98,12 +99,12 @@ function createIntroScreen() {
   introTopbar.appendChild(createThemeToggle())
   typewriter(el.querySelector('.adv-sw-intro-desc'))
 
-  el.querySelector('#adv-wg-back').addEventListener('pointerdown', () => navigate('game-select'))
-  el.querySelector('#adv-wg-minus').addEventListener('pointerdown', () => updateCount(-1))
-  el.querySelector('#adv-wg-plus').addEventListener('pointerdown', () => updateCount(1))
-  el.querySelector('#adv-wg-rminus').addEventListener('pointerdown', () => updateRounds(-1))
-  el.querySelector('#adv-wg-rplus').addEventListener('pointerdown', () => updateRounds(1))
-  el.querySelector('#adv-wg-start').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#adv-wg-back'), () => navigate('game-select'))
+  onTap(el.querySelector('#adv-wg-minus'), () => updateCount(-1))
+  onTap(el.querySelector('#adv-wg-plus'), () => updateCount(1))
+  onTap(el.querySelector('#adv-wg-rminus'), () => updateRounds(-1))
+  onTap(el.querySelector('#adv-wg-rplus'), () => updateRounds(1))
+  onTap(el.querySelector('#adv-wg-start'), () => {
     trackGameStart('adv-word-game', 'advanced', { playerCount: players.length })
     transitionTo(el, createGameplayScreen(players, rounds))
   })
@@ -291,7 +292,7 @@ function createGameplayScreen(players, totalRounds) {
 
     // Tap a blank to select it
     blanksEl.querySelectorAll('.adv-wg-solve-slot:not(.adv-wg-locked)').forEach(slot => {
-      slot.addEventListener('pointerdown', () => {
+      onTap(slot, () => {
         blanksEl.querySelectorAll('.adv-wg-solve-slot').forEach(s => s.classList.remove('adv-wg-slot-active'))
         slot.classList.add('adv-wg-slot-active')
         activeSlot = slot
@@ -307,7 +308,7 @@ function createGameplayScreen(players, totalRounds) {
 
     // Tap a letter on the solve keyboard
     solveUI.querySelectorAll('.adv-wg-solve-key').forEach(key => {
-      key.addEventListener('pointerdown', () => {
+      onTap(key, () => {
         if (!activeSlot) return
         activeSlot.textContent = key.dataset.letter
         activeSlot.classList.remove('adv-wg-empty')
@@ -326,7 +327,7 @@ function createGameplayScreen(players, totalRounds) {
     })
 
     // Submit guess
-    solveUI.querySelector('#adv-wg-solve-submit').addEventListener('pointerdown', () => {
+    onTap(solveUI.querySelector('#adv-wg-solve-submit'), () => {
       const slots = [...blanksEl.querySelectorAll('.adv-wg-solve-slot')]
       const guess = slots.map(s => s.textContent || '').join('')
       const answer = chars.filter(c => c !== ' ').join('')
@@ -376,7 +377,7 @@ function createGameplayScreen(players, totalRounds) {
     })
 
     // Cancel
-    solveUI.querySelector('#adv-wg-solve-cancel').addEventListener('pointerdown', () => {
+    onTap(solveUI.querySelector('#adv-wg-solve-cancel'), () => {
       solveUI.remove()
       keyboard.style.display = ''
       solveBtn.style.display = ''
@@ -489,12 +490,12 @@ function createGameplayScreen(players, totalRounds) {
       el.querySelector('.adv-wg-actions').appendChild(promptEl)
       solveBtn.style.display = 'none'
 
-      promptEl.querySelector('#adv-wg-lc-solve').addEventListener('pointerdown', () => {
+      onTap(promptEl.querySelector('#adv-wg-lc-solve'), () => {
         promptEl.remove()
         solveBtn.style.display = ''
         enterSolveModeLastChance(passedPlayers)
       })
-      promptEl.querySelector('#adv-wg-lc-pass').addEventListener('pointerdown', () => {
+      onTap(promptEl.querySelector('#adv-wg-lc-pass'), () => {
         promptEl.remove()
         solveBtn.style.display = ''
         if (isMultiplayer) {
@@ -599,13 +600,13 @@ function createGameplayScreen(players, totalRounds) {
     requestAnimationFrame(() => prompt.classList.add('adv-sw-popup-show'))
 
     if (hasMissed) {
-      prompt.querySelector('#adv-wg-rep-review').addEventListener('pointerdown', () => {
+      onTap(prompt.querySelector('#adv-wg-rep-review'), () => {
         showReviewOverlay(prompt)
       })
     }
 
     if (canContinue) {
-      prompt.querySelector('#adv-wg-more').addEventListener('pointerdown', () => {
+      onTap(prompt.querySelector('#adv-wg-more'), () => {
         trackPlayMoreRounds('adv-word-game', state.wordsCompleted)
         prompt.classList.remove('adv-sw-popup-show')
         setTimeout(() => {
@@ -621,7 +622,7 @@ function createGameplayScreen(players, totalRounds) {
       })
     }
 
-    prompt.querySelector('#adv-wg-finish').addEventListener('pointerdown', () => {
+    onTap(prompt.querySelector('#adv-wg-finish'), () => {
       prompt.classList.remove('adv-sw-popup-show')
       setTimeout(() => {
         prompt.remove()
@@ -682,7 +683,7 @@ function createGameplayScreen(players, totalRounds) {
       impactEl.classList.remove('adv-sw-impact-show')
       setTimeout(() => { impactEl.remove(); onDone() }, 300)
     }
-    impactEl.addEventListener('pointerdown', dismiss)
+    onTap(impactEl, dismiss)
     setTimeout(dismiss, 8000)
   }
 
@@ -737,14 +738,14 @@ function createGameplayScreen(players, totalRounds) {
       requestAnimationFrame(() => completionEl.classList.add('adv-sw-popup-show'))
 
       if (hasMissed) {
-        completionEl.querySelector('#adv-wg-review').addEventListener('pointerdown', () => {
+        onTap(completionEl.querySelector('#adv-wg-review'), () => {
           showReviewOverlay(completionEl)
         })
       }
-      completionEl.querySelector('#adv-wg-again').addEventListener('pointerdown', () => {
+      onTap(completionEl.querySelector('#adv-wg-again'), () => {
         transitionTo(el, createIntroScreen())
       })
-      completionEl.querySelector('#adv-wg-home2').addEventListener('pointerdown', () => {
+      onTap(completionEl.querySelector('#adv-wg-home2'), () => {
         navigate('game-select')
       })
     }
@@ -800,13 +801,13 @@ function createGameplayScreen(players, totalRounds) {
 
     // Toggle category dropdowns
     reviewEl.querySelectorAll('.adv-review-cat-toggle').forEach(btn => {
-      btn.addEventListener('pointerdown', () => {
+      onTap(btn, () => {
         btn.classList.toggle('adv-review-open')
         btn.nextElementSibling.classList.toggle('adv-review-items-open')
       })
     })
 
-    reviewEl.querySelector('#adv-wg-review-back').addEventListener('pointerdown', () => {
+    onTap(reviewEl.querySelector('#adv-wg-review-back'), () => {
       reviewEl.remove()
       parentOverlay.style.display = ''
     })
@@ -833,32 +834,32 @@ function createGameplayScreen(players, totalRounds) {
     `
     el.appendChild(popup)
     requestAnimationFrame(() => popup.classList.add('adv-sw-popup-show'))
-    popup.querySelector('#adv-confirm-stay').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-stay'), () => {
       popup.classList.remove('adv-sw-popup-show')
       setTimeout(() => popup.remove(), 300)
     })
-    popup.querySelector('#adv-confirm-leave').addEventListener('pointerdown', () => {
+    onTap(popup.querySelector('#adv-confirm-leave'), () => {
       transitionTo(el, createIntroScreen())
     })
   }
 
   // ── Event Bindings ──
 
-  el.querySelector('#adv-wg-home').addEventListener('pointerdown', () => confirmBack())
-  solveBtn.addEventListener('pointerdown', () => enterSolveMode())
+  onTap(el.querySelector('#adv-wg-home'), () => confirmBack())
+  onTap(solveBtn, () => enterSolveMode())
 
   // Quit button in lower right corner (like jeopardy)
   const quitBtn = document.createElement('button')
   quitBtn.className = 'adv-sw-quit-btn adv-jp-quit-btn'
   quitBtn.textContent = 'Quit'
   el.querySelector('.adv-wg-body').appendChild(quitBtn)
-  quitBtn.addEventListener('pointerdown', () => {
+  onTap(quitBtn, () => {
     trackGameQuit('adv-word-game', 'advanced', state.wordsCompleted)
     showCompletion(true)
   })
 
   keyboard.querySelectorAll('.adv-wg-key').forEach(key => {
-    key.addEventListener('pointerdown', () => handleGuess(key.dataset.letter))
+    onTap(key, () => handleGuess(key.dataset.letter))
   })
 
   // ── Initialize ──

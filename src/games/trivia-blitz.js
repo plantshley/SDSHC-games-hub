@@ -1,4 +1,5 @@
 import { navigate } from '../router.js'
+import { onTap } from '../utils/tap.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/trivia-blitz.js'
 import { processAssetSVG, clearSVGCache } from '../utils/svg-recolor.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
@@ -65,13 +66,13 @@ function createIntroScreen() {
   }
   typingTimer = setTimeout(typeChar, 400)
 
-  el.querySelector('#tb-intro-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#tb-intro-home'), () => {
     clearTimeout(typingTimer)
     navigate('game-select/guardians')
   })
 
   el.querySelectorAll('.tb-mode-card').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       clearTimeout(typingTimer)
       transitionTo(el, createGameplayScreen(card.dataset.mode))
     })
@@ -464,7 +465,7 @@ function createGameplayScreen(mode) {
     canvasPanel.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('tb-show'))
 
-    overlay.querySelector('#tb-round-next').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#tb-round-next'), () => {
       overlay.classList.remove('tb-show')
       setTimeout(() => overlay.remove(), 300)
       if (isLastRound) showCompletion()
@@ -525,7 +526,7 @@ function createGameplayScreen(mode) {
     canvasPanel.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('tb-show'))
 
-    overlay.querySelector('#tb-retry').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#tb-retry'), () => {
       overlay.classList.remove('tb-show')
       setTimeout(() => overlay.remove(), 300)
       state.score = 0
@@ -540,7 +541,7 @@ function createGameplayScreen(mode) {
       showQuestion()
     })
 
-    overlay.querySelector('#tb-go-home').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#tb-go-home'), () => {
       stopTimer()
       clearSVGCache()
       transitionTo(el, createIntroScreen())
@@ -584,13 +585,13 @@ function createGameplayScreen(mode) {
     canvasPanel.appendChild(overlay)
     requestAnimationFrame(() => overlay.classList.add('tb-show'))
 
-    overlay.querySelector('#tb-play-again').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#tb-play-again'), () => {
       stopTimer()
       clearSVGCache()
       transitionTo(el, createIntroScreen())
     })
 
-    overlay.querySelector('#tb-go-home2').addEventListener('pointerdown', () => {
+    onTap(overlay.querySelector('#tb-go-home2'), () => {
       stopTimer()
       clearSVGCache()
       transitionTo(el, createIntroScreen())
@@ -599,17 +600,17 @@ function createGameplayScreen(mode) {
 
   // ── Event bindings ──
 
-  el.querySelector('#tb-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#tb-game-home'), () => {
     stopTimer()
     clearSVGCache()
     transitionTo(el, createIntroScreen())
   })
 
   choiceButtons.forEach((btn, i) => {
-    btn.addEventListener('pointerdown', () => handleAnswer(i))
+    onTap(btn, () => handleAnswer(i))
   })
 
-  el.querySelector('#tb-mode-toggle').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#tb-mode-toggle'), () => {
     stopTimer()
     clearSVGCache()
     const newMode = mode === 'topic' ? 'endless' : 'topic'
@@ -617,18 +618,18 @@ function createGameplayScreen(mode) {
   })
 
   if (mode === 'topic') {
-    el.querySelector('#tb-skip').addEventListener('pointerdown', handleSkip)
-    el.querySelector('#tb-quit-topic').addEventListener('pointerdown', () => {
+    onTap(el.querySelector('#tb-skip'), handleSkip)
+    onTap(el.querySelector('#tb-quit-topic'), () => {
       stopTimer()
       showCompletion(true)
     })
     el.querySelectorAll('.tb-round-item').forEach(item => {
-      item.addEventListener('pointerdown', () => {
+      onTap(item, () => {
         handleRoundClick(parseInt(item.dataset.round))
       })
     })
   } else {
-    el.querySelector('#tb-quit').addEventListener('pointerdown', () => {
+    onTap(el.querySelector('#tb-quit'), () => {
       stopTimer()
       showGameOver()
     })

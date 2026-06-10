@@ -452,10 +452,11 @@
   display: block;
 }
 
-/* Dropped decorations overlay */
+/* Dropped decorations overlay — covers the whole canvas panel so decorations
+   can be placed anywhere on it, not only over the cake image. */
 .sc-dropped-decos {
   position: absolute;
-  top: 0; left: 0;
+  inset: 0;
   z-index: 3;
   pointer-events: none;
   overflow: hidden;
@@ -6444,6 +6445,9 @@
 .db-item-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  /* Equal-height rows so all four cards are the same size regardless of how
+     tall each item's image + label happen to be. */
+  grid-template-rows: repeat(2, 1fr);
   gap: 24px;
   width: 80%;
   max-width: 800px;
@@ -7774,6 +7778,52 @@
     padding: 6px !important;
     gap: 6px !important;
   }
+  /* Farm-manager: let the WHOLE left column scroll as one unit so the
+     scenario, choices, and instruction/character hint all keep their full
+     size instead of being squeezed against each other. Everything inside is
+     natural-height; the column scrolls when the total exceeds the viewport. */
+  .fm-left-panel {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .fm-panel {
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+  }
+  .fm-scenario-section {
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+  }
+  .fm-options {
+    flex: 0 0 auto !important;
+  }
+  .fm-panel-bottom {
+    flex: 0 0 auto !important;
+  }
+  /* `.fm-panel` prefix raises specificity above the shared `[class*="-quit-btn"]`
+     rule (which bumps sidebar quit buttons to 0.85rem) so the farm-manager quit
+     button — a full-width button in the panel — can be smaller without affecting
+     the other games' quit buttons. */
+  .fm-panel .fm-quit-btn {
+    flex-shrink: 0 !important;
+    margin-top: 6px !important;
+    padding: 4px 12px !important;
+    font-size: 0.65rem !important;
+    min-height: 0 !important;
+    border-bottom-width: 3px !important;
+  }
+  /* Choice text: small, but slightly bigger than the first pass. */
+  .fm-option-label {
+    font-size: 0.6rem !important;
+    line-height: 1.15 !important;
+  }
+  /* Practice description (the dark caption over the farm image) — 15px is too
+     big and fills the canvas; shrink it down. */
+  .fm-practice-description {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+    padding: 8px 14px !important;
+  }
   /* Planting sim flower / pollinator items — explicit 2-col grid inside
      the .ps-panel with items capped at ~56px so they never trigger
      horizontal scroll inside the 160px column. */
@@ -8063,6 +8113,26 @@
     font-size: 16px !important;
     line-height: 1 !important;
   }
+  /* Soil cake: kiosk-sized layer labels (28px) + placed decorations (50px)
+     overwhelm the small mobile cake. Shrink labels, the label column, and the
+     placed-decoration glyphs so the cake itself can be larger and legible. */
+  .sc-label-text,
+  .sc-label-arrow {
+    font-size: 11px !important;
+  }
+  .sc-label-text {
+    padding: 1px 3px !important;
+  }
+  .sc-layer-labels {
+    width: 32px !important;
+    margin-right: 6px !important;
+  }
+  .sc-cake-wrapper {
+    margin-right: 8px !important;
+  }
+  .sc-placed-deco {
+    font-size: 26px !important;
+  }
   /* Don't-belong: shrink the side panel to 130px so the canvas has more
      room. Width-fix the OUTER .db-left-panel in the horizontal flex row;
      keep the INNER .db-panel as a flex-1 column child so its height fills
@@ -8261,15 +8331,64 @@
     gap: 4px !important;
     align-items: stretch !important;
   }
-  /* Spin wheel: `zoom` shrinks the whole wheel container (canvas + center
-     SPIN button + arrow + decorations) as one unit so they stay glued. */
+  /* Spin wheel: size the wheel to the short viewport. `zoom` was overflowing
+     its flex row and spilling the wheel above the canvas panel (clipped). Sizing
+     the container instead keeps it inside; the canvas fills it and the centered
+     SPIN button + top pointer (both positioned at 50%) scale with it. */
   .sw-wheel-container {
-    zoom: 0.5;
+    width: min(46vh, 360px) !important;
+    height: min(46vh, 360px) !important;
+  }
+  #sw-wheel-canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .sw-spin-btn {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 10px !important;
+  }
+  /* Plants bar: the kiosk version stacks a 56px plant image + name + score
+     vertically (~117px tall) which ate half the short panel and squeezed the
+     wheel until it overflowed. Compact to a single short row of small plants. */
+  .sw-plants-bar {
+    padding: 4px 10px !important;
+    gap: 12px !important;
+  }
+  .sw-plant-slot {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  .sw-plant-img {
+    width: 26px !important;
+    height: 26px !important;
   }
   .sw-wheel-area {
     flex-direction: row !important;
     align-items: center !important;
     gap: 4px !important;
+  }
+  /* Question + answer choices (shown after a spin) — the kiosk 26px question
+     and 16px / 48px-tall choices are far too big for the short viewport. */
+  .sw-question-area {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+  .sw-question-text {
+    font-size: 0.8rem !important;
+    line-height: 1.25 !important;
+  }
+  .sw-choices {
+    gap: 6px !important;
+  }
+  .sw-choice {
+    flex: 1 1 45% !important;
+    min-width: 0 !important;
+    padding: 6px 10px !important;
+    font-size: 0.7rem !important;
+    min-height: 0 !important;
+    border-bottom-width: 3px !important;
   }
   /* Category list: number badge (1, 2, 3…) hidden — eats horizontal space
      without earning it on a 160px panel. Title + 0/N count shrunk. */
@@ -8280,11 +8399,10 @@
     padding: 4px 6px !important;
     gap: 4px !important;
   }
-  /* Category labels at 0.85rem to match the Quit button, allowed to wrap
-     to a second line (default white-space normal + overflow-wrap so long
-     names like "Soil Art & Culture" can break instead of being clipped). */
+  /* Category labels: shrink hard — 0.85rem was too big for the slim sidebar.
+     Still allowed to wrap so long names ("Soil Art & Culture") don't clip. */
   .sw-cat-title {
-    font-size: 0.85rem !important;
+    font-size: 0.62rem !important;
     line-height: 1.15 !important;
     white-space: normal !important;
     overflow-wrap: break-word !important;
@@ -8292,10 +8410,10 @@
     overflow: visible !important;
   }
   .sw-cat-count {
-    font-size: 0.85rem !important;
+    font-size: 0.62rem !important;
   }
   .sw-panel-heading {
-    font-size: 0.85rem !important;
+    font-size: 0.68rem !important;
   }
   /* Player plant labels at bottom of canvas — match Quit button size. */
   .sw-plant-name,
@@ -8485,5 +8603,218 @@
   [class*="-celebration-title"] {
     font-size: 1.05rem !important;
     margin-bottom: 6px !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Landscape phone: ACTUALLY let kid gameplay scroll.
+ * The per-element shrinking above still clipped the bottom of screens
+ * because each game body is `flex: 1` (exactly viewport height) with an
+ * internal `overflow: hidden` play area — so content that didn't fit got
+ * cut off with no way to scroll to it. Here we let the DOM-based game
+ * bodies size to their content so the absolutely-positioned .screen
+ * (which is `overflow-y: auto` at ≤1279) genuinely scrolls.
+ *
+ * Canvas games (coloring/dot-to-dot/soil-cake/spin-wheel) are intentionally
+ * excluded — their canvases are sized from the body/container height, so
+ * forcing content-height could collapse them. They keep the fit-in-place
+ * treatment from the blocks above.
+ * ================================================================ */
+@media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
+  /* Top-align the screen so scrollable content starts at the top, never
+     centered (which would push the top off-screen and clip it).
+     Scoped to the card-grid games only — games with a side-panel + a visual
+     canvas that must stay EQUAL height (planting-sim, drag-drop, farm-manager)
+     are handled separately so content-sizing doesn't break their layout. */
+  .db-game,
+  .oo-game {
+    justify-content: flex-start !important;
+  }
+  /* Size the body to its content + add breathing room at the bottom so the
+     last row isn't flush against the viewport edge once it scrolls. */
+  .db-game-body,
+  .oo-game-body {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    align-items: flex-start !important;
+    padding-bottom: 16px !important;
+  }
+
+  /* dont-belong + odd-one-out share the card-grid play area. The base panel
+     uses overflow:hidden + a height:100% grid, which clipped the bottom row.
+     Unclip and let the grid take its natural height so all four cards show
+     (scrolling if needed). */
+  .db-canvas-panel,
+  .oo-canvas-panel {
+    overflow: visible !important;
+  }
+  .db-item-grid,
+  .oo-item-grid {
+    height: auto !important;
+    /* Equal-height rows so all four cards match; the grid still grows to its
+       content height (and the screen scrolls) rather than clipping. */
+    grid-template-rows: repeat(2, 1fr) !important;
+    align-content: start !important;
+  }
+  .db-item-card,
+  .oo-item-card {
+    aspect-ratio: auto !important;
+    height: 100% !important;
+    max-height: none !important;
+  }
+
+  /* Speech bubble: keep the hint text INSIDE the bubble. Let it grow to fit
+     its content (don't squish), wrap normally, and never clip. */
+  .db-panel .db-speech-bubble,
+  .db-panel .db-game-speech,
+  .oo-panel .db-speech-bubble,
+  .oo-panel .db-game-speech {
+    height: auto !important;
+    min-height: 0 !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.62rem !important;
+    line-height: 1.25 !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Trivia Blitz landscape phone polish.
+ * Kiosk-sized round labels, Skip/Quit buttons, and the question asset
+ * image overwhelm the ~300px-tall viewport. Hide the round-number
+ * badges, shrink the labels/buttons, and cap the asset image height.
+ * ================================================================ */
+@media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
+  /* Hide the (1)(2)… round number badges to reclaim horizontal space. */
+  .tb-round-num {
+    display: none !important;
+  }
+  .tb-round-topic {
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+    /* Single line + ellipsis so a long topic can't wrap and overflow into the
+       row below it. */
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .tb-round-item {
+    padding: 4px 8px !important;
+    gap: 6px !important;
+    min-height: 0 !important;
+    /* Don't let the rounds list squeeze items below their content height —
+       it scrolls instead (removing the base 44px min-height re-enabled flex
+       shrink, which collapsed rows and overlapped their text). */
+    flex-shrink: 0 !important;
+  }
+  /* Skip / Quit buttons — drop the 44px min-height and big font. */
+  .tb-skip-btn {
+    padding: 4px 10px !important;
+    font-size: 0.72rem !important;
+    min-height: 0 !important;
+  }
+  /* Question asset image — removed entirely on landscape phone; there's no
+     vertical room for it and it pushed the question + choices off-screen. */
+  .tb-has-asset .tb-asset-display,
+  .tb-asset-display {
+    display: none !important;
+  }
+  /* Q #/# counter — much smaller. */
+  .tb-question-counter {
+    font-size: 0.6rem !important;
+    margin-bottom: 0 !important;
+  }
+  /* Answer choices — the kiosk 100px min-height + 20px font dominate the
+     short viewport. Shrink hard so all four fit under the question. */
+  .tb-choices {
+    gap: 6px !important;
+    padding: 6px 10px !important;
+    margin-left: 10px !important;
+    margin-right: 10px !important;
+  }
+  .tb-choice {
+    min-height: 0 !important;
+    padding: 6px 6px !important;
+    font-size: 0.7rem !important;
+    border-bottom-width: 3px !important;
+  }
+  .tb-question-text {
+    font-size: 0.85rem !important;
+    line-height: 1.25 !important;
+  }
+}
+
+/* ================================================================
+ * RESPONSIVE — Landscape phone: drop-zone indicators + overlays.
+ * Two fixes the per-game blocks above missed:
+ *  1. Drag-drop "?" drop zones are sized for the kiosk diagram (120×52)
+ *     and look huge on the shrunk mobile diagram.
+ *  2. Info overlays (correct-answer facts) and game-end overlays are
+ *     absolutely positioned inside the canvas panel (overflow:hidden), so
+ *     a kiosk-sized card gets clipped. Let the overlay scroll (safe-center
+ *     so the top is never cut) and shrink the card to fit.
+ * ================================================================ */
+@media (max-width: 899px) and (orientation: landscape) and (max-height: 500px) {
+  /* Drag-drop drop zones + their "?" labels. */
+  .dd-drop-zone {
+    width: 66px !important;
+    height: 30px !important;
+    border-width: 2px !important;
+  }
+  .dd-zone-label {
+    font-size: 9px !important;
+  }
+  .dd-zone-filled .dd-zone-label {
+    font-size: 11px !important;
+  }
+
+  /* Overlays scroll instead of clipping; safe-center keeps the top reachable. */
+  [class*="-completion-overlay"],
+  [class*="-fact-modal"] {
+    overflow-y: auto !important;
+    padding: 8px !important;
+    align-items: safe center !important;
+  }
+  /* Cards shrink to fit the short viewport. */
+  [class*="-fact-card"],
+  [class*="-completion-content"],
+  [class*="-completion-card"] {
+    max-width: 92% !important;
+    max-height: none !important;
+  }
+  [class*="-fact-card"] {
+    padding: 10px 14px !important;
+    gap: 6px !important;
+  }
+  [class*="-completion-bubble"] {
+    padding: 8px 12px !important;
+  }
+  [class*="-completion-text"],
+  [class*="-fact-text"],
+  [class*="-fact-card"] p {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+  }
+  [class*="-fact-title"] {
+    font-size: 0.85rem !important;
+  }
+  [class*="-fact-source"] {
+    font-size: 0.6rem !important;
+  }
+  [class*="-completion-character"],
+  [class*="-completion-worm"],
+  [class*="-completion-img"] {
+    height: 40px !important;
+    width: auto !important;
+  }
+  [class*="-completion-btn"],
+  [class*="-fact-continue"],
+  [class*="-completion-buttons"] button,
+  [class*="-fact-buttons"] button {
+    padding: 6px 14px !important;
+    font-size: 0.72rem !important;
+    min-height: 0 !important;
   }
 }

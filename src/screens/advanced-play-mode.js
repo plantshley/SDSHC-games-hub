@@ -16,6 +16,7 @@
  */
 
 import { navigate, navigateRaw } from '../router.js'
+import { onTap } from '../utils/tap.js'
 import { getActiveEventId, getEventById } from '../utils/leaderboard-api.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle } from '../utils/theme-toggle.js'
@@ -87,16 +88,16 @@ export function createAdvancedPlayModeScreen() {
     else if (sub) sub.textContent = ''
   })()
 
-  screen.querySelector('#adv-pm-back').addEventListener('pointerdown', () => {
+  onTap(screen.querySelector('#adv-pm-back'), () => {
     navigateRaw('intro')
   })
 
-  screen.querySelector('#adv-pm-team').addEventListener('pointerdown', () => {
+  onTap(screen.querySelector('#adv-pm-team'), () => {
     setPlayMode('team')
     navigate('roster')
   })
 
-  screen.querySelector('#adv-pm-casual').addEventListener('pointerdown', () => {
+  onTap(screen.querySelector('#adv-pm-casual'), () => {
     setPlayMode('casual')
     navigate('game-select')
   })

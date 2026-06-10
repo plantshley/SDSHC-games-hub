@@ -14,6 +14,7 @@ import {
   getLeaderboard,
 } from './leaderboard-api.js'
 import { navigateRaw } from '../router.js'
+import { onTap } from './tap.js'
 
 /**
  * @returns {HTMLButtonElement}
@@ -26,7 +27,7 @@ export function createLeaderboardButton() {
   // glyph from Noto Sans Symbols 2 rather than emoji fallback.
   btn.textContent = '\u{1F3C6}\u{FE0E}'
 
-  btn.addEventListener('pointerdown', (e) => {
+  onTap(btn, (e) => {
     e.stopPropagation()
     showLeaderboardModal()
   })
@@ -90,14 +91,14 @@ async function showLeaderboardModal() {
     setTimeout(() => overlay.remove(), 250)
   }
 
-  overlay.querySelector('.adv-lb-close').addEventListener('pointerdown', (e) => {
+  onTap(overlay.querySelector('.adv-lb-close'), (e) => {
     e.stopPropagation()
     dismiss()
   })
-  overlay.addEventListener('pointerdown', (e) => {
+  onTap(overlay, (e) => {
     if (e.target === overlay) dismiss()
   })
-  overlay.querySelector('.adv-lb-admin-link').addEventListener('pointerdown', (e) => {
+  onTap(overlay.querySelector('.adv-lb-admin-link'), (e) => {
     e.preventDefault()
     e.stopPropagation()
     dismiss()
@@ -122,7 +123,7 @@ async function showLeaderboardModal() {
   }
 
   overlay.querySelectorAll('.adv-lb-tab').forEach(tabBtn => {
-    tabBtn.addEventListener('pointerdown', (e) => {
+    onTap(tabBtn, (e) => {
       e.stopPropagation()
       overlay.querySelectorAll('.adv-lb-tab').forEach(b => b.classList.remove('adv-lb-tab-active'))
       tabBtn.classList.add('adv-lb-tab-active')

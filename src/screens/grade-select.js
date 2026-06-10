@@ -1,5 +1,6 @@
 import { navigate, navigateRaw } from '../router.js'
 import { trackGradeTierSelect } from '../utils/analytics.js'
+import { onTap } from '../utils/tap.js'
 
 const TIERS = [
   {
@@ -129,10 +130,10 @@ export function createGradeSelectScreen() {
   el.querySelector('.character-area').appendChild(createFoliage())
   addSparkles(el)
 
-  el.querySelector('#grade-back').addEventListener('pointerdown', () => navigateRaw('intro'))
+  onTap(el.querySelector('#grade-back'), () => navigateRaw('intro'))
 
   el.querySelectorAll('.tier-btn').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       trackGradeTierSelect(btn.dataset.tier)
       navigate(`game-select/${btn.dataset.tier}`)
     })

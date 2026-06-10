@@ -1,4 +1,5 @@
 import { navigate } from '../router.js'
+import { onTap } from '../utils/tap.js'
 import { LEVELS, ROUND_TIME, INSTRUCTIONS } from '../data/content/odd-one-out.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
 
@@ -84,8 +85,8 @@ function createIntroScreen() {
   }
   typingTimer = setTimeout(typeChar, 400)
 
-  el.querySelector('#oo-intro-home').addEventListener('pointerdown', () => navigate('game-select/meadow'))
-  el.querySelector('#oo-go-btn').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#oo-intro-home'), () => navigate('game-select/meadow'))
+  onTap(el.querySelector('#oo-go-btn'), () => {
     clearTimeout(typingTimer)
     transitionTo(el, createGameplayScreen(0, 0, 0))
   })
@@ -271,16 +272,16 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
         <button class="oo-completion-btn" id="oo-play-again">Play Again</button>
         <button class="oo-completion-btn oo-completion-btn-primary" id="oo-back-games">Back to Games</button>
       `
-      compButtons.querySelector('#oo-play-again').addEventListener('pointerdown', () => {
+      onTap(compButtons.querySelector('#oo-play-again'), () => {
         transitionTo(el, createGameplayScreen(0, 0, 0))
       })
-      compButtons.querySelector('#oo-back-games').addEventListener('pointerdown', () => {
+      onTap(compButtons.querySelector('#oo-back-games'), () => {
         navigate('game-select/meadow')
       })
     } else {
       compText.innerHTML = `${level.title} Complete!<br><br>Score: ${score}`
       compButtons.innerHTML = `<button class="oo-completion-btn oo-completion-btn-primary" id="oo-next-level">Next Level</button>`
-      compButtons.querySelector('#oo-next-level').addEventListener('pointerdown', () => {
+      onTap(compButtons.querySelector('#oo-next-level'), () => {
         transitionTo(el, createGameplayScreen(levelIdx + 1, 0, 0))
       })
     }
@@ -305,11 +306,11 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
     }
   }
 
-  factContinueBtn.addEventListener('pointerdown', advanceRound)
+  onTap(factContinueBtn, advanceRound)
 
   // ─── Item tap handlers ───
   el.querySelectorAll('.oo-item-card').forEach(card => {
-    card.addEventListener('pointerdown', () => {
+    onTap(card, () => {
       if (answered) return
       if (factModal.classList.contains('oo-fact-visible')) return
 
@@ -353,7 +354,7 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
 
   // ─── Level nav pills ───
   el.querySelectorAll('.oo-level-nav-item').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
+    onTap(btn, () => {
       const idx = parseInt(btn.dataset.level)
       if (idx === levelIdx) return
       stopTimer()
@@ -362,11 +363,11 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
   })
 
   // Home + quit
-  el.querySelector('#oo-game-home').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#oo-game-home'), () => {
     stopTimer()
     transitionTo(el, createIntroScreen())
   })
-  el.querySelector('#oo-quit').addEventListener('pointerdown', () => {
+  onTap(el.querySelector('#oo-quit'), () => {
     stopTimer()
     transitionTo(el, createIntroScreen())
   })
