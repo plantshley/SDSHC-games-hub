@@ -189,12 +189,6 @@ function createWordToImageScreen(level, levelIdx) {
           </div>
           <button class="dd-quit-btn" id="dd-quit">Quit \u2715</button>
         </div>
-        <div class="dd-panel-bottom">
-          <div class="dd-instructions">
-            <p id="dd-instruction-text"></p>
-          </div>
-          <img class="dd-game-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="">
-        </div>
       </div>
       <div class="dd-canvas-panel">
         <div class="dd-image-grid">
@@ -217,7 +211,7 @@ function createWordToImageScreen(level, levelIdx) {
   let instrIdx = 0
   let instrTimer = null
   function typeInstr() {
-    if (instrIdx < instrText.length && el.parentNode) {
+    if (instrEl && instrIdx < instrText.length && el.parentNode) {
       instrEl.textContent += instrText[instrIdx++]
       instrTimer = setTimeout(typeInstr, 35)
     }
@@ -248,10 +242,12 @@ function createWordToImageScreen(level, levelIdx) {
   })
 
   function showHint(item) {
+    if (!instrEl) return
     instrEl.textContent = `\u{1F4A1} Try matching "${item.label}" to a different image.`
   }
 
   function resetInstruction() {
+    if (!instrEl) return
     instrEl.textContent = INSTRUCTIONS.gameplayMatch
   }
 
@@ -409,12 +405,6 @@ function createWordToPositionScreen(level, levelIdx) {
           </div>
           <button class="dd-quit-btn" id="dd-quit">Quit \u2715</button>
         </div>
-        <div class="dd-panel-bottom">
-          <div class="dd-instructions">
-            <p id="dd-instruction-text"></p>
-          </div>
-          <img class="dd-game-character" src="/assets/sprites/Basic_Charakter_plain.png" alt="">
-        </div>
       </div>
       <div class="dd-canvas-panel">
         <div class="dd-diagram-container" id="dd-diagram">
@@ -438,7 +428,7 @@ function createWordToPositionScreen(level, levelIdx) {
   let instrIdx = 0
   let instrTimer = null
   function typeInstr() {
-    if (instrIdx < instrText.length && el.parentNode) {
+    if (instrEl && instrIdx < instrText.length && el.parentNode) {
       instrEl.textContent += instrText[instrIdx++]
       instrTimer = setTimeout(typeInstr, 35)
     }
@@ -470,10 +460,12 @@ function createWordToPositionScreen(level, levelIdx) {
   })
 
   function showHint(item) {
+    if (!instrEl) return
     instrEl.textContent = `\u{1F4A1} Try a different spot for "${item.label}".`
   }
 
   function resetInstruction() {
+    if (!instrEl) return
     instrEl.textContent = INSTRUCTIONS.gameplayDiagram
   }
 

@@ -2066,7 +2066,11 @@
   background: var(--color-white);
   border: 3px solid transparent;
   border-radius: 10px;
-  cursor: pointer; touch-action: none;
+  /* Tap-only list item inside the scrollable .tb-panel — `pan-y` keeps it
+     tappable while letting a vertical drag scroll the panel past it.
+     (`none` here used to swallow the scroll gesture, making the panel feel
+     un-scrollable on touch, in the PWA and browser alike.) */
+  cursor: pointer; touch-action: pan-y;
   transition: border-color var(--transition-fast), transform var(--transition-fast);
   min-height: 44px;
 }
@@ -3270,7 +3274,9 @@
   background: var(--color-white);
   border: 3px solid transparent;
   border-radius: 10px;
-  cursor: default; touch-action: none;
+  /* Non-draggable list item in the scrollable .sw-panel — allow vertical
+     scroll to pass through (was `none`, which blocked panel scrolling). */
+  cursor: default; touch-action: pan-y;
   transition: border-color var(--transition-fast), transform var(--transition-fast);
   min-height: 35px;
 }
@@ -5215,6 +5221,7 @@
   overflow: hidden;
   background: rgba(253, 246, 227, 1);
   border-radius: 14px;
+  border: 5px solid var(--color-meadow);
 }
 
 /* ── Image Grid (Mode A) ── */
@@ -5771,7 +5778,10 @@
   border-radius: 14px;
   cursor: pointer;
   transition: transform 0.15s, border-color 0.3s, background 0.3s;
-  touch-action: none;
+  /* Tap-only option card filling the scrollable farm-manager panel — `pan-y`
+     lets a vertical drag scroll the panel instead of dying on the card.
+     (`none` made the side panel feel un-scrollable on touch.) */
+  touch-action: pan-y;
 }
 
 .fm-option-card:active {
@@ -6438,6 +6448,7 @@
   overflow: hidden;
   background: rgba(253, 246, 227, 1);
   border-radius: 14px;
+  border: 5px solid var(--color-sprouts);
 }
 
 /* ── 2×2 Item grid ── */
@@ -7014,6 +7025,7 @@
   overflow: hidden;
   background: rgba(253, 246, 227, 1);
   border-radius: 14px;
+  border: 5px solid var(--color-meadow);
 }
 
 /* ── Timer bar ── */
@@ -7440,6 +7452,9 @@
     font-size: 0.78rem !important;
     padding: 8px 12px !important;
     max-width: 60vw;
+    /* Base bubbles hardcode min-height (140–200px) so they're far taller than
+       the text — collapse to fit the content on the short landscape viewport. */
+    min-height: 0 !important;
   }
   /* Intro decor / ground sprites hidden — they push the enter-button
      below the fold and overlap small viewports. Note: deliberately NOT

@@ -698,11 +698,28 @@
     margin-top: -40px;
     padding: 0 24px 24px;
   }
+  /* Explicit per-tier column counts (NOT auto-fit) so the column count can
+     never change mid-load. auto-fit recomputes how many columns fit on every
+     width change — e.g. the vertical scrollbar flickering as cards pop in —
+     which snapped the centered grid left/right (the "jittering" cards). Fixed
+     track width still keeps the 3-card guardians tier the same card size as the
+     4-card tiers. */
+  .game-grid.cols-4 {
+    grid-template-columns: repeat(4, 260px);
+  }
+  .game-grid.cols-3 {
+    grid-template-columns: repeat(3, 260px);
+  }
   .game-grid.cols-4,
   .game-grid.cols-3 {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     width: 100%;
     max-width: 980px;
+  }
+  /* The base icon uses margin-bottom: -10px, which (with the inner gap) lets
+     the icon overlap the title on the smaller responsive cards. Drop the
+     negative pull so there's a clean gap between icon and title. */
+  .game-card-icon {
+    margin-bottom: 0;
   }
 }
 
@@ -775,6 +792,10 @@
   .game-select-screen {
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    /* Reserve the scrollbar's width whether or not it's showing, so a scrollbar
+       appearing during the card pop-in can't change the content width (and thus
+       can't shift the centered card grid). No-op on mobile overlay scrollbars. */
+    scrollbar-gutter: stable;
   }
   /* The grass-tile background is set as a repeating image on the absolute
      .game-select-bg child; when the screen scrolls, the child scrolls
@@ -862,9 +883,15 @@
     margin-top: 0;
     padding: 16px 12px;
   }
+  /* Explicit counts (see the ≤1279 note) — no auto-fit reflow. */
+  .game-grid.cols-4 {
+    grid-template-columns: repeat(4, 190px);
+  }
+  .game-grid.cols-3 {
+    grid-template-columns: repeat(3, 190px);
+  }
   .game-grid.cols-4,
   .game-grid.cols-3 {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 14px;
   }
   .game-card-icon {
@@ -1022,9 +1049,15 @@
     padding: 8px 12px 12px;
     margin-top: 0;
   }
+  /* Explicit counts (see the ≤1279 note) — no auto-fit reflow / no load jitter. */
+  .game-grid.cols-4 {
+    grid-template-columns: repeat(4, 170px);
+  }
+  .game-grid.cols-3 {
+    grid-template-columns: repeat(3, 170px);
+  }
   .game-grid.cols-4,
   .game-grid.cols-3 {
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 10px;
   }
   .game-card-icon {
