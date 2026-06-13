@@ -8107,11 +8107,26 @@
      landscape the side panel is only 160px, so that huge left padding
      forces the instruction to wrap onto a second line and squeezes the
      gameplay area below. Pull padding back to symmetric, shrink the font. */
+  /* Pull the instruction onto the header row — absolutely positioned over the
+     header band, to the right of the home button + title — instead of sitting
+     in its own full-width row below the header. That frees ~28px of vertical
+     space so the side panel + canvas fill more of the short landscape viewport.
+     pointer-events:none so it never blocks the home button. */
   .ps-yib-instr-bar,
   .ps-poll-instr-bar {
-    padding: 4px 12px !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 168px !important;
+    right: 10px !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
     text-align: center !important;
     line-height: 1.2 !important;
+    z-index: 4 !important;
+    pointer-events: none;
   }
   .ps-yib-instr-bar p,
   .ps-poll-instr-bar p,
@@ -8211,10 +8226,14 @@
     padding: 6px !important;
     gap: 6px !important;
   }
-  /* db hint character on side panel — shrink so it doesn't compete. */
-  .db-panel .db-game-character {
-    height: 40px !important;
+  /* db + oo hint character on side panel — shrink so it doesn't compete, and
+     drop the big base margins (margin-top:25 / margin-bottom:20) that inflated
+     the panel height. */
+  .db-panel .db-game-character,
+  .oo-panel .oo-game-character {
+    height: 30px !important;
     width: auto !important;
+    margin: 4px 0 !important;
   }
   /* db quit button: same shrink as other quits, NOT full width. */
   .db-quit-btn {
@@ -8649,27 +8668,44 @@
      last row isn't flush against the viewport edge once it scrolls. */
   .db-game-body,
   .oo-game-body {
-    flex: 0 0 auto !important;
+    /* Fill the screen and stretch children so the side panel and the canvas
+       are the SAME height. They were content-sized + top-aligned, so a tall
+       side panel (especially odd-one-out, with Round/Score sections) stuck out
+       below the shorter canvas. Now both fill the body height; the panel
+       scrolls internally on overflow instead of expanding past the canvas. */
+    flex: 1 !important;
     min-height: 0 !important;
-    align-items: flex-start !important;
-    padding-bottom: 16px !important;
+    align-items: stretch !important;
+    padding-bottom: 12px !important;
+  }
+  /* Side panel matches the canvas height; scroll on overflow, don't expand. */
+  .db-panel,
+  .oo-panel {
+    overflow-y: auto !important;
+    min-height: 0 !important;
   }
 
-  /* dont-belong + odd-one-out share the card-grid play area. The base panel
-     uses overflow:hidden + a height:100% grid, which clipped the bottom row.
-     Unclip and let the grid take its natural height so all four cards show
-     (scrolling if needed). */
+  /* dont-belong + odd-one-out share the card-grid play area. */
   .db-canvas-panel,
   .oo-canvas-panel {
-    overflow: visible !important;
+    overflow: hidden !important;
   }
-  .db-item-grid,
-  .oo-item-grid {
-    height: auto !important;
-    /* Equal-height rows so all four cards match; the grid still grows to its
-       content height (and the screen scrolls) rather than clipping. */
+  /* db canvas holds only the grid → fill it entirely. */
+  .db-item-grid {
+    height: 100% !important;
     grid-template-rows: repeat(2, 1fr) !important;
-    align-content: start !important;
+    align-content: stretch !important;
+  }
+  /* oo canvas stacks a timer bar + round header ABOVE the grid, so a flat
+     height:100% overflowed (cards clipped). Flex-fill the remaining column
+     height instead. */
+  .oo-item-grid {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    width: 100% !important;
+    grid-template-rows: repeat(2, 1fr) !important;
+    align-content: stretch !important;
   }
   .db-item-card,
   .oo-item-card {
@@ -8690,8 +8726,13 @@
     overflow: visible !important;
     white-space: normal !important;
     overflow-wrap: break-word !important;
-    font-size: 0.62rem !important;
-    line-height: 1.25 !important;
+    /* Use the full panel width (was max-width:80%, which forced the hint to
+       wrap one word per line in the narrow landscape panel) and a smaller
+       font so the instruction is compact. */
+    max-width: 100% !important;
+    font-size: 0.55rem !important;
+    line-height: 1.2 !important;
+    padding: 4px 6px !important;
   }
 }
 
