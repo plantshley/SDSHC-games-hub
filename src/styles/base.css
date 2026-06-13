@@ -298,11 +298,23 @@ button {
        own `touch-action: none`, so dragging is unaffected. */
     touch-action: pan-y;
     overscroll-behavior-y: contain;
+    /* Hide the scroll *bar* (content is still fully scrollable by touch/wheel).
+       A classic space-taking scrollbar reserves ~15px on the right, so centered
+       content lands half-a-scrollbar left of true center — the "cards pushed
+       slightly left" in portrait. Hiding it (this app is touch-first) lets
+       content center on the full width, and removes the bare black scrollbar.
+       No-op on mobile, which already uses zero-width overlay scrollbars. */
+    scrollbar-width: none;
     /* `safe center` keeps vertical centering when content fits and falls back
        to top-align when it would overflow (the centered offset isn't
        scrollable above 0). Screens whose centering doesn't gracefully fall
        back here have their own per-screen flex-start override. */
     justify-content: safe center;
+  }
+  /* WebKit/Blink equivalent of `scrollbar-width: none` (Chrome, Edge, Safari). */
+  .screen::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 }
 

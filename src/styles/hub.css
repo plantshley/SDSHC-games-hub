@@ -792,10 +792,6 @@
   .game-select-screen {
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    /* Reserve the scrollbar's width whether or not it's showing, so a scrollbar
-       appearing during the card pop-in can't change the content width (and thus
-       can't shift the centered card grid). No-op on mobile overlay scrollbars. */
-    scrollbar-gutter: stable;
   }
   /* The grass-tile background is set as a repeating image on the absolute
      .game-select-bg child; when the screen scrolls, the child scrolls
