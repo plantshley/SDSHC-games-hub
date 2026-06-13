@@ -67,10 +67,14 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-7e5eb42b'], (function (workbox) { 'use strict';
+define(['./workbox-841e1dd6'], (function (workbox) { 'use strict';
 
-  self.skipWaiting();
-  workbox.clientsClaim();
+  self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+    }
+  });
+
   /**
    * The precacheAndRoute() method efficiently caches and responds to
    * requests for URLs in the manifest.
@@ -81,11 +85,20 @@ define(['./workbox-7e5eb42b'], (function (workbox) { 'use strict';
     "revision": "476909f2076e502d417aacd83df9ac98"
   }, {
     "url": "index.html",
-    "revision": "0.p2odma33p7g"
+    "revision": "0.9tb583dmqh8"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/]
   }));
+  workbox.registerRoute(/\.(?:svg|webp|png|gif|jpe?g|JPG)$/, new workbox.StaleWhileRevalidate({
+    "cacheName": "sdshc-media",
+    plugins: [new workbox.ExpirationPlugin({
+      maxEntries: 700,
+      maxAgeSeconds: 31536000
+    }), new workbox.CacheableResponsePlugin({
+      statuses: [0, 200]
+    })]
+  }), 'GET');
 
 }));

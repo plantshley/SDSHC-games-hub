@@ -140,6 +140,10 @@ function handleRoute(route) {
       case 'game':
         handleAdvancedGame(route)
         break
+      default:
+        // Unrecognized advanced sub-route (e.g. a typo'd hash) — self-heal to
+        // the game grid instead of sweeping the screen and rendering nothing.
+        navigate('game-select')
     }
     return
   }

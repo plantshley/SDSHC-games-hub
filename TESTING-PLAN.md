@@ -35,6 +35,34 @@ Rationale: prove the stable base first, then move outward to the new, network-de
 
 ---
 
+## ✅ Claude [C] test run — 2026-06-10
+
+All **pure-[C]** tests that needed no prior setup from you have been run (code-verified, with pure functions executed in Node where possible). Each test below carries an inline "**✅ Result**" line with file:line evidence. Summary:
+
+| Test | What | Verdict |
+|---|---|---|
+| 1.3 | Score idempotency (deterministic doc ids + guard read) | ✅ PASS |
+| 3.3 | Idle timer disabled on `#advanced/admin` | ✅ PASS |
+| 3.7 | Firestore security rules vs. threat model | ✅ PASS (3 soft-spots by design) |
+| 4.1 | play-mode session lifecycle (set/clear/re-prompt) | ✅ PASS |
+| 4.3 | Profanity filter (executed in Node) | ✅ PASS — see substring note |
+| 5.1 | Par-normalization formula (executed: par→100, 2×par→200, neg→0) | ✅ PASS |
+| 5.2 | Re-par recomputes history at read time (no stored norm) | ✅ PASS |
+| 5.3 | Cascade deletes (team/event) + merge re-tag | ✅ PASS |
+| 6.3 | All 10 routes + legacy unprefixed hash | ✅ PASS — see blank-route note |
+| 6.4 | Idle reset clears `sdshc-progress`, keeps `sdshc-lb-*` | ✅ PASS |
+| 7.2 | Fonts from bundle, no CDN | ✅ PASS — see ref-doc note |
+| 7.3 | Analytics fails silently when blocked | ✅ PASS |
+
+**No failures.** Three **optional, defer-able** suggestions surfaced (none block the event):
+1. **Profanity substring false-positives** (4.3) — names like `Scunthorpe`/`Cocker`/`Dickinson` get blocked by substring match; admin can override. Consider word-boundary matching for short ambiguous tokens.
+2. **Blank screen on malformed advanced hash** (6.3) — `#advanced/<typo>` renders nothing (no in-app link reaches it). A `default: navigate('game-select')` in the advanced switch would self-heal.
+3. **Google-Fonts in `other/` reference HTML** (7.2) — outside the app bundle; harmless, left as-is.
+
+**Not run here** (need your hands — live Firestore round-trips, real offline toggling, two devices, Firebase Console, touch/visual): all `[U]` and `[C+U]` tests — Sections 1.1/1.2/1.4, 2.*, 3.1/3.2/3.4/3.5/3.6, 4.2/4.4, 6.1/6.2/6.5/6.6, 7.1. The `[C]` logic underneath several of those (idempotency, tagging, cascade, rules) is already confirmed above, so your live runs are confirming the *wiring*, not the *logic*.
+
+---
+
 ## Section 1 — Firebase: teams + scores, ONLINE
 
 Pre (all): `USE_FIRESTORE === true` in [src/firebase/config.js](src/firebase/config.js) (confirmed live), online, one tab, dev server running.
@@ -76,6 +104,7 @@ Pre (all): `USE_FIRESTORE === true` in [src/firebase/config.js](src/firebase/con
   console.table((await api.listRecentScores(20)).filter(s => s.runId === runId))
   ```
 - **Expect:** Exactly **one** row for that runId (not two).
+- **✅ Result (2026-06-10, [C] code-verified):** PASS. [leaderboard-api.firestore.js:405-433](src/utils/leaderboard-api.firestore.js#L405-L433) — `recordScores` does a guard read of `${runId}__0` (line 411) and returns early if it exists; otherwise it writes deterministic doc ids `${runId}__${i}` via `setDoc` in a single `writeBatch`. Re-call paths: (a) guard short-circuits, or (b) `setDoc` overwrites the same ids → no duplication either way. The guard reading only entry 0 is sound because `batch.commit()` is atomic — entry 0 exists **iff** the whole run committed, so there's no partial-write window where 0 exists but 1..n don't. *Live round-trip against Firestore is the [C+U] half (1.1/1.2) — the idempotency logic itself is fully determined by code.*
 
 ### 1.4 [C+U] Leaderboard read reflects the score; pending team stays hidden publicly
 - **Steps:** Open the leaderboard modal (trophy button) on This-Month / All-Time tabs.
@@ -149,6 +178,7 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
 ### 3.3 [C] Idle timer is disabled on admin
 - **Steps (console on `#advanced/admin`):** confirm no idle-warning/reset fires while idle (the route force-disables the timer).
 - **Observe:** Leave it untouched ~30s+; no countdown overlay, no redirect to intro.
+- **✅ Result (2026-06-10, [C] code-verified):** PASS. [main.js:75-76](src/main.js#L75-L76) — `if (route.mode === 'advanced' && route.screen === 'admin') disableIdleTimer()`. [idle-timer.js:99-104](src/idle-timer.js#L99-L104) `disableIdleTimer()` sets `enabled=false`, clears both timers, hides the overlay; and both [`onActivity`](src/idle-timer.js#L78) and [`resetTimer`](src/idle-timer.js#L64) early-return when `!enabled`, so even pointer/key activity can't re-arm it. Navigating away to any other advanced screen calls `enableIdleTimer()` + `setIdleTimeout(600_000)` ([main.js:80-81](src/main.js#L80-L81)) so the 10-min timer resumes off-admin. *(The `[U]` half is just eyeballing that no overlay appears after 30s.)*
 
 ### 3.4 [U] Event lifecycle
 - **Steps:** Create event → Start now (and separately, Schedule for later → open scheduled). End event. Reopen. Delete a throwaway event.
@@ -169,6 +199,11 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
 
 ### 3.7 [C] Security spot-check (read the rules, don't pen-test prod)
 - **Confirm in [firestore.rules](firestore.rules):** writes to teams/events/scores require `isAdmin()` except the intentionally-open paths (pending-team create, roster append). Note these accepted soft-spots in the audit; no action unless the event threat model changes.
+- **✅ Result (2026-06-10, [C] code-verified):** PASS — rules match the documented threat model.
+  - **Teams** ([firestore.rules:26-38](firestore.rules#L26-L38)): public read; `create` only when `status=='pending'` + `name` is a 1–40-char string + `normalized` is a string; `update`/`delete` admin-only. Matches `getOrCreateTeam` which always writes `status:'pending'` and a `normalized` field.
+  - **Events** ([firestore.rules:45-50](firestore.rules#L45-L50)): public read; `create`/`delete` admin-only; `update` admin-only **or** a diff touching *only* the `roster` key — exactly the unauthenticated "player adds a pending team mid-game" path (`addTeamToEventRoster` writes only `roster`).
+  - **Scores** ([firestore.rules:56-64](firestore.rules#L56-L64)): public read; `create` requires `gameId`/`runId` strings + `points` is an **int** in ±100000; `update`/`delete` admin-only. `recordScores` writes `points: Math.round(...)` (always int) — consistent. ✅
+  - **Accepted soft-spots (by design, low-stakes kiosk threat model):** (1) pending team names are world-readable (profanity filter guards entry, only *approved* teams ever render); (2) an unauthenticated client can rewrite an event's `roster` array (can't start/end/rename events; organizer cleans up in admin); (3) anyone can create a score within the point clamp (kiosk play is unauthenticated by necessity). All three are already noted inline in the rules and in AUDIT-2026-06.md — **no action needed.**
 
 ---
 
@@ -181,6 +216,12 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
   ```
   Choose Team on `#advanced/play-mode` → expect `"team"`. Navigate to `#intro` → expect it cleared. Re-enter advanced with an active event → expect re-prompt.
 - **Also:** Changing the active event in admin clears it (forces re-prompt).
+- **✅ Result (2026-06-10, [C] code-verified):** PASS. Session key `sdshc-lb-play-mode` is owned by [advanced-play-mode.js:24-38](src/screens/advanced-play-mode.js#L24-L38) (`get/set/clearPlayMode`, sessionStorage). Lifecycle traced:
+  - **Set:** Team/Casual buttons call `setPlayMode('team'|'casual')` ([play-mode.js:95-103](src/screens/advanced-play-mode.js#L95-L103)).
+  - **Cleared on intro:** [main.js:89-92](src/main.js#L89-L92) — the `intro` route calls `clearPlayMode()` every time, so returning to `#intro` always re-prompts on next Advanced entry. ✅
+  - **Re-prompt gate:** [main.js:119-123](src/main.js#L119-L123) — `#advanced/game-select` redirects to `#advanced/play-mode` when `getActiveEventId() && !getPlayMode()`. ✅
+  - **Cleared on active-event change in admin:** [advanced-admin.js:145-146](src/screens/advanced-admin.js#L145-L146) and [171-172](src/screens/advanced-admin.js#L171-L172) — both `setActiveEventId(...)` paths immediately call `clearPlayMode()`. ✅
+  - **`getScoreEventId()` tagging** ([play-mode.js:45-49](src/screens/advanced-play-mode.js#L45-L49)): returns the event id **only** when an event is active *and* mode is `team`; casual → `null`. Confirms the 4.2 tagging contract at the source.
 
 ### 4.2 [C+U] Casual vs team tagging
 - **Expect:** Casual mode hides the team line in game intros and keeps `teamId === null` on scores; `eventId` is tagged **only** when team mode AND an active event exist (`getScoreEventId()`).
@@ -193,6 +234,8 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
   console.log(isClean('Pierre HS'), isClean('<a known-bad word>'))
   ```
 - **Expect:** clean names `true`, blocked names `false`. **[U]:** confirm the roster UI actually refuses a blocked name inline before creating the team.
+- **✅ Result (2026-06-10, [C] executed in Node against [profanity.js](src/utils/profanity.js)):** PASS (13/14 expectations; the one miss was a wrong *test* expectation, not a code bug). Confirmed: empty/whitespace → `false`; clean school names → `true`; profanity/slurs/`69`/`420` substrings → `false`. `isClean` lowercases, rejects blank, and does a substring match over the `BLOCKED` list.
+  - ⚠️ **Suggested fix (Minor — substring false positives):** because matching is pure substring with no word boundaries, innocuous names get blocked: **`Scunthorpe`** (contains `cunt`), **`Cocker` / `Babcock`** (contains `cock`), **`Dickinson`** (a real SD-region surname/town; contains `dick`), **`Essex`/`Sussex`** (contains `sex`). Conversely `Assassins` is correctly allowed (blocklist uses `asshole`, not `ass`). For an event with SD school names this is low-risk, and admin can approve a blocked name manually — but if you want to reduce surprise rejections, consider word-boundary matching for the short/ambiguous tokens (`cock`, `dick`, `tit`, `sex`, `69`, `420`) while keeping substring matching for unambiguous slurs. **Optional, defer-able.**
 
 ### 4.4 [U] Free-typed new team is immediately playable
 - **Steps:** In a game intro (team mode), type a brand-new school name not yet approved.
@@ -212,14 +255,31 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
   console.log(await api.getLeaderboard({ scope:'all-time' }))
   ```
 - **Expect:** normalized ≈ 100 / 200 / 0 respectively; **Raw** column shows actual points; sorted by normalized.
+- **✅ Result (2026-06-10, [C] executed in Node against the real registry + code-traced):** PASS. Ran `Math.round(Math.max(0, raw) / getGamePar(id) * 100)` — the exact expression from [leaderboard-api.firestore.js:493](src/utils/leaderboard-api.firestore.js#L493) + the `Math.round` at [line 504](src/utils/leaderboard-api.firestore.js#L504) — against `getGamePar('adv-jeopardy')` (= **3000**):
+
+  | raw | normalized |
+  |---|---|
+  | 3000 (= par) | **100** |
+  | 6000 (2×par) | **200** |
+  | −500 | **0** (floored by `Math.max(0, …)`) |
+  | 0 | 0 |
+  | 1500 (½ par) | 50 |
+
+  Registry pars: spin-wheel 1500 · trivia-blitz 1300 · jeopardy 3000 · word-game 1200 · field-guide 3000 · connections 1500. Unknown gameId → `DEFAULT_PAR = 1500` ([advanced-game-registry.js:81-91](src/data/advanced-game-registry.js#L81-L91)), so a stray score can't divide-by-zero or vanish. Sort is `b.normPoints - a.normPoints || b.points - a.points` ([line 511](src/utils/leaderboard-api.firestore.js#L511)) — normalized first, raw as tiebreak. Both columns are surfaced (`normPoints` + `points`).
 
 ### 5.2 [C] Re-par recomputes history at read time
 - **Steps:** Note a game's leaderboard totals. Temporarily change its `par` in [src/data/advanced-game-registry.js](src/data/advanced-game-registry.js) (dev only), reload, re-read board.
 - **Expect:** Entire history re-normalizes instantly (computed in `getLeaderboard`, not on write). **Revert the par change after.**
+- **✅ Result (2026-06-10, [C] code-verified):** PASS. `recordScores` persists **only** raw `points` + `gameId` per score doc ([leaderboard-api.firestore.js:420-429](src/utils/leaderboard-api.firestore.js#L420-L429)) — no normalized value is ever stored. Normalization happens entirely at read time inside `getLeaderboard` via `getGamePar(s.gameId)` ([line 493](src/utils/leaderboard-api.firestore.js#L493)), which reads the live registry. So editing a `par` in [advanced-game-registry.js](src/data/advanced-game-registry.js) re-normalizes the whole history on the next board read, with zero migration. ✅
 
 ### 5.3 [C] Cascade deletes
 - **Steps (console):** create a throwaway team + score, then `deleteTeam(id)`; create a throwaway event + tagged score, then `deleteEvent(id)`.
 - **Expect:** team delete removes its scores + all roster entries; event delete removes its tagged scores + clears active-event if it was active on this kiosk.
+- **✅ Result (2026-06-10, [C] code-verified):** PASS.
+  - **`deleteTeam(id)`** ([leaderboard-api.firestore.js:211-227](src/utils/leaderboard-api.firestore.js#L211-L227)): deletes the team doc, then queries `/scores where teamId == id` and batch-deletes them, then walks every event and strips the team from its `roster`. No orphan scores or zombie roster refs. ✅
+  - **`deleteEvent(id)`** ([leaderboard-api.firestore.js:303-312](src/utils/leaderboard-api.firestore.js#L303-L312)): deletes the event doc, batch-deletes `/scores where eventId == id`, and calls `setActiveEventId(null)` if it was the active event on this kiosk. ✅
+  - **`mergeTeams(fromId, toId)`** ([leaderboard-api.firestore.js:232-249](src/utils/leaderboard-api.firestore.js#L232-L249)) re-tags all of `from`'s scores onto `to` then deletes `from` — the 2.4 collision-cleanup path is sound at the code level (its real-device half stays [U]).
+  - *Note:* `deleteTeam` intentionally does **not** touch `eventId` on any surviving casual/other scores, and leaves scores with `teamId:null` (casual) untouched — correct, those aren't the team's.
 
 ---
 
@@ -240,6 +300,23 @@ For each (`adv-spin-wheel, adv-trivia-blitz, adv-jeopardy, adv-word-game, adv-fi
   #advanced/play-mode  #advanced/roster  #advanced/admin
   ```
   Also a legacy unprefixed hash (e.g. `#grade-select`) → should be treated as kid mode.
+- **✅ Result (2026-06-10, [C] code-verified against [router.js](src/router.js) + [main.js](src/main.js)):** PASS for all 10 documented routes + the legacy case:
+
+  | Hash | → `parseHash` | Renders |
+  |---|---|---|
+  | `#intro` / `` (empty) | `{screen:'intro', mode:null}` | intro ✅ |
+  | `#kid/splash` | `{screen:'splash', mode:'kid'}` | splash ✅ |
+  | `#kid/grade-select` | `grade-select` | grade-select ✅ |
+  | `#kid/game-select/sprouts` | `{game-select, tier:'sprouts'}` | tier grid ✅ |
+  | `#kid/game/soil-cake/1` | `{game, gameId:'soil-cake', level:1}` | kid game ✅ |
+  | `#advanced/game-select` | `{game-select, mode:'advanced'}` | adv grid ✅ |
+  | `#advanced/game/adv-jeopardy/1` | `{game, gameId:'adv-jeopardy', level:1}` | adv game ✅ |
+  | `#advanced/play-mode` | `play-mode` | play-mode ✅ |
+  | `#advanced/roster` | `roster` | roster (guards to game-select if not team+event) ✅ |
+  | `#advanced/admin` | `admin` | admin ✅ |
+  | `#grade-select` (legacy, no prefix) | `{grade-select, mode:'kid'}` | kid grade-select ✅ |
+
+  - ⚠️ **Suggested fix (Minor — silent blank on malformed advanced route):** `parseRoute` falls back to `{screen:'splash'}` for anything unrecognized ([router.js:96](src/router.js#L96)). In **kid** mode that's harmless (splash exists). In **advanced** mode the `switch` in [main.js:115-144](src/main.js#L115-L144) has **no `splash` case**, so a typo'd hash like `#advanced/foo` (or a bare `#advanced/`) sweeps the current screen and renders **nothing** (blank). Not reachable from any in-app link, so event-day risk is ~zero — but a one-line `default: navigate('game-select')` in the advanced switch (mirroring the kid-game unknown-id fallback) would make it self-heal. **Optional.**
 
 ### 6.4 [C] Idle reset preserves leaderboard keys
 - **Spec:** idle timeout clears `sdshc-progress` but keeps all `sdshc-lb-*` keys.
@@ -248,6 +325,8 @@ For each (`adv-spin-wheel, adv-trivia-blitz, adv-jeopardy, adv-word-game, adv-fi
   Object.keys(localStorage).filter(k => k.startsWith('sdshc-'))
   ```
 - **Expect:** `sdshc-progress` gone; `sdshc-lb-kiosk-id` and any other `sdshc-lb-*` survive.
+- **✅ Result (2026-06-10, [C] code-verified):** PASS. The idle-reset callback ([main.js:206-210](src/main.js#L206-L210)) calls `clearProgress()` then `navigateRaw('intro')`. `clearProgress()` removes **only** `sdshc-progress` ([idle-timer.js:126-128](src/idle-timer.js#L126-L128)) — it never touches any `sdshc-lb-*` key. So `sdshc-lb-active-event` and `sdshc-lb-kiosk-id` (both localStorage) survive an idle reset. ✅
+  - **Nuance worth knowing (not a bug):** the reset routes to `#intro`, whose handler calls `clearPlayMode()` — which removes `sdshc-lb-play-mode`. That key is **sessionStorage** and is *meant* to clear so each fresh kiosk user re-picks team/casual; the "all `sdshc-lb-*` survive" guarantee in CLAUDE.md is about the **localStorage** leaderboard keys (active-event, kiosk-id), which it does. Don't flag the play-mode reset as a regression.
 
 ### 6.5 [U] Fully-offline kid-mode play
 - **Steps:** Go offline, hard-reload, play several kid games.
@@ -269,10 +348,13 @@ For each (`adv-spin-wheel, adv-trivia-blitz, adv-jeopardy, adv-word-game, adv-fi
 ### 7.2 [C] Fonts load from bundle (no CDN)
 - **Steps:** Network panel → filter fonts.
 - **Expect:** Silkscreen, 04b03, JetBrains Mono, Noto Sans Symbols 2 all served from `/assets/fonts/...`; zero requests to `fonts.googleapis.com` / `fonts.gstatic.com`.
+- **✅ Result (2026-06-10, [C] grep-verified):** PASS for the app bundle. All four `@font-face` rules in [base.css:2-28](src/styles/base.css#L2-L28) load from `/assets/fonts/` (Silkscreen `.ttf`, 04b03 `.ttf`, JetBrains Mono `.woff2`, Noto Sans Symbols 2 `.ttf`). A repo-wide grep for `fonts.googleapis|fonts.gstatic|@import url|cdn.|unpkg|jsdelivr` (excluding `node_modules`) found **zero** hits in `src/`, `public/`, or `index.html`.
+  - ℹ️ **Note (not in the app bundle):** [other/SDSHC_Games_Hub_GA4_Reference_Guide.html](other/SDSHC_Games_Hub_GA4_Reference_Guide.html) pulls the `Kalnia Glaze` font from Google Fonts. It's a **standalone internal reference doc**, not imported, built, or shipped by Vite — so it doesn't affect the offline kiosk. Harmless; left as-is. (If you ever open it offline it just falls back to a system font.)
 
 ### 7.3 [C] Analytics fails silently when blocked
 - **Steps:** Block GA, play a game.
 - **Expect:** No uncaught errors; gameplay unaffected (`trackEvent` is fire-and-forget).
+- **✅ Result (2026-06-10, [C] code-verified):** PASS. [analytics.js:13-21](src/utils/analytics.js#L13-L21) — `trackEvent` guards on `typeof window.gtag === 'function'` (so a blocked/missing gtag is a no-op, not a throw) **and** wraps the call in `try { … } catch {}`. Every named helper (`trackGameStart`, `trackThemeToggle`, etc.) routes through `trackEvent`, so none can throw. When GA is blocked the calls silently do nothing and gameplay is unaffected. ✅
 
 ---
 

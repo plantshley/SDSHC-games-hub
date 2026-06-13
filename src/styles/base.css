@@ -278,14 +278,43 @@ button {
  * top doesn't get clipped on tall content).
  */
 @media (max-width: 1279px) {
+  /* Size the app to the *dynamic* viewport, not `100vh`. On mobile browsers
+     `100vh` is the LARGEST viewport (URL bar hidden); while the bar is showing
+     the bottom ~120–180px sits below the fold, and since body is
+     `overflow: hidden` and each screen is exactly app-height, there's nothing
+     to scroll into — content is simply cut off and unreachable. `100dvh`
+     tracks the currently-visible area, so screens fit (or overflow-scroll)
+     correctly in-browser. In the installed PWA / kiosk there's no dynamic
+     chrome, so `dvh == vh` and nothing changes. */
+  #app {
+    height: 100dvh;
+  }
   .screen {
     overflow-y: auto;
     overflow-x: hidden;
+    /* Commit touch gestures to vertical scroll immediately (don't wait to
+       disambiguate a pinch-zoom), and stop overscroll from chaining to the
+       browser (pull-to-refresh / bounce). Draggable game children keep their
+       own `touch-action: none`, so dragging is unaffected. */
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+    /* Hide the scroll *bar* (content is still fully scrollable by touch/wheel).
+       A classic space-taking scrollbar reserves ~15px on the right, so centered
+       content lands half-a-scrollbar left of true center — the "cards pushed
+       slightly left" in portrait. Hiding it (this app is touch-first) lets
+       content center on the full width, and removes the bare black scrollbar.
+       No-op on mobile, which already uses zero-width overlay scrollbars. */
+    scrollbar-width: none;
     /* `safe center` keeps vertical centering when content fits and falls back
        to top-align when it would overflow (the centered offset isn't
        scrollable above 0). Screens whose centering doesn't gracefully fall
        back here have their own per-screen flex-start override. */
     justify-content: safe center;
+  }
+  /* WebKit/Blink equivalent of `scrollbar-width: none` (Chrome, Edge, Safari). */
+  .screen::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 }
 
