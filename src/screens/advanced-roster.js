@@ -4,10 +4,12 @@
  * Reached after picking Team Play. Lets the player(s) register the team(s)
  * that will play at this kiosk during the event. New names create teams as
  * `pending` and add them to the event roster as `pending` — admin approves
- * them from the admin panel. The dropdown on game intros sources from the
- * (full) event roster regardless of per-roster approval status, so teams can
- * play immediately even before admin gets to approving them; their scores
- * just don't appear on the public event leaderboard until approval.
+ * them from the admin panel. The autocomplete dropdown on game intros lists
+ * APPROVED teams only (see team-input.js `ensureRosterDatalist`) so unmoderated
+ * names don't get suggested — but a pending team is still immediately playable:
+ * typing its name manually resolves to the existing pending team and tags
+ * scores correctly. Those scores just don't appear on the public event
+ * leaderboard until approval.
  *
  * Approved teams from prior events (in the global teams registry) show up in
  * the autocomplete suggestions so returning teams don't get duplicated.

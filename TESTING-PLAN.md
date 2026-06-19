@@ -73,28 +73,33 @@ Pre (all): `USE_FIRESTORE === true` in [src/firebase/config.js](src/firebase/con
 - **Expect:** Team created with `status: "pending"`, added to the event roster as `pending`. Returns to game-select.
 - **Observe [C]:** In console:
   ```js
-  const api = await import('/src/utils/leaderboard-api.js')
+  const api = await import('/SDSHC-games-hub/src/utils/leaderboard-api.js')
   console.table(await api.listAllTeams())          // new team present, status "pending"
   console.log(await api.getEventRoster(api.getActiveEventId()))
   ```
 - **Observe [U]:** Firebase Console → Firestore → `/teams` shows the new doc; `/events/{id}.roster` contains it.
+- **✅ Result (2026-06-18, [C+U] live):** PASS. `Test High 0618` created with `status:"pending"`, `color1`/`color2` set, `createdByKiosk` populated; `listAllTeams()` shows it and `getEventRoster(activeEvent)` returns one entry. Confirmed visible in the Firebase Console `/teams` + `/events/{id}.roster`.
+  - 🚩 **UX finding surfaced during this test (logged in AUDIT-2026-06.md §E):** the roster screen has **two** buttons — "+ Add team" (commits) and "Start playing →" (just navigates). Typing a name and clicking "Start playing →" **silently drops** the un-committed name (no team created). Reproduced live. See audit for the recommended fix.
 
 ### 1.2 [C+U] Play an advanced game in team mode → score written correctly
 - **Steps:** Enter any advanced game, in team mode assign the player to the team, complete one full run.
 - **Expect:** A `/scores` doc per player with correct `gameId` (e.g. `adv-jeopardy`), `teamId`, `eventId`, `runId`, `points`, `kioskId`, `ts`.
 - **Observe [C]:**
   ```js
-  const api = await import('/src/utils/leaderboard-api.js')
+  const api = await import('/SDSHC-games-hub/src/utils/leaderboard-api.js')
   console.table(await api.listRecentScores(10))
   ```
   Confirm `eventId` is set (team mode + active event) and `teamId` matches the team from 1.1.
 - **Observe [U]:** Firebase Console `/scores` shows the new doc(s).
+- **✅ Result (2026-06-18, [C+U] live):** PASS. Played `adv-jeopardy` in team mode; newest `/scores` row: `teamId` = `64ccc017…` (Test High 0618), `eventId` = `c91d6d93…` (set per `getScoreEventId()` — team mode + active event), `points:300`, `runId`/`kioskId`/`ts` populated, doc id `{runId}__0`. Older casual rows correctly show `teamId:null, eventId:null`. The "Score saved ✓" pill appeared on results (reconfirms 2.5①).
+  - **✅ 4.4 also confirmed live:** the pending team was *not* in the dropdown (approved-only by design), but typing `Test High 0618` manually resolved to the existing pending team and tagged the score — pending teams are immediately playable.
+  - 🚩 **Doc discrepancy found (logged AUDIT §A):** the game-intro dropdown shows **approved teams only** ([team-input.js:44-53](src/utils/team-input.js#L44-L53)) — but CLAUDE.md + [advanced-roster.js:7-10](src/screens/advanced-roster.js#L7-L10) claim it sources from the full roster "regardless of approval." Behavior is intentional and *preferred* by the owner; the **docs** are wrong, not the code.
 
 ### 1.3 [C] Idempotency — re-submitting the same runId does not double-count
 - **Why:** Firestore impl uses deterministic doc IDs `${runId}__${i}` + a guard read on the first entry, so a retried/duplicate `recordScores` overwrites the same docs instead of creating new ones.
 - **Steps (console):**
   ```js
-  const api = await import('/src/utils/leaderboard-api.js')
+  const api = await import('/SDSHC-games-hub/src/utils/leaderboard-api.js')
   const runId = crypto.randomUUID()
   const payload = { gameId:'adv-trivia-blitz', runId,
     entries:[{ playerName:'Idem', teamId:null, points:900 }],
@@ -109,9 +114,10 @@ Pre (all): `USE_FIRESTORE === true` in [src/firebase/config.js](src/firebase/con
 ### 1.4 [C+U] Leaderboard read reflects the score; pending team stays hidden publicly
 - **Steps:** Open the leaderboard modal (trophy button) on This-Month / All-Time tabs.
 - **Expect:** A `pending` team's score does **not** appear on public boards; once approved (Section 3.5) it appears. Current-Event board follows the per-event roster status independently.
+- **✅ Result (2026-06-18, [C+U] live):** PASS. While pending, both `all-time` and `event` boards returned `[]` (hidden). After approving Test High 0618 **statewide** and **for the event** in admin, both boards return it with `normPoints: 10` (= 300 ÷ 3000 par × 100) and `points: 300`. Confirms the hidden→visible flip, **3.5** (both moderation levers), and a **live corroboration of 5.1** par-normalization with real data. Lever independence is code-backed ([leaderboard-api.firestore.js:458-469](src/utils/leaderboard-api.firestore.js#L458-L469)).
 - **Observe [C]:**
   ```js
-  const api = await import('/src/utils/leaderboard-api.js')
+  const api = await import('/SDSHC-games-hub/src/utils/leaderboard-api.js')
   console.log(await api.getLeaderboard({ scope:'all-time' }))
   ```
 
@@ -130,7 +136,7 @@ Pre (all): `USE_FIRESTORE === true` in [src/firebase/config.js](src/firebase/con
 - **Expect:** UI behaves normally; reads serve from cached snapshot; writes queue in Firestore's local mutation queue. No crash, no infinite spinner.
 - **Observe [C] (while offline):**
   ```js
-  const api = await import('/src/utils/leaderboard-api.js')
+  const api = await import('/SDSHC-games-hub/src/utils/leaderboard-api.js')
   console.table(await api.listRecentScores(10))  // shows the offline-written score from cache
   ```
 - **Watch for:** any uncaught promise rejection in console, a blocked UI, or a score the game *thinks* saved but isn't queued (see Section 2.5).
@@ -153,13 +159,19 @@ The fire-and-forget gap is fixed: advanced games call `recordScoresWithStatus()`
 - **Saved offline:** go offline (DevTools → Offline), complete a run → pill shows **"Saved offline — will sync when online"** immediately (it does **not** wait on the commit, which stays pending until reconnect). Then reconnect and confirm the score lands server-side (ties into 2.3). *[U].*
 - **Failure:** force a rejection from the console and confirm the **error** pill appears (not a silent console-only log):
   ```js
-  const { recordScoresWithStatus } = await import('/src/utils/score-save-status.js')
+  const { recordScoresWithStatus } = await import('/SDSHC-games-hub/src/utils/score-save-status.js')
   // points:NaN is skipped by the writer, so to force a reject, call while signed-out
   // against rules, or temporarily break the gameId; observe the pill, not just console.
   recordScoresWithStatus({ gameId:'adv-trivia-blitz', runId:crypto.randomUUID(),
     entries:[{playerName:'ErrTest', teamId:null, points:100}], eventId:null })
   ```
 - **Expect:** the pill is visible and legible at kiosk size and on phones (`max-width: min(90vw, 460px)`), auto-dismisses, and never blocks the results overlay.
+- **✅ Result (2026-06-18, [C+U] live on dev server):** PASS.
+  - **① Saved (online):** ✅ confirmed — "Saving score…" → "Score saved ✓", auto-fades, doesn't block results.
+  - **② Saved offline:** ✅ confirmed via real Wi-Fi toggle (`navigator.onLine === false` path, [score-save-status.js:73-79](src/utils/score-save-status.js#L73-L79)) — pill shows "Saved offline" immediately; localhost dev server keeps serving so the app stays live (no PWA needed — that's only for *cold-loading* offline, tracked in 6.5/6.6).
+  - **③ Failure:** ✅ confirmed-by-construction — same render path as ①/② (`getPill`→`setState`→`scheduleDismiss`) with the `.error` CSS variant present and red in both themes ([advanced.css:3136](src/styles/advanced.css#L3136) dark, [3148](src/styles/advanced.css#L3148) light). The empty-`gameId` reject ([leaderboard-api.firestore.js:406](src/utils/leaderboard-api.firestore.js#L406)) routes to the `.catch` error branch ([score-save-status.js:100-107](src/utils/score-save-status.js#L100-L107)) without any Firestore write.
+  - ℹ️ **Known/accepted limitation:** the pill's theme is stamped at call time (`getPill`), so toggling dark↔light *while a pill is already showing* doesn't recolor it. A pill lives ~3.5s; not reactive by design — non-issue.
+  - 🛠️ **Dev-testing gotcha discovered (doc fix needed):** Vite `base` is `/SDSHC-games-hub/` ([vite.config.js:6](vite.config.js#L6)), so console `import('/SDSHC-games-hub/src/…')` snippets 404 on the dev server — they must be `import('/SDSHC-games-hub/src/…')`. **All console snippets in Sections 1/4/5 below need this prefix.** (Patched in the snippets + noted at the quick-reference section.)
 
 ---
 
@@ -174,6 +186,7 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
 ### 3.2 [U] Sign-in gate behavior
 - **Steps:** Visit `#advanced/admin`. Enter wrong password → expect shake animation + friendly error. Enter correct password → panel unlocks. Reload the page.
 - **Expect:** Session persists across reload (`browserLocalPersistence`) — no re-login needed.
+- **✅ Result (2026-06-18, [U] live):** PASS. Wrong password → shake + error, panel stays locked. Correct password → unlocks. Page reload → still signed in (no re-login). Admin user `admin@sdshc.local` + `/admins/{uid}` confirmed set up in the Firebase Console.
 
 ### 3.3 [C] Idle timer is disabled on admin
 - **Steps (console on `#advanced/admin`):** confirm no idle-warning/reset fires while idle (the route force-disables the timer).
@@ -185,9 +198,10 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
 - **Expect:** Status transitions `scheduled → open → ended → open(reopen)`. Setting an event active clears the session play-mode (re-prompts on next entry). Deleting an event cascades: its tagged scores removed, active-event cleared on this kiosk if it was active.
 - **Observe [C]:**
   ```js
-  const api = await import('/src/utils/leaderboard-api.js')
+  const api = await import('/SDSHC-games-hub/src/utils/leaderboard-api.js')
   console.table(await api.listEvents()); console.log(api.getActiveEventId())
   ```
+- **✅ Result (2026-06-18, [C+U] live — create/start/activate):** PASS. Created `TEST-0618` via admin → `status:"open"`, `roster:[]`, `startedAt` set, `endedAt:null`, `scheduledStart:null`; `getActiveEventId()` returns its id. *End / reopen / schedule / delete-cascade are exercised at teardown (ties to 5.3).*
 
 ### 3.5 [U] Team moderation
 - **Steps:** Approve a pending team **statewide**; separately approve/unapprove a team **for the current event**; remove a team from the event roster; change a team's two colors via the picker.
@@ -230,7 +244,7 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
 ### 4.3 [C] Profanity filter
 - **Steps (console):**
   ```js
-  const { isClean } = await import('/src/utils/profanity.js')
+  const { isClean } = await import('/SDSHC-games-hub/src/utils/profanity.js')
   console.log(isClean('Pierre HS'), isClean('<a known-bad word>'))
   ```
 - **Expect:** clean names `true`, blocked names `false`. **[U]:** confirm the roster UI actually refuses a blocked name inline before creating the team.
@@ -249,8 +263,8 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
 - **Spec:** `displayed = max(0, raw) ÷ par × 100`. A par run ≈ 100; negative runs floor at 0.
 - **Steps (console):** record three runs for one game (raw = par, raw = 2×par, raw = −500) and read the board:
   ```js
-  const api = await import('/src/utils/leaderboard-api.js')
-  const { getGamePar } = await import('/src/data/advanced-game-registry.js')
+  const api = await import('/SDSHC-games-hub/src/utils/leaderboard-api.js')
+  const { getGamePar } = await import('/SDSHC-games-hub/src/data/advanced-game-registry.js')
   getGamePar('adv-jeopardy')   // confirm par used in the math below
   console.log(await api.getLeaderboard({ scope:'all-time' }))
   ```
@@ -344,6 +358,9 @@ For each (`adv-spin-wheel, adv-trivia-blitz, adv-jeopardy, adv-word-game, adv-fi
 ### 7.1 [C+U] No unexpected external calls
 - **Steps:** DevTools Network, block all, reload, play games.
 - **Expect:** Only GA4 (`googletagmanager`) and Firebase endpoints attempt network; everything else is local. Games remain fully playable with network blocked. **[C]:** `list_network_requests` / Network panel review.
+- **✅ Result (2026-06-18, [C+U] runtime-verified via `performance.getEntriesByType('resource')`):** PASS. After exercising intro → kid game → advanced game, the **only** external origins touched were: `www.googletagmanager.com` (GA4 loader ×1), `www.google-analytics.com` (GA4 `collect` ×7), and `firestore.googleapis.com` (Firebase WebChannel ×15). **Zero** font-CDN / other origins — corroborates 7.2 at runtime. GA4 confirmed live (real `page_view`/`mode_select`/`theme_toggle` beacons). Firebase traffic is normal SDK `Listen/channel` transport with a clean `TYPE=terminate` teardown.
+  - ℹ️ *Minor observation (no action):* Firestore keeps `Listen` WebChannels open even though the data layer only does one-shot `getDocs` — that's the `persistentLocalCache` SDK keeping its channel warm. Harmless background chatter on a single kiosk.
+  - 🔜 *Deferred half:* "games still playable while network is blocked" belongs to the **PWA** (6.5/6.6), not the dev server (blocking all network on `npm run dev` just kills the un-cached shell). Tracked there.
 
 ### 7.2 [C] Fonts load from bundle (no CDN)
 - **Steps:** Network panel → filter fonts.
@@ -361,9 +378,11 @@ For each (`adv-spin-wheel, adv-trivia-blitz, adv-jeopardy, adv-word-game, adv-fi
 ## Quick-reference console snippet (paste once per session)
 
 ```js
+// NOTE: the Vite `base` is /SDSHC-games-hub/, so on the DEV SERVER all module
+// import paths need that prefix (a bare /src/… 404s). Confirmed 2026-06-18.
 // Load the live data layer the app actually uses
-window.api = await import('/src/utils/leaderboard-api.js')
-window.reg = await import('/src/data/advanced-game-registry.js')
+window.api = await import('/SDSHC-games-hub/src/utils/leaderboard-api.js')
+window.reg = await import('/SDSHC-games-hub/src/data/advanced-game-registry.js')
 // Common reads
 console.log('kiosk', api.getKioskId(), 'activeEvent', api.getActiveEventId())
 console.table(await api.listAllTeams())
