@@ -18,6 +18,10 @@ Each test lists: **Pre** (precondition) · **Steps** · **Expect** · **Observe*
 
 > **Setup note for [C] Firebase tests:** Firestore's `persistentLocalCache` uses `persistentSingleTabManager` — **single browser tab only**. Open exactly one tab for any Firebase test or the SDK throws on the second tab. For console inspection of Firestore, use the app's own imported functions (see snippets) rather than reaching into IndexedDB directly.
 
+> **⚠️ Dev-server gotchas (learned 2026-06-18/19):**
+> 1. **Base path:** Vite `base` is `/SDSHC-games-hub/`, so console `import()` paths need that prefix (`/SDSHC-games-hub/src/…`), not a bare `/src/…`.
+> 2. **Dev service worker staleness:** the PWA runs a service worker in dev (`devOptions.enabled: true`). After editing source mid-session it can serve **stale/mixed modules** to the app flow even though the console `import()` pulls fresh code — which looks like "the feature worked, then stopped for no reason." When in doubt after a code edit: DevTools → Application → Service Workers → **Unregister** + **Clear site data**, then reload (or restart `npm run dev`). This bit us once chasing a "missing pill" that was just stale-bundle.
+
 ---
 
 ## Recommended execution order
@@ -140,11 +144,14 @@ Pre (all): `USE_FIRESTORE === true` in [src/firebase/config.js](src/firebase/con
   console.table(await api.listRecentScores(10))  // shows the offline-written score from cache
   ```
 - **Watch for:** any uncaught promise rejection in console, a blocked UI, or a score the game *thinks* saved but isn't queued (see Section 2.5).
+- **❌ Result (2026-06-19, [C+U] live) — FAIL → CRITICAL BUG FOUND.** Completing a team-mode run **offline** shows the "Saved offline" pill but **no score is queued** — `listRecentScores` stays at the same count offline *and* after reconnect (no new doc ever, server-side included). Console showed `recordScores failed FirebaseError: Failed to get document because the client is offline.` **Root cause:** the idempotency-guard `getDoc(\`${runId}__0\`)` ([leaderboard-api.firestore.js:411](src/utils/leaderboard-api.firestore.js#L411)) throws offline for the never-cached new runId, so `recordScores` rejects *before* the `batch.set`/`commit` that would queue the write; `score-save-status.js` had already shown the optimistic "Saved offline" pill and swallowed the rejection. **Impact:** every score earned during an offline event is silently lost. **Logged as AUDIT §E-6 [CRITICAL].** Fix = wrap the guard in try/catch (deterministic doc ids + `set()` keep it idempotent on replay). **2.3 cannot pass until this is fixed** (nothing to replay).
+- **✅ RE-TEST (2026-06-19, after fix) — PASS.** Wrapped the guard `getDoc` in try/catch ([leaderboard-api.firestore.js:410-422](src/utils/leaderboard-api.firestore.js#L410-L422)). Verified via a direct offline `recordScores` call (isolated from game UI): offline → `count` +1, `queued? true`, **no** `recordScores failed` error. Build passes. *(Note on game UI: a run records on game completion or via the dedicated **Quit** button — both call `recordScoresWithStatus`; the Home/back arrow intentionally discards with a "progress will be lost" warning. Confirmed working-as-intended and kept as-is per owner.)*
 
 ### 2.3 [U] Reconnect → auto-replay, no duplicates
 - **Steps:** Re-enable network. Wait a few seconds.
 - **Expect:** Firestore auto-flushes the mutation queue to the cloud. The offline-created team and scores now appear server-side; **no duplicates** of what was already written.
 - **Observe [U]:** Firebase Console shows exactly the offline-created docs once each. **Observe [C]:** counts before/after reconnect match (no doubling).
+- **✅ Result (2026-06-19, [C+U] live, after E-6 fix) — PASS.** Re-enabled the network: the offline-queued score replayed automatically — `count` unchanged from offline, `present once? 1` (no duplicate), `✓ commit resolved` fired, and the doc appears in the Firebase Console exactly once. Confirms deterministic-doc-id idempotency end-to-end (offline write → reconnect replay, no dupes).
 
 ### 2.4 [U] Two-kiosk offline name collision *(needs 2 devices)*
 - **Pre:** Both kiosks offline, same active event.
@@ -170,6 +177,7 @@ The fire-and-forget gap is fixed: advanced games call `recordScoresWithStatus()`
   - **① Saved (online):** ✅ confirmed — "Saving score…" → "Score saved ✓", auto-fades, doesn't block results.
   - **② Saved offline:** ✅ confirmed via real Wi-Fi toggle (`navigator.onLine === false` path, [score-save-status.js:73-79](src/utils/score-save-status.js#L73-L79)) — pill shows "Saved offline" immediately; localhost dev server keeps serving so the app stays live (no PWA needed — that's only for *cold-loading* offline, tracked in 6.5/6.6).
   - **③ Failure:** ✅ confirmed-by-construction — same render path as ①/② (`getPill`→`setState`→`scheduleDismiss`) with the `.error` CSS variant present and red in both themes ([advanced.css:3136](src/styles/advanced.css#L3136) dark, [3148](src/styles/advanced.css#L3148) light). The empty-`gameId` reject ([leaderboard-api.firestore.js:406](src/utils/leaderboard-api.firestore.js#L406)) routes to the `.catch` error branch ([score-save-status.js:100-107](src/utils/score-save-status.js#L100-L107)) without any Firestore write.
+  - ⚙️ **Product change (owner, 2026-06-19):** the pill will become **error-only** — `saving`/`saved`/`queued`(offline) suppressed, only the red error pill shows. So the "all three states render" expectation above is superseded; after the E-1b change the only state to verify visually is the **error** pill. (Success/offline saves still happen — E-6 fix intact — they're just silent.)
   - ℹ️ **Known/accepted limitation:** the pill's theme is stamped at call time (`getPill`), so toggling dark↔light *while a pill is already showing* doesn't recolor it. A pill lives ~3.5s; not reactive by design — non-issue.
   - 🛠️ **Dev-testing gotcha discovered (doc fix needed):** Vite `base` is `/SDSHC-games-hub/` ([vite.config.js:6](vite.config.js#L6)), so console `import('/SDSHC-games-hub/src/…')` snippets 404 on the dev server — they must be `import('/SDSHC-games-hub/src/…')`. **All console snippets in Sections 1/4/5 below need this prefix.** (Patched in the snippets + noted at the quick-reference section.)
 
@@ -202,6 +210,7 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
   console.table(await api.listEvents()); console.log(api.getActiveEventId())
   ```
 - **✅ Result (2026-06-18, [C+U] live — create/start/activate):** PASS. Created `TEST-0618` via admin → `status:"open"`, `roster:[]`, `startedAt` set, `endedAt:null`, `scheduledStart:null`; `getActiveEventId()` returns its id. *End / reopen / schedule / delete-cascade are exercised at teardown (ties to 5.3).*
+- **✅ Result (2026-06-19, [C+U] live — delete):** PASS. Deleting `TEST-0618` removed the event, cascade-deleted its tagged scores, and cleared the active event (`getActiveEventId()` → `null`). *(Schedule-for-later + end/reopen transitions not separately exercised — recommend a quick [U] pass before the event, but create/activate/delete + cascade are confirmed.)*
 
 ### 3.5 [U] Team moderation
 - **Steps:** Approve a pending team **statewide**; separately approve/unapprove a team **for the current event**; remove a team from the event roster; change a team's two colors via the picker.
@@ -210,6 +219,7 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
 ### 3.6 [U] Score moderation
 - **Steps:** In Recent Scores, delete a row (with confirm).
 - **Expect:** Row removed; leaderboard totals recompute. (Deleting a team also cascades its scores — verify in Section 2.4 merge.)
+- **✅ Result (2026-06-19, teardown) — PASS (full).** Deleted the 4 leftover casual scores via the **admin Recent Scores per-row delete UI** (button + confirm) → `remaining: 0`. Both the admin UI and the underlying `deleteScore` are confirmed working.
 
 ### 3.7 [C] Security spot-check (read the rules, don't pen-test prod)
 - **Confirm in [firestore.rules](firestore.rules):** writes to teams/events/scores require `isAdmin()` except the intentionally-open paths (pending-team create, roster append). Note these accepted soft-spots in the audit; no action unless the event threat model changes.
@@ -294,6 +304,7 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
   - **`deleteEvent(id)`** ([leaderboard-api.firestore.js:303-312](src/utils/leaderboard-api.firestore.js#L303-L312)): deletes the event doc, batch-deletes `/scores where eventId == id`, and calls `setActiveEventId(null)` if it was the active event on this kiosk. ✅
   - **`mergeTeams(fromId, toId)`** ([leaderboard-api.firestore.js:232-249](src/utils/leaderboard-api.firestore.js#L232-L249)) re-tags all of `from`'s scores onto `to` then deletes `from` — the 2.4 collision-cleanup path is sound at the code level (its real-device half stays [U]).
   - *Note:* `deleteTeam` intentionally does **not** touch `eventId` on any surviving casual/other scores, and leaves scores with `teamId:null` (casual) untouched — correct, those aren't the team's.
+- **✅ Result (2026-06-19, [C+U] live, teardown):** PASS. Deleted `Test High 0618` → `team gone? true`, `team scores left: 0` (the 300 + 500 cascade-deleted), event roster `[]`. Deleted `TEST-0618` → `event gone? true`, `getActiveEventId()` → `null`. Casual `teamId:null` scores correctly untouched by both. Confirms team cascade (scores + roster) and event cascade (scores + active-event clear) end-to-end. *(Admin Recent Scores table showed stale "(no team)" rows until refreshed — display-only, data was correct per console.)*
 
 ---
 

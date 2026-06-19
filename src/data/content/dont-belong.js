@@ -45,7 +45,7 @@ export const LEVELS = [
     categoryReveal: "They're all animals! 🐰🐷🦆",
   },
 
-  // ── Level 4: Elements vs Concrete ──
+  // ── Level 4: Nature vs Snack ──
   {
     id: 'elements-vs-concrete',
     items: [
@@ -55,7 +55,7 @@ export const LEVELS = [
       { id: 'wind', label: 'Wind', asset: '/assets/sprites/wind-pixel.png' },
     ],
     answer: 'grape',
-    categoryReveal: "They're all elements! 💧🌍💨",
+    categoryReveal: "The rest are parts of nature! 💧🌍💨 The grape is a yummy snack.",
   },
 ]
 

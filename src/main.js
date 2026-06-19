@@ -143,6 +143,7 @@ function handleRoute(route) {
       default:
         // Unrecognized advanced sub-route (e.g. a typo'd hash) — self-heal to
         // the game grid instead of sweeping the screen and rendering nothing.
+        console.warn('[router] Unrecognized advanced route:', route.screen)
         navigate('game-select')
     }
     return

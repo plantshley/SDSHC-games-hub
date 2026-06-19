@@ -408,8 +408,22 @@ export async function recordScores({ gameId, runId, entries, eventId }) {
   if (!Array.isArray(entries)) throw new Error('entries must be an array')
 
   // Idempotency guard: if the first entry of this run already exists, skip.
-  const firstExisting = await getDoc(doc(getDb(), C_SCORES, `${runId}__0`))
-  if (firstExisting.exists()) return
+  // Wrapped in try/catch because getDoc throws offline ("client is offline")
+  // for a doc id the cache has never seen — which a fresh runId always is.
+  // The guard is only an optimization: the deterministic doc ids (`{runId}__{i}`)
+  // + set() below keep the write idempotent on replay regardless, so when the
+  // guard can't run (offline) we skip it and queue the write instead of
+  // aborting — otherwise every score earned offline would be silently lost.
+  try {
+    const firstExisting = await getDoc(doc(getDb(), C_SCORES, `${runId}__0`))
+    if (firstExisting.exists()) return
+  } catch {
+    // Intentionally broad: the guard is only an optimization, so fail OPEN on
+    // ANY getDoc error (offline throws for an uncached id — that must never
+    // abort the write, or offline scores are lost). Deterministic ids + set()
+    // keep replay idempotent, and a genuine error (e.g. permission-denied)
+    // still surfaces when batch.commit() runs below.
+  }
 
   const ts = Date.now()
   const kioskId = getKioskId()

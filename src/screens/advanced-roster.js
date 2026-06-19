@@ -110,6 +110,7 @@ export function createAdvancedRosterScreen() {
     errorEl.textContent = msg || ''
   }
 
+  let isAdding = false
   async function handleAdd() {
     const val = input.value.trim()
     if (!val) {
@@ -121,7 +122,13 @@ export function createAdvancedRosterScreen() {
       showError('That name isn\'t allowed — try another.')
       return
     }
+    // Guard against concurrent adds — e.g. tapping "+ Add team" then "Start
+    // playing →" in quick succession (both call handleAdd). Without this, two
+    // in-flight calls can each create the team / push a roster entry before
+    // either write lands, producing a duplicate.
+    if (isAdding) return
     showError('')
+    isAdding = true
     try {
       const result = await getOrCreateTeam(val, colorPicker.getValue())
       await addTeamToEventRoster(eventId, result.teamId)
@@ -133,6 +140,8 @@ export function createAdvancedRosterScreen() {
     } catch (err) {
       console.error('roster add failed', err)
       showError('Could not add team. Try again.')
+    } finally {
+      isAdding = false
     }
   }
 
@@ -147,7 +156,14 @@ export function createAdvancedRosterScreen() {
     }
   })
 
-  onTap(screen.querySelector('#adv-roster-continue'), () => {
+  onTap(screen.querySelector('#adv-roster-continue'), async () => {
+    // If the player typed a team name but didn't tap "+ Add team", commit it now
+    // so it isn't silently dropped. handleAdd clears the input on success and
+    // leaves it (with an error shown) on failure — only navigate once it's clean.
+    if (input.value.trim()) {
+      await handleAdd()
+      if (input.value.trim()) return // add failed (e.g. blocked name) — let them fix it
+    }
     navigate('game-select')
   })
 
