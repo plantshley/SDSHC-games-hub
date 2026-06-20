@@ -1,31 +1,33 @@
 /**
  * Score-save status pill.
  *
- * Advanced games previously fired `recordScores(...).catch(console.error)` — so
- * a failed (or merely pending) save was invisible to players, who'd walk away
- * believing their team scored. This wraps `recordScores` and surfaces a small,
- * non-blocking pill: saving → saved / saved-offline / couldn't-save.
+ * Advanced games fire `recordScoresWithStatus(...)` on results. Per owner
+ * preference (2026-06-19) the pill is ERROR-ONLY: a successful save (online) or
+ * a safely-queued offline save shows NOTHING — only a genuine save failure
+ * surfaces a small, non-blocking "Couldn't save score — tell an organizer" pill.
  *
  * It never rejects. Returns Promise<boolean> (true = saved or safely queued,
  * false = failed) for callers that care; callers may ignore it exactly like the
  * old fire-and-forget pattern.
  *
- * Offline note: with Firestore offline persistence the write is cached
- * immediately but `batch.commit()` does NOT resolve until reconnect. So when
- * the browser reports offline we show "saved offline" right away instead of
- * waiting on a promise that won't settle until the network returns.
+ * Offline note: with Firestore offline persistence an offline write is cached
+ * immediately and replays on reconnect (idempotent via deterministic doc ids in
+ * recordScores). `batch.commit()` doesn't resolve until reconnect, so offline we
+ * fire the write and report success immediately rather than awaiting a promise
+ * that won't settle until the network returns.
  */
 
 import { recordScores } from './leaderboard-api.js'
 
+// Only `error` is rendered today (success/offline are silent per owner
+// preference); the other entries are retained as the CSS-class map in case
+// success feedback is ever re-enabled.
 const STATES = {
   saving: { text: 'Saving score…', cls: 'saving' },
   saved:  { text: 'Score saved ✓', cls: 'saved' },
   queued: { text: 'Saved offline — will sync when online', cls: 'queued' },
   error:  { text: "Couldn't save score — tell an organizer", cls: 'error' },
 }
-
-const SLOW_MS = 6000 // online but unsettled this long → treat as queued
 
 function getPill() {
   let pill = document.querySelector('.score-save-pill')
@@ -68,39 +70,18 @@ const isOffline = () =>
  * @returns {Promise<boolean>}
  */
 export function recordScoresWithStatus(payload) {
-  const pill = getPill()
-
+  // Success + offline-queued saves are SILENT (owner preference); only a real
+  // failure surfaces a pill. Offline writes still queue and replay on reconnect.
   if (isOffline()) {
-    setState(pill, 'queued')
-    scheduleDismiss(pill, 4500)
-    // Still issue the write so Firestore queues it for replay on reconnect.
     recordScores(payload).catch(err => console.error('recordScores failed', err))
     return Promise.resolve(true)
   }
 
-  setState(pill, 'saving')
-
-  let settled = false
-  const slowTimer = setTimeout(() => {
-    if (!settled) {
-      // Commit is dragging (flaky network); reassure rather than spin forever.
-      setState(pill, 'queued')
-      scheduleDismiss(pill, 4500)
-    }
-  }, SLOW_MS)
-
   return recordScores(payload)
-    .then(() => {
-      settled = true
-      clearTimeout(slowTimer)
-      setState(pill, 'saved')
-      scheduleDismiss(pill, 3500)
-      return true
-    })
+    .then(() => true)
     .catch(err => {
-      settled = true
-      clearTimeout(slowTimer)
       console.error('recordScores failed', err)
+      const pill = getPill()
       setState(pill, 'error')
       scheduleDismiss(pill, 6000)
       return false

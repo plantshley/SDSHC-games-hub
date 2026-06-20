@@ -14,7 +14,7 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { createLeaderboardButton } from '../../utils/leaderboard-modal.js'
-import { renderTeamPlayerRows } from '../../utils/team-input.js'
+import { renderTeamPlayerRows, commitTeams } from '../../utils/team-input.js'
 import { recordScoresWithStatus } from '../../utils/score-save-status.js'
 import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
@@ -104,7 +104,11 @@ function createIntroScreen() {
   onTap(el.querySelector('#adv-wg-plus'), () => updateCount(1))
   onTap(el.querySelector('#adv-wg-rminus'), () => updateRounds(-1))
   onTap(el.querySelector('#adv-wg-rplus'), () => updateRounds(1))
-  onTap(el.querySelector('#adv-wg-start'), () => {
+  let starting = false
+  onTap(el.querySelector('#adv-wg-start'), async () => {
+    if (starting) return
+    starting = true
+    await commitTeams(players)
     trackGameStart('adv-word-game', 'advanced', { playerCount: players.length })
     transitionTo(el, createGameplayScreen(players, rounds))
   })

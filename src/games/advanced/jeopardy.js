@@ -13,7 +13,7 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { createLeaderboardButton } from '../../utils/leaderboard-modal.js'
-import { renderTeamPlayerRows } from '../../utils/team-input.js'
+import { renderTeamPlayerRows, commitTeams } from '../../utils/team-input.js'
 import { recordScoresWithStatus } from '../../utils/score-save-status.js'
 import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
@@ -79,7 +79,11 @@ function createIntroScreen() {
   onTap(el.querySelector('#adv-jp-back'), () => navigate('game-select'))
   onTap(el.querySelector('#adv-jp-minus'), () => updateCount(-1))
   onTap(el.querySelector('#adv-jp-plus'), () => updateCount(1))
-  onTap(el.querySelector('#adv-jp-start'), () => {
+  let starting = false
+  onTap(el.querySelector('#adv-jp-start'), async () => {
+    if (starting) return
+    starting = true
+    await commitTeams(players)
     trackGameStart('adv-jeopardy', 'advanced', { playerCount: players.length })
     transitionTo(el, createGameplayScreen(players))
   })

@@ -34,6 +34,10 @@ const DATALIST_ID = 'adv-team-datalist'
 // team rows without re-fetching and wiping the whole list.
 const rosterByContainer = new WeakMap()
 
+// Player object → its row's resolveTeam fn, so commitTeams(players) can force a
+// typed-but-uncommitted team name to resolve before a game snapshots players.
+const resolverByPlayer = new WeakMap()
+
 /**
  * Refresh the shared <datalist> with this event's APPROVED roster names only.
  * Pending teams are intentionally excluded — players shouldn't see unmoderated
@@ -80,6 +84,31 @@ export function renderTeamPlayerRows(container, players, options = {}) {
 
   if (wantMode === 'team') reconcileTeamRows(container, players, eventId, opts)
   else reconcileCasualRows(container, players, opts)
+}
+
+/**
+ * Force any typed-but-uncommitted team names to resolve to teamIds before a
+ * game snapshots its players. Each advanced game's Start handler awaits this.
+ *
+ * Why it's needed: tapping Start blurs the team field, which fires resolveTeam
+ * asynchronously — but the game copies `players` synchronously right after,
+ * freezing teamId=null, so the run records teamless. Awaiting here guarantees
+ * teamId has landed before the snapshot.
+ *
+ * Works offline too: getOrCreateTeam + addTeamToEventRoster use settleWrite, so
+ * their Firestore writes don't block while offline (they cache immediately and
+ * replay on reconnect). That keeps this awaitable in both states, so teamId
+ * lands before the snapshot even for a team created offline in the PWA. Capped
+ * at 4s so a genuinely stuck resolution can't trap the player at the intro.
+ */
+export function commitTeams(players) {
+  if (!Array.isArray(players)) return Promise.resolve()
+  const resolvers = players.map(p => resolverByPlayer.get(p)).filter(Boolean)
+  if (resolvers.length === 0) return Promise.resolve()
+  return Promise.race([
+    Promise.all(resolvers.map(r => r())),
+    new Promise(res => setTimeout(res, 4000)),
+  ])
 }
 
 /* ─── Row enter / exit animation helpers ─── */
@@ -204,47 +233,76 @@ function attachTeamRowHandlers(row, player, i, players, eventId, roster, { nameP
   const input = row.querySelector('.adv-team-input')
   const fb = row.querySelector('.adv-team-feedback')
 
-  const resolveTeam = async () => {
+  // Serialize this row's resolutions through one chain so two commits never run
+  // getOrCreateTeam concurrently. Concurrent "does this name exist?" queries are
+  // exactly what create duplicate team docs: both see "no" and both create. With
+  // a chain, the first create completes (and becomes queryable) before the next
+  // queued resolution runs, so it finds the existing team instead of duplicating
+  // — for ANY interleaving (change+blur, or edit-then-recommit-back).
+  let chain = Promise.resolve()
+  let resolvedVal = null   // value last resolved onto player.teamId
+
+  const resolveTeam = () => {
     const val = input.value.trim()
     if (!val) {
       player.teamId = null
       player.teamName = ''
+      resolvedVal = null
       fb.className = 'adv-team-feedback'
       fb.textContent = ''
-      return
+      return Promise.resolve()
     }
     if (!isClean(val)) {
       player.teamId = null
       player.teamName = ''
+      resolvedVal = null
       fb.className = 'adv-team-feedback adv-team-feedback-error'
       fb.textContent = 'Pick a different name'
-      return
+      return Promise.resolve()
     }
-    try {
-      const result = await getOrCreateTeam(val)
-      // Whether the team was pre-existing or just created, add it to the
-      // event roster (idempotent) so future player setups can pick it.
-      await addTeamToEventRoster(eventId, result.teamId)
-      const updatedRoster = await getEventRoster(eventId)
-      ensureRosterDatalist(updatedRoster)
-      // Keep the per-container roster cache fresh so rows added afterward see
-      // the team that was just registered.
-      const owner = row.parentElement
-      if (owner) rosterByContainer.set(owner, updatedRoster)
-      const rEntry = updatedRoster.find(r => r.teamId === result.teamId)
-      player.teamId = result.teamId
-      player.teamName = result.name
-      if (rEntry && rEntry.rosterStatus === 'approved') {
-        fb.className = 'adv-team-feedback adv-team-feedback-approved'
-        fb.textContent = '✓ on roster'
-      } else {
-        fb.className = 'adv-team-feedback adv-team-feedback-pending'
-        fb.textContent = '↻ awaiting approval'
+    // Already committed this exact name — no new work, but return the chain so a
+    // caller (commitTeams) still awaits any resolution still in flight.
+    if (val === resolvedVal && player.teamId) return chain
+
+    chain = chain.then(async () => {
+      // A prior queued resolution may have already handled this exact value.
+      if (val === resolvedVal && player.teamId) return
+      try {
+        const result = await getOrCreateTeam(val)
+        // Tag the player as early as possible — before the (idempotent) roster
+        // writes — so teamId is set the moment the team doc exists. A game's
+        // Start handler awaits commitTeams() before snapshotting players, so
+        // this is what keeps scores carrying the team instead of recording
+        // teamless.
+        player.teamId = result.teamId
+        player.teamName = result.name
+        resolvedVal = val
+        // Whether pre-existing or just created, add it to the event roster
+        // (idempotent) so future player setups can pick it.
+        await addTeamToEventRoster(eventId, result.teamId)
+        const updatedRoster = await getEventRoster(eventId)
+        ensureRosterDatalist(updatedRoster)
+        // Keep the per-container roster cache fresh so rows added afterward see
+        // the team that was just registered.
+        const owner = row.parentElement
+        if (owner) rosterByContainer.set(owner, updatedRoster)
+        const rEntry = updatedRoster.find(r => r.teamId === result.teamId)
+        if (rEntry && rEntry.rosterStatus === 'approved') {
+          fb.className = 'adv-team-feedback adv-team-feedback-approved'
+          fb.textContent = '✓ on roster'
+        } else {
+          fb.className = 'adv-team-feedback adv-team-feedback-pending'
+          fb.textContent = '↻ awaiting approval'
+        }
+      } catch (err) {
+        console.error('team lookup failed', err)
       }
-    } catch (err) {
-      console.error('team lookup failed', err)
-    }
+    })
+    return chain
   }
+
+  // Let commitTeams(players) force this row to resolve before a game starts.
+  resolverByPlayer.set(player, resolveTeam)
 
   // Resolve/create only on commit — tapping out (blur), Enter, or picking a
   // datalist option (change). Resolving on every keystroke would spawn a
@@ -271,6 +329,7 @@ function attachTeamRowHandlers(row, player, i, players, eventId, roster, { nameP
 
   // Pre-fill feedback if the player already had a team selected.
   if (player.teamId) {
+    resolvedVal = player.teamName
     const rEntry = roster.find(r => r.teamId === player.teamId)
     if (rEntry && rEntry.rosterStatus === 'approved') {
       fb.className = 'adv-team-feedback adv-team-feedback-approved'

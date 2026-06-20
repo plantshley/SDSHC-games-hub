@@ -25,11 +25,11 @@ export const LEVELS = [
         items: [
           { id: 'broccoli', label: 'Broccoli', asset: '/assets/sprites/Basic_Grass_Biom_things_tree2.png' },
           { id: 'artichoke', label: 'Artichoke', asset: '/assets/sprites/artichoke-pixel.png' },
-          { id: 'coconut', label: 'Coconut', asset: '/assets/sprites/coconut-pixel.png' },
+          { id: 'beans', label: 'Beans', asset: '/assets/sprites/beans-pixel.png' },
           { id: 'squash', label: 'Squash', asset: '/assets/sprites/squash-pixel3.png' },
         ],
         answer: 'squash',
-        explanation: 'Broccoli and artichoke are flower buds, and coconut is a seed. Squash is a fruit!',
+        explanation: 'Broccoli and artichoke are flower buds, and beans are seeds. Squash is the only fruit!',
       },
       {
         items: [
@@ -46,7 +46,7 @@ export const LEVELS = [
           { id: 'lettuce2', label: 'Lettuce', asset: '/assets/sprites/lettuce-pixel2.png' },
           { id: 'wheat', label: 'Wheat', asset: '/assets/sprites/wheat-pixel.png' },
           { id: 'beans', label: 'Beans', asset: '/assets/sprites/beans-pixel.png' },
-          { id: 'coconut2', label: 'Coconut', asset: '/assets/sprites/coconut-pixel.png' },
+          { id: 'barley2', label: 'Barley', asset: '/assets/sprites/Barley-pixel.png' },
         ],
         answer: 'lettuce2',
         explanation: 'The rest are all seeds! Lettuce is a leaf.',

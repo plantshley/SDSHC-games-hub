@@ -268,7 +268,7 @@ export function createAdvancedAdminScreen() {
       const id = row.dataset.id
       onTap(row.querySelector('[data-act="approve"]'), async () => {
         await approveTeam(id)
-        await renderPending(); await renderTeams(); await renderRoster()
+        await renderPending(); await renderTeams(); await renderRoster(); await renderScores()
       })
       row.querySelector('[data-act="remove"]').addEventListener('click', async () => {
         if (!window.confirm('Remove this team AND all its score entries? This cannot be undone.')) return
@@ -280,7 +280,7 @@ export function createAdvancedAdminScreen() {
         const next = window.prompt('Rename team to:', cur)
         if (next && next.trim()) {
           await renameTeam(id, next.trim())
-          await renderPending(); await renderTeams(); await renderRoster()
+          await renderPending(); await renderTeams(); await renderRoster(); await renderScores()
         }
       })
       onTap(row.querySelector('[data-act="colors"]'), () => {
@@ -321,14 +321,14 @@ export function createAdvancedAdminScreen() {
       list.querySelectorAll('.adv-admin-row').forEach(row => {
         const id = row.dataset.id
         onTap(row.querySelector('[data-act="approve"]'), async () => {
-          await approveTeam(id); await renderTeams(); await renderPending(); await renderRoster()
+          await approveTeam(id); await renderTeams(); await renderPending(); await renderRoster(); await renderScores()
         })
         row.querySelector('[data-act="rename"]')?.addEventListener('click', async () => {
           const cur = row.querySelector('.adv-admin-row-name').textContent
           const next = window.prompt('Rename team to (merges if name matches another team):', cur)
           if (next && next.trim()) {
             await renameTeam(id, next.trim())
-            await renderTeams(); await renderPending(); await renderRoster()
+            await renderTeams(); await renderPending(); await renderRoster(); await renderScores()
           }
         })
         row.querySelector('[data-act="delete"]')?.addEventListener('click', async () => {
@@ -422,11 +422,19 @@ export function createAdvancedAdminScreen() {
     el.innerHTML = `
       <ul class="adv-admin-list">
         ${scores.map(s => {
-          const teamName = s.teamId ? (teamMap.get(s.teamId)?.name || '(deleted team)') : '(no team)'
+          const team = s.teamId ? teamMap.get(s.teamId) : null
+          const teamName = s.teamId ? (team?.name || '(deleted team)') : '(no team)'
+          // Show a status badge while the team isn't approved (pending/hidden) so
+          // an organizer can see this score won't appear on the public board yet.
+          // Read live from the team doc, so a rename/approve here reflects after
+          // renderScores() re-runs (rename/approve handlers now call it).
+          const statusTag = team && team.status !== 'approved'
+            ? ` <span class="adv-admin-row-status adv-admin-status-${team.status}">${team.status}</span>`
+            : ''
           const evName = s.eventId ? (eventMap.get(s.eventId)?.name || '(deleted event)') : ''
           return `
             <li class="adv-admin-row" data-id="${s.id}">
-              <span class="adv-admin-row-name">${escapeHtml(teamName)} ${'·'} <span class="adv-admin-row-faint">${escapeHtml(s.playerName)}</span></span>
+              <span class="adv-admin-row-name">${escapeHtml(teamName)}${statusTag} ${'·'} <span class="adv-admin-row-faint">${escapeHtml(s.playerName)}</span></span>
               <span class="adv-admin-row-meta">${escapeHtml(s.gameId)} ${'·'} ${formatDate(s.ts)} ${evName ? `${'·'} ${escapeHtml(evName)}` : ''}</span>
               <span class="adv-admin-row-points">${s.points} pts</span>
               <span class="adv-admin-row-actions">

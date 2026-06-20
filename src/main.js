@@ -20,7 +20,7 @@ import { createAdvancedRosterScreen } from './screens/advanced-roster.js'
 import { createAdvancedAdminScreen } from './screens/advanced-admin.js'
 import { getGameById } from './data/game-registry.js'
 import { getAdvancedGameById } from './data/advanced-game-registry.js'
-import { getActiveEventId } from './utils/leaderboard-api.js'
+import { getActiveEventId, setActiveEventId, listEvents } from './utils/leaderboard-api.js'
 import { warmOfflineCache, isWarmedForBuild } from './utils/offline-warmup.js'
 
 const app = document.getElementById('app')
@@ -115,13 +115,7 @@ function handleRoute(route) {
   if (route.mode === 'advanced') {
     switch (route.screen) {
       case 'game-select':
-        // If an event is active and the player hasn't chosen a play mode this
-        // session, redirect to the play-mode prompt first.
-        if (getActiveEventId() && !getPlayMode()) {
-          navigateRaw('advanced/play-mode')
-          return
-        }
-        switchScreen(createAdvancedGameSelectScreen())
+        handleAdvancedGameSelect()
         break
       case 'play-mode':
         switchScreen(createAdvancedPlayModeScreen())
@@ -143,9 +137,59 @@ function handleRoute(route) {
       default:
         // Unrecognized advanced sub-route (e.g. a typo'd hash) — self-heal to
         // the game grid instead of sweeping the screen and rendering nothing.
+        console.warn('[router] Unrecognized advanced route:', route.screen)
         navigate('game-select')
     }
     return
+  }
+}
+
+/**
+ * Advanced game-select entry. If this kiosk has an active event and the player
+ * hasn't chosen a play mode this session, prompt team-vs-casual first — but only
+ * after confirming the active event still exists and is open. A stale pointer
+ * (event ended/deleted, possibly on another kiosk while this one held the id in
+ * localStorage) is cleared so we don't prompt team play for a dead event.
+ */
+async function handleAdvancedGameSelect() {
+  const entryHash = location.hash
+  const activeId = getActiveEventId()
+  if (activeId && !getPlayMode()) {
+    const status = await activeEventStatus(activeId)
+    // A newer navigation superseded us while awaiting the event read — let it
+    // own the screen instead of switching on top of it.
+    if (location.hash !== entryHash) return
+    if (status === 'open') {
+      navigateRaw('advanced/play-mode')
+      return
+    }
+    // Clear only when CONFIRMED gone or ended, so this kiosk stands down when an
+    // event ends/deletes elsewhere. A scheduled event, or a transient read
+    // failure, keeps the pointer and just skips the prompt this time.
+    if (status === 'invalid') setActiveEventId(null)
+  }
+  if (location.hash !== entryHash) return
+  switchScreen(createAdvancedGameSelectScreen())
+}
+
+/**
+ * 'open'    — event exists and is running → prompt team play.
+ * 'invalid' — event is deleted or ended → stale, clear the pointer.
+ * 'pending' — event exists but is scheduled (not open yet) → skip prompt, keep it.
+ * 'unknown' — read failed (e.g. offline + uncached) → skip prompt, keep it.
+ * Uses listEvents (a cached collection read that doesn't throw offline) rather
+ * than a single-doc get (which throws for an id the cache has never seen).
+ */
+async function activeEventStatus(activeId) {
+  try {
+    const events = await listEvents()
+    const ev = events.find(e => e.id === activeId)
+    if (!ev) return 'invalid'
+    if (ev.status === 'open') return 'open'
+    if (ev.status === 'ended') return 'invalid'
+    return 'pending'
+  } catch {
+    return 'unknown'
   }
 }
 
