@@ -20,6 +20,8 @@ import {
   initializeFirestore,
   persistentLocalCache,
   persistentSingleTabManager,
+  enableNetwork,
+  disableNetwork,
 } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { firebaseConfig, FIREBASE_CONFIGURED } from './config.js'
@@ -46,8 +48,26 @@ export function getDb() {
         tabManager: persistentSingleTabManager(),
       }),
     })
+    bindNetworkToOnlineState(_db)
   }
   return _db
+}
+
+/**
+ * Keep Firestore's network state in sync with the browser's online/offline
+ * status. Without this, an offline read (getDoc/getDocs, default source) tries
+ * the server first and only falls back to cache AFTER a network timeout — so
+ * every read stalls for seconds while offline. disableNetwork() makes reads
+ * serve straight from cache instantly; enableNetwork() on reconnect flushes
+ * queued writes. (Writes still don't settle while disabled — settleWrite in the
+ * data layer handles their non-resolving promises so the UI never blocks.)
+ */
+function bindNetworkToOnlineState(db) {
+  if (typeof window === 'undefined') return
+  window.addEventListener('online', () => { enableNetwork(db).catch(() => {}) })
+  window.addEventListener('offline', () => { disableNetwork(db).catch(() => {}) })
+  // Apply the current state immediately (e.g. PWA launched already offline).
+  if (navigator.onLine === false) disableNetwork(db).catch(() => {})
 }
 
 export function getFirebaseAuth() {

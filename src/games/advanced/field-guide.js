@@ -13,7 +13,7 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { createLeaderboardButton } from '../../utils/leaderboard-modal.js'
-import { renderTeamPlayerRows } from '../../utils/team-input.js'
+import { renderTeamPlayerRows, commitTeams } from '../../utils/team-input.js'
 import { recordScoresWithStatus } from '../../utils/score-save-status.js'
 import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
@@ -241,7 +241,8 @@ function createIntroScreen() {
     renderTopics()
   })
 
-  onTap(el.querySelector('#adv-fg-start'), () => {
+  let starting = false
+  onTap(el.querySelector('#adv-fg-start'), async () => {
     let selection
     if (randomized) {
       selection = { mode: 'randomized', topicIds: CATEGORIES.map(c => c.id) }
@@ -252,6 +253,9 @@ function createIntroScreen() {
     } else {
       selection = { mode: 'grouped', topicIds: [...selectedTopics] }
     }
+    if (starting) return
+    starting = true
+    await commitTeams(players)
     const titles = selection.topicIds.map(id => {
       const c = CATEGORIES.find(cc => cc.id === id)
       return c ? c.title : id

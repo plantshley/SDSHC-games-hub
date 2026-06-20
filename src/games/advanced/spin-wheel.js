@@ -14,7 +14,7 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { createLeaderboardButton } from '../../utils/leaderboard-modal.js'
-import { renderTeamPlayerRows } from '../../utils/team-input.js'
+import { renderTeamPlayerRows, commitTeams } from '../../utils/team-input.js'
 import { recordScoresWithStatus } from '../../utils/score-save-status.js'
 import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
@@ -108,7 +108,11 @@ function createIntroScreen() {
   onTap(el.querySelector('#adv-sw-back'), () => navigate('game-select'))
   onTap(el.querySelector('#adv-sw-minus'), () => updateCount(-1))
   onTap(el.querySelector('#adv-sw-plus'), () => updateCount(1))
-  onTap(el.querySelector('#adv-sw-start'), () => {
+  let starting = false
+  onTap(el.querySelector('#adv-sw-start'), async () => {
+    if (starting) return
+    starting = true
+    await commitTeams(players)
     trackGameStart('adv-spin-wheel', 'advanced', { playerCount: players.length })
     trackTopicSelect('adv-spin-wheel', CATEGORIES.map(c => c.title))
     transitionTo(el, createGameplayScreen(players))

@@ -509,7 +509,9 @@ export async function getLeaderboard({ scope, eventId } = {}) {
     const approvedRosterIds = new Set(
       (ev.roster || []).filter(r => r.status === 'approved').map(r => r.teamId)
     )
-    visibilityCheck = (teamId) => approvedRosterIds.has(teamId)
+    // Require the team to still exist — a stale roster entry pointing at a
+    // deleted team must not surface as a "(deleted)" leaderboard row.
+    visibilityCheck = (teamId) => approvedRosterIds.has(teamId) && teamMap.has(teamId)
   } else {
     visibilityCheck = (teamId) => teamMap.get(teamId)?.status === 'approved'
   }

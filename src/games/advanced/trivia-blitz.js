@@ -13,7 +13,7 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { createLeaderboardButton } from '../../utils/leaderboard-modal.js'
-import { renderTeamPlayerRows } from '../../utils/team-input.js'
+import { renderTeamPlayerRows, commitTeams } from '../../utils/team-input.js'
 import { recordScoresWithStatus } from '../../utils/score-save-status.js'
 import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
@@ -99,8 +99,12 @@ function createIntroScreen() {
   onTap(el.querySelector('#adv-tb-minus'), () => updateCount(-1))
   onTap(el.querySelector('#adv-tb-plus'), () => updateCount(1))
 
+  let starting = false
   el.querySelectorAll('.adv-tb-mode-card').forEach(card => {
-    onTap(card, () => {
+    onTap(card, async () => {
+      if (starting) return
+      starting = true
+      await commitTeams(players)
       trackGameStart('adv-trivia-blitz', 'advanced', { playerCount: players.length })
       trackTopicSelect('adv-trivia-blitz', [card.dataset.mode === 'topic' ? 'Topic Mode' : 'Endless Shuffle'])
       transitionTo(el, createGameplayScreen(players, card.dataset.mode))

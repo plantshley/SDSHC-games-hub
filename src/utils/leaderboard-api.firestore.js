@@ -76,6 +76,24 @@ async function readDoc(collName, id) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null
 }
 
+/* ─── Firestore write helper ─── */
+
+/**
+ * Await a write only when online. With offline persistence, a write applies to
+ * the local cache immediately but its promise does NOT settle until reconnect —
+ * so awaiting it offline hangs the caller indefinitely. Offline we let the write
+ * replay in the background (logging failures) and resolve right away, so flows
+ * that need to continue (team create → tag a score, roster add) don't block.
+ * Online behaviour is unchanged: we await, surfacing real write errors.
+ */
+function settleWrite(writePromise) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    writePromise.catch(err => console.error('offline write (queued) failed', err))
+    return Promise.resolve()
+  }
+  return writePromise
+}
+
 /**
  * Delete a list of doc refs in chunks under the per-batch cap.
  */
@@ -83,7 +101,7 @@ async function deleteRefsInChunks(refs) {
   for (let i = 0; i < refs.length; i += BATCH_LIMIT) {
     const batch = writeBatch(getDb())
     for (const ref of refs.slice(i, i + BATCH_LIMIT)) batch.delete(ref)
-    await batch.commit()
+    await settleWrite(batch.commit())
   }
 }
 
@@ -147,7 +165,10 @@ export async function getOrCreateTeam(name, colors) {
     createdAt: Date.now(),
     createdByKiosk: getKioskId(),
   }
-  await setDoc(doc(getDb(), C_TEAMS, id), newTeam)
+  // settleWrite: offline this returns the client-generated id immediately
+  // (the doc is cached + replays on reconnect) instead of hanging on the write,
+  // so a team created offline can still tag scores. Online it awaits as before.
+  await settleWrite(setDoc(doc(getDb(), C_TEAMS, id), newTeam))
   return { teamId: id, status: newTeam.status, name: newTeam.name }
 }
 
@@ -199,7 +220,7 @@ async function updateTeam(id, patch) {
   const ref = doc(getDb(), C_TEAMS, id)
   const snap = await getDoc(ref)
   if (!snap.exists()) throw new Error('Team not found')
-  await updateDoc(ref, patch)
+  await settleWrite(updateDoc(ref, patch))
   return { id, ...snap.data(), ...patch }
 }
 
@@ -209,7 +230,7 @@ async function updateTeam(id, patch) {
  * teams reappearing when a name is re-typed).
  */
 export async function deleteTeam(id) {
-  await deleteDoc(doc(getDb(), C_TEAMS, id))
+  await settleWrite(deleteDoc(doc(getDb(), C_TEAMS, id)))
 
   const scoreSnap = await getDocs(
     query(collection(getDb(), C_SCORES), where('teamId', '==', id))
@@ -219,9 +240,9 @@ export async function deleteTeam(id) {
   const events = await readAll(C_EVENTS)
   for (const ev of events) {
     if (ev.roster && ev.roster.some(r => r.teamId === id)) {
-      await updateDoc(doc(getDb(), C_EVENTS, ev.id), {
+      await settleWrite(updateDoc(doc(getDb(), C_EVENTS, ev.id), {
         roster: ev.roster.filter(r => r.teamId !== id),
-      })
+      }))
     }
   }
 }
@@ -243,9 +264,9 @@ export async function mergeTeams(fromId, toId) {
     for (const d of scoreSnap.docs.slice(i, i + BATCH_LIMIT)) {
       batch.update(d.ref, { teamId: toId })
     }
-    await batch.commit()
+    await settleWrite(batch.commit())
   }
-  await deleteDoc(fromRef)
+  await settleWrite(deleteDoc(fromRef))
 }
 
 /* ─── Events ─── */
@@ -279,7 +300,7 @@ export async function startEvent(name, options = {}) {
     status: scheduledStart && scheduledStart > now ? 'scheduled' : 'open',
     roster: [],
   }
-  await setDoc(doc(getDb(), C_EVENTS, id), event)
+  await settleWrite(setDoc(doc(getDb(), C_EVENTS, id), event))
   return { id, ...event }
 }
 
@@ -301,7 +322,7 @@ export async function reopenEvent(id) {
  * Delete an event AND all its tagged scores.
  */
 export async function deleteEvent(id) {
-  await deleteDoc(doc(getDb(), C_EVENTS, id))
+  await settleWrite(deleteDoc(doc(getDb(), C_EVENTS, id)))
 
   const scoreSnap = await getDocs(
     query(collection(getDb(), C_SCORES), where('eventId', '==', id))
@@ -315,7 +336,7 @@ async function updateEvent(id, patch) {
   const ref = doc(getDb(), C_EVENTS, id)
   const snap = await getDoc(ref)
   if (!snap.exists()) throw new Error('Event not found')
-  await updateDoc(ref, patch)
+  await settleWrite(updateDoc(ref, patch))
   return { id, ...snap.data(), ...patch }
 }
 
@@ -327,7 +348,9 @@ export async function addTeamToEventRoster(eventId, teamId) {
   const roster = ev.roster || []
   if (roster.find(r => r.teamId === teamId)) return ev
   roster.push({ teamId, status: 'pending', addedAt: Date.now() })
-  await updateDoc(doc(getDb(), C_EVENTS, eventId), { roster })
+  // settleWrite: don't hang on the roster write offline — the cache reflects it
+  // immediately (so getEventRoster reads it back) and it replays on reconnect.
+  await settleWrite(updateDoc(doc(getDb(), C_EVENTS, eventId), { roster }))
   return { ...ev, roster }
 }
 
@@ -335,7 +358,7 @@ export async function removeTeamFromEventRoster(eventId, teamId) {
   const ev = await readDoc(C_EVENTS, eventId)
   if (!ev) throw new Error('Event not found')
   const roster = (ev.roster || []).filter(r => r.teamId !== teamId)
-  await updateDoc(doc(getDb(), C_EVENTS, eventId), { roster })
+  await settleWrite(updateDoc(doc(getDb(), C_EVENTS, eventId), { roster }))
   return { ...ev, roster }
 }
 
@@ -357,7 +380,7 @@ async function updateRosterEntry(eventId, teamId, patch) {
   } else {
     roster[rIdx] = { ...roster[rIdx], ...patch }
   }
-  await updateDoc(doc(getDb(), C_EVENTS, eventId), { roster })
+  await settleWrite(updateDoc(doc(getDb(), C_EVENTS, eventId), { roster }))
   return { ...ev, roster }
 }
 
@@ -454,7 +477,7 @@ export async function listRecentScores(limit = 50) {
 }
 
 export async function deleteScore(id) {
-  await deleteDoc(doc(getDb(), C_SCORES, id))
+  await settleWrite(deleteDoc(doc(getDb(), C_SCORES, id)))
 }
 
 /* ─── Leaderboards ─── */
@@ -477,7 +500,10 @@ export async function getLeaderboard({ scope, eventId } = {}) {
     const approvedRosterIds = new Set(
       (ev.roster || []).filter(r => r.status === 'approved').map(r => r.teamId)
     )
-    visibilityCheck = (teamId) => approvedRosterIds.has(teamId)
+    // Require the team to still exist — a stale roster entry pointing at a
+    // deleted team (e.g. a cross-kiosk offline delete that couldn't reach the
+    // other kiosk's roster) must not surface as a "(deleted)" leaderboard row.
+    visibilityCheck = (teamId) => approvedRosterIds.has(teamId) && teamMap.has(teamId)
   } else {
     visibilityCheck = (teamId) => teamMap.get(teamId)?.status === 'approved'
   }

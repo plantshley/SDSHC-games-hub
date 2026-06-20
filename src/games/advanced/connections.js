@@ -14,7 +14,7 @@ import { addGradientBackground } from '../../utils/gradient-bg.js'
 import { createThemeToggle } from '../../utils/theme-toggle.js'
 import { createHelpButton } from '../../utils/help-overlay.js'
 import { createLeaderboardButton } from '../../utils/leaderboard-modal.js'
-import { renderTeamPlayerRows } from '../../utils/team-input.js'
+import { renderTeamPlayerRows, commitTeams } from '../../utils/team-input.js'
 import { recordScoresWithStatus } from '../../utils/score-save-status.js'
 import { getScoreEventId } from '../../screens/advanced-play-mode.js'
 import { typewriter } from '../../utils/typewriter.js'
@@ -167,8 +167,12 @@ function createIntroScreen() {
     renderTopics()
   })
 
-  onTap(el.querySelector('#adv-cn-start'), () => {
+  let starting = false
+  onTap(el.querySelector('#adv-cn-start'), async () => {
     if (selectedTopics.size === 0) return
+    if (starting) return
+    starting = true
+    await commitTeams(players)
     const rounds = shuffleArray([...selectedTopics].map(id => PUZZLES.find(p => p.id === id)))
     trackGameStart('adv-connections', 'advanced', { playerCount: players.length })
     trackTopicSelect('adv-connections', rounds.map(r => r.title))
