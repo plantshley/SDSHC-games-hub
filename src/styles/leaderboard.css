@@ -1908,14 +1908,19 @@
     flex-wrap: wrap;
     gap: 4px 8px;
   }
-  /* Podium — switch to a vertical stack when the 3-up doesn't fit. */
+  /* Podium — keep the 3-up 2·1·3 row (not stacked). The cols are flex:1 1 0,
+     so they shrink to share the narrower modal width; just tighten the gap and
+     side padding so all three fit and stay centered. Team names already
+     ellipsize. */
   .adv-lb-podium {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    gap: 6px;
+    padding: 18px 6px 4px;
   }
-  .adv-lb-podium-col {
-    width: 100%;
+  .adv-lb-podium-team {
+    font-size: 0.72rem;
+  }
+  .adv-lb-podium-raw {
+    font-size: 0.6rem;
   }
   /* Color swatches: keep them a single horizontal row of round circles.
      flex-shrink:0 stops them squishing into ovals; trimmed size + gap let all
