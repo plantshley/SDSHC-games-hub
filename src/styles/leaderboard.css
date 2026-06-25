@@ -1894,6 +1894,12 @@
   .adv-roster-continue {
     width: 100%;
   }
+  /* play-mode container padding (60px 80px base) was never reduced for mobile;
+     tame it so the in-flow header (see the ≤1919 block below) isn't squeezed.
+     Roster already reduces its own padding above. */
+  .adv-play-mode {
+    padding: 16px 16px 40px;
+  }
   /* Leaderboard bar rows — let labels/meta wrap rather than truncate hard. */
   .adv-lb-bar-row {
     gap: 8px;
@@ -1940,12 +1946,34 @@
     flex-shrink: 0;
   }
 
+  /* play-mode — short landscape viewport. The card content (heading + two
+     buttons) is short, so let it be its NATURAL height and center — don't cap +
+     internal-scroll it like roster (roster scrolls a long team list; play-mode
+     has nothing to scroll). Put the two play buttons side-by-side to save
+     vertical space (the ≤899 block stacks them; this fires later and wins) and
+     tighten spacing so it comfortably fits a short landscape phone. */
+  .adv-pm-card {
+    padding: 14px 20px;
+    gap: 8px;
+  }
+  .adv-pm-heading {
+    font-size: 1.05rem;
+  }
+  .adv-pm-actions {
+    flex-direction: row;
+    gap: 8px;
+  }
+  .adv-pm-btn {
+    min-height: 0;
+    padding: 10px 14px;
+  }
+
   /* Roster — short landscape viewport. The `calc(100vh - 220px)` cap left only
      ~180px, so with overflow:hidden everything below the name input + Add button
      got clipped. Let the whole card grow much taller and scroll as one unit,
      with smaller type and tighter padding/spacing so more fits. */
   .adv-roster {
-    padding: 10px 16px 16px;
+    padding: 6px 16px 16px;
     gap: 10px;
   }
   .adv-roster-card {
@@ -2080,7 +2108,140 @@
     padding: 12px 0;
     margin: 0 0 16px;
     background: none;
-    
+
+  }
+}
+
+/* ─── play-mode + roster: non-kiosk header (≤1919px) ───
+   These screens reuse .adv-header but never had a responsive layout, so below
+   kiosk they fell back to the base kiosk header (position: fixed, centered,
+   width: calc(100% - 160px)). On phones that collapsed to a tiny centered box
+   (portrait: back/title/theme cramped) and, on landscape phones WIDER than
+   899px (e.g. 932px), sat fixed and got covered by the card. Make it an in-flow
+   full-width top bar: back + title left, theme toggle right. Done at ≤1919 to
+   match game-select/admin AND to catch landscape phones >899px. align-self
+   stretch is essential — the containers are align-items: center, which would
+   otherwise size the header to its content and break space-between. Kiosk
+   (1920) is untouched. */
+@media (max-width: 1919px) {
+  .adv-play-mode .adv-header,
+  .adv-roster .adv-header {
+    position: static;
+    left: auto;
+    right: auto;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    align-self: stretch;          /* override container align-items: center */
+    justify-content: space-between;
+    margin: 0 0 8px;
+    padding: 0;
+  }
+  .adv-play-mode .adv-header-left,
+  .adv-roster .adv-header-left {
+    flex: 1 1 auto;
+    min-width: 0;                  /* let the title ellipsize, don't shove right */
+  }
+  .adv-play-mode .adv-title,
+  .adv-roster .adv-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .adv-play-mode .adv-header-right,
+  .adv-roster .adv-header-right {
+    flex: 0 0 auto;               /* theme toggle never shrinks or disappears */
+  }
+  /* Play-mode already has its own "How do you want to play?" heading, so the
+     redundant "Advanced Mode" header title is hidden below kiosk — keeps it from
+     colliding with the centered card / overlay header. (Roster keeps its title.) */
+  .adv-play-mode .adv-title {
+    display: none;
+  }
+}
+
+/* ─── play-mode + roster: LANDSCAPE / desktop (non-kiosk) ───
+   Landscape has no room to stack a header bar above the card, and the in-flow
+   bar pushed the card down and overlapped it. Instead OVERLAY the header as a
+   fixed top strip — back button in the top-LEFT corner, theme toggle in the
+   top-RIGHT — and keep the card CENTERED in the viewport behind it. `safe center`
+   falls back to top-aligned (no clipping) if the card is taller than a short
+   landscape phone, with the screen scrolling. Portrait keeps the in-flow stacked
+   bar above (handled in the ≤1919 block). Kiosk (1920) excluded by max-width;
+   portrait excluded by the aspect ratio. Placed last to win the source-order
+   cascade. (Uses min-aspect-ratio rather than `orientation: landscape` because
+   the orientation media feature is unreliable in dev tooling / some browsers —
+   aspect-ratio tracks the real viewport width/height.) */
+@media (min-aspect-ratio: 1/1) and (max-width: 1919px) {
+  .adv-play-mode .adv-header,
+  .adv-roster .adv-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: none;
+    transform: none;
+    align-self: auto;            /* not an in-flow flex child anymore */
+    margin: 0;
+    padding: 12px 20px;
+    box-sizing: border-box;
+    z-index: 100;
+  }
+  .adv-play-mode,
+  .adv-roster {
+    justify-content: safe center;  /* center the card; top-align if it overflows */
+    padding-top: 0;
+  }
+}
+
+/* Short landscape (landscape PHONE): there's no room to float a centered card
+   under an overlay header — that left a big empty band above the short play-mode
+   card. Drop play-mode back to the in-flow STACKED bar (like portrait): header at
+   the very top, card directly below it, no wasted space. Roster keeps its overlay
+   + tall centered card (it's tall enough to look right, and was confirmed good).
+   Targets .adv-play-mode only, and is placed after the landscape overlay block so
+   it re-overrides the header back to in-flow for this short-viewport case. */
+@media (min-aspect-ratio: 1/1) and (max-height: 500px) {
+  .adv-play-mode .adv-header {
+    position: static;
+    align-self: stretch;
+    margin: 0 0 6px;
+    padding: 0;
+  }
+  .adv-play-mode {
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+  .adv-pm-card {
+    margin: 0;                    /* flow directly below the header */
+  }
+}
+
+/* Portrait (non-kiosk): in-flow stacked header flush to the top on play-mode +
+   roster. Forces the header into normal flow + top-aligns the container so the
+   header can't inherit the landscape overlay/centering, then drops padding-top to
+   0 so it sits at the very top edge. Uses max-aspect-ratio (not
+   `orientation: portrait`) because the orientation media feature is unreliable in
+   dev tooling / some browsers; aspect-ratio tracks the real viewport. Kiosk
+   (1920×1080, ratio > 1) is excluded by min-aspect-ratio not matching here. */
+@media (max-aspect-ratio: 1/1) and (max-width: 1919px) {
+  .adv-play-mode,
+  .adv-roster {
+    justify-content: flex-start;  /* header stays pinned to the top */
+    padding-top: 10px;            /* small breathing room above the header */
+  }
+  .adv-play-mode .adv-header,
+  .adv-roster .adv-header {
+    /* `[data-mode="advanced"] .screen > *:not(…)` (advanced.css) forces
+       position: relative on this header at (0,6,0) specificity — higher than our
+       rules — so we can't make it static. Don't fight it: just zero `top` (our
+       top:0 beats the base .adv-header top:60px). A relative header with top:0
+       sits at its in-flow position, i.e. flush at the container's 0 padding-top. */
+    top: 0;
+    align-self: stretch;
+    margin: 0 0 8px;              /* flush at the very top, small gap to the card */
   }
 }
 

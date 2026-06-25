@@ -277,7 +277,7 @@ export function createAdvancedAdminScreen() {
       })
       row.querySelector('[data-act="rename"]').addEventListener('click', async () => {
         const cur = row.querySelector('.adv-admin-row-name').textContent
-        const next = window.prompt('Rename team to:', cur)
+        const next = window.prompt('Rename team to (merges if name matches another team):', cur)
         if (next && next.trim()) {
           await renameTeam(id, next.trim())
           await renderPending(); await renderTeams(); await renderRoster(); await renderScores()

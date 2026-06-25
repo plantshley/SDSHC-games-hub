@@ -3479,9 +3479,11 @@
     flex-wrap: nowrap;
     flex: 1 1 auto;
     min-width: 0;
-  }
-  .adv-header > * {
-    flex-shrink: 0;
+    /* MUST stay shrinkable. The title ellipsizes to absorb the squeeze; if the
+       left cluster can't shrink it keeps full width and shoves the right cluster
+       (trophy + theme toggle) off the right edge on narrow portrait. The back
+       button and right cluster keep their own flex-shrink:0 below. */
+    flex-shrink: 1;
   }
   .adv-back-btn {
     font-size: 0.72rem;
