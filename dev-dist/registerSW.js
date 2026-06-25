@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) navigator.serviceWorker.register('/SDSHC-games-hub/dev-sw.js?dev-sw', { scope: '/SDSHC-games-hub/', type: 'classic' })
