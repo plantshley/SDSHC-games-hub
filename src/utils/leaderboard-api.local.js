@@ -236,8 +236,56 @@ export async function mergeTeams(fromId, toId) {
   })
   writeJSON(K_SCORES, scoresData)
 
+  // Re-point every event roster from the loser to the survivor so a merge
+  // leaves no orphaned "(deleted team)" entry and carries event approval over.
+  const eventsData = getEventsRaw()
+  let eventsChanged = false
+  eventsData.events.forEach(ev => {
+    const next = reconcileRoster(ev.roster, fromId, toId)
+    if (next) {
+      ev.roster = next
+      eventsChanged = true
+    }
+  })
+  if (eventsChanged) writeJSON(K_EVENTS, eventsData)
+
   teamsData.teams.splice(fromIdx, 1)
   writeJSON(K_TEAMS, teamsData)
+}
+
+/**
+ * Re-point a single event's roster from `fromId` to `toId` during a merge.
+ * Returns the new roster array, or `null` if the event isn't affected (so the
+ * caller can skip the write). If both teams are on the roster, the loser entry
+ * is dropped and the survivor keeps the MORE-approved of the two statuses so a
+ * merge never silently downgrades a visibility the organizer set.
+ */
+function reconcileRoster(roster, fromId, toId) {
+  if (!Array.isArray(roster)) return null
+  const fromEntry = roster.find(r => r.teamId === fromId)
+  if (!fromEntry) return null
+  const toEntries = roster.filter(r => r.teamId === toId)
+  if (toEntries.length === 0) {
+    // Winner not yet on the roster: just re-point the loser's entry onto it.
+    return roster.map(r => (r.teamId === fromId ? { ...r, teamId: toId } : r))
+  }
+  // Winner already present: drop the loser and collapse to a single winner row
+  // (defensive — a corrupt/colliding write could in theory leave duplicates),
+  // keeping the FIRST winner entry so its addedAt/join-time stands. More-approved
+  // wins (explicit 'pending' fallback so a future third status can't slip through).
+  const status = fromEntry.status === 'approved' || toEntries.some(e => e.status === 'approved')
+    ? 'approved'
+    : 'pending'
+  let keptWinner = false
+  return roster
+    .filter(r => r.teamId !== fromId)
+    .filter(r => {
+      if (r.teamId !== toId) return true
+      if (keptWinner) return false
+      keptWinner = true
+      return true
+    })
+    .map(r => (r.teamId === toId ? { ...r, status } : r))
 }
 
 /* ─── Events ─── */
