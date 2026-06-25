@@ -30,9 +30,18 @@ function buildGate(opts) {
     <button type="button" class="too-narrow-gate-back">← Back</button>
   `
 
+  // The gate is mounted the instant a game screen swaps in — often directly
+  // under the button the user just tapped to enter the game. On touch devices
+  // the browser synthesizes a `click` at the tap coordinates *after* that swap,
+  // which can land on this freshly-mounted Back button and bounce the user
+  // straight back out (seen on food-web in landscape, where the centered Back
+  // button sits right where "Enter" was). Ignore clicks fired within a short
+  // window of mount so only a deliberate, separate tap triggers Back.
+  const mountedAt = Date.now()
   const back = gate.querySelector('.too-narrow-gate-back')
   back.addEventListener('click', (e) => {
     e.stopPropagation()
+    if (Date.now() - mountedAt < 400) return
     if (opts.onBack) {
       opts.onBack()
     } else {
