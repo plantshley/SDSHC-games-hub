@@ -65,6 +65,8 @@ All **pure-[C]** tests that needed no prior setup from you have been run (code-v
 
 **Not run here** (need your hands — live Firestore round-trips, real offline toggling, two devices, Firebase Console, touch/visual): all `[U]` and `[C+U]` tests — Sections 1.1/1.2/1.4, 2.*, 3.1/3.2/3.4/3.5/3.6, 4.2/4.4, 6.1/6.2/6.5/6.6, 7.1. The `[C]` logic underneath several of those (idempotency, tagging, cascade, rules) is already confirmed above, so your live runs are confirming the *wiring*, not the *logic*.
 
+> **✅ Status update (2026-06-25): the `[U]` / `[C+U]` set is now complete — all passing.** The user-run live tests were worked through over 2026-06-18 → 06-25 (results logged inline per test). Fixes that came out of them: **E-6** (offline score loss), **E-5** (roster silent-drop), **2.4** merge-roster reconciliation, **D-5** food-web landscape gate bounce, and the leaderboard portrait-podium layout. Suggestion #2 above (malformed-advanced-hash self-heal) was also implemented ([main.js:137-141](src/main.js#L137-L141)). No open failures remain.
+
 ---
 
 ## Section 1 — Firebase: teams + scores, ONLINE
@@ -159,6 +161,7 @@ Pre (all): `USE_FIRESTORE === true` in [src/firebase/config.js](src/firebase/con
 - **Expect (documented, by design):** Two **separate** `Pierre HS` team docs sync up — neither kiosk saw the other's offline write. Scores attach to their respective doc.
 - **Resolution:** In Admin, use rename + **merge** to combine them (`renameTeam`, `mergeTeams` re-tag all scores from one onto the other and delete the loser). Confirm merged team's score total = sum of both.
 - **This is expected behavior, not a bug** — but confirm the merge tooling actually works end-to-end, since it's the only mitigation.
+- **✅ Result (2026-06-25, [U] live, 2 devices):** PASS (after a fix). Both kiosks created `sunny` offline under the same event and synced as two separate docs; rename→merge re-tagged all scores onto the winner and the merged total = sum of both, visible on the All-Time board. **Bug found + fixed during this run:** post-merge the *event roster* still showed "(deleted team)" and the merged scores didn't appear on the **event** leaderboard — `mergeTeams` re-tagged scores but not roster entries. Fixed in both backends (`reconcileRoster` re-tags/collapses the loser's roster entry onto the winner — [leaderboard-api.firestore.js](src/utils/leaderboard-api.firestore.js), [leaderboard-api.local.js](src/utils/leaderboard-api.local.js)); also added a "merges if name matches another team" note to the admin rename prompt. Re-verified: merged team now shows correctly on both the event and All-Time boards.
 
 ### 2.5 [C+U] Score-save status pill (audit E-1 — now implemented)
 The fire-and-forget gap is fixed: advanced games call `recordScoresWithStatus()` ([src/utils/score-save-status.js](src/utils/score-save-status.js)), which shows a non-blocking pill. Verify all three states actually render:
@@ -211,6 +214,7 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
   ```
 - **✅ Result (2026-06-18, [C+U] live — create/start/activate):** PASS. Created `TEST-0618` via admin → `status:"open"`, `roster:[]`, `startedAt` set, `endedAt:null`, `scheduledStart:null`; `getActiveEventId()` returns its id. *End / reopen / schedule / delete-cascade are exercised at teardown (ties to 5.3).*
 - **✅ Result (2026-06-19, [C+U] live — delete):** PASS. Deleting `TEST-0618` removed the event, cascade-deleted its tagged scores, and cleared the active event (`getActiveEventId()` → `null`). *(Schedule-for-later + end/reopen transitions not separately exercised — recommend a quick [U] pass before the event, but create/activate/delete + cascade are confirmed.)*
+- **✅ Result (2026-06-25, [U] live — schedule / end / reopen):** PASS. Remaining transitions exercised: Schedule-for-later → open scheduled, End event, and Reopen all behaved as expected. Combined with the create/start/activate (06-18) and delete-cascade (06-19) passes, the full `scheduled → open → ended → open(reopen)` lifecycle is now confirmed end-to-end.
 
 ### 3.5 [U] Team moderation
 - **Steps:** Approve a pending team **statewide**; separately approve/unapprove a team **for the current event**; remove a team from the event roster; change a team's two colors via the picker.
@@ -361,6 +365,7 @@ For each (`adv-spin-wheel, adv-trivia-blitz, adv-jeopardy, adv-word-game, adv-fi
 - **Pre:** recent commit reworked the service worker to shell-only precache + runtime media cache to fix stale mobile builds.
 - **Steps:** Build + deploy (or preview), load on a phone, then push a trivial change and reload.
 - **Expect:** New build picked up (no stale shell); media still served from runtime cache offline.
+- **✅ Result (2026-06-25, [U] live, phone PWA):** PASS. Deployed a new build (this session's fixes) to Pages; the already-installed phone PWA picked it up (no stale shell) and reflected the new build — e.g. the leaderboard portrait podium now renders as a single centered row, which the prior build did not. Confirms `autoUpdate` swaps the service worker on next load and the shell-precache + runtime media-cache rework holds.
 
 ---
 
