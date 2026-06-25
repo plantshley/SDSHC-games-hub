@@ -137,3 +137,10 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Local dev-mode PWA service worker output — regenerated on every `npm run dev`
+# (just a fresh revision hash each time). Not used by deploys, which build dist/.
+dev-dist
+
+# Scratch / test artifacts
+.tmp/
