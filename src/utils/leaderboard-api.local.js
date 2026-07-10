@@ -15,7 +15,8 @@
  *                  eventId|null, kioskId }
  *
  * Team status (`team.status`): "pending" | "approved" | "hidden". Controls
- * visibility on the statewide (this-month / all-time) leaderboards.
+ * visibility on the statewide leaderboard scopes (`all`, and the `month` scope
+ * which the API supports but no UI tab currently surfaces).
  *
  * Event roster (`event.roster`): [{ teamId, status: "pending"|"approved" }].
  * Independent of statewide approval. The event leaderboard shows teams only

@@ -118,7 +118,7 @@ Pre (all): `USE_FIRESTORE === true` in [src/firebase/config.js](src/firebase/con
 - **✅ Result (2026-06-10, [C] code-verified):** PASS. [leaderboard-api.firestore.js:405-433](src/utils/leaderboard-api.firestore.js#L405-L433) — `recordScores` does a guard read of `${runId}__0` (line 411) and returns early if it exists; otherwise it writes deterministic doc ids `${runId}__${i}` via `setDoc` in a single `writeBatch`. Re-call paths: (a) guard short-circuits, or (b) `setDoc` overwrites the same ids → no duplication either way. The guard reading only entry 0 is sound because `batch.commit()` is atomic — entry 0 exists **iff** the whole run committed, so there's no partial-write window where 0 exists but 1..n don't. *Live round-trip against Firestore is the [C+U] half (1.1/1.2) — the idempotency logic itself is fully determined by code.*
 
 ### 1.4 [C+U] Leaderboard read reflects the score; pending team stays hidden publicly
-- **Steps:** Open the leaderboard modal (trophy button) on This-Month / All-Time tabs.
+- **Steps:** Open the leaderboard modal (trophy button) on the All-Time tab.
 - **Expect:** A `pending` team's score does **not** appear on public boards; once approved (Section 3.5) it appears. Current-Event board follows the per-event roster status independently.
 - **✅ Result (2026-06-18, [C+U] live):** PASS. While pending, both `all-time` and `event` boards returned `[]` (hidden). After approving Test High 0618 **statewide** and **for the event** in admin, both boards return it with `normPoints: 10` (= 300 ÷ 3000 par × 100) and `points: 300`. Confirms the hidden→visible flip, **3.5** (both moderation levers), and a **live corroboration of 5.1** par-normalization with real data. Lever independence is code-backed ([leaderboard-api.firestore.js:458-469](src/utils/leaderboard-api.firestore.js#L458-L469)).
 - **Observe [C]:**
@@ -218,7 +218,7 @@ Route: `#advanced/admin`. Pre: `USE_FIRESTORE === true` shows the **sign-in gate
 
 ### 3.5 [U] Team moderation
 - **Steps:** Approve a pending team **statewide**; separately approve/unapprove a team **for the current event**; remove a team from the event roster; change a team's two colors via the picker.
-- **Expect:** Statewide `status` controls This-Month/All-Time visibility; per-event roster status controls Current-Event visibility — **independently**. Color changes persist and show on leaderboard swatches.
+- **Expect:** Statewide `status` controls All-Time visibility; per-event roster status controls Current-Event visibility — **independently**. Color changes persist and show on leaderboard swatches.
 
 ### 3.6 [U] Score moderation
 - **Steps:** In Recent Scores, delete a row (with confirm).

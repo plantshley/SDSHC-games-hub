@@ -2,8 +2,10 @@
  * Leaderboard button + modal for Advanced Mode.
  *
  * Renders a small trophy button to drop next to the theme toggle. Tapping
- * opens a modal with three tabs: Current Event (hidden if no active event),
- * This Month, All-Time. Only approved teams appear.
+ * opens a modal with two tabs: the active event (labelled with the event's own
+ * name, omitted entirely when no event is active) and All-Time. Only approved
+ * teams appear. `getLeaderboard` also supports a `month` scope, but no tab
+ * surfaces it today.
  *
  * Footer has a small "Admin" link that navigates to #advanced/admin.
  */

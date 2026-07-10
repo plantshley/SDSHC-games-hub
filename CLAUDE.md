@@ -313,7 +313,7 @@ sdshc-lb-play-mode     "team" | "casual" (sessionStorage, see above)
 
 ### Team status model
 
-- **Global team status** (`team.status`): `pending | approved | hidden`. Controls visibility on This-Month / All-Time leaderboards.
+- **Global team status** (`team.status`): `pending | approved | hidden`. Controls visibility on the All-Time leaderboard.
 - **Per-event roster status** (entry in `event.roster`): `pending | approved`. Controls visibility on the Current-Event leaderboard. Independent of global status — an organizer can approve a team for one event without committing to statewide visibility.
 - The team/school **dropdown** (autocomplete `<datalist>`) on game intros lists **approved teams only** — pending teams are intentionally excluded so unmoderated names don't autocomplete-suggest ([team-input.js](src/utils/team-input.js) `ensureRosterDatalist`). A pending team is still immediately playable: typing its name manually resolves to the existing pending team and tags scores correctly. Scores just don't appear publicly until the team is approved.
 - Profane names blocked inline by `isClean()` in [profanity.js](src/utils/profanity.js) before they hit the queue.
