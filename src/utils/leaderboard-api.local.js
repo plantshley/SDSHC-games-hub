@@ -27,6 +27,7 @@
 
 import { getGamePar } from '../data/advanced-game-registry.js'
 import { deriveTeamColors, getTeamColors } from './team-colors.js'
+import { effectivelyOpen, eventEndsAt, DEFAULT_EVENT_DURATION_MS } from './event-status.js'
 
 const K_TEAMS = 'sdshc-lb-teams'
 const K_EVENTS = 'sdshc-lb-events'
@@ -295,8 +296,15 @@ export async function listEvents() {
   return [...getEventsRaw().events].sort((a, b) => b.startedAt - a.startedAt)
 }
 
+/**
+ * Events running right now, per the derived clock rules in event-status.js —
+ * NOT a raw `status === 'open'` filter. A scheduled event becomes joinable at
+ * its start time with no write; a forgotten one ages out instead of staying
+ * joinable forever.
+ */
 export async function listOpenEvents() {
-  return (await listEvents()).filter(e => e.status === 'open')
+  const now = Date.now()
+  return (await listEvents()).filter(e => effectivelyOpen(e, now))
 }
 
 export async function getEventById(id) {
@@ -312,18 +320,22 @@ export async function getEventById(id) {
  * @param {number|null} [options.scheduledStart] - if set, the event is
  *   created with status "scheduled" and starts at that timestamp; otherwise
  *   it opens immediately at now.
+ * @param {number|null} [options.endsAt] - overrides the default 24h window.
+ *   A multi-day event needs this, or it ages out overnight.
  */
 export async function startEvent(name, options = {}) {
   const cleaned = String(name || '').trim() || 'Untitled Event'
-  const { scheduledStart = null } = options
+  const { scheduledStart = null, endsAt = null } = options
   const data = getEventsRaw()
   const now = Date.now()
+  const startedAt = scheduledStart || now
   const event = {
     id: genId(),
     name: cleaned,
-    startedAt: scheduledStart || now,
+    startedAt,
     scheduledStart: scheduledStart || null,
     endedAt: null,
+    endsAt: endsAt || startedAt + DEFAULT_EVENT_DURATION_MS,
     status: scheduledStart && scheduledStart > now ? 'scheduled' : 'open',
     roster: [],
   }
@@ -333,14 +345,25 @@ export async function startEvent(name, options = {}) {
 }
 
 /**
- * Mark a "scheduled" event as "open" if its scheduledStart has passed.
- * Called by admin when promoting manually or auto-checked on listOpenEvents.
+ * Promote a scheduled event early. Re-anchors `startedAt` to now (it was set to
+ * the future scheduledStart) so the 24h window runs from the real start. Also
+ * refuses to leave a lapsed `endsAt` behind, which would derive the event
+ * straight back to "ended" on the next read.
  */
 export async function openScheduledEvent(eventId) {
   const data = getEventsRaw()
   const idx = data.events.findIndex(e => e.id === eventId)
   if (idx === -1) throw new Error('Event not found')
-  data.events[idx] = { ...data.events[idx], status: 'open' }
+  const now = Date.now()
+  const ev = data.events[idx]
+  const patch = { status: 'open' }
+  if (typeof ev.startedAt === 'number' && ev.startedAt > now) {
+    patch.startedAt = now
+  }
+  if (!(eventEndsAt(ev) > now)) {
+    patch.endsAt = now + DEFAULT_EVENT_DURATION_MS
+  }
+  data.events[idx] = { ...ev, ...patch }
   writeJSON(K_EVENTS, data)
   return data.events[idx]
 }
@@ -361,12 +384,31 @@ export async function endEvent(id) {
  * Re-open a previously ended event. Scores and roster are preserved (they
  * were never deleted on end), so setting the kiosk to this event will show
  * its prior leaderboard immediately. New scores write to the same eventId.
+ *
+ * Pushes `endsAt` forward — without this, reopening an event that aged out
+ * would leave it instantly derived-ended again.
  */
 export async function reopenEvent(id) {
   const data = getEventsRaw()
   const idx = data.events.findIndex(e => e.id === id)
   if (idx === -1) throw new Error('Event not found')
-  data.events[idx] = { ...data.events[idx], status: 'open', endedAt: null }
+  const now = Date.now()
+  data.events[idx] = {
+    ...data.events[idx],
+    status: 'open',
+    endedAt: null,
+    endsAt: now + DEFAULT_EVENT_DURATION_MS,
+  }
+  writeJSON(K_EVENTS, data)
+  return data.events[idx]
+}
+
+/** Move an event's auto-end time. */
+export async function setEventEndsAt(id, endsAt) {
+  const data = getEventsRaw()
+  const idx = data.events.findIndex(e => e.id === id)
+  if (idx === -1) throw new Error('Event not found')
+  data.events[idx] = { ...data.events[idx], endsAt }
   writeJSON(K_EVENTS, data)
   return data.events[idx]
 }

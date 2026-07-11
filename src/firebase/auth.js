@@ -9,6 +9,14 @@
  *
  * These functions are only called when the Firestore backend is active; in the
  * localStorage backend the admin panel has no gate.
+ *
+ * Persistence is deliberately SESSION-scoped, not local. On a shared event
+ * device the danger is a signed-in admin session outliving the person who
+ * signed in — staff sets up, walks away, and a curious student later opens
+ * #advanced/admin to a wide-open panel. `browserSessionPersistence` drops the
+ * session when the app window/tab closes; main.js additionally signs out the
+ * moment the admin screen is navigated away from. Together: the panel is only
+ * ever unlocked while an admin is actively on it.
  */
 
 import {
@@ -16,7 +24,7 @@ import {
   signOut,
   onAuthStateChanged,
   setPersistence,
-  browserLocalPersistence,
+  browserSessionPersistence,
 } from 'firebase/auth'
 import { getFirebaseAuth } from './init.js'
 import { ADMIN_EMAIL } from './config.js'
@@ -28,7 +36,7 @@ import { ADMIN_EMAIL } from './config.js'
  */
 export async function adminSignIn(password) {
   const auth = getFirebaseAuth()
-  await setPersistence(auth, browserLocalPersistence)
+  await setPersistence(auth, browserSessionPersistence)
   await signInWithEmailAndPassword(auth, ADMIN_EMAIL, String(password || ''))
 }
 

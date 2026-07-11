@@ -38,6 +38,7 @@ export const startEvent = impl.startEvent
 export const openScheduledEvent = impl.openScheduledEvent
 export const endEvent = impl.endEvent
 export const reopenEvent = impl.reopenEvent
+export const setEventEndsAt = impl.setEventEndsAt
 export const deleteEvent = impl.deleteEvent
 export const addTeamToEventRoster = impl.addTeamToEventRoster
 export const removeTeamFromEventRoster = impl.removeTeamFromEventRoster

@@ -42,6 +42,7 @@ import {
 import { getDb } from '../firebase/init.js'
 import { getGamePar } from '../data/advanced-game-registry.js'
 import { deriveTeamColors, getTeamColors } from './team-colors.js'
+import { effectivelyOpen, eventEndsAt, DEFAULT_EVENT_DURATION_MS } from './event-status.js'
 
 const K_ACTIVE = 'sdshc-lb-active-event'
 const K_KIOSK = 'sdshc-lb-kiosk-id'
@@ -322,8 +323,15 @@ export async function listEvents() {
   return (await readAll(C_EVENTS)).sort((a, b) => b.startedAt - a.startedAt)
 }
 
+/**
+ * Events running right now, per the derived clock rules in event-status.js —
+ * NOT a raw `status === 'open'` filter. This is what lets a scheduled event
+ * become joinable at its start time without anyone writing to it, and what
+ * keeps a forgotten event from staying joinable forever.
+ */
 export async function listOpenEvents() {
-  return (await listEvents()).filter(e => e.status === 'open')
+  const now = Date.now()
+  return (await listEvents()).filter(e => effectivelyOpen(e, now))
 }
 
 export async function getEventById(id) {
@@ -332,18 +340,22 @@ export async function getEventById(id) {
 
 /**
  * Create a new event. With `options.scheduledStart` in the future, the event
- * is created "scheduled"; otherwise it opens immediately.
+ * is created "scheduled"; otherwise it opens immediately. `options.endsAt`
+ * overrides the default 24h window (a multi-day event needs this, or it would
+ * age out overnight).
  */
 export async function startEvent(name, options = {}) {
   const cleaned = String(name || '').trim() || 'Untitled Event'
-  const { scheduledStart = null } = options
+  const { scheduledStart = null, endsAt = null } = options
   const now = Date.now()
   const id = genId()
+  const startedAt = scheduledStart || now
   const event = {
     name: cleaned,
-    startedAt: scheduledStart || now,
+    startedAt,
     scheduledStart: scheduledStart || null,
     endedAt: null,
+    endsAt: endsAt || startedAt + DEFAULT_EVENT_DURATION_MS,
     status: scheduledStart && scheduledStart > now ? 'scheduled' : 'open',
     roster: [],
   }
@@ -351,8 +363,23 @@ export async function startEvent(name, options = {}) {
   return { id, ...event }
 }
 
+/**
+ * Promote a scheduled event early. Re-anchors `startedAt` to now (it was set to
+ * the future scheduledStart) so the 24h window runs from the real start, not
+ * from a time that hasn't happened. Also refuses to leave a lapsed `endsAt`
+ * behind, which would derive the event straight back to "ended" on the next read.
+ */
 export async function openScheduledEvent(eventId) {
-  return updateEvent(eventId, { status: 'open' })
+  const now = Date.now()
+  const ev = await readDoc(C_EVENTS, eventId)
+  const patch = { status: 'open' }
+  if (ev && typeof ev.startedAt === 'number' && ev.startedAt > now) {
+    patch.startedAt = now
+  }
+  if (!ev || !(eventEndsAt(ev) > now)) {
+    patch.endsAt = now + DEFAULT_EVENT_DURATION_MS
+  }
+  return updateEvent(eventId, patch)
 }
 
 export async function endEvent(id) {
@@ -361,8 +388,22 @@ export async function endEvent(id) {
   return updated
 }
 
+/**
+ * Re-open an ended event. Pushes `endsAt` forward — without this, reopening an
+ * event that aged out would leave it instantly derived-ended again.
+ */
 export async function reopenEvent(id) {
-  return updateEvent(id, { status: 'open', endedAt: null })
+  const now = Date.now()
+  return updateEvent(id, {
+    status: 'open',
+    endedAt: null,
+    endsAt: now + DEFAULT_EVENT_DURATION_MS,
+  })
+}
+
+/** Move an event's auto-end time (admin-only per firestore.rules). */
+export async function setEventEndsAt(id, endsAt) {
+  return updateEvent(id, { endsAt })
 }
 
 /**

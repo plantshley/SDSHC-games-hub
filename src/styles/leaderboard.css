@@ -300,6 +300,47 @@
   margin: 0;
 }
 
+/* Event picker — only rendered when two or more events are running at once,
+   so it never appears in the normal single-event flow. */
+.adv-pm-event-picker {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 4px;
+}
+
+.adv-pm-event-picker[hidden] {
+  display: none;
+}
+
+.adv-pm-event-option {
+  font-family: var(--font-body), monospace;
+  font-size: 0.95rem;
+  color: var(--adv-text);
+  background: var(--adv-surface);
+  border: 1px solid var(--adv-border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  min-height: 44px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.adv-pm-event-option:hover,
+.adv-pm-event-option:active {
+  border-color: var(--adv-accent);
+  background: var(--adv-surface-hover);
+}
+
+.adv-pm-event-option-active {
+  border-color: var(--adv-accent);
+  background: var(--adv-accent-dim);
+  color: var(--adv-accent);
+}
+
 .adv-pm-actions {
   display: flex;
   flex-direction: column;
@@ -307,6 +348,17 @@
   width: 100%;
   max-width: 420px;
   margin-top: 8px;
+}
+
+.adv-pm-btn-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.adv-pm-btn-disabled:hover,
+.adv-pm-btn-disabled:active {
+  border-color: var(--adv-border);
+  background: var(--adv-surface);
 }
 
 .adv-pm-btn {
@@ -567,7 +619,14 @@
 .adv-admin .adv-header {
   position: sticky;
   top: 0;
-  z-index: 10;
+  /* Above the sign-in gate (.adv-admin-gate, z-index 200) so Back and the theme
+     toggle stay tappable while the panel is locked — otherwise an accidental tap
+     on Admin traps you on the password screen with no way back to game-select.
+     !important is required: the `[data-mode="advanced"] .screen > *:not(…)` clamp
+     in advanced.css forces every screen child to z-index:1 at a higher specificity
+     (0,6,0), which would otherwise bury this header under the gate. This bites only
+     at the 1920px kiosk — below 1919 the header layout differs and never overlaps. */
+  z-index: 210 !important;
   padding: 12px 0;
   margin: 0 0 16px;
   background: transparent;
@@ -691,6 +750,24 @@
   font-size: 0.78rem;
   color: var(--adv-text-muted);
   line-height: 1.5;
+}
+
+/* Inline "Ends <datetime>" control in an event row. */
+.adv-admin-endsat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.72rem;
+  color: var(--adv-text-muted);
+  white-space: nowrap;
+}
+
+.adv-admin-endsat .adv-admin-datetime {
+  flex: 0 0 auto;
+  max-width: 200px;
+  font-size: 0.72rem;
+  padding: 4px 6px;
 }
 
 .adv-admin-active-row {

@@ -514,16 +514,16 @@ code {
 
   <header class="masthead">
     <h1>SDSHC Games Hub <span>&mdash; Event Cheat Sheet</span></h1>
-    <div class="kicker">Advanced Mode &middot; Team Play</div>
+    <div class="kicker">Advanced Mode &middot; Team Play &middot; manual-setup version (archived)</div>
   </header>
 
   <div class="alarm">
     <div class="mark">Read this</div>
     <p>
-      <strong>Devices join the open event automatically</strong> &mdash; no admin setup per device.
-      Just make sure <strong>your event is <em>open</em></strong> on event day (scheduled &ne; open &mdash; tap
-      <strong>Open now</strong> in Admin &rarr; Events), and that <strong>only your event is open</strong>
-      (two open &rarr; each device stops to ask &ldquo;which one?&rdquo;). Still prep every device at home first.
+      <strong>Creating an event does not turn it on for your device.</strong>
+      <em>Which event is active</em> is saved per-device. On <strong>every device you bring</strong>: open
+      <code>#advanced/admin</code>, sign in, pick your event under <strong>&ldquo;Set kiosk to&rdquo;</strong>.
+      Skip it and no one sees the Team Play prompt &mdash; every score records with no team.
     </p>
   </div>
 
@@ -537,12 +537,12 @@ code {
         <ol class="steps">
           <li><strong>Install the app.</strong> Open the site in Edge or Chrome, click <strong>Install</strong> in the address bar. Use the shortcut after this, not a browser tab.</li>
           <li><strong>Cache for offline.</strong> Admin &rarr; Offline readiness &rarr; <strong>Cache for offline</strong>. Wait for <strong>&ldquo;&check; All assets cached&rdquo;</strong>. Redo after every app update. <em>First sign-in:</em> when the browser offers to save the admin password, click <strong>Never</strong> &mdash; a saved password lets a student click straight into Admin.</li>
-          <li class="hot"><strong>Confirm it joined the event.</strong> Open <strong>Advanced Mode</strong> &mdash; you should see <strong>&ldquo;How do you want to play?&rdquo;</strong> naming your event. A &ldquo;Which event?&rdquo; list means two events are open; no prompt means none is.</li>
+          <li class="hot"><strong>Set the active event.</strong> Admin &rarr; <strong>Set kiosk to</strong> &rarr; your event. Confirm it reads <em>&ldquo;Currently active: &hellip;&rdquo;</em></li>
           <li><strong>Warm the leaderboard.</strong> Tap the trophy once while online. Seeing real teams and scores proves the cache filled.</li>
           <li><strong>Pre-approve the school.</strong> Add it on the roster screen, then Admin &rarr; Active event roster &rarr; <strong>Approve for event</strong>. Now students just pick it from a dropdown.</li>
         </ol>
         <p class="note">
-          No prompt at all? Your event is still <code>scheduled</code> &mdash; Admin &rarr; Events &rarr; <strong>Open now</strong>. Scheduling never auto-opens an event.
+          Event shows as <code>scheduled</code> and isn&rsquo;t in the dropdown? Admin &rarr; Events &rarr; <strong>Open now</strong> first. Scheduling never auto-opens an event.
         </p>
       </section>
 
@@ -644,8 +644,8 @@ code {
               <tr><th>Symptom</th><th>Fix</th></tr>
             </thead>
             <tbody>
-              <tr><td class="lead">No Team/Casual prompt</td><td>No event is <strong>open</strong> &rarr; Admin &rarr; Events &rarr; <strong>Open now</strong></td></tr>
-              <tr><td class="lead">&ldquo;Which event are you at?&rdquo; keeps asking</td><td>Two events open at once &rarr; Events &rarr; <strong>End</strong> the stale one</td></tr>
+              <tr><td class="lead">No Team/Casual prompt</td><td>No active event on <em>this</em> device &rarr; Admin &rarr; Set kiosk to</td></tr>
+              <tr><td class="lead">Event missing from dropdown</td><td>It&rsquo;s <code>scheduled</code> &rarr; Events &rarr; <strong>Open now</strong></td></tr>
               <tr><td class="lead">Team dropdown empty</td><td>Nothing approved for the event yet &rarr; <strong>Approve for event</strong></td></tr>
               <tr><td class="lead">School not on leaderboard</td><td>Team still pending &rarr; approve it</td></tr>
               <tr><td class="lead">Leaderboard stuck loading</td><td>Never cached online. Go online, open the trophy, wait.</td></tr>

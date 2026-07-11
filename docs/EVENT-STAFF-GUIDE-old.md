@@ -1,17 +1,20 @@
-# SDSHC Games Hub — Event Staff Guide
+# SDSHC Games Hub — Event Staff Guide *(manual-setup version — archived)*
+
+> 📁 **This is the older, manual-setup version, kept as a fallback.** It describes the workflow where every device is pointed at its event by hand in the Admin panel (**"Set kiosk to"**). The current build **joins the open event automatically** — see the main [EVENT-STAFF-GUIDE.md](EVENT-STAFF-GUIDE.md). Use this one only if auto-join misbehaves and you need to fall back to setting each device manually.
 
 Everything you need to run the Games Hub with students at a school visit, fair booth, or field day.
 
 **Live site:** https://plantshley.github.io/SDSHC-games-hub/
 **Admin panel:** https://plantshley.github.io/SDSHC-games-hub/#advanced/admin
-**Printable one-page cheat sheet:** [event-cheat-sheet.html](event-cheat-sheet.html) — open it in a browser and print. Keep a copy in the event bag.
+**Printable one-page cheat sheet:** [event-cheat-sheet-old.html](event-cheat-sheet-old.html) — open it in a browser and print. Keep a copy in the event bag.
 
-> **Read this first.** Devices now **join the open event automatically** — no admin sign-in, no per-device event setup. Just make sure two things are true on event day:
+> **Read this first.** There is exactly one thing that reliably goes wrong, and it isn't obvious:
 >
-> 1. **Your event is actually _open_, not _scheduled_.** Auto-join only picks up events whose status is `open`. A scheduled event does **not** open itself when its time arrives — someone has to tap **"Open now"** in Admin → Events. If no event is open, students never see the Team Play prompt and every score records as casual, tied to no team. The games still work — but nothing lands on the leaderboard.
-> 2. **Only _your_ event is open.** If an old event was left running, two events are open at once — so instead of joining silently, each device stops and asks **"Which event are you at?"** That's recoverable (just pick the right one), but cleaner to avoid: **end old events** before the new one.
+> **Creating an event does not turn it on for your device.** Events are stored in the cloud and shared, but *"which event is active on this laptop/kiosk"* is saved **on that device only**. If Ashley creates the event a week early, your laptop still knows nothing about it. You must open the Admin panel **on the device you're bringing**, sign in, and pick the event from the **"Set kiosk to"** dropdown. Every device you bring needs this, separately.
 >
-> You still have to **prep each device at home** (install + cache for offline) — that part hasn't changed. What's gone is the old "open Admin on every device and pick the event by hand" step.
+> If you skip that step, students never see the Team Play prompt and every score is recorded as casual, tied to no team. The games all still work — but nothing lands on the leaderboard.
+>
+> *(A change is planned that will let a device join the open event automatically, with no admin sign-in. Until it ships, the step above is required.)*
 
 ---
 
@@ -50,7 +53,7 @@ Include:
 - **How many devices you're bringing** — each one needs its own setup
 - **Whether you'll have reliable Wi-Fi** — assume you won't; see [Online vs. offline](#online-vs-offline-and-blocked-school-wi-fi)
 
-Ashley creates and opens the event, and can pre-create the teams. Once the event is open, **every prepped device joins it automatically** the moment it enters Advanced Mode — there's no per-device event step anymore (see [device prep](#before-the-event--device-prep)).
+Ashley creates and opens the event, and can pre-create the teams. **You still have to point each device at the event** (see [device prep](#before-the-event--device-prep), step 3).
 
 Short notice? You can create the event yourself — see [Setting up an event yourself](#setting-up-an-event-yourself).
 
@@ -176,15 +179,15 @@ The app downloads its code automatically, but the ~107 MB of photos, sprites, an
 >
 > On a shared event device, a saved-and-autofilled password lets a student click straight through the sign-in screen — deleting it keeps the panel actually locked.
 
-### 3. Confirm the device joined the event
+### 3. Point the device at the event ← the step everyone forgets
 
-Auto-join does the work — but verify it before you pack the device:
+Still in the Admin panel:
 
-1. Open **Advanced Mode**. If your event is open, the first screen is **"How do you want to play?"** with **Event: *Your Event Name*** under the heading. That's the device confirming it joined.
-2. See a **"Which event are you at?"** list instead? Two or more events are open. Either pick yours, or (cleaner) go to **Admin → Events** and **End** the stale one so only yours remains.
-3. See the game grid with **no** play prompt? No event is open. **Scheduled events do not open themselves** — go to **Admin → Events**, find yours, tap **"Open now"**, then reopen Advanced Mode.
+1. Find **"Active event on this kiosk"** at the top.
+2. In the **"Set kiosk to"** dropdown, choose your event.
+3. The line beside it should now read **"Currently active: *Your Event Name*"**.
 
-> **The manual override still exists.** Admin → *Active event on this kiosk* → **"Set kiosk to"** pins a device to a specific event by hand. You rarely need it now, but it's there for the several-events-open case, or to force one device onto a particular event.
+**Only events with status `open` appear in this dropdown.** If the event was *scheduled* for a future date rather than started, it won't be listed — and **scheduled events do not open themselves when their time arrives.** Scroll to the **Events** section, find it, tap **"Open now"**, then come back and set it active.
 
 ### 4. Warm the leaderboard
 
@@ -200,7 +203,7 @@ The night before, per device:
 
 - [ ] App is **installed** (opened from the desktop shortcut, not a browser tab)
 - [ ] Admin → Offline readiness shows **"✓ All assets cached"**
-- [ ] Advanced Mode shows the **"How do you want to play?"** prompt naming your event (proof it auto-joined)
+- [ ] Admin → Active event shows **"Currently active: *Your Event*"**
 - [ ] Trophy icon shows real teams/scores (not empty, not "Loading…")
 - [ ] Your teams appear on the event roster marked **✓ Event**
 - [ ] Opening a game's intro screen shows those teams **in the Team dropdown**
@@ -218,10 +221,10 @@ That sixth item is the one that catches Path B — if the dropdown is empty, you
 Perfectly supported, and maybe useful for a large class. Also, note that each game supports multiplayer up to four. 
 
 - **Events and teams are shared** through the cloud. Create them once.
-- **Every device auto-joins the open event** — there's no per-device event step. Each device still needs its own [offline prep](#before-the-event--device-prep) (install + cache), but "pointing it at the event" is automatic now. (You can skip install/cache on a device used at the venue, noting the risks.)
+- **The active-event pointer is per-device.** Every laptop, tablet, and kiosk must be walked through [prep steps 1–4](#before-the-event--device-prep) on its own — install, cache, admin sign-in, "Set kiosk to." (can skip prep steps 1-2, noting the risks)
 - **If pre-creating the teams,** do it once on any device, online, before the event. Then every device shows the same dropdown, nobody types a name, and you cannot get duplicates.
 - **If devices are offline and students type team names by hand, you might get duplicates.** Each device's cache can't see a team another device invented while offline, so two "Lincoln HS" records sync up later. [Merge them afterward.](#after-the-event)
-- **Keep just one event open per gathering.** With two events open, every device stops to ask "Which event are you at?" — recoverable, but end the stale one and they all join silently.
+- Don't point two devices at *different* events at the same gathering unless you mean to.
 
 
 <div align="right"><sub><a href="#table-of-contents">↑ Contents</a></sub></div>
@@ -242,7 +245,7 @@ In **"Active event on this kiosk"**, bottom row:
 
 | Choice | What happens |
 |---|---|
-| **Start now** | Event opens immediately. **Every prepped device auto-joins it** when it enters Advanced Mode — this one included. |
+| **Start now** | Event opens immediately **and is set active on this device**. Other devices still need step 3. |
 | **Schedule for** | Event is created with status `scheduled`. It is **not** active, **won't appear** in the "Set kiosk to" dropdown, and **will not open by itself** when the scheduled time arrives. |
 
 > **Scheduling is a reminder, not an automation.** On event day someone must open **Events → "Open now"** before any device can join. If you don't need the calendar entry, "Start now" on the morning of is simpler.
@@ -272,50 +275,41 @@ The **Events** section lists everything with status badges:
 ```
 Opening screen
      │
-     └── Advanced Mode  ──  how many events are OPEN?
+     └── Advanced Mode
             │
-            ├── ONE open ─────► device joins it automatically ──┐
-            │                                                    │
-            ├── SEVERAL open ─► "Which event are you at?"        │
-            │                    student picks one ──────────────┤
-            │                                                     ▼
-            │                                    "How do you want to play?"
-            │                                          │
-            │                          ┌─── Team Play ─┴─ Casual Play ───┐
-            │                          ▼                                  ▼
-            │                     Team Roster                        Game Select
-            │                          │                                  │
-            │                     Game Select                pick a game → a name
-            │                          │                        only, no Team field
-            │             pick a game → a name + a Team                   │
-            │                 from the dropdown              play → recorded, but
-            │                          │                       on no leaderboard
-            │             play → saved to the event
-            │                 + All-Time leaderboards
-            │
-            └── NONE open ──────────────────────────────────► Game Select
-                                                                    │
-                                                  pick a game → a name only,
-                                                        no Team field
-                                                                    │
-                                                  play → recorded, but
-                                                    on no leaderboard
+            ├── event active on this device → "How do you want to play?"
+            │         │
+            │         ├── Team Play ──→ Team Roster ──→ Game Select
+            │         │                                     │
+            │         │                   pick a game → each player row is
+            │         │                   a name + a Team from the dropdown
+            │         │                                     │
+            │         │                   play → scores saved to the
+            │         │                   event + All-Time leaderboards
+            │         │
+            │         └── Casual Play ──┐
+            │                           │
+            └── no active event ───────►┤
+                                        ▼
+                                   Game Select
+                                        │
+                          pick a game → a name only, no Team field
+                                        │
+                          play → scores recorded, but on no leaderboard
 ```
 
-Only the **Team Play** path shows a Team dropdown and puts scores on a leaderboard. Casual Play and "no event open" look identical to the student — a name field, no team, nothing tracked publicly.
+Only the **Team Play** path shows a Team dropdown and puts scores on a leaderboard. Casual Play and "no active event" look identical to the student — a name field, no team, nothing tracked publicly.
 
 > **A "player" doesn't have to be one student.** In [Path B](#path-b--class-teams-one-classroom-groups-compete) each player slot can be a whole group huddled around the device: they pick their group from the Team dropdown and put the group's name (or a representative's) in the name field. "Player" below means "whoever is at that slot" — one kid or a table of them.
 
 ### The play-mode prompt
 
-If exactly one event is open, the device joins it automatically and the first screen after Advanced Mode is **"How do you want to play?"**, naming the event. If several events are open, that screen first asks **"Which event are you at?"** — pick yours, then choose Team or Casual.
+If the device has an active, open event, the first thing after Advanced Mode is **"How do you want to play?"**
 
 - **Team Play** — scores roll up to a team. Goes to the roster screen next.
 - **Casual Play** — no team tracking. The team field is hidden everywhere, and scores are recorded but **never appear on any leaderboard.**
 
 **This choice lasts for the browser session, not forever.** After **10 minutes** idle the app returns to the opening screen, which clears the choice — so the next group is asked fresh. To force a reset between groups, tap **Back** to the opening screen.
-
-> **Picked the wrong event?** When several events are open, the "Which event are you at?" picker re-appears on every fresh entry — so just tap **Back** to the opening screen and re-enter Advanced Mode to choose again. No admin trip needed.
 
 Use **Casual Play** for walk-up booths at fairs. Use **Team Play** for classrooms and anything competitive.
 
@@ -465,7 +459,7 @@ The event leaderboard tab will now show a single Lincoln HS row instead of six �
 | Device | Verdict |
 |---|---|
 | **The Dell kiosk touchscreen** | ✅ Best. Built for it. Prep once, stays prepped. 1920×1080, full-screen, touch-first. |
-| **Your own Windows laptop / large tablet** | ✅ Great. Needs its own offline prep (install + cache); it auto-joins the open event on its own. |
+| **Your own Windows laptop / large tablet** | ✅ Great. Needs its own full prep: install, cache, admin sign-in, set active event. |
 | **Small tablet / large phone** | ⚠️ Works, with limits. **Game screens won't load below ~600px wide** — they show a "screen too narrow, switch to landscape orientation" message. Field Guide needs ~900px. **Use landscape.** Menus, roster, and admin work at any size. |
 | **A school's computer** | ⚠️ Risky. You can't install or pre-cache the app, and it's the machine most likely to have the site blocked. If it happens to be online and unblocked it works fine — but don't make it the plan. |
 
@@ -523,9 +517,8 @@ If groups are sharing a slot ([Path B](#path-b--class-teams-one-classroom-groups
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| **No "How do you want to play?" prompt** | No event is **open** (auto-join only fires for open events) | Admin → Events → **"Open now"** on your event, then reopen Advanced Mode |
-| **"Which event are you at?" keeps appearing** | Two or more events are open at once | End the stale one: Admin → Events → **End**. Only your event should be open |
-| **Event won't open by itself at its scheduled time** | Scheduling is a reminder, not automation | Admin → Events → **"Open now"** on event day |
+| **No "How do you want to play?" prompt** | No active event on *this device* | Admin → **"Set kiosk to"** → your event |
+| **My event isn't in the "Set kiosk to" dropdown** | It's `scheduled`, not `open` | Admin → Events → **"Open now"**, then set it active |
 | **Team dropdown empty on game intros** | No teams approved **for this event** | Admin → Active event roster → **"Approve for event"** |
 | **Event leaderboard stays empty during class** | Students' typed teams are still `pending` | Approve each **for the event** — or pre-create them next time |
 | **A school isn't on the All-Time board** | Team isn't approved **statewide** | Admin → approve statewide |
@@ -537,7 +530,7 @@ If groups are sharing a slot ([Path B](#path-b--class-teams-one-classroom-groups
 | **Game says "screen too narrow"** | Narrower than ~600px (Field Guide: ~900px) | Rotate to landscape, or use a bigger device |
 | **App won't load at the school** | Site blocked and device never prepped | Nothing on-site. Prep at home next time. |
 | **App reloaded itself mid-game** | It auto-updated while online | Harmless — and why you **update at home, never at an event** |
-| **Admin signs me out when I leave the panel** | Intended — for shared-device security, admin now signs out the moment you navigate away (and when the app closes) | Sign in again when you return. Nothing is wrong |
+| **Admin keeps signing me out** | Cleared site data, or a different browser/device | Sign in again. Each device signs in separately. |
 
 <div align="right"><sub><a href="#table-of-contents">↑ Contents</a></sub></div>
 
@@ -549,8 +542,8 @@ If groups are sharing a slot ([Path B](#path-b--class-teams-one-classroom-groups
 |---|---|
 | Live site | https://plantshley.github.io/SDSHC-games-hub/ |
 | Admin panel | `…/#advanced/admin` |
-| Admin password | Ask Ashley — one shared password. **Not** kept between admin sessions (signs out when you leave the panel) |
-| Active event | **Auto-joined.** Every prepped device joins the one open event; if several are open it asks which |
+| Admin password | Ask Ashley — one shared password, remembered per device |
+| Active event | **Per-device.** Set it on every device you bring |
 | Teams & events | **Shared in the cloud.** Create them once |
 | Team names | **Global, matched by name.** Prefix class teams with the school |
 | Rename onto an existing name | **Merges** the two teams |
@@ -568,4 +561,4 @@ If groups are sharing a slot ([Path B](#path-b--class-teams-one-classroom-groups
 
 ---
 
-*Companion: [event-cheat-sheet.html](event-cheat-sheet.html) — a one-page printable summary. Open it in any browser and hit Print; it's laid out to fit a single sheet of Letter paper, and has no dependencies, so you can email it to staff as-is.*
+*Companion: [event-cheat-sheet-old.html](event-cheat-sheet-old.html) — a one-page printable summary. Open it in any browser and hit Print; it's laid out to fit a single sheet of Letter paper, and has no dependencies, so you can email it to staff as-is.*
