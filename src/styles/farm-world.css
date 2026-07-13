@@ -43,11 +43,11 @@
   color: var(--adv-text-muted);
 }
 
-/* Farm World has no leaderboard trophy in its topbars (no score recording),
-   so the right-alignment that .adv-lb-btn normally provides moves to the
-   theme toggle. */
-.adv-fw-intro .adv-sw-intro-topbar .adv-theme-toggle,
-.adv-fw-topbar .adv-theme-toggle {
+/* Intro: no leaderboard trophy (no score recording), so the right-alignment
+   that .adv-lb-btn normally provides moves to the theme toggle. In the WORLD
+   topbar the day/night toggle is instead grouped left, right after the
+   customizer button, so it deliberately does NOT get margin-left: auto. */
+.adv-fw-intro .adv-sw-intro-topbar .adv-theme-toggle {
   margin-left: auto;
 }
 
@@ -78,8 +78,8 @@
 
 /* topbar glyph buttons (⊙ camera reset, ☺ customizer) */
 .adv-fw-topbar-btn {
-  font-size: 1.15rem;
-  line-height: 1;
+  font-size: 1.5rem;
+  line-height: 0;
 }
 
 .adv-fw-canvas {
@@ -95,11 +95,11 @@
   height: 100%;
 }
 
-/* ── HUD: soil health meter (top right, below the topbar) ── */
+/* ── HUD: soil health meter (top right, aligned with the topbar row) ── */
 
 .adv-fw-meter {
   position: absolute;
-  top: 64px;
+  top: 12px;
   right: 24px;
   width: 230px;
   display: flex;
@@ -604,7 +604,7 @@
 
 @media (max-width: 899px) {
   .adv-fw-meter {
-    top: 58px;
+    top: 12px;
     right: 12px;
     width: 168px;
     padding: 8px 12px;

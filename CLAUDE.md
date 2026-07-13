@@ -20,7 +20,7 @@ Educational game hub for South Dakota Soil Health Coalition (SDSHC) events. Runs
 - **Kid Mode auto-reset** — 120s idle returns to intro screen, 10s warning at 110s
 - **Advanced Mode auto-reset** — 600s (10 min) idle returns to intro screen
 - **Admin panel disables idle timer** — `#advanced/admin` keeps the timer off so an admin typing/picking colors isn't kicked back to intro mid-task
-- **Progress resets on idle timeout** — each kiosk user starts fresh. Idle reset clears `sdshc-progress`; all `sdshc-lb-*` leaderboard keys survive.
+- **Progress resets on idle timeout** — each kiosk user starts fresh. Idle reset clears `sdshc-progress` and the session-scoped Farm World look (`sdshc-fw-look`); all `sdshc-lb-*` leaderboard keys survive.
 
 ## Tech Stack
 
