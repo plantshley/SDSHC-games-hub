@@ -1026,7 +1026,8 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   const dragPts = new Map()
   let lastPinch = 0
   canvas.addEventListener('pointerdown', (e) => {
-    if (customizeFocus) return // camera is framing the customizer — no orbiting
+    // orbiting stays enabled during customize so you can spin around the
+    // explorer (e.g. to see the backpack); the frame-loop pan keeps them framed
     canvas.setPointerCapture(e.pointerId)
     dragPts.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (dragPts.size === 2) {
@@ -1061,7 +1062,6 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   canvas.addEventListener('pointercancel', endDrag)
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault() // don't let the page scroll under the world
-    if (customizeFocus) return
     camDist = clamp(camDist * (1 + e.deltaY * 0.0012), CAM_DIST_MIN, CAM_DIST_MAX)
   }, { passive: false })
 
@@ -1545,10 +1545,11 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   /** Recolor / re-hat the player. look: { body, hat, hatColor, shoes, pack } */
   function applyLook(look) {
     const u = player.userData
-    u.mats.body.color.setHex(look.body)
-    u.mats.hat.color.setHex(look.hatColor)
-    u.mats.shoe.color.setHex(look.shoes)
-    u.mats.pack.color.setHex(look.pack)
+    // .set() accepts '#rrggbb' strings and legacy numeric hex alike
+    u.mats.body.color.set(look.body)
+    u.mats.hat.color.set(look.hatColor)
+    u.mats.shoe.color.set(look.shoes)
+    u.mats.pack.color.set(look.pack)
     u.hats.beanie.visible = look.hat === 'beanie'
     u.hats.straw.visible = look.hat === 'straw'
   }

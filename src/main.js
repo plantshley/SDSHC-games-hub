@@ -254,6 +254,11 @@ initRouter()
 initIdleTimer(() => {
   trackIdleTimeout(app.dataset.mode || 'intro', location.hash.replace('#', '') || 'intro')
   clearProgress()
+  // Farm World's explorer look is session-scoped; drop it on idle too so each
+  // fresh kiosk walk-up starts from the default (mirrors LOOK_KEY in
+  // games/advanced/farm-world/index.js — not imported to avoid eagerly
+  // bundling the three.js game chunk into the main entry).
+  sessionStorage.removeItem('sdshc-fw-look')
   navigateRaw('intro')
 })
 

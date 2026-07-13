@@ -32,23 +32,29 @@ const POINTS_SECOND_TRY = 50
 // ── Player look (customizer) ──
 
 const LOOK_KEY = 'sdshc-fw-look'
-const LOOK_DEFAULT = { body: 0xb9b0e6, hat: 'beanie', hatColor: 0xf2cf3e, shoes: 0x4a7fe0, pack: 0x5a8ff0 }
-const BODY_COLORS = [0xb9b0e6, 0x92dbb4, 0xf2a3b0, 0x8fc9f5, 0xf5d98f, 0xf0eee8]
-const HAT_COLORS = [0xf2cf3e, 0xe0596e, 0x38cebc, 0x3b4a8c, 0xe87fae, 0x5cc257]
-const SHOE_COLORS = [0x4a7fe0, 0xe0596e, 0x3a3a3f, 0xf2cf3e]
-const PACK_COLORS = [0x5a8ff0, 0xe0784a, 0x5cc257, 0x8f6ae0]
+// Look lives in sessionStorage, not localStorage: it survives navigating away
+// from the game and back (and page reloads) within the same browser tab, but
+// resets to the default when the site is fully closed and reopened later.
+// Colors are '#rrggbb' strings so the IDE shows inline swatch previews.
+// three.js Color.set() accepts them directly (and still accepts old numeric
+// values that may linger from before, so the format change is backward-safe).
+const LOOK_DEFAULT = { body: '#e295df', hat: 'beanie', hatColor: '#ff35d0', shoes: '#cd35ff', pack: '#ff7ca8' }
+const BODY_COLORS = ['#b9b0e6', '#92dbb4', '#f2a3b0', '#8fc9f5', '#e295df', '#f5d98f']
+const HAT_COLORS = ['#f2cf3e', '#e0596e', '#38cebc', '#3b4a8c', '#ff35d0', '#5cc257']
+const SHOE_COLORS = ['#ffa760', '#e0596e', '#3a3a3f', '#f2cf3e', '#cd35ff', '#38cebc']
+const PACK_COLORS = ['#5a8ff0', '#e0784a', '#5cc257', '#8f6ae0', '#ff7ca8', '#f2cf3e']
 const HAT_STYLES = [['beanie', 'Beanie'], ['straw', 'Straw Hat'], ['none', 'No Hat']]
 
 function loadLook() {
   try {
-    const raw = JSON.parse(localStorage.getItem(LOOK_KEY))
+    const raw = JSON.parse(sessionStorage.getItem(LOOK_KEY))
     if (raw && typeof raw === 'object') return { ...LOOK_DEFAULT, ...raw }
   } catch { /* corrupted or unavailable — fall through to the default */ }
   return { ...LOOK_DEFAULT }
 }
 
 function saveLook(look) {
-  try { localStorage.setItem(LOOK_KEY, JSON.stringify(look)) } catch { /* look just won't persist */ }
+  try { sessionStorage.setItem(LOOK_KEY, JSON.stringify(look)) } catch { /* look just won't persist */ }
 }
 
 function esc(str) {
@@ -276,7 +282,6 @@ function createWorldScreen() {
     panel.className = 'adv-fw-custom'
     el.appendChild(panel)
 
-    const hex = c => '#' + c.toString(16).padStart(6, '0')
     const applyAndRender = () => {
       saveLook(look)
       world.applyLook(look)
@@ -293,8 +298,8 @@ function createWorldScreen() {
       colors.forEach(c => {
         const b = document.createElement('button')
         b.className = 'adv-fw-swatch' + (look[key] === c ? ' adv-fw-swatch-active' : '')
-        b.style.background = hex(c)
-        b.title = `${label}: ${hex(c)}`
+        b.style.background = c
+        b.title = `${label}: ${c}`
         onTap(b, () => { look[key] = c; applyAndRender() })
         row.appendChild(b)
       })
