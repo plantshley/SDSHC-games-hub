@@ -1,0 +1,676 @@
+/* ─── Farm World (Advanced Mode 3D explorer) ───
+   Loaded lazily with the game chunk (imported by games/advanced/farm-world).
+   Every rule is scoped to .adv-fw-* classes; responsive overrides live in
+   media-query blocks at the bottom (kiosk-safety rule). */
+
+/* ── Intro additions (base layout reuses .adv-sw-intro classes) ── */
+
+.adv-fw-intro-features {
+  display: flex;
+  gap: 18px;
+  width: 100%;
+}
+
+.adv-fw-feature {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 14px;
+  background: var(--adv-glass);
+  border: 1px solid var(--adv-border);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.adv-fw-feature-icon {
+  font-family: 'Noto Sans Symbols 2', sans-serif;
+  font-size: 1.7rem;
+  color: var(--adv-accent);
+}
+
+.adv-fw-feature-title {
+  font-family: var(--font-title), sans-serif;
+  font-size: 0.85rem;
+  color: var(--adv-text);
+}
+
+.adv-fw-feature-desc {
+  font-family: var(--font-body), monospace;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--adv-text-muted);
+}
+
+/* Farm World has no leaderboard trophy in its topbars (no score recording),
+   so the right-alignment that .adv-lb-btn normally provides moves to the
+   theme toggle. */
+.adv-fw-intro .adv-sw-intro-topbar .adv-theme-toggle,
+.adv-fw-topbar .adv-theme-toggle {
+  margin-left: auto;
+}
+
+/* ── World screen ── */
+/* HUD follows the Coastal World reference: white rounded cards and pills with
+   deep-navy text, floating over the bright 3D scene. Deliberately identical in
+   both themes — it belongs to the scene, not to the app chrome. */
+
+.adv-fw-world {
+  overflow: hidden;
+  background: #7fd4f5; /* matches the 3D sky while the renderer boots */
+}
+
+/* topbar controls go white-on-navy over the bright sky */
+.adv-fw-world .adv-game-topbar-btn,
+.adv-fw-world .adv-help-btn,
+.adv-fw-world .adv-theme-toggle {
+  background: rgba(255, 255, 255, 0.92);
+  border: none;
+  color: #3b3a5c;
+  box-shadow: 0 4px 16px rgba(31, 41, 81, 0.18);
+}
+
+.adv-fw-world .adv-sw-game-title {
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(31, 41, 81, 0.35);
+}
+
+/* topbar glyph buttons (⊙ camera reset, ☺ customizer) */
+.adv-fw-topbar-btn {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.adv-fw-canvas {
+  position: absolute;
+  inset: 0;
+  /* the drivable 3D view — suppress native pinch/double-tap zoom gestures */
+  touch-action: none;
+}
+
+.adv-fw-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── HUD: soil health meter (top right, below the topbar) ── */
+
+.adv-fw-meter {
+  position: absolute;
+  top: 64px;
+  right: 24px;
+  width: 230px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(31, 41, 81, 0.18);
+  z-index: 5;
+}
+
+.adv-fw-meter-label {
+  font-family: var(--font-title), sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: #17a08e;
+}
+
+.adv-fw-meter-bar {
+  height: 10px;
+  border-radius: 5px;
+  background: #e8eaf2;
+  overflow: hidden;
+}
+
+.adv-fw-meter-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #38cebc, #7ad35e);
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.adv-fw-meter-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-body), monospace;
+  font-size: 0.72rem;
+  color: #3b3a5c;
+}
+
+/* ── HUD: interact prompt (bottom center) ── */
+
+.adv-fw-prompt {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translate(-50%, 16px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px 10px 22px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 999px;
+  box-shadow: 0 8px 28px rgba(31, 41, 81, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 5;
+}
+
+.adv-fw-prompt-show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.adv-fw-prompt-name {
+  font-family: var(--font-title), sans-serif;
+  font-size: 0.85rem;
+  color: #3b3a5c;
+}
+
+.adv-fw-prompt-btn {
+  min-height: 44px; /* project touch-target minimum */
+  padding: 9px 26px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #34c98c, #38cebc);
+  color: #ffffff;
+  font-family: var(--font-title), sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.adv-fw-prompt-btn:hover,
+.adv-fw-prompt-btn:active {
+  box-shadow: 0 0 16px rgba(52, 201, 140, 0.6);
+  transform: scale(1.04);
+}
+
+.adv-fw-prompt-key {
+  font-family: var(--font-body), monospace;
+  font-size: 0.7rem;
+  color: #9a9db4;
+}
+
+/* ── HUD: keyboard hint (bottom right) ── */
+
+.adv-fw-keys-hint {
+  position: absolute;
+  bottom: 18px;
+  right: 24px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 6px rgba(31, 41, 81, 0.35);
+  z-index: 4;
+}
+
+/* ── HUD: virtual joystick (bottom left) ── */
+
+.adv-fw-joystick {
+  position: absolute;
+  bottom: 28px;
+  left: 28px;
+  z-index: 5;
+}
+
+.adv-fw-joystick-base {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.adv-fw-joystick-thumb {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(31, 41, 81, 0.3);
+  pointer-events: none;
+}
+
+/* ── Player customizer panel ── */
+
+/* Docked to the LEFT edge so the character (framed right of center while the
+   customizer is open — see setCustomizeFocus/lookAt pan) stays fully visible. */
+.adv-fw-custom {
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 400px;
+  max-width: calc(100% - 48px);
+  max-height: calc(100% - 130px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 22px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 22px;
+  box-shadow: 0 12px 40px rgba(31, 41, 81, 0.28);
+  z-index: 12;
+}
+
+.adv-fw-custom-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.adv-fw-custom-label {
+  width: 100%;
+  font-family: var(--font-title), sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #3b3a5c;
+}
+
+.adv-fw-swatch {
+  width: 44px; /* project touch-target minimum */
+  height: 44px;
+  border-radius: 50%;
+  border: 4px solid #ffffff;
+  box-shadow: 0 0 0 1px #e3e5f0, 0 2px 6px rgba(31, 41, 81, 0.15);
+  cursor: pointer;
+  padding: 0;
+}
+
+.adv-fw-swatch-active {
+  box-shadow: 0 0 0 3px #38cebc, 0 2px 6px rgba(31, 41, 81, 0.2);
+}
+
+.adv-fw-chip {
+  min-height: 44px; /* project touch-target minimum */
+  padding: 8px 18px;
+  border: 1px solid #e3e5f0;
+  border-radius: 999px;
+  background: #f5f6fa;
+  color: #3b3a5c;
+  font-family: var(--font-body), monospace;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.adv-fw-chip-active {
+  border-color: #38cebc;
+  background: #eefaf8;
+  color: #17a08e;
+}
+
+.adv-fw-custom-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.adv-fw-custom-done {
+  /* NOT dead code: neutralizes .adv-fw-card-btn's align-self: flex-start so
+     the Done button centers within the footer row like its siblings. */
+  align-self: auto;
+}
+
+/* while customizing, movement is locked — hide the movement UI */
+.adv-fw-customizing .adv-fw-joystick,
+.adv-fw-customizing .adv-fw-keys-hint {
+  display: none;
+}
+
+/* ── Station overlay: lesson / questions / fact ── */
+
+.adv-fw-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(31, 41, 81, 0.35);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 20;
+}
+
+.adv-fw-overlay-show {
+  opacity: 1;
+}
+
+.adv-fw-card {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  max-height: 86vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 30px 34px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 18px 60px rgba(31, 41, 81, 0.35);
+  animation: adv-fw-card-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.adv-fw-card-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 44px; /* project touch-target minimum */
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: #f2f3f9;
+  color: #9a9db4;
+  font-family: var(--font-body), monospace;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.adv-fw-card-close:hover,
+.adv-fw-card-close:active {
+  color: #e0596e;
+  background: #fdeef1;
+}
+
+@keyframes adv-fw-card-in {
+  from { transform: translateY(14px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.adv-fw-card-tag {
+  font-family: var(--font-body), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #17a08e;
+}
+
+.adv-fw-card-title {
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.5rem;
+  color: #32305a;
+}
+
+.adv-fw-card-lesson {
+  font-family: var(--font-body), monospace;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #3b3a5c;
+}
+
+.adv-fw-card-question {
+  font-family: var(--font-body), monospace;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #3b3a5c;
+}
+
+.adv-fw-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adv-fw-choice {
+  padding: 13px 18px;
+  border: 1px solid #e3e5f0;
+  border-radius: 14px;
+  background: #f5f6fa;
+  color: #3b3a5c;
+  font-family: var(--font-body), monospace;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.adv-fw-choice:hover,
+.adv-fw-choice:active {
+  border-color: #38cebc;
+  background: #eefaf8;
+}
+
+.adv-fw-choice-correct {
+  border-color: #2fbf6b;
+  background: rgba(74, 212, 106, 0.16);
+  color: #23663f;
+}
+
+.adv-fw-choice-wrong {
+  border-color: #e05656;
+  background: rgba(224, 86, 86, 0.1);
+  opacity: 0.75;
+}
+
+.adv-fw-card-feedback {
+  min-height: 1.2em;
+  font-family: var(--font-body), monospace;
+  font-size: 0.82rem;
+}
+
+.adv-fw-feedback-good { color: #27ae60; }
+.adv-fw-feedback-bad { color: #e0596e; }
+
+.adv-fw-card-btn {
+  align-self: flex-start;
+  min-height: 44px; /* project touch-target minimum */
+  padding: 12px 32px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #34c98c, #38cebc);
+  color: #ffffff;
+  font-family: var(--font-title), sans-serif;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(52, 201, 140, 0.35);
+  transition: all 0.2s ease;
+}
+
+.adv-fw-card-btn:hover,
+.adv-fw-card-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(52, 201, 140, 0.5);
+}
+
+/* ── Restored toast (top center) ── */
+
+.adv-fw-toast {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translate(-50%, -12px);
+  padding: 12px 26px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 999px;
+  box-shadow: 0 8px 28px rgba(31, 41, 81, 0.22);
+  color: #27ae60;
+  font-family: var(--font-title), sans-serif;
+  font-size: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.adv-fw-toast-show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ── Completion / leave popups (shared .adv-sw-completion-* classes) ──
+   Re-skinned white inside the world so they match the Coastal-style HUD. */
+
+.adv-fw-world .adv-sw-completion-overlay {
+  background: rgba(31, 41, 81, 0.35);
+}
+
+.adv-fw-world .adv-sw-completion-content {
+  background: #ffffff;
+  border: none;
+  border-radius: 24px;
+  box-shadow: 0 18px 60px rgba(31, 41, 81, 0.35);
+}
+
+.adv-fw-world .adv-sw-completion-heading {
+  color: #32305a;
+  text-shadow: none;
+}
+
+.adv-fw-world .adv-sw-completion-detail,
+.adv-fw-world .adv-sw-completion-name,
+.adv-fw-world .adv-sw-completion-pts {
+  color: #3b3a5c;
+}
+
+.adv-fw-world .adv-sw-completion-row {
+  background: #f5f6fa;
+  border-color: #e3e5f0;
+}
+
+.adv-fw-world .adv-sw-comp-btn {
+  background: #f2f3f9;
+  border: none;
+  color: #3b3a5c;
+}
+
+.adv-fw-world .adv-sw-comp-btn.adv-sw-comp-primary {
+  background: linear-gradient(135deg, #34c98c, #38cebc);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(52, 201, 140, 0.35);
+}
+
+/* ── WebGL fallback ── */
+
+.adv-fw-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px;
+  text-align: center;
+  background: var(--adv-bg);
+}
+
+.adv-fw-fallback h2 {
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.4rem;
+  color: var(--adv-text);
+}
+
+.adv-fw-fallback p {
+  font-family: var(--font-body), monospace;
+  font-size: 0.9rem;
+  color: var(--adv-text-muted);
+}
+
+/* ─── Responsive (≤ 1279px: laptops / tablets) ─── */
+
+@media (max-width: 1279px) {
+  /* .adv-fw-world keeps its unconditional overflow: hidden — the base .screen
+     page-scroll override never applies to this full-viewport canvas screen. */
+  .adv-fw-meter {
+    width: 200px;
+    padding: 10px 14px;
+  }
+}
+
+/* ─── Responsive (≤ 899px: tablet portrait / landscape phones) ─── */
+
+@media (max-width: 899px) {
+  .adv-fw-meter {
+    top: 58px;
+    right: 12px;
+    width: 168px;
+    padding: 8px 12px;
+    gap: 5px;
+  }
+
+  .adv-fw-meter-row {
+    font-size: 0.62rem;
+  }
+
+  .adv-fw-joystick {
+    bottom: 18px;
+    left: 18px;
+  }
+
+  .adv-fw-joystick-base {
+    width: 112px;
+    height: 112px;
+  }
+
+  .adv-fw-joystick-thumb {
+    width: 46px;
+    height: 46px;
+  }
+
+  .adv-fw-prompt {
+    bottom: 24px;
+    gap: 10px;
+    padding: 10px 16px;
+  }
+
+  .adv-fw-prompt-key,
+  .adv-fw-keys-hint {
+    display: none;
+  }
+
+  .adv-fw-custom {
+    left: 12px;
+    width: 340px;
+    max-width: calc(100% - 24px);
+    max-height: calc(100% - 90px);
+    padding: 12px 14px;
+    gap: 6px;
+  }
+
+  .adv-fw-card {
+    padding: 22px 22px;
+    gap: 12px;
+  }
+
+  .adv-fw-card-title {
+    font-size: 1.2rem;
+  }
+
+  .adv-fw-intro-features {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .adv-fw-feature {
+    flex-direction: row;
+    text-align: left;
+    padding: 12px 16px;
+  }
+
+  .adv-fw-feature-desc {
+    flex: 1;
+  }
+}

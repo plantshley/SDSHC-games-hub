@@ -60,6 +60,14 @@ const VARIANTS = {
     pos2: 'bottom: -20%; right: -5%;',
     pos3: 'top: 55%; left: 30%;',
   },
+  'farm-world': {
+    sphere1: 'linear-gradient(55deg, rgba(120, 190, 70, 0.5), rgba(56, 206, 188, 0.25))',
+    sphere2: 'linear-gradient(235deg, rgba(140, 100, 50, 0.45), rgba(184, 232, 74, 0.2))',
+    sphere3: 'linear-gradient(145deg, rgba(56, 206, 188, 0.45), rgba(100, 160, 60, 0.25))',
+    pos1: 'top: -18%; right: -8%;',
+    pos2: 'bottom: -18%; left: -12%;',
+    pos3: 'top: 50%; left: 35%;',
+  },
 }
 
 const PARTICLE_COUNT = 60

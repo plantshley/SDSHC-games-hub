@@ -77,7 +77,8 @@ export function createAdvancedGameSelectScreen() {
   addGradientBackground(screen, 'game-select')
 
   // Right cluster: (team mode) the manage-roster button to the LEFT of the
-  // leaderboard button, then leaderboard, then the theme toggle.
+  // leaderboard button, then Farm World, then leaderboard, then the theme
+  // toggle.
   const headerRight = document.createElement('div')
   headerRight.className = 'adv-header-right'
   if (playMode === 'team' && activeEventId) {
@@ -91,6 +92,17 @@ export function createAdvancedGameSelectScreen() {
     })
     headerRight.appendChild(rosterBtn)
   }
+  // Farm World launcher — the 3D explorer lives behind this button only (it
+  // has no card in the game grid).
+  const farmBtn = document.createElement('button')
+  farmBtn.className = 'adv-lb-btn adv-fw-hub-btn'
+  farmBtn.title = 'Farm World'
+  farmBtn.textContent = '\u{169E7}' // 𖧧
+  onTap(farmBtn, (e) => {
+    e.stopPropagation()
+    navigate('game/adv-farm-world/0')
+  })
+  headerRight.appendChild(farmBtn)
   headerRight.appendChild(createLeaderboardButton())
   headerRight.appendChild(createThemeToggle())
   screen.querySelector('.adv-header').appendChild(headerRight)
