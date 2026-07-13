@@ -136,8 +136,11 @@
 
 /* Ensure screen content sits above the gradient bg. The admin sign-in gate is
    a full-screen fixed overlay (like the gradient bg and narrow gate), so it's
-   excluded here to keep its own position: fixed and center on the viewport. */
-[data-mode="advanced"] .screen > *:not(.adv-gradient-bg):not(.adv-burst-particle):not(.too-narrow-gate):not(.adv-admin-gate) {
+   excluded here to keep its own position: fixed and center on the viewport.
+   The Farm World world screen (.adv-fw-world) is excluded entirely: it has no
+   gradient bg, and its canvas + HUD children position themselves absolutely
+   against the screen — this clamp would demote them to in-flow relative. */
+[data-mode="advanced"] .screen:not(.adv-fw-world) > *:not(.adv-gradient-bg):not(.adv-burst-particle):not(.too-narrow-gate):not(.adv-admin-gate) {
   position: relative;
   z-index: 1;
 }
@@ -3146,6 +3149,16 @@
 .score-save-pill[data-theme="light"].saved  { border-color: #1f9d63; color: #135a37; }
 .score-save-pill[data-theme="light"].queued { border-color: #7f9c1c; color: #45560f; }
 .score-save-pill[data-theme="light"].error  { border-color: #d63a72; color: #8a1840; }
+
+/* ─── Farm World launcher (game-select header) ───
+   Circular button reusing .adv-lb-btn; the 𖧧 glyph (U+169E7, Bamum
+   Supplement) isn't in Noto Sans Symbols 2, so fall through to system fonts
+   that cover it. */
+.adv-fw-hub-btn {
+  font-family: 'Ebrima', 'Segoe UI Historic', 'Noto Sans Bamum', 'Noto Sans Symbols 2', sans-serif;
+  font-size: 1.3rem;
+  color: var(--adv-accent-secondary);
+}
 
 /* ================================================================
  * RESPONSIVE

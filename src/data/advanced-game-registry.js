@@ -66,6 +66,16 @@ export const ADVANCED_GAMES = [
     par: 1500, // ~2 puzzles solved cleanly (up to ~1000 pts each, order-dependent)
     module: () => import('../games/advanced/connections.js'),
   },
+  {
+    id: 'adv-farm-world',
+    title: 'Farm World',
+    description: 'Drive a 3D farm and restore its soil health, station by station.',
+    icon: '\u{169E7}', // 𖧧 — matches the header launch button
+    players: '1 player',
+    par: 1400, // defensive only — Farm World never records leaderboard scores
+    hidden: true, // not in the game grid; launched from the game-select header
+    module: () => import('../games/advanced/farm-world/index.js'),
+  },
 ]
 
 export function getAdvancedGameById(id) {
@@ -73,7 +83,9 @@ export function getAdvancedGameById(id) {
 }
 
 export function getAllAdvancedGames() {
-  return ADVANCED_GAMES
+  // Hidden games (Farm World) stay routable via getAdvancedGameById but are
+  // excluded from the game-select grid.
+  return ADVANCED_GAMES.filter(g => !g.hidden)
 }
 
 // Fallback par for any score whose gameId isn't in the registry (defensive —

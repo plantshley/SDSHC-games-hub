@@ -27,6 +27,7 @@ Educational game hub for South Dakota Soil Health Coalition (SDSHC) events. Runs
 - **Vite** — dev server and bundler (`npm run dev` / `npm run build`)
 - **Vanilla JavaScript** — ES modules, no framework
 - **CSS** — custom properties for theming, no preprocessor
+- **three.js** — used ONLY by the Farm World explorer (lazy-loaded chunk, bundled locally — still no CDN/offline-safe)
 
 ## Screen Flow
 
@@ -103,6 +104,7 @@ src/
       word-game.js        # Advanced: Wheel of Fortune style, multiplayer
       field-guide.js      # Advanced: photo ID game (exception to no-image rule)
       connections.js      # Advanced: NYT Connections style, group 16 tiles
+      farm-world/         # Advanced: 3D farm explorer (three.js) — index.js, world.js, controls.js
   data/
     game-registry.js      # kid mode game metadata (GAMES array + TIER_META)
     advanced-game-registry.js  # advanced mode game metadata (flat ADVANCED_GAMES array + getGamePar())
@@ -233,11 +235,20 @@ Light theme overrides under `[data-mode="advanced"][data-theme="light"]`.
 5. **Field Guide** (`adv-field-guide`) — photo identification game (exception to no-image-assets rule), multiplayer
 6. **Conservation Connections** (`adv-connections`) — NYT Connections style, sort 16 tiles into 4 hidden groups, multiplayer
 
+### Farm World (hidden 7th experience)
+
+**Farm World** (`adv-farm-world`) — Coastal World-inspired 3D farm explorer ([src/games/advanced/farm-world/](src/games/advanced/farm-world/)). Walk a mascot character around a low-poly procedural island (three.js — second exception to the no-image-assets rule: WebGL canvas, but zero textures/image files) and visit 7 stations; each shows a lesson → 2 multiple-choice questions → sourced fact, then visually restores that corner of the farm. The in-world HUD is deliberately Coastal-style (white rounded cards, identical in both themes); the world screen `.adv-fw-world` is excluded from the advanced-mode position clamp in advanced.css. Question pools reuse the Trivia Blitz rounds; facts reuse existing IMPACT_MESSAGES ([src/data/content/advanced/farm-world.js](src/data/content/advanced/farm-world.js)).
+
+- **Not in the game grid** — registry entry has `hidden: true` (filtered out of `getAllAdvancedGames()`, still routable via `getAdvancedGameById`). Launched only from the circular 𖧧 button in the game-select header, left of the leaderboard trophy.
+- Single player, no leaderboard recording (its `par` is defensive only).
+- Controls: on-screen virtual joystick (kiosk) + WASD/arrows (laptops); E/Enter/Space or the Visit button to interact. Drag the scene to orbit the camera, wheel/two-finger-pinch to zoom, ⊙ topbar button resets the view. ☺ opens the player customizer (body/hat/shoes/backpack; persisted in localStorage `sdshc-fw-look`). The theme-toggle slot in the world topbar is a day/night switch for the 3D scene (default day) — the app theme toggle only appears on the Farm World intro.
+- Standard narrow gate at ≤ 599px; falls back to a friendly message if WebGL is unavailable.
+
 ### Advanced Game Registry
 
 Flat array (no tiers). Each entry:
 ```js
-{ id, title, description, icon (Unicode symbol, swappable later), players, par, module: () => import(...) }
+{ id, title, description, icon (Unicode symbol, swappable later), players, par, hidden?, module: () => import(...) }
 ```
 
 `par` is the leaderboard's normalization reference — see the Leaderboard section below. To recalibrate after watching real play, just edit the number; the entire score history re-normalizes instantly. `getGamePar(id)` from the same module is the read-side accessor (falls back to `DEFAULT_PAR = 1500` for unknown ids).
