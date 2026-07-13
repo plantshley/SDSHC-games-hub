@@ -54,7 +54,7 @@ We use the Firebase Web SDK's **offline persistence** (an IndexedDB-backed local
 - **Online:** reads and writes go to Firestore and are mirrored into the local cache automatically.
 - **Offline (at an event):** the app reads from the **last-synced cloud snapshot** in the local cache, and every score/team write is queued in Firestore's local mutation queue. The UI updates immediately as if online.
 - **Reconnect (back home):** Firestore **automatically replays the queued writes to the cloud** — no manual export/import, no custom sync code. The offline event's scores merge into the global database, tagged with their `eventId`.
-- **Statewide visibility is still gated by approval.** An offline event's scores stay invisible on the This-Month / All-Time leaderboards until you approve the teams in the admin panel — so an offline event feels isolated during play but isn't *lost* after sync.
+- **Statewide visibility is still gated by approval.** An offline event's scores stay invisible on the All-Time leaderboard until you approve the teams in the admin panel — so an offline event feels isolated during play but isn't *lost* after sync.
 
 ### ⚠️ Two limits to plan around
 

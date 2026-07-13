@@ -38,7 +38,9 @@ import {
   removeTeamFromEventRoster,
   approveTeamForEvent,
   setTeamColors,
+  setEventEndsAt,
 } from '../utils/leaderboard-api.js'
+import { derivedEventStatus, eventEndsAt } from '../utils/event-status.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle } from '../utils/theme-toggle.js'
 import { clearPlayMode } from './advanced-play-mode.js'
@@ -116,15 +118,23 @@ export function createAdvancedAdminScreen() {
       <div class="adv-admin-active-row">
         <label class="adv-admin-label" for="active-event-select">Set kiosk to</label>
         <select class="adv-admin-select" id="active-event-select">
-          <option value="">${'—'} None (casual mode)</option>
+          <option value="">${'—'} None (auto)</option>
           ${open.map(e => `<option value="${e.id}" ${e.id === currentId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`).join('')}
         </select>
         <span class="adv-admin-active-inline">
           ${current
             ? `Currently active: <strong>${escapeHtml(current.name)}</strong>`
-            : `No active event ${'·'} casual scores go to all-time only.`}
+            : open.length === 1
+              ? `Will join <strong>${escapeHtml(open[0].name)}</strong> automatically.`
+              : open.length > 1
+                ? `${open.length} events running ${'·'} players pick one when they start.`
+                : `No event running ${'·'} scores go to all-time only.`}
         </span>
       </div>
+      <p class="adv-admin-hint">
+        You normally don't need this. A device joins the running event by itself.
+        Override it here only when more than one event is running at once.
+      </p>
       <div class="adv-admin-event-creator-row">
         <input class="adv-admin-input" id="new-event-name" placeholder="New event name (e.g. FFA Day Spring)" maxlength="60" />
         <label class="adv-admin-radio">
@@ -370,23 +380,43 @@ export function createAdvancedAdminScreen() {
       el.innerHTML = `<div class="adv-admin-empty">No events yet.</div>`
       return
     }
-    const statusToStatus = (s) => s === 'open' ? 'approved' : s === 'scheduled' ? 'pending' : 'hidden'
+    // Status is DERIVED from the clock, not read off `e.status` — a scheduled
+    // event whose start has passed is really open, and an event nobody ended is
+    // really over once its endsAt lapses. Showing the raw field would lie.
+    const now = Date.now()
+    const pillClass = (s) => s === 'open' ? 'approved' : s === 'scheduled' ? 'pending' : 'hidden'
     el.innerHTML = `
       <ul class="adv-admin-list">
-        ${events.map(e => `
+        ${events.map(e => {
+          const ds = derivedEventStatus(e, now)
+          const agedOut = ds === 'ended' && !e.endedAt
+          const ends = eventEndsAt(e)
+          return `
           <li class="adv-admin-row" data-id="${e.id}">
             <span class="adv-admin-row-name">${escapeHtml(e.name)}</span>
-            <span class="adv-admin-row-meta">${e.scheduledStart && e.status === 'scheduled' ? `starts ${formatDate(e.scheduledStart)}` : `${formatDate(e.startedAt)}${e.endedAt ? ` ${'→'} ${formatDate(e.endedAt)}` : ''}`}</span>
-            <span class="adv-admin-row-status adv-admin-status-${statusToStatus(e.status)}">${e.status}</span>
+            <span class="adv-admin-row-meta">${eventMeta(e, ds, ends)}</span>
+            <span class="adv-admin-row-status adv-admin-status-${pillClass(ds)}"${agedOut ? ' title="No one ended this event — it closed itself at its end time."' : ''}>${ds}${agedOut ? ' (auto)' : ''}</span>
             <span class="adv-admin-row-actions">
-              ${e.status === 'scheduled' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="open-now">Open now</button>` : ''}
-              ${e.status === 'open' ? `<button class="adv-admin-btn adv-admin-btn-warn" data-act="end">End</button>` : ''}
-              ${e.status === 'ended' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="reopen">Reopen</button>` : ''}
+              ${ds !== 'ended' && ends
+                ? `<label class="adv-admin-endsat" title="When this event closes itself">Ends
+                     <input type="datetime-local" class="adv-admin-input adv-admin-datetime" data-act="endsat"
+                       value="${toLocalInputValue(ends)}" min="${toLocalInputValue(endsAtFloor(e, now))}" />
+                   </label>`
+                : ''}
+              ${ds === 'scheduled' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="open-now">Open now</button>` : ''}
+              ${ds === 'open' ? `<button class="adv-admin-btn adv-admin-btn-warn" data-act="end">End</button>` : ''}
+              ${ds === 'ended' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="reopen">Reopen</button>` : ''}
               <button class="adv-admin-btn adv-admin-btn-danger" data-act="delete">Delete</button>
             </span>
           </li>
-        `).join('')}
+        `}).join('')}
       </ul>
+      <p class="adv-admin-hint">
+        Devices join the running event on their own — no sign-in needed on the kiosk.
+        An event closes itself at its end time, so nothing stays joinable forever.
+        New events end 24 hours after they start; for anything longer, push the
+        <strong>Ends</strong> time out on its row.
+      </p>
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
       const id = row.dataset.id
@@ -402,12 +432,46 @@ export function createAdvancedAdminScreen() {
         await reopenEvent(id)
         await renderEvents(); await renderActiveEvent()
       })
+      row.querySelector('[data-act="endsat"]')?.addEventListener('change', async (e) => {
+        const ts = new Date(e.target.value).getTime()
+        if (Number.isNaN(ts)) return
+        // `min` on the input isn't reliably enforced for typed values, and an
+        // end time before the start would derive the event straight to "ended"
+        // without it ever having been open.
+        const ev = events.find(x => x.id === id)
+        const floor = endsAtFloor(ev, Date.now())
+        if (ts <= floor) {
+          flashMessage('End time must be after the event starts')
+          await renderEvents()
+          return
+        }
+        await setEventEndsAt(id, ts)
+        await renderEvents(); await renderActiveEvent()
+        flashMessage('End time updated')
+      })
       row.querySelector('[data-act="delete"]')?.addEventListener('click', async () => {
         if (!window.confirm('Delete this event AND all its tagged scores? This cannot be undone.')) return
         await deleteEvent(id)
         await renderEvents(); await renderActiveEvent(); await renderScores(); await renderRoster()
       })
     })
+  }
+
+  /**
+   * Earliest sane auto-end for an event: never before it starts, never in the
+   * past. A scheduled event's floor is its scheduledStart, not `now`.
+   */
+  function endsAtFloor(e, now) {
+    if (!e) return now
+    return Math.max(now, typeof e.scheduledStart === 'number' ? e.scheduledStart : 0)
+  }
+
+  function eventMeta(e, ds, ends) {
+    if (ds === 'scheduled' && e.scheduledStart) return `starts ${formatDate(e.scheduledStart)}`
+    const started = formatDate(e.startedAt)
+    if (e.endedAt) return `${started} ${'→'} ${formatDate(e.endedAt)}`
+    if (ds === 'ended' && ends) return `${started} ${'→'} auto-ended ${formatDate(ends)}`
+    return started
   }
 
   async function renderScores() {
@@ -611,11 +675,19 @@ export function createAdvancedAdminScreen() {
 function buildSignInGate(onSubmit) {
   const el = document.createElement('div')
   el.className = 'adv-admin-gate'
+  // autocomplete="new-password" (not "current-password") tells the browser this
+  // is NOT a login to autofill — on a shared event device, an autofilled
+  // password a student could just click "Unlock" past would defeat the whole
+  // lockout. `off` on the form and a random field name further discourage the
+  // save/offer prompt. (This can't purge a password the browser already saved —
+  // deleting that is a one-time browser-settings step per device.)
   el.innerHTML = `
-    <form class="adv-admin-gate-card" novalidate>
+    <form class="adv-admin-gate-card" novalidate autocomplete="off">
       <h2 class="adv-admin-gate-title">Admin sign-in</h2>
       <p class="adv-admin-gate-sub">Enter the admin password to manage teams, events, and scores.</p>
-      <input class="adv-admin-gate-input" type="password" placeholder="Password" autocomplete="current-password" />
+      <input class="adv-admin-gate-input" type="password" placeholder="Password"
+        name="admin-unlock-${Math.random().toString(36).slice(2, 8)}"
+        autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" />
       <button class="adv-admin-gate-btn" type="submit">Unlock</button>
       <div class="adv-admin-gate-error" role="alert"></div>
     </form>
@@ -697,4 +769,15 @@ function formatDate(ts) {
   h = h % 12 || 12
   const m = String(d.getMinutes()).padStart(2, '0')
   return `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(2)} ${h}:${m} ${ampm}`
+}
+
+/**
+ * `YYYY-MM-DDTHH:mm` in LOCAL time, which is what <input type="datetime-local">
+ * expects. toISOString() would render UTC and silently shift the value by the
+ * timezone offset every time the row re-renders.
+ */
+function toLocalInputValue(ts) {
+  const d = new Date(ts)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }

@@ -21,10 +21,15 @@ import { createAdvancedAdminScreen } from './screens/advanced-admin.js'
 import { getGameById } from './data/game-registry.js'
 import { getAdvancedGameById } from './data/advanced-game-registry.js'
 import { getActiveEventId, setActiveEventId, listEvents } from './utils/leaderboard-api.js'
+import { chooseEvent } from './utils/event-status.js'
 import { warmOfflineCache, isWarmedForBuild } from './utils/offline-warmup.js'
+import { USE_FIRESTORE } from './firebase/config.js'
 
 const app = document.getElementById('app')
 let currentScreen = null
+// Tracks whether the screen we're leaving was the admin panel, so we can lock
+// it behind the password again the moment staff navigates away (see below).
+let wasAdmin = false
 
 function switchScreen(newScreenEl) {
   // Sweep any orphaned old screens first — defensive cleanup so animation
@@ -63,6 +68,17 @@ function switchScreen(newScreenEl) {
 }
 
 function handleRoute(route) {
+  // Lock the admin panel behind the password again as soon as it's left. On a
+  // shared event device the risk is a signed-in session outliving the staffer
+  // who signed in; ending it on navigation-away means a student can't wander
+  // into an already-unlocked panel. Fire-and-forget; the auth chunk is loaded
+  // lazily so non-admin navigation never pulls firebase/auth in.
+  const isAdmin = route.mode === 'advanced' && route.screen === 'admin'
+  if (wasAdmin && !isAdmin && USE_FIRESTORE) {
+    import('./firebase/auth.js').then(m => m.adminSignOut()).catch(() => {})
+  }
+  wasAdmin = isAdmin
+
   // Set mode on app element for CSS scoping
   if (route.mode) {
     app.dataset.mode = route.mode
@@ -145,52 +161,72 @@ function handleRoute(route) {
 }
 
 /**
- * Advanced game-select entry. If this kiosk has an active event and the player
- * hasn't chosen a play mode this session, prompt team-vs-casual first — but only
- * after confirming the active event still exists and is open. A stale pointer
- * (event ended/deleted, possibly on another kiosk while this one held the id in
- * localStorage) is cleared so we don't prompt team play for a dead event.
+ * Advanced game-select entry. Before showing the grid, work out whether this
+ * device should be prompted for team-vs-casual — which means working out which
+ * event, if any, this device is in.
+ *
+ * The device no longer has to be pointed at an event by hand from the admin
+ * panel: if exactly one event is running, it joins it. See resolveActiveEvent.
  */
 async function handleAdvancedGameSelect() {
   const entryHash = location.hash
-  const activeId = getActiveEventId()
-  if (activeId && !getPlayMode()) {
-    const status = await activeEventStatus(activeId)
+  if (!getPlayMode()) {
+    const resolution = await resolveActiveEvent()
     // A newer navigation superseded us while awaiting the event read — let it
     // own the screen instead of switching on top of it.
     if (location.hash !== entryHash) return
-    if (status === 'open') {
+
+    // 'joined'    — one event, now active on this device.
+    // 'ambiguous' — several running; the play-mode screen shows a picker.
+    // 'unknown'   — we couldn't read the events (cold offline cache), but this
+    //   device still holds a pointer from when it *could*. Prompt anyway. Not
+    //   prompting would leave play-mode unset, which every caller treats as
+    //   casual — so a kiosk booted offline would silently record a whole event
+    //   with no team and no eventId, the exact failure auto-join exists to fix.
+    const prompt =
+      resolution === 'joined' ||
+      resolution === 'ambiguous' ||
+      (resolution === 'unknown' && getActiveEventId())
+
+    if (prompt) {
       navigateRaw('advanced/play-mode')
       return
     }
-    // Clear only when CONFIRMED gone or ended, so this kiosk stands down when an
-    // event ends/deletes elsewhere. A scheduled event, or a transient read
-    // failure, keeps the pointer and just skips the prompt this time.
-    if (status === 'invalid') setActiveEventId(null)
   }
   if (location.hash !== entryHash) return
   switchScreen(createAdvancedGameSelectScreen())
 }
 
 /**
- * 'open'    — event exists and is running → prompt team play.
- * 'invalid' — event is deleted or ended → stale, clear the pointer.
- * 'pending' — event exists but is scheduled (not open yet) → skip prompt, keep it.
- * 'unknown' — read failed (e.g. offline + uncached) → skip prompt, keep it.
- * Uses listEvents (a cached collection read that doesn't throw offline) rather
- * than a single-doc get (which throws for an id the cache has never seen).
+ * Decide which event this device is in, and persist the answer.
+ *
+ * Auto-join replaces the old "admin signs in on every device and picks the
+ * event" step. The decision itself is pure — see `chooseEvent` in
+ * utils/event-status.js, which is where the rules and their rationale live.
+ *
+ * The resolved id is WRITTEN to localStorage, not merely computed per
+ * navigation: a device that goes offline afterwards then keeps its event even
+ * once the events cache goes cold.
+ *
+ * @returns {'joined' | 'ambiguous' | 'none' | 'unknown'}
  */
-async function activeEventStatus(activeId) {
+async function resolveActiveEvent() {
+  let events
   try {
-    const events = await listEvents()
-    const ev = events.find(e => e.id === activeId)
-    if (!ev) return 'invalid'
-    if (ev.status === 'open') return 'open'
-    if (ev.status === 'ended') return 'invalid'
-    return 'pending'
+    // listEvents is a cached collection read; unlike a single-doc get it does
+    // not throw offline for an id the cache has never seen.
+    events = await listEvents()
   } catch {
-    return 'unknown'
+    return 'unknown' // transient read failure — keep any pointer, don't prompt
   }
+
+  const activeId = getActiveEventId()
+  const { decision, eventId } = chooseEvent(events, activeId, Date.now())
+
+  // 'unknown' means we can't tell — never write, never clear.
+  if (decision !== 'unknown' && eventId !== activeId) setActiveEventId(eventId)
+
+  return decision
 }
 
 async function handleKidGame(route) {
