@@ -490,12 +490,15 @@ code {
     --adv-danger: #8f2a1a;
     --adv-danger-dim: #f8e9e6;
     --adv-card-radius: 6px;
+    /* Print body text in the browser's default sans-serif font (Silkscreen
+       titles, which use --font-title, are unaffected). */
+    --font-body: sans-serif;
   }
 
   body {
     padding: 0;
     font-size: 8.6pt;
-    line-height: 1.26;
+    line-height: 1.34;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
@@ -505,7 +508,16 @@ code {
 
   b, strong { text-shadow: none; font-weight: 700; color: #000; }
   .masthead h1 { text-shadow: none; font-size: 11pt; }
-  .kicker { font-size: 0.58rem; }
+  /* Print header: replace the "Advanced Mode · Team Play" kicker with the
+     site URL (top-right), and drop the subtitle link row entirely. */
+  .kicker { font-size: 0; letter-spacing: 0; }
+  .kicker::after {
+    content: "plantshley.github.io/SDSHC-games-hub";
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+    text-transform: none;
+    color: var(--adv-accent);
+  }
 
   .sheet { max-width: none; gap: 7px; }
   .columns { gap: 12px; grid-template-columns: 3fr 2fr; }
@@ -518,11 +530,12 @@ code {
      keep it a touch more compact than the prose so the whole flow (1–5)
      stays on one printed page. */
   table.shape { font-size: 7.5pt; }
-  table.shape thead th { padding-bottom: 3px; }
-  table.shape tbody td { padding: 2.5px 8px 2.5px 0; line-height: 1.18; }
+  table.shape thead th { padding-bottom: 5px; border-bottom-color: #999; }
+  table.shape tbody td { padding: 4px 8px 4px 0; line-height: 1.22; border-bottom-color: #999; }
   .masthead { padding-bottom: 6px; padding-right: 0; }
-  .masthead-links { font-size: 0.56rem; margin-top: 2px; gap: 2px 14px; }
-  ol.steps { gap: 4px; }
+  .masthead-links { display: none; }
+  ol.steps { gap: 6px; }
+  .card > p.intro { font-size: 8.5pt; }
   ol.steps li { padding-left: 27px; }
   ol.steps li::before { width: 18px; height: 18px; font-size: 0.54rem; }
   ol.steps li, ul.nope li, table { font-size: 8.5pt; }
@@ -533,8 +546,8 @@ code {
   .qref { gap: 0 16px; }
   /* Troubleshooting + quick reference print as a second page. */
   .page-2 { break-before: page; }
-  tbody td { padding: 4px 8px 4px 0; }
-  thead th { padding-bottom: 4px; }
+  tbody td { padding: 6px 8px 6px 0; border-bottom-color: #999; }
+  thead th { padding-bottom: 6px; border-bottom-color: #999; }
   .note { margin-top: 6px; padding-top: 4px; font-size: 8pt; }
   .footer { padding-top: 6px; font-size: 8pt; }
 }
@@ -640,13 +653,13 @@ code {
               </tr>
               <tr>
                 <td class="lead">Wi-Fi exists but blocks the site</td>
-                <td><strong>Disconnect from the Wi-Fi entirely</strong> and play via installed app shortcut. Or use a phone hotspot. </td>
+                <td><strong>Disconnect from the Wi-Fi entirely</strong> and play via installed app shortcut (or try a phone hotspot). </td>
               </tr>
             </tbody>
           </table>
         </div>
         <p class="note">
-          The games <strong>never</strong> need internet. But if a device wasn&rsquo;t prepped at home and the site is blocked, nothing can be done on-site. Always bring a prepped device.
+          The games never need internet, but if a device wasn&rsquo;t prepped at home, the site is blocked, and hotspot is unreliable, nothing can be done on-site.
         </p>
       </section>
 

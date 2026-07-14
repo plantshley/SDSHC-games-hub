@@ -399,7 +399,7 @@ In **Admin → All teams**, use **Rename**. **If you rename a team to a name tha
 
 **The games never need the internet.** After the offline prep, every game runs fully from the device. The internet only matters for saving scores to the shared leaderboard, and those saves queue and replay later.
 
-### The three situations you'll actually be in
+### Three situations
 
 | Situation | What to do | What happens to scores |
 |---|---|---|
@@ -413,9 +413,8 @@ Some schools block outside sites on their guest network. **Connected but blocked
 
 **Disconnecting removes the ambiguity.** The app sees "offline," queues everything locally, and behaves exactly as designed. It all syncs when you're back on a network you trust.
 
-If you want live sync at a blocked school, use a **phone hotspot** rather than the school's Wi-Fi.
+If you want live sync at a blocked school, use a **phone hotspot** rather than the school's Wi-Fi. Otherwise, there is nothing you can do on-site if you did not prep the device at home. 
 
-> 🚨 **If you didn't prep the device at home and the site is blocked, there is nothing you can do on-site.** The app won't load at all. Always bring a prepped device.
 
 ### Offline rules
 

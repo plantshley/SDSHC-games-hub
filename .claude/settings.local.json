@@ -1,6 +1,14 @@
 {
   "permissions": {
-    "allow": ["mcp__playwright"],
+    "allow": [
+      "mcp__playwright",
+      "Bash(ls \"/c/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe\" \"/c/Program Files/Microsoft/Edge/Application/msedge.exe\" 2>/dev/null; echo \"---chrome---\"; ls \"/c/Program Files/Google/Chrome/Application/chrome.exe\" \"/c/Program Files \\(x86\\)/Google/Chrome/Application/chrome.exe\" 2>/dev/null)",
+      "Read(//c/Program Files \\\\\\(x86\\\\\\)/Google/Chrome/Application/**)",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --no-pdf-header-footer --print-to-pdf=\"cheat-print.pdf\" \"file:///C:/Users/ashle/Documents/GitHub/SDSHC-games-hub/docs/event-cheat-sheet.html\")",
+      "Bash(echo \"exit=$?\")",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless --disable-gpu --no-pdf-header-footer '--print-to-pdf=C:\\\\Users\\\\ashle\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-ashle-Documents-GitHub-SDSHC-games-hub\\\\cfb94fa8-5a84-48cb-b996-05b82af8a1c1\\\\scratchpad\\\\cheat-print.pdf' file:///C:/Users/ashle/Documents/GitHub/SDSHC-games-hub/docs/event-cheat-sheet.html)",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless --disable-gpu --no-pdf-header-footer '--print-to-pdf=C:\\\\Users\\\\ashle\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-ashle-Documents-GitHub-SDSHC-games-hub\\\\cfb94fa8-5a84-48cb-b996-05b82af8a1c1\\\\scratchpad\\\\cheat-print2.pdf' file:///C:/Users/ashle/Documents/GitHub/SDSHC-games-hub/docs/event-cheat-sheet.html)"
+    ],
     "deny": []
   }
 }
