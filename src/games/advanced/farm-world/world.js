@@ -11,6 +11,7 @@
  */
 
 import * as THREE from 'three'
+import { createProceduralCharacter } from './procedural-character.js'
 
 // ─── Palette ───
 
@@ -994,7 +995,7 @@ const easeOutBack = t => {
  *   interact range changed (null = none)
  * @param {() => void} [opts.onDisposed]
  * @returns {{ dispose, upgradeStation, setMovementEnabled, resetCamera,
- *   applyLook, setCustomizeFocus, setTimeOfDay }}
+ *   applyLook, getDollCharacter, setCustomizeFocus, setTimeOfDay }}
  */
 export function createFarmWorld({ host, stationIds, getInput, onNearStation, onDisposed }) {
   // ── Renderer / scene / camera ──
@@ -1284,11 +1285,48 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   scene.add(birdCarrier)
 
   // ── Player ──
-  const player = makeFarmer()
+  // `player` is a movable wrapper: movement/heading/camera all target it, and
+  // it carries whichever character is active — the farmer mascot (default) or
+  // the ported fairy-worlds doll (built lazily on first switch).
+  const player = new THREE.Group()
+  const farmer = makeFarmer()
+  player.add(farmer)
   player.position.set(0, 0, 8)
   scene.add(player)
   let heading = Math.PI // facing the hub sign
   player.rotation.y = heading
+
+  let doll = null // procedural character handle (see procedural-character.js)
+  let dollG = null // scaled holder; also carries the doll's walk bob/waddle
+  let activeCharacter = 'farmer'
+  let lastLook = null // stashed by applyLook so ensureDoll can seed state
+
+  // The doll casts shadows like the farmer — but skip flat face decals
+  // (basic-material circles) and transparent parts (wings, sticker blush),
+  // whose shadows would read as floating smudges.
+  function applyDollShadows() {
+    if (!doll) return
+    doll.root.traverse(obj => {
+      if (obj.isMesh && !obj.material.transparent && obj.material.type !== 'MeshBasicMaterial') {
+        obj.castShadow = true
+      }
+    })
+  }
+
+  function ensureDoll() {
+    if (doll) return doll
+    doll = createProceduralCharacter(lastLook?.doll || {})
+    doll.setOnRebuild(applyDollShadows) // variant swaps create fresh meshes
+    applyDollShadows()
+    dollG = new THREE.Group()
+    // fairy-worlds doll is ~1.36 units tall vs the farmer's ~2.3 — scale to match
+    dollG.scale.setScalar(1.7)
+    dollG.add(doll.root)
+    dollG.userData.walkT = 0
+    dollG.visible = false
+    player.add(dollG)
+    return doll
+  }
 
   // ── Tweens ──
   const tweens = []
@@ -1389,22 +1427,45 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     const moved = movePlayer(dt)
 
     // walk cycle — limbs swing while moving, everything settles when idle
-    const pu = player.userData
-    if (moved > 0) {
-      pu.walkT += dt * 10.5
-      const s = Math.sin(pu.walkT)
-      pu.legL.rotation.x = s * 0.75
-      pu.legR.rotation.x = -s * 0.75
-      pu.armL.rotation.x = -s * 0.55
-      pu.armR.rotation.x = s * 0.55
-      pu.bodyG.position.y = Math.abs(s) * 0.09
-      pu.bodyG.rotation.x = 0.07 // slight forward lean
-    } else {
-      const settle = Math.min(1, dt * 8)
-      ;[pu.legL, pu.legR, pu.armL, pu.armR].forEach(p => { p.rotation.x -= p.rotation.x * settle })
-      pu.bodyG.rotation.x -= pu.bodyG.rotation.x * settle
-      // gentle idle breathing bob
-      pu.bodyG.position.y += (0.02 + Math.sin(t * 2.2) * 0.02 - pu.bodyG.position.y) * settle
+    if (activeCharacter === 'farmer') {
+      const pu = farmer.userData
+      if (moved > 0) {
+        pu.walkT += dt * 10.5
+        const s = Math.sin(pu.walkT)
+        pu.legL.rotation.x = s * 0.75
+        pu.legR.rotation.x = -s * 0.75
+        pu.armL.rotation.x = -s * 0.55
+        pu.armR.rotation.x = s * 0.55
+        pu.bodyG.position.y = Math.abs(s) * 0.09
+        pu.bodyG.rotation.x = 0.07 // slight forward lean
+      } else {
+        const settle = Math.min(1, dt * 8)
+        ;[pu.legL, pu.legR, pu.armL, pu.armR].forEach(p => { p.rotation.x -= p.rotation.x * settle })
+        pu.bodyG.rotation.x -= pu.bodyG.rotation.x * settle
+        // gentle idle breathing bob
+        pu.bodyG.position.y += (0.02 + Math.sin(t * 2.2) * 0.02 - pu.bodyG.position.y) * settle
+      }
+    } else if (dollG) {
+      // same gait as the farmer: the doll's shoulder/hip pivots carry the
+      // limbs AND their outfit parts (sleeves, socks, trouser legs), so
+      // everything swings together
+      const L = doll.limbs
+      if (moved > 0) {
+        dollG.userData.walkT += dt * 10.5
+        const s = Math.sin(dollG.userData.walkT)
+        L.legL.rotation.x = s * 0.65
+        L.legR.rotation.x = -s * 0.65
+        L.armL.rotation.x = -s * 0.5
+        L.armR.rotation.x = s * 0.5
+        dollG.position.y = Math.abs(s) * 0.05
+        dollG.rotation.x = 0.05 // slight forward lean
+      } else {
+        const settle = Math.min(1, dt * 8)
+        ;[L.legL, L.legR, L.armL, L.armR].forEach(p => { p.rotation.x -= p.rotation.x * settle })
+        dollG.rotation.x -= dollG.rotation.x * settle
+        // gentle idle breathing bob
+        dollG.position.y += (0.02 + Math.sin(t * 2.2) * 0.02 - dollG.position.y) * settle
+      }
     }
 
     // camera: orbitable follow with exponential smoothing — snappier while a
@@ -1542,9 +1603,14 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     }
   }
 
-  /** Recolor / re-hat the player. look: { body, hat, hatColor, shoes, pack } */
+  /**
+   * Recolor / re-hat the player and switch the active character.
+   * look: { character: 'farmer'|'doll', body, hat, hatColor, shoes, pack,
+   *         doll: <procedural character state|null> }
+   */
   function applyLook(look) {
-    const u = player.userData
+    lastLook = look
+    const u = farmer.userData
     // .set() accepts '#rrggbb' strings and legacy numeric hex alike
     u.mats.body.color.set(look.body)
     u.mats.hat.color.set(look.hatColor)
@@ -1552,6 +1618,20 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     u.mats.pack.color.set(look.pack)
     u.hats.beanie.visible = look.hat === 'beanie'
     u.hats.straw.visible = look.hat === 'straw'
+
+    activeCharacter = look.character === 'doll' ? 'doll' : 'farmer'
+    if (activeCharacter === 'doll') ensureDoll()
+    farmer.visible = activeCharacter === 'farmer'
+    if (dollG) dollG.visible = activeCharacter === 'doll'
+  }
+
+  /**
+   * Handle to the second character for the customizer's granular edits
+   * (setColor / setVariant / setAccessory / setAccessoryColor / getState).
+   * State persistence stays in index.js — it saves getState() into the look.
+   */
+  function getDollCharacter() {
+    return ensureDoll()
   }
 
   /** Swing the camera around to the player's face while the customizer is
@@ -1645,5 +1725,5 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     if (onDisposed) onDisposed()
   }
 
-  return { dispose, upgradeStation, setMovementEnabled, resetCamera, applyLook, setCustomizeFocus, setTimeOfDay }
+  return { dispose, upgradeStation, setMovementEnabled, resetCamera, applyLook, getDollCharacter, setCustomizeFocus, setTimeOfDay }
 }
