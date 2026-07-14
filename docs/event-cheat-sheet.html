@@ -560,6 +560,14 @@ code {
      print-color-adjust: exact (inherited from body) forces it to render even
      with the browser's "Background graphics" option off. */
   td.lead { background: #e8edf3; }
+  /* Match the troubleshooting (symptom) table's label column to the
+     quick-reference lead width so the two page-2 tables line up. */
+  .page-2 td.lead { width: 195px; }
+  /* Quick reference stacks its two tables in print (single column below
+     820px). The first table's last row ("Rename onto existing name") drops
+     its bottom border via tbody tr:last-child, leaving no divider at the
+     seam — restore it so the two halves read as one continuous table. */
+  .qref table:first-of-type tbody tr:last-child td { border-bottom: 1px solid #999; }
   .note { margin-top: 6px; padding-top: 4px; padding-bottom: 0; font-size: 8pt; }
   .footer { padding-top: 6px; font-size: 8pt; }
 }
