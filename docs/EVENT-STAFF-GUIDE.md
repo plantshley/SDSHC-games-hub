@@ -478,8 +478,7 @@ The event leaderboard tab will now show a single Lincoln HS row instead of six â
 - **One device serves up to 4 students (or groups) at a time.** Size your teams to that. 
 - Players on **one device can be on different teams** â€” set up competition on a single machine.
 - With multiple devices, you can set up game **stations** and rotate, or have each group play on their own device.
-- Put devices where **you** can see them. You want to catch a stuck group before they give up.
-- Charge everything. No sound, so no speakers to worry about.
+- If unfamiliar with the games, make sure you instruct students to read the game instructions via the (?) button in the header, or go over them as a class before playing. 
 
 
 ### Keeping energy up

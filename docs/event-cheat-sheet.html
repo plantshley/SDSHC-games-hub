@@ -242,6 +242,12 @@ body::after {
 @media (max-width: 820px) {
   .qref { grid-template-columns: 1fr; }
 }
+/* The two quick-reference halves are independent tables, so each would size
+   its label column to its own longest label — making the shaded lead column
+   jog where the halves meet (or stack). Pin both to one width so the lead/td
+   split lines up exactly. Wide enough for the longest label ("Rename onto
+   existing name"). */
+.qref td.lead { width: 195px; }
 
 .card {
   background: var(--adv-surface);
@@ -334,9 +340,10 @@ b, strong { text-shadow: 0 0 1px currentColor; }
 
 .note {
   margin: 12px 0 0;
-  padding-top: 11px;
+  padding-top: 18px;
+  padding-bottom: 4px;
   border-top: 1px dashed var(--adv-border);
-  font-size: 0.6rem;
+  font-size: 0.66rem;
   color: var(--adv-text-muted);
 }
 
@@ -498,7 +505,7 @@ code {
   body {
     padding: 0;
     font-size: 8.6pt;
-    line-height: 1.34;
+    line-height: 1.3;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
@@ -519,22 +526,22 @@ code {
     color: var(--adv-accent);
   }
 
-  .sheet { max-width: none; gap: 7px; }
+  .sheet { max-width: none; gap: 5px; }
   .columns { gap: 12px; grid-template-columns: 3fr 2fr; }
-  .col { gap: 10px; }
+  .col { gap: 7px; }
   /* Dark, explicit border so each card reads as a distinct box on paper —
      light hairlines drop out in the print render. */
-  .card { padding: 6px 11px; border: 1.5px solid #b1b1b1; }
+  .card { padding: 5px 11px; border: 1.5px solid #b1b1b1; }
   .card > h2 { margin-bottom: 5px; font-size: 0.6rem; }
   /* The event-shape reference table is the tallest single block on page 1;
      keep it a touch more compact than the prose so the whole flow (1–5)
      stays on one printed page. */
   table.shape { font-size: 7.5pt; }
   table.shape thead th { padding-bottom: 5px; border-bottom-color: #999; }
-  table.shape tbody td { padding: 4px 8px 4px 0; line-height: 1.22; border-bottom-color: #999; }
+  table.shape tbody td { padding: 4px 8px 4px 9px; line-height: 1.22; border-bottom-color: #999; }
   .masthead { padding-bottom: 6px; padding-right: 0; }
   .masthead-links { display: none; }
-  ol.steps { gap: 6px; }
+  ol.steps { gap: 5px; }
   .card > p.intro { font-size: 8.5pt; }
   ol.steps li { padding-left: 27px; }
   ol.steps li::before { width: 18px; height: 18px; font-size: 0.54rem; }
@@ -546,9 +553,14 @@ code {
   .qref { gap: 0 16px; }
   /* Troubleshooting + quick reference print as a second page. */
   .page-2 { break-before: page; }
-  tbody td { padding: 6px 8px 6px 0; border-bottom-color: #999; }
+  tbody td { padding: 6px 8px 6px 9px; border-bottom-color: #999; }
   thead th { padding-bottom: 6px; border-bottom-color: #999; }
-  .note { margin-top: 6px; padding-top: 4px; font-size: 8pt; }
+  /* Keep the shaded label column visible on paper — the print :root resets
+     --adv-bg to white, so restate the screen tint explicitly.
+     print-color-adjust: exact (inherited from body) forces it to render even
+     with the browser's "Background graphics" option off. */
+  td.lead { background: #e8edf3; }
+  .note { margin-top: 6px; padding-top: 4px; padding-bottom: 0; font-size: 8pt; }
   .footer { padding-top: 6px; font-size: 8pt; }
 }
 
@@ -602,7 +614,7 @@ code {
   </section>
 
   <section class="card">
-    <h2>2 - Give Ashley a heads-up <span class="when">a few days ahead</span></h2>
+    <h2>2 - Let Ashley know <span class="when">a few days ahead</span></h2>
     <p class="intro">Before you prep anything, tell Ashley the event is coming so she can register &amp; schedule it ahead of time: <strong>event name, date &amp; time, school(s), and event shape.</strong> You can also set the event up yourself in Admin.</p>
   </section>
 
@@ -625,8 +637,8 @@ code {
         <h2>4 - Run the event <span class="when">offline is fine</span></h2>
         <ol class="steps">
           <li><strong>Confirm the event is open.</strong> Every prepped device <strong>joins the open event automatically</strong>, so opening <strong>Advanced Mode</strong> should show <strong>&ldquo;How do you want to play?&rdquo;</strong> naming your event. A <strong>scheduled</strong> event opens itself at its start time; to open one early &mdash; or if there&rsquo;s <strong>no prompt</strong> &mdash; Admin &rarr; Events &rarr; <strong>Open now</strong>. A <strong>&ldquo;Which event?&rdquo;</strong> list means two are open; <strong>End</strong> the stale one so only yours is.</li>
-          <li><strong>Advanced Mode</strong> &rarr; students pick <strong>Team Play</strong> (competitive) or <strong>Casual Play</strong> (general event, nothing tracked).</li>
-          <li><strong>Up to 4 players per device</strong>, per game. Players on one device can be on <em>different</em> teams &mdash; good for head-to-head. A &ldquo;player&rdquo; can be a whole <em>group</em> &mdash; they pick their team, put the group or representative's name in the name field, and take turns.</li>
+          <li><strong>Advanced Mode</strong> &rarr; students pick <strong>Team Play</strong> (competitive) or <strong>Casual Play</strong> (general event, nothing tracked). Then enter teams on the <strong>roster screen</strong> (if not pre-made), and pick a game.</li>
+          <li><strong>Up to 4 players per device</strong>, per game. Players on one device can be on <em>different</em> teams &mdash; good for head-to-head. A &ldquo;player&rdquo; can be a whole <em>group</em> &mdash; they pick their team, put the group or representative's name in the name field, and take turns.  Go over the <strong>game rules</strong> via the (?) buttons before playing.</li>
         </ol>
       </section>
 
@@ -721,13 +733,13 @@ code {
           <tr><td class="lead">Active event</td><td><strong>Auto-joined.</strong> Every prepped device joins the one open event; if several are open it asks which</td></tr>
           <tr><td class="lead">Teams &amp; events</td><td><strong>Shared in the cloud.</strong> Create them once</td></tr>
           <tr><td class="lead">Team names</td><td><strong>Global, matched by name.</strong> Prefix class teams with the school</td></tr>
-          <tr><td class="lead">Rename onto existing name</td><td><strong>Merges</strong> the two teams</td></tr>
           
           
         </tbody>
       </table>
       <table>
         <tbody>
+          <tr><td class="lead">Rename onto existing name</td><td><strong>Merges</strong> the two teams</td></tr>
           <tr><td class="lead">Delete team/event</td><td><strong>Destroys its scores.</strong> Use End, not Delete</td></tr>
           <tr><td class="lead">Players/groups per game</td><td>1&ndash;4</td></tr>
           <tr><td class="lead">Scheduled events</td><td><strong>Open themselves</strong> at their start time (device clock). &ldquo;Open now&rdquo; opens one early</td></tr>
