@@ -204,7 +204,7 @@ The night before, per device:
 - [ ] Device is **charged**, and you have the charger
 - [ ] You know the admin password
 
-That sixth item is the one that catches Path B — if the dropdown is empty, you approved the teams statewide but not *for the event*.
+The sixth item is the one that catches Path B — if the dropdown is empty, you approved the teams statewide but not *for the event*.
 
 <div align="right"><sub><a href="#table-of-contents">↑ Contents</a></sub></div>
 

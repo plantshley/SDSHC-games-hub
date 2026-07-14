@@ -253,11 +253,11 @@ body::after {
 
 .card > h2 {
   font-family: var(--font-title);
-  font-size: 0.7rem;
-  font-weight: 400;
+  font-size: 0.9rem;
+  font-weight: 600;
   line-height: 1.4;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
   margin: 0 0 14px;
   color: var(--adv-accent);
   display: flex;
@@ -273,6 +273,7 @@ body::after {
   text-transform: none;
   color: var(--adv-text-muted);
   margin-left: auto;
+  font-weight: 400;
 }
 
 /* ── Numbered steps. Order is real information here (before →
@@ -296,7 +297,7 @@ ol.steps li {
   counter-increment: step;
   position: relative;
   padding-left: 34px;
-  font-size: 0.87rem;
+  font-size: 0.75rem;
 }
 
 ol.steps li::before {
@@ -328,14 +329,14 @@ b, strong { text-shadow: 0 0 1px currentColor; }
 
 .card > p.intro {
   margin: 0;
-  font-size: 0.87rem;
+  font-size: 0.75rem;
 }
 
 .note {
   margin: 12px 0 0;
   padding-top: 11px;
   border-top: 1px dashed var(--adv-border);
-  font-size: 0.78rem;
+  font-size: 0.6rem;
   color: var(--adv-text-muted);
 }
 
@@ -348,7 +349,7 @@ ul.nope {
   display: flex;
   flex-direction: column;
   gap: 9px;
-  font-size: 0.85rem;
+  font-size: 0.75rem ;
 }
 
 ul.nope li {
@@ -377,31 +378,36 @@ ul.nope li.ok::before {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
+td { font-size: 0.7rem !important; }
 
 thead th {
   text-align: left;
   font-family: var(--font-title);
-  font-size: 0.58rem;
-  font-weight: 400;
+  font-size: 0.75rem;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--adv-text-muted);
-  padding: 0 12px 8px 0;
+  color: var(--adv-text);
+  padding: 8px 12px 8px 0;
   border-bottom: 1px solid var(--adv-border);
   white-space: nowrap;
+  padding-left: 9px;
+  vertical-align: center;
 }
 
 tbody td {
   padding: 9px 12px 9px 0;
   border-bottom: 1px solid var(--adv-border);
-  vertical-align: top;
+  vertical-align: center;
+  padding-left: 9px;
+  font-size: 0.75rem;
 }
 
 tbody tr:last-child td { border-bottom: none; }
 
-td.lead { color: var(--adv-text); }
+td.lead { color: var(--adv-text); font-weight: 500; background: var(--adv-bg); }
 
 /* ── Inline bits ───────────────────────────────────────────────── */
 
@@ -506,7 +512,7 @@ code {
   .col { gap: 10px; }
   /* Dark, explicit border so each card reads as a distinct box on paper —
      light hairlines drop out in the print render. */
-  .card { padding: 6px 11px; border: 2px solid #b1b1b1; }
+  .card { padding: 6px 11px; border: 1.5px solid #b1b1b1; }
   .card > h2 { margin-bottom: 5px; font-size: 0.6rem; }
   /* The event-shape reference table is the tallest single block on page 1;
      keep it a touch more compact than the prose so the whole flow (1–5)
@@ -584,7 +590,7 @@ code {
 
   <section class="card">
     <h2>2 - Give Ashley a heads-up <span class="when">a few days ahead</span></h2>
-    <p class="intro">Before you prep anything, tell Ashley the event is coming so she can register &amp; schedule it ahead of time: <strong>event name, date &amp; time, school(s), and event shape.</strong> Her contact is at the bottom of this sheet. Short on time? You can set the event up yourself in Admin.</p>
+    <p class="intro">Before you prep anything, tell Ashley the event is coming so she can register &amp; schedule it ahead of time: <strong>event name, date &amp; time, school(s), and event shape.</strong> You can also set the event up yourself in Admin.</p>
   </section>
 
   <div class="columns">
@@ -605,7 +611,7 @@ code {
       <section class="card">
         <h2>4 - Run the event <span class="when">offline is fine</span></h2>
         <ol class="steps">
-          <li class="hot"><strong>Confirm the event is open.</strong> Every prepped device <strong>joins the open event automatically</strong>, so opening <strong>Advanced Mode</strong> should show <strong>&ldquo;How do you want to play?&rdquo;</strong> naming your event. A <strong>scheduled</strong> event opens itself at its start time; to open one early &mdash; or if there&rsquo;s <strong>no prompt</strong> &mdash; Admin &rarr; Events &rarr; <strong>Open now</strong>. A <strong>&ldquo;Which event?&rdquo;</strong> list means two are open; <strong>End</strong> the stale one so only yours is.</li>
+          <li><strong>Confirm the event is open.</strong> Every prepped device <strong>joins the open event automatically</strong>, so opening <strong>Advanced Mode</strong> should show <strong>&ldquo;How do you want to play?&rdquo;</strong> naming your event. A <strong>scheduled</strong> event opens itself at its start time; to open one early &mdash; or if there&rsquo;s <strong>no prompt</strong> &mdash; Admin &rarr; Events &rarr; <strong>Open now</strong>. A <strong>&ldquo;Which event?&rdquo;</strong> list means two are open; <strong>End</strong> the stale one so only yours is.</li>
           <li><strong>Advanced Mode</strong> &rarr; students pick <strong>Team Play</strong> (competitive) or <strong>Casual Play</strong> (general event, nothing tracked).</li>
           <li><strong>Up to 4 players per device</strong>, per game. Players on one device can be on <em>different</em> teams &mdash; good for head-to-head. A &ldquo;player&rdquo; can be a whole <em>group</em> &mdash; they pick their team, put the group or representative's name in the name field, and take turns.</li>
         </ol>
@@ -647,10 +653,9 @@ code {
       <section class="card">
         <h2>While offline &mdash; do not</h2>
         <ul class="nope">
-          <li>Clear browser data or site data &mdash; wipes unsynced scores permanently</li>
+          <li>Clear browser data or site data</li>
           <li>Uninstall the app before syncing</li>
           <li>Open the site in a second tab while the app is running</li>
-          <li class="ok">The 10-minute idle reset is safe &mdash; it only clears game progress</li>
         </ul>
       </section>
 
@@ -658,7 +663,7 @@ code {
   </div>
 
   <section class="card">
-    <h2>5 - Back home (feel free to leave steps 2-4 for Ashley)<span class="when">online</span></h2>
+    <h2>5 - Back home (online)<span class="when">(feel free to leave steps 2-4 for Ashley)</span></h2>
     <ol class="steps">
       <li><strong>Open the app on Wi-Fi and leave it open 1&ndash;2 minutes.</strong> This is when queued scores flush to the cloud.</li>
       <li><strong>Approve teams statewide</strong> so their points reach the All-Time board.</li>
@@ -696,26 +701,28 @@ code {
     <div class="qref">
       <table>
         <tbody>
-          <tr><td class="lead">Admin panel</td><td><a href="https://plantshley.github.io/SDSHC-games-hub/#advanced/admin" target="_blank" rel="noopener">#advanced/admin</a></td></tr>
+          <tr><td class="lead">Contact</td><td>ashley@sdsoil.org &middot; 605-251-4364 (text only)</td></tr>
+          <tr><td class="lead">Live site</td><td><a href="https://plantshley.github.io/SDSHC-games-hub/" target="_blank" rel="noopener">https://plantshley.github.io/SDSHC-games-hub/</a></td></tr>
+          <tr><td class="lead">Admin panel</td><td><a href="https://plantshley.github.io/SDSHC-games-hub/#advanced/admin" target="_blank" rel="noopener">https://plantshley.github.io/SDSHC-games-hub/#advanced/admin</a></td></tr>
           <tr><td class="lead">Admin password</td><td>Ask Ashley &mdash; one shared password. <strong>Not</strong> kept between sessions (signs out when you leave Admin)</td></tr>
           <tr><td class="lead">Active event</td><td><strong>Auto-joined.</strong> Every prepped device joins the one open event; if several are open it asks which</td></tr>
           <tr><td class="lead">Teams &amp; events</td><td><strong>Shared in the cloud.</strong> Create them once</td></tr>
           <tr><td class="lead">Team names</td><td><strong>Global, matched by name.</strong> Prefix class teams with the school</td></tr>
           <tr><td class="lead">Rename onto existing name</td><td><strong>Merges</strong> the two teams</td></tr>
-          <tr><td class="lead">Delete a team or event</td><td><strong>Destroys its scores.</strong> Use End, not Delete</td></tr>
-          <tr><td class="lead">Players per game</td><td>1&ndash;4</td></tr>
+          
+          
         </tbody>
       </table>
       <table>
         <tbody>
+          <tr><td class="lead">Delete team/event</td><td><strong>Destroys its scores.</strong> Use End, not Delete</td></tr>
+          <tr><td class="lead">Players/groups per game</td><td>1&ndash;4</td></tr>
           <tr><td class="lead">Scheduled events</td><td><strong>Open themselves</strong> at their start time (device clock). &ldquo;Open now&rdquo; opens one early</td></tr>
           <tr><td class="lead">Open events</td><td><strong>Auto-end 24 h after they start.</strong> Push the &ldquo;Ends&rdquo; time out for longer; &ldquo;End&rdquo; closes early</td></tr>
-          <tr><td class="lead">Idle reset (Advanced)</td><td>10 min &rarr; opening screen</td></tr>
-          <tr><td class="lead">Idle reset (Kid Mode)</td><td>2 min</td></tr>
+          <tr><td class="lead">Idle reset</td><td> <strong>Advanced:</strong> 10 min &rarr; opening screen; <strong>Kid Mode:</strong> 2 min &rarr; opening screen</td></tr>
           <tr><td class="lead">Idle reset (Admin)</td><td>Disabled</td></tr>
           <tr><td class="lead">Minimum screen width</td><td>~600px (Field Guide: ~900px)</td></tr>
-          <tr><td class="lead">Live site</td><td>plantshley.github.io/SDSHC-games-hub</td></tr>
-          <tr><td class="lead">Contact</td><td>ashley@sdsoil.org &middot; 605-251-4364</td></tr>
+          
         </tbody>
       </table>
     </div>
@@ -723,10 +730,8 @@ code {
 
   <footer class="footer">
     <div class="contact">
-      Heads-up on an event?
-      <span>Ashley &middot; email: ashley@sdsoil.org &middot; text: 605-251-4364 &middot; a few days ahead or early</span>
+
     </div>
-    <div class="url">plantshley.github.io/SDSHC-games-hub/</div>
   </footer>
 
 </div>
