@@ -23,6 +23,7 @@ import { mountNarrowGate } from '../../../utils/narrow-gate.js'
 import { trackGameStart, trackGameComplete, trackGameQuit } from '../../../utils/analytics.js'
 import { STATIONS, QUESTIONS_PER_STATION, INSTRUCTIONS, RULES } from '../../../data/content/advanced/farm-world.js'
 import { createFarmWorld } from './world.js'
+import { PROCEDURAL_CUSTOMIZATION_SCHEMA, PROCEDURAL_DEFAULTS } from './procedural-character.js'
 import { createJoystick, createKeyboardInput } from './controls.js'
 
 const GAME_ID = 'adv-farm-world'
@@ -38,7 +39,10 @@ const LOOK_KEY = 'sdshc-fw-look'
 // Colors are '#rrggbb' strings so the IDE shows inline swatch previews.
 // three.js Color.set() accepts them directly (and still accepts old numeric
 // values that may linger from before, so the format change is backward-safe).
-const LOOK_DEFAULT = { body: '#e295df', hat: 'beanie', hatColor: '#ff35d0', shoes: '#cd35ff', pack: '#ff7ca8' }
+// `character` picks the explorer: the farmer mascot or the fairy-worlds doll
+// (see procedural-character.js). `doll` holds that character's full state
+// (colors/variants/accessories) — null means its built-in defaults.
+const LOOK_DEFAULT = { character: 'farmer', body: '#e295df', hat: 'beanie', hatColor: '#ff35d0', shoes: '#cd35ff', pack: '#ff7ca8', doll: null }
 const BODY_COLORS = ['#b9b0e6', '#92dbb4', '#f2a3b0', '#8fc9f5', '#e295df', '#f5d98f']
 const HAT_COLORS = ['#f2cf3e', '#e0596e', '#38cebc', '#3b4a8c', '#ff35d0', '#5cc257']
 const SHOE_COLORS = ['#ffa760', '#e0596e', '#3a3a3f', '#f2cf3e', '#cd35ff', '#38cebc']
@@ -183,6 +187,14 @@ function createWorldScreen() {
   camResetBtn.textContent = '⊙'
   camResetBtn.title = 'Reset view'
   topbar.appendChild(camResetBtn)
+  // character swap — toggles between the farmer mascot and the doll explorer;
+  // sits left of the customizer, which follows whichever character is active
+  const charBtn = document.createElement('button')
+  charBtn.className = 'adv-help-btn adv-fw-topbar-btn'
+  charBtn.textContent = '✿'
+  charBtn.title = 'Switch character'
+  charBtn.classList.toggle('adv-fw-charswap-on', look.character === 'doll')
+  topbar.appendChild(charBtn)
   const customizeBtn = document.createElement('button')
   customizeBtn.className = 'adv-help-btn adv-fw-topbar-btn'
   customizeBtn.textContent = '☺'
@@ -270,6 +282,9 @@ function createWorldScreen() {
 
   // ── Player customizer ──
 
+  let renderCustomizer = null // live while the panel is open, so the character
+                              // toggle can re-render it for the other option set
+
   function openCustomizer() {
     if (customizerOpen || overlayOpen) return
     customizerOpen = true
@@ -288,13 +303,18 @@ function createWorldScreen() {
       render()
     }
 
-    function swatchRow(label, colors, key) {
+    function rowShell(label) {
       const row = document.createElement('div')
       row.className = 'adv-fw-custom-row'
       const lab = document.createElement('span')
       lab.className = 'adv-fw-custom-label'
       lab.textContent = label
       row.appendChild(lab)
+      return row
+    }
+
+    function swatchRow(label, colors, key) {
+      const row = rowShell(label)
       colors.forEach(c => {
         const b = document.createElement('button')
         b.className = 'adv-fw-swatch' + (look[key] === c ? ' adv-fw-swatch-active' : '')
@@ -307,12 +327,7 @@ function createWorldScreen() {
     }
 
     function chipRow(label, options, key) {
-      const row = document.createElement('div')
-      row.className = 'adv-fw-custom-row'
-      const lab = document.createElement('span')
-      lab.className = 'adv-fw-custom-label'
-      lab.textContent = label
-      row.appendChild(lab)
+      const row = rowShell(label)
       options.forEach(([value, name]) => {
         const b = document.createElement('button')
         b.className = 'adv-fw-chip' + (look[key] === value ? ' adv-fw-chip-active' : '')
@@ -323,20 +338,143 @@ function createWorldScreen() {
       return row
     }
 
-    function render() {
-      panel.innerHTML = ''
+    function renderFarmerRows() {
       panel.appendChild(chipRow('Hat', HAT_STYLES, 'hat'))
       panel.appendChild(swatchRow('Hat color', HAT_COLORS, 'hatColor'))
       panel.appendChild(swatchRow('Body', BODY_COLORS, 'body'))
       panel.appendChild(swatchRow('Shoes', SHOE_COLORS, 'shoes'))
       panel.appendChild(swatchRow('Backpack', PACK_COLORS, 'pack'))
+    }
+
+    // ── Doll rows (fairy-worlds character) — driven by its schema so the
+    // panel always matches what the builder supports. Colors use native
+    // pickers (any color, exactly like the source game); edits go straight
+    // to the character handle and the resulting state is saved on the look. ──
+
+    function colorSphere(name, initial, onChange) {
+      const wrap = document.createElement('label')
+      wrap.className = 'adv-fw-color'
+      const sphere = document.createElement('span')
+      sphere.className = 'adv-fw-sphere'
+      sphere.style.background = initial
+      const input = document.createElement('input')
+      input.type = 'color'
+      input.value = initial
+      input.addEventListener('input', () => {
+        sphere.style.background = input.value
+        onChange(input.value)
+      })
+      sphere.appendChild(input)
+      const txt = document.createElement('span')
+      txt.className = 'adv-fw-color-name'
+      txt.textContent = name
+      wrap.appendChild(sphere)
+      wrap.appendChild(txt)
+      return wrap
+    }
+
+    function renderDollRows() {
+      const doll = world.getDollCharacter()
+      const state = doll.getState()
+      const commit = () => { look.doll = doll.getState(); saveLook(look) }
+      const schema = PROCEDURAL_CUSTOMIZATION_SCHEMA
+
+      const colorRow = rowShell('Colors')
+      schema.colors.forEach(({ id, label }) => {
+        colorRow.appendChild(colorSphere(label, state.colors[id],
+          hex => { doll.setColor(id, hex); commit() }))
+      })
+      // per-accessory color pickers — visible only while that accessory is worn
+      const accSpheres = {}
+      schema.accessories.forEach(({ id, label, defaultColor }) => {
+        const sphere = colorSphere(label, state.accessoryColors[id] ?? defaultColor,
+          hex => { doll.setAccessoryColor(id, hex); commit() })
+        sphere.hidden = !state.accessories[id]
+        accSpheres[id] = sphere
+        colorRow.appendChild(sphere)
+      })
+      panel.appendChild(colorRow)
+
+      schema.variants.forEach(({ id, label, options }) => {
+        const row = rowShell(label)
+        options.forEach(opt => {
+          const b = document.createElement('button')
+          b.className = 'adv-fw-chip' + (state.variants[id] === opt ? ' adv-fw-chip-active' : '')
+          b.textContent = opt
+          onTap(b, () => {
+            doll.setVariant(id, opt)
+            commit()
+            row.querySelectorAll('.adv-fw-chip').forEach(c => c.classList.remove('adv-fw-chip-active'))
+            b.classList.add('adv-fw-chip-active')
+          })
+          row.appendChild(b)
+        })
+        panel.appendChild(row)
+      })
+
+      const accRow = rowShell('Accessories')
+      schema.accessories.forEach(({ id, label }) => {
+        const b = document.createElement('button')
+        b.className = 'adv-fw-chip' + (state.accessories[id] ? ' adv-fw-chip-active' : '')
+        b.textContent = label
+        onTap(b, () => {
+          const on = !b.classList.contains('adv-fw-chip-active')
+          b.classList.toggle('adv-fw-chip-active', on)
+          doll.setAccessory(id, on)
+          accSpheres[id].hidden = !on
+          commit()
+        })
+        accRow.appendChild(b)
+      })
+      panel.appendChild(accRow)
+    }
+
+    function randomizeDoll() {
+      const doll = world.getDollCharacter()
+      const schema = PROCEDURAL_CUSTOMIZATION_SCHEMA
+      const randHex = () => '#' + Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, '0')
+      schema.colors.forEach(({ id }) => doll.setColor(id, randHex()))
+      schema.variants.forEach(({ id, options }) => doll.setVariant(id, pickFrom(options)))
+      schema.accessories.forEach(({ id }) => {
+        doll.setAccessory(id, Math.random() < 0.35)
+        doll.setAccessoryColor(id, randHex())
+      })
+      look.doll = doll.getState()
+      saveLook(look)
+      render() // refresh chips + spheres to the rolled state
+    }
+
+    function render() {
+      panel.innerHTML = ''
+      if (look.character === 'doll') renderDollRows()
+      else renderFarmerRows()
 
       const foot = document.createElement('div')
       foot.className = 'adv-fw-custom-foot'
+      const resetBtn = document.createElement('button')
+      resetBtn.className = 'adv-fw-chip'
+      resetBtn.textContent = '⟲ Reset'
+      onTap(resetBtn, () => {
+        if (look.character === 'doll') {
+          const doll = world.getDollCharacter()
+          doll.applyState(PROCEDURAL_DEFAULTS)
+          look.doll = doll.getState()
+          saveLook(look)
+          render()
+          return
+        }
+        look.hat = LOOK_DEFAULT.hat
+        look.hatColor = LOOK_DEFAULT.hatColor
+        look.body = LOOK_DEFAULT.body
+        look.shoes = LOOK_DEFAULT.shoes
+        look.pack = LOOK_DEFAULT.pack
+        applyAndRender()
+      })
       const randomBtn = document.createElement('button')
       randomBtn.className = 'adv-fw-chip'
       randomBtn.textContent = '⚄ Random'
       onTap(randomBtn, () => {
+        if (look.character === 'doll') { randomizeDoll(); return }
         look.hat = pickFrom(HAT_STYLES)[0]
         look.hatColor = pickFrom(HAT_COLORS)
         look.body = pickFrom(BODY_COLORS)
@@ -348,6 +486,7 @@ function createWorldScreen() {
       doneBtn.className = 'adv-fw-card-btn adv-fw-custom-done'
       doneBtn.textContent = '✓ Done'
       onTap(doneBtn, closeCustomizer)
+      foot.appendChild(resetBtn)
       foot.appendChild(randomBtn)
       foot.appendChild(doneBtn)
       panel.appendChild(foot)
@@ -355,6 +494,7 @@ function createWorldScreen() {
 
     function closeCustomizer() {
       customizerOpen = false
+      renderCustomizer = null
       el.classList.remove('adv-fw-customizing')
       panel.remove()
       world.setCustomizeFocus(false)
@@ -370,6 +510,7 @@ function createWorldScreen() {
     }
 
     render()
+    renderCustomizer = render
   }
 
   const pickFrom = (arr) => arr[Math.floor(Math.random() * arr.length)]
@@ -637,6 +778,13 @@ function createWorldScreen() {
   onTap(el.querySelector('#adv-fw-visit'), () => tryInteract())
   onTap(el.querySelector('#adv-fw-home'), () => confirmBack())
   onTap(camResetBtn, () => world.resetCamera())
+  onTap(charBtn, () => {
+    look.character = look.character === 'doll' ? 'farmer' : 'doll'
+    saveLook(look)
+    world.applyLook(look) // builds the doll on first switch
+    charBtn.classList.toggle('adv-fw-charswap-on', look.character === 'doll')
+    if (renderCustomizer) renderCustomizer() // open panel follows the character
+  })
   onTap(customizeBtn, () => openCustomizer())
   onTap(dayNightBtn, () => {
     isNight = !isNight

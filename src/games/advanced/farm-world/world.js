@@ -11,6 +11,7 @@
  */
 
 import * as THREE from 'three'
+import { createProceduralCharacter } from './procedural-character.js'
 
 // ─── Palette ───
 
@@ -557,9 +558,16 @@ function buildCropField() {
   const pre = new THREE.Group()
   const post = new THREE.Group()
 
-  group.add(place(box(16, 0.3, 11, C.soil), 0, 0.15, 0))
+  // whole field sits back from the hub a bit so the visit beacon's ring
+  // lands on grass instead of clipping into the raised bed
+  const Z_OFF = -1.6
+  const bed = place(box(16, 0.3, 11, C.soil), 0, 0.15, Z_OFF)
+  group.add(bed)
+  const walkables = [bed]
   for (let i = -2; i <= 2; i++) {
-    group.add(place(box(15, 0.3, 0.9, C.soilRidge), 0, 0.36, i * 2.1))
+    const ridge = place(box(15, 0.3, 0.9, C.soilRidge), 0, 0.36, i * 2.1 + Z_OFF)
+    group.add(ridge)
+    walkables.push(ridge)
   }
 
   // pre: dry stubble
@@ -583,8 +591,10 @@ function buildCropField() {
   post.add(instanced(new THREE.ConeGeometry(0.4, 1.5, 6), C.foliage[0], cropA))
   post.add(instanced(new THREE.ConeGeometry(0.4, 1.5, 6), C.foliage[1], cropB))
 
+  pre.position.z = Z_OFF
+  post.position.z = Z_OFF
   group.add(pre, post)
-  return { group, pre, post, colliders: [] }
+  return { group, pre, post, colliders: [], walkables }
 }
 
 function buildFarmstead() {
@@ -651,12 +661,15 @@ function buildSoilPit() {
   const pre = new THREE.Group()
   const post = new THREE.Group()
 
-  // the pit itself
-  group.add(place(box(5.2, 0.16, 4.2, 0x2e2018), 0, 0.06, 0.6))
-  group.add(place(box(5.6, 0.24, 0.35, C.path), 0, 0.12, 2.75))
-  group.add(place(box(5.6, 0.24, 0.35, C.path), 0, 0.12, -1.55))
-  group.add(place(box(0.35, 0.24, 4.65, C.path), 2.65, 0.12, 0.6))
-  group.add(place(box(0.35, 0.24, 4.65, C.path), -2.65, 0.12, 0.6))
+  // the pit itself (floor + raised rim curbs — all standable)
+  const walkables = [
+    place(box(5.2, 0.16, 4.2, 0x2e2018), 0, 0.06, 0.6),
+    place(box(5.6, 0.24, 0.35, C.path), 0, 0.12, 2.75),
+    place(box(5.6, 0.24, 0.35, C.path), 0, 0.12, -1.55),
+    place(box(0.35, 0.24, 4.65, C.path), 2.65, 0.12, 0.6),
+    place(box(0.35, 0.24, 4.65, C.path), -2.65, 0.12, 0.6),
+  ]
+  walkables.forEach(m => group.add(m))
 
   // exposed soil profile wall behind the pit
   group.add(place(box(5.2, 1.2, 0.9, C.stubble), 0, 0.6, -2.6))   // parent material
@@ -688,7 +701,7 @@ function buildSoilPit() {
   }
 
   group.add(pre, post)
-  return { group, pre, post, colliders: [{ x: 0, z: -2.6, r: 2.4 }] }
+  return { group, pre, post, colliders: [{ x: 0, z: -2.6, r: 2.4 }], walkables }
 }
 
 function buildPasture() {
@@ -827,7 +840,10 @@ function buildPond() {
   group.add(pre, post)
   return {
     group, pre, post,
-    colliders: [{ x: 0, z: 0, r: 5.4 }, { x: -5.8, z: -3.2, r: 0.8 }],
+    // water-only collider (r + PLAYER_R keeps the player's center at ~4.8,
+    // just inside the bank ring) so the bank itself is walkable
+    colliders: [{ x: 0, z: 0, r: 3.8 }, { x: -5.8, z: -3.2, r: 0.8 }],
+    walkables: [bank],
   }
 }
 
@@ -933,7 +949,11 @@ function buildHeritage() {
   })
 
   group.add(pre, post)
-  return { group, pre, post, colliders: [{ x: -3.4, z: -2.6, r: 2.5 }] }
+  return {
+    group, pre, post,
+    // tipi + one circle per planting mound
+    colliders: [{ x: -3.4, z: -2.6, r: 2.5 }, ...moundPos.map(([x, z]) => ({ x, z, r: 0.85 }))],
+  }
 }
 
 // ─── Layout ───
@@ -994,7 +1014,7 @@ const easeOutBack = t => {
  *   interact range changed (null = none)
  * @param {() => void} [opts.onDisposed]
  * @returns {{ dispose, upgradeStation, setMovementEnabled, resetCamera,
- *   applyLook, setCustomizeFocus, setTimeOfDay }}
+ *   applyLook, getDollCharacter, setCustomizeFocus, setTimeOfDay }}
  */
 export function createFarmWorld({ host, stationIds, getInput, onNearStation, onDisposed }) {
   // ── Renderer / scene / camera ──
@@ -1146,6 +1166,8 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   // ── Stations ──
   const stations = {}
   const stationList = []
+  const walkables = [] // meshes the player can stand on top of (ground-height raycast)
+  const cowColliders = [] // roaming cows — world position read fresh each frame
   stationIds.forEach(id => {
     const layout = STATION_LAYOUT[id]
     const builder = BUILDERS[id]
@@ -1170,6 +1192,9 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     path.receiveShadow = true
     place(path, px, 0.05, pz, -a + Math.PI / 2)
     scene.add(path)
+    walkables.push(path)
+    if (built.walkables) walkables.push(...built.walkables)
+    if (built.group.userData.cows) cowColliders.push(...built.group.userData.cows)
 
     // beacon on the path, just before the station
     const bx = Math.cos(a) * (STATION_R - 6)
@@ -1284,11 +1309,48 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   scene.add(birdCarrier)
 
   // ── Player ──
-  const player = makeFarmer()
+  // `player` is a movable wrapper: movement/heading/camera all target it, and
+  // it carries whichever character is active — the farmer mascot (default) or
+  // the ported fairy-worlds doll (built lazily on first switch).
+  const player = new THREE.Group()
+  const farmer = makeFarmer()
+  player.add(farmer)
   player.position.set(0, 0, 8)
   scene.add(player)
   let heading = Math.PI // facing the hub sign
   player.rotation.y = heading
+
+  let doll = null // procedural character handle (see procedural-character.js)
+  let dollG = null // scaled holder; also carries the doll's walk bob/waddle
+  let activeCharacter = 'farmer'
+  let lastLook = null // stashed by applyLook so ensureDoll can seed state
+
+  // The doll casts shadows like the farmer — but skip flat face decals
+  // (basic-material circles) and transparent parts (wings, sticker blush),
+  // whose shadows would read as floating smudges.
+  function applyDollShadows() {
+    if (!doll) return
+    doll.root.traverse(obj => {
+      if (obj.isMesh && !obj.material.transparent && obj.material.type !== 'MeshBasicMaterial') {
+        obj.castShadow = true
+      }
+    })
+  }
+
+  function ensureDoll() {
+    if (doll) return doll
+    doll = createProceduralCharacter(lastLook?.doll || {})
+    doll.setOnRebuild(applyDollShadows) // variant swaps create fresh meshes
+    applyDollShadows()
+    dollG = new THREE.Group()
+    // fairy-worlds doll is ~1.36 units tall vs the farmer's ~2.3 — scale to match
+    dollG.scale.setScalar(1.7)
+    dollG.add(doll.root)
+    dollG.userData.walkT = 0
+    dollG.visible = false
+    player.add(dollG)
+    return doll
+  }
 
   // ── Tweens ──
   const tweens = []
@@ -1328,7 +1390,25 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   ro.observe(host)
 
   // ── Movement + collisions ──
+  // Raised standable surfaces (sidewalks, crop-field bed + ridges, soil-pit
+  // floor + curbs, pond bank) are registered in `walkables`; a downward ray
+  // reports the surface height under the player so feet ride on top instead
+  // of sinking through. Everything else sits at y ≈ 0.
+  const groundRay = new THREE.Raycaster(undefined, undefined, 0, 12)
+  const groundOrigin = new THREE.Vector3()
+  const GROUND_DOWN = new THREE.Vector3(0, -1, 0)
+  const groundHits = []
+  function groundHeightAt(x, z) {
+    groundOrigin.set(x, 6, z)
+    groundRay.set(groundOrigin, GROUND_DOWN)
+    groundHits.length = 0
+    groundRay.intersectObjects(walkables, false, groundHits)
+    return groundHits.length ? Math.max(0, groundHits[0].point.y) : 0
+  }
+
   const camTarget = new THREE.Vector3()
+  const cowPos = new THREE.Vector3()
+  const cowScl = new THREE.Vector3()
   function movePlayer(dt) {
     const input = getInput()
     let ix = input.x
@@ -1365,6 +1445,22 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
         nz = c.z + (dz / d) * min
       }
     }
+    // cows roam, so their blocking circles follow their world position; the
+    // radius follows world scale (calf is 0.55, and it lives in the pasture's
+    // `post` group, which stays at ~0.001 until the station is restored)
+    for (const cow of cowColliders) {
+      cow.getWorldPosition(cowPos)
+      const s = cow.getWorldScale(cowScl).x
+      if (s < 0.4) continue
+      const min = 1.15 * s + PLAYER_R
+      const dx = nx - cowPos.x
+      const dz = nz - cowPos.z
+      const d = Math.hypot(dx, dz)
+      if (d < min && d > 0.0001) {
+        nx = cowPos.x + (dx / d) * min
+        nz = cowPos.z + (dz / d) * min
+      }
+    }
 
     player.position.x = nx
     player.position.z = nz
@@ -1388,23 +1484,51 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
 
     const moved = movePlayer(dt)
 
+    // step up/down onto raised platforms — sidewalks, crop beds, pit curbs
+    // (eased so it reads as a hop, not a snap); the walk-cycle bob below rides
+    // on child groups, so the two never fight over the same transform
+    player.position.y += (groundHeightAt(player.position.x, player.position.z) - player.position.y) * Math.min(1, dt * 14)
+
     // walk cycle — limbs swing while moving, everything settles when idle
-    const pu = player.userData
-    if (moved > 0) {
-      pu.walkT += dt * 10.5
-      const s = Math.sin(pu.walkT)
-      pu.legL.rotation.x = s * 0.75
-      pu.legR.rotation.x = -s * 0.75
-      pu.armL.rotation.x = -s * 0.55
-      pu.armR.rotation.x = s * 0.55
-      pu.bodyG.position.y = Math.abs(s) * 0.09
-      pu.bodyG.rotation.x = 0.07 // slight forward lean
-    } else {
-      const settle = Math.min(1, dt * 8)
-      ;[pu.legL, pu.legR, pu.armL, pu.armR].forEach(p => { p.rotation.x -= p.rotation.x * settle })
-      pu.bodyG.rotation.x -= pu.bodyG.rotation.x * settle
-      // gentle idle breathing bob
-      pu.bodyG.position.y += (0.02 + Math.sin(t * 2.2) * 0.02 - pu.bodyG.position.y) * settle
+    if (activeCharacter === 'farmer') {
+      const pu = farmer.userData
+      if (moved > 0) {
+        pu.walkT += dt * 10.5
+        const s = Math.sin(pu.walkT)
+        pu.legL.rotation.x = s * 0.75
+        pu.legR.rotation.x = -s * 0.75
+        pu.armL.rotation.x = -s * 0.55
+        pu.armR.rotation.x = s * 0.55
+        pu.bodyG.position.y = Math.abs(s) * 0.09
+        pu.bodyG.rotation.x = 0.07 // slight forward lean
+      } else {
+        const settle = Math.min(1, dt * 8)
+        ;[pu.legL, pu.legR, pu.armL, pu.armR].forEach(p => { p.rotation.x -= p.rotation.x * settle })
+        pu.bodyG.rotation.x -= pu.bodyG.rotation.x * settle
+        // gentle idle breathing bob
+        pu.bodyG.position.y += (0.02 + Math.sin(t * 2.2) * 0.02 - pu.bodyG.position.y) * settle
+      }
+    } else if (dollG) {
+      // same gait as the farmer: the doll's shoulder/hip pivots carry the
+      // limbs AND their outfit parts (sleeves, socks, trouser legs), so
+      // everything swings together
+      const L = doll.limbs
+      if (moved > 0) {
+        dollG.userData.walkT += dt * 10.5
+        const s = Math.sin(dollG.userData.walkT)
+        L.legL.rotation.x = s * 0.65
+        L.legR.rotation.x = -s * 0.65
+        L.armL.rotation.x = -s * 0.5
+        L.armR.rotation.x = s * 0.5
+        dollG.position.y = Math.abs(s) * 0.05
+        dollG.rotation.x = 0.05 // slight forward lean
+      } else {
+        const settle = Math.min(1, dt * 8)
+        ;[L.legL, L.legR, L.armL, L.armR].forEach(p => { p.rotation.x -= p.rotation.x * settle })
+        dollG.rotation.x -= dollG.rotation.x * settle
+        // gentle idle breathing bob
+        dollG.position.y += (0.02 + Math.sin(t * 2.2) * 0.02 - dollG.position.y) * settle
+      }
     }
 
     // camera: orbitable follow with exponential smoothing — snappier while a
@@ -1542,9 +1666,14 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     }
   }
 
-  /** Recolor / re-hat the player. look: { body, hat, hatColor, shoes, pack } */
+  /**
+   * Recolor / re-hat the player and switch the active character.
+   * look: { character: 'farmer'|'doll', body, hat, hatColor, shoes, pack,
+   *         doll: <procedural character state|null> }
+   */
   function applyLook(look) {
-    const u = player.userData
+    lastLook = look
+    const u = farmer.userData
     // .set() accepts '#rrggbb' strings and legacy numeric hex alike
     u.mats.body.color.set(look.body)
     u.mats.hat.color.set(look.hatColor)
@@ -1552,6 +1681,20 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     u.mats.pack.color.set(look.pack)
     u.hats.beanie.visible = look.hat === 'beanie'
     u.hats.straw.visible = look.hat === 'straw'
+
+    activeCharacter = look.character === 'doll' ? 'doll' : 'farmer'
+    if (activeCharacter === 'doll') ensureDoll()
+    farmer.visible = activeCharacter === 'farmer'
+    if (dollG) dollG.visible = activeCharacter === 'doll'
+  }
+
+  /**
+   * Handle to the second character for the customizer's granular edits
+   * (setColor / setVariant / setAccessory / setAccessoryColor / getState).
+   * State persistence stays in index.js — it saves getState() into the look.
+   */
+  function getDollCharacter() {
+    return ensureDoll()
   }
 
   /** Swing the camera around to the player's face while the customizer is
@@ -1645,5 +1788,5 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     if (onDisposed) onDisposed()
   }
 
-  return { dispose, upgradeStation, setMovementEnabled, resetCamera, applyLook, setCustomizeFocus, setTimeOfDay }
+  return { dispose, upgradeStation, setMovementEnabled, resetCamera, applyLook, getDollCharacter, setCustomizeFocus, setTimeOfDay }
 }
