@@ -34,6 +34,7 @@ import {
   listRecentScores,
   deleteScore,
   getEventRoster,
+  getOrCreateTeam,
   addTeamToEventRoster,
   removeTeamFromEventRoster,
   approveTeamForEvent,
@@ -44,7 +45,8 @@ import { derivedEventStatus, eventEndsAt } from '../utils/event-status.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle } from '../utils/theme-toggle.js'
 import { clearPlayMode } from './advanced-play-mode.js'
-import { getTeamColors, openColorPopover } from '../utils/team-colors.js'
+import { getTeamColors, openColorPopover, createColorSwatchPicker, deriveTeamColors } from '../utils/team-colors.js'
+import { isClean } from '../utils/profanity.js'
 import { USE_FIRESTORE } from '../firebase/config.js'
 import { adminSignIn, adminSignOut, onAdminAuthChange } from '../firebase/auth.js'
 import { warmOfflineCache, onWarmupProgress } from '../utils/offline-warmup.js'
@@ -158,6 +160,13 @@ export function createAdvancedAdminScreen() {
       await renderRoster()
     })
 
+    // Typing a date implies scheduling — flip the radio so the UI matches what
+    // will actually happen (the submit handler treats a filled date as
+    // scheduled regardless, but keeping the radio in sync avoids confusion).
+    el.querySelector('#new-event-when').addEventListener('input', (e) => {
+      if (e.target.value) el.querySelector('input[name="when"][value="scheduled"]').checked = true
+    })
+
     onTap(el.querySelector('#start-event-btn'), async () => {
       const input = el.querySelector('#new-event-name')
       const name = input.value.trim()
@@ -166,14 +175,20 @@ export function createAdvancedAdminScreen() {
         return
       }
       const when = el.querySelector('input[name="when"]:checked').value
+      const dtRaw = el.querySelector('#new-event-when').value
+      const dtTs = dtRaw ? new Date(dtRaw).getTime() : null
       let scheduledStart = null
-      if (when === 'scheduled') {
-        const dt = el.querySelector('#new-event-when').value
-        if (!dt) {
-          el.querySelector('#new-event-when').focus()
-          return
-        }
-        scheduledStart = new Date(dt).getTime()
+      if (dtTs && !Number.isNaN(dtTs) && dtTs > Date.now()) {
+        // A future date/time was filled in — schedule for it even if the
+        // "Start now" radio was left selected. It's easy to type a date and
+        // forget to flip the radio, and the filled-in date is the clearer
+        // intent, so it wins.
+        scheduledStart = dtTs
+      } else if (when === 'scheduled') {
+        // "Schedule for" chosen but no valid future time given — a blank or
+        // past date can't schedule, so point the organizer back at the field.
+        el.querySelector('#new-event-when').focus()
+        return
       }
       const ev = await startEvent(name, { scheduledStart })
       // Auto-activate only if starting now
@@ -304,15 +319,32 @@ export function createAdvancedAdminScreen() {
 
   async function renderTeams() {
     const el = screen.querySelector('#sec-teams')
-    const teams = await listAllTeams()
+    const [teams, events] = await Promise.all([listAllTeams(), listEvents()])
     if (teams.length === 0) {
       el.innerHTML = `<div class="adv-admin-empty">No teams yet.</div>`
       return
     }
+    // Which events each team sits on (with its per-event roster status), so the
+    // row can label its status pills by scope — "pending · statewide" vs
+    // "approved · FFA Day" — instead of a bare "pending" that hides which
+    // approval it refers to. Only currently-relevant events (open or scheduled)
+    // are labelled; a team's membership in a long-past event is just noise.
+    const now = Date.now()
+    const membershipsByTeam = new Map()
+    for (const ev of events) {
+      const ds = derivedEventStatus(ev, now)
+      if (ds !== 'open' && ds !== 'scheduled') continue
+      for (const r of (ev.roster || [])) {
+        const arr = membershipsByTeam.get(r.teamId) || []
+        arr.push({ eventName: ev.name, rosterStatus: r.status })
+        membershipsByTeam.set(r.teamId, arr)
+      }
+    }
+    const rowFor = (t) => teamRowHtml(t, membershipsByTeam.get(t.id) || [])
     el.innerHTML = `
       <input class="adv-admin-input adv-admin-search" id="teams-search" placeholder="Search teams…" />
       <ul class="adv-admin-list" id="teams-list">
-        ${teams.map(t => teamRowHtml(t)).join('')}
+        ${teams.map(rowFor).join('')}
       </ul>
     `
     const list = el.querySelector('#teams-list')
@@ -321,7 +353,7 @@ export function createAdvancedAdminScreen() {
       const q = search.value.toLowerCase()
       list.innerHTML = teams
         .filter(t => t.name.toLowerCase().includes(q))
-        .map(t => teamRowHtml(t))
+        .map(rowFor)
         .join('')
       bindTeamRows()
     })
@@ -356,13 +388,15 @@ export function createAdvancedAdminScreen() {
     }
   }
 
-  function teamRowHtml(t) {
+  function teamRowHtml(t, memberships = []) {
     const c = getTeamColors(t)
+    const eventPills = memberships.map(m => scopePill(m.rosterStatus, m.eventName)).join('')
     return `
       <li class="adv-admin-row" data-id="${t.id}">
         <span class="adv-admin-row-color" style="background: linear-gradient(135deg, ${c.color1}, ${c.color2})"></span>
         <span class="adv-admin-row-name">${escapeHtml(t.name)}</span>
-        <span class="adv-admin-row-status adv-admin-status-${t.status}">${t.status}</span>
+        ${scopePill(t.status, 'statewide')}
+        ${eventPills}
         <span class="adv-admin-row-actions">
           ${t.status !== 'approved' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="approve">Approve</button>` : ''}
           <button class="adv-admin-btn" data-act="colors">Colors</button>
@@ -403,6 +437,7 @@ export function createAdvancedAdminScreen() {
                        value="${toLocalInputValue(ends)}" min="${toLocalInputValue(endsAtFloor(e, now))}" />
                    </label>`
                 : ''}
+              ${ds === 'scheduled' ? `<button class="adv-admin-btn" data-act="precreate">Manage Teams</button>` : ''}
               ${ds === 'scheduled' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="open-now">Open now</button>` : ''}
               ${ds === 'open' ? `<button class="adv-admin-btn adv-admin-btn-warn" data-act="end">End</button>` : ''}
               ${ds === 'ended' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="reopen">Reopen</button>` : ''}
@@ -420,6 +455,10 @@ export function createAdvancedAdminScreen() {
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
       const id = row.dataset.id
+      onTap(row.querySelector('[data-act="precreate"]'), () => {
+        const ev = events.find(x => x.id === id)
+        openRosterModal(id, ev ? ev.name : 'Event')
+      })
       onTap(row.querySelector('[data-act="open-now"]'), async () => {
         await openScheduledEvent(id)
         await renderEvents(); await renderActiveEvent()
@@ -472,6 +511,179 @@ export function createAdvancedAdminScreen() {
     if (e.endedAt) return `${started} ${'→'} ${formatDate(e.endedAt)}`
     if (ds === 'ended' && ends) return `${started} ${'→'} auto-ended ${formatDate(ends)}`
     return started
+  }
+
+  /**
+   * Team-management modal for a specific event, used to build (and moderate) an
+   * event's roster ahead of time. Adding a name creates the team (if new) with
+   * the colors picked below, puts it on this event's roster, AND approves it for
+   * the event in one step — so it shows up pre-approved in the game-intro
+   * dropdown the moment the event goes live, without the organizer having to
+   * open the event early. Each row can then be approved statewide, recolored, or
+   * removed. Mirrors the player-facing Team Roster screen (inline color picker,
+   * swatched rows) with the admin moderation controls added.
+   *
+   * The overlay mounts on document.body — NOT the admin `.screen` — because the
+   * screen is a transformed/scrollable positioning context, which would make a
+   * `position: fixed` child center within the tall scroll area instead of the
+   * viewport. data-mode/theme are stamped so the advanced-mode CSS variables
+   * resolve outside #app (same trick as openColorPopover).
+   */
+  function openRosterModal(eventId, eventName) {
+    const overlay = document.createElement('div')
+    overlay.className = 'adv-roster-modal'
+    const app = document.getElementById('app')
+    if (app) {
+      overlay.dataset.mode = app.dataset.mode || 'advanced'
+      if (app.dataset.theme) overlay.dataset.theme = app.dataset.theme
+    }
+    overlay.innerHTML = `
+      <div class="adv-roster-modal-card" role="dialog" aria-modal="true" aria-label="Manage teams">
+        <div class="adv-roster-modal-head">
+          <h2 class="adv-roster-modal-title">Manage Teams ${'·'} ${escapeHtml(eventName)}</h2>
+          <button class="adv-roster-modal-close" data-act="close" aria-label="Close">${'✕'}</button>
+        </div>
+        <p class="adv-roster-modal-sub">Teams you add here go on this event's roster pre-approved, so they're ready to pick the moment the event opens.</p>
+        <form class="adv-roster-modal-add">
+          <input class="adv-admin-input" data-act="add-name" placeholder="Team / school name" maxlength="40" spellcheck="false" autocomplete="off" />
+          <button class="adv-admin-btn-create" type="submit">Add team</button>
+        </form>
+        <div class="adv-roster-modal-colors" data-host="colors"></div>
+        <div class="adv-roster-modal-feedback" role="alert"></div>
+        <div class="adv-roster-modal-list">Loading…</div>
+      </div>
+    `
+    const card = overlay.querySelector('.adv-roster-modal-card')
+    const form = overlay.querySelector('.adv-roster-modal-add')
+    const nameInput = overlay.querySelector('[data-act="add-name"]')
+    const feedback = overlay.querySelector('.adv-roster-modal-feedback')
+    const listEl = overlay.querySelector('.adv-roster-modal-list')
+    const colorsHost = overlay.querySelector('[data-host="colors"]')
+
+    let touchedTeams = false // did we create/approve anything worth refreshing on close?
+
+    // Inline swatch picker for the team being added, seeded with a fresh random
+    // pair each time so consecutive teams get distinct colors unless picked.
+    let colorPicker = null
+    function mountColorPicker() {
+      colorsHost.innerHTML = ''
+      colorPicker = createColorSwatchPicker(deriveTeamColors(`${Date.now()}_${Math.random()}`))
+      colorsHost.appendChild(colorPicker.el)
+    }
+    mountColorPicker()
+
+    function setFeedback(text, kind) {
+      feedback.textContent = text || ''
+      feedback.className = `adv-roster-modal-feedback${kind ? ` adv-roster-modal-feedback-${kind}` : ''}`
+    }
+
+    async function paintList() {
+      const roster = await getEventRoster(eventId)
+      if (roster.length === 0) {
+        listEl.innerHTML = `<div class="adv-admin-empty">No teams yet. Add schools above to build the roster ahead of time.</div>`
+        return
+      }
+      listEl.innerHTML = `
+        <ul class="adv-admin-list">
+          ${roster.map(r => `
+            <li class="adv-admin-row" data-id="${r.teamId}">
+              <span class="adv-admin-row-color" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>
+              <span class="adv-admin-row-name">${escapeHtml(r.teamName)}</span>
+              ${rosterStatusPill(r.rosterStatus, 'Event')}
+              ${rosterStatusPill(r.teamStatus, 'Statewide')}
+              <span class="adv-admin-row-actions">
+                ${r.rosterStatus !== 'approved'
+                  ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="approve-event">Approve for event</button>`
+                  : ''}
+                ${r.teamStatus !== 'approved'
+                  ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="approve-statewide">Approve statewide</button>`
+                  : ''}
+                <button class="adv-admin-btn" data-act="colors">Colors</button>
+                <button class="adv-admin-btn adv-admin-btn-danger" data-act="remove">Remove</button>
+              </span>
+            </li>
+          `).join('')}
+        </ul>
+      `
+      listEl.querySelectorAll('.adv-admin-row').forEach(rowEl => {
+        const teamId = rowEl.dataset.id
+        const rEntry = roster.find(r => r.teamId === teamId)
+        onTap(rowEl.querySelector('[data-act="approve-event"]'), async () => {
+          await approveTeamForEvent(eventId, teamId)
+          touchedTeams = true
+          await paintList()
+        })
+        onTap(rowEl.querySelector('[data-act="approve-statewide"]'), async () => {
+          await approveTeam(teamId)
+          touchedTeams = true
+          await paintList()
+        })
+        onTap(rowEl.querySelector('[data-act="colors"]'), () => {
+          openColorPopover({ color1: rEntry.color1, color2: rEntry.color2 }, async ({ color1, color2 }) => {
+            await setTeamColors(teamId, color1, color2)
+            touchedTeams = true
+            await paintList()
+          })
+        })
+        rowEl.querySelector('[data-act="remove"]')?.addEventListener('click', async () => {
+          if (!window.confirm('Remove this team from the event roster?')) return
+          await removeTeamFromEventRoster(eventId, teamId)
+          touchedTeams = true
+          await paintList()
+        })
+      })
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const name = nameInput.value.trim()
+      if (!name) {
+        nameInput.focus()
+        return
+      }
+      if (!isClean(name)) {
+        setFeedback('Pick a different name.', 'error')
+        nameInput.select()
+        return
+      }
+      setFeedback('')
+      try {
+        const { teamId } = await getOrCreateTeam(name, colorPicker.getValue())
+        await addTeamToEventRoster(eventId, teamId)
+        await approveTeamForEvent(eventId, teamId)
+        touchedTeams = true
+        nameInput.value = ''
+        mountColorPicker()
+        await paintList()
+        setFeedback(`Added ${'"'}${name}${'"'} — approved for this event.`, 'ok')
+      } catch (err) {
+        console.error('pre-create team failed', err)
+        setFeedback('Could not add that team. Try again.', 'error')
+      }
+      nameInput.focus()
+    })
+
+    function close() {
+      document.removeEventListener('keydown', onKey)
+      overlay.remove()
+      // A pre-created team is also a new statewide-pending team, so refresh the
+      // sections that reflect that. The active-event roster may overlap if the
+      // modal targeted the active event.
+      if (touchedTeams) {
+        renderPending(); renderTeams(); renderRoster()
+      }
+    }
+    function onKey(e) { if (e.key === 'Escape') close() }
+
+    onTap(overlay.querySelector('[data-act="close"]'), close)
+    // Backdrop click (outside the card) closes; clicks inside don't bubble out.
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close() })
+    card.addEventListener('click', (e) => e.stopPropagation())
+    document.addEventListener('keydown', onKey)
+
+    document.body.appendChild(overlay)
+    paintList()
+    setTimeout(() => nameInput.focus(), 50)
   }
 
   async function renderScores() {
@@ -751,6 +963,14 @@ function rosterStatusPill(status, scope) {
   const mark = marks[status] || '·'
   const title = `${status} (${scope.toLowerCase()})`
   return `<span class="adv-admin-row-status adv-admin-status-${status}" title="${title}">${mark} ${scope}</span>`
+}
+
+// Full-word status pill labelled with its scope — "pending · statewide",
+// "approved · FFA Day". Used in the All-teams list so a bare "pending" can't be
+// mistaken for the wrong kind of approval. `scopeLabel` may be a user-entered
+// event name, so it's escaped.
+function scopePill(status, scopeLabel) {
+  return `<span class="adv-admin-row-status adv-admin-status-${status}" title="${status} (${scopeLabel})">${status} ${'·'} ${escapeHtml(scopeLabel)}</span>`
 }
 
 function escapeHtml(s) {
