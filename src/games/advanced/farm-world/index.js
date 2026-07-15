@@ -191,7 +191,7 @@ function createWorldScreen() {
   // sits left of the customizer, which follows whichever character is active
   const charBtn = document.createElement('button')
   charBtn.className = 'adv-help-btn adv-fw-topbar-btn'
-  charBtn.textContent = '✦'
+  charBtn.textContent = '✿'
   charBtn.title = 'Switch character'
   charBtn.classList.toggle('adv-fw-charswap-on', look.character === 'doll')
   topbar.appendChild(charBtn)
