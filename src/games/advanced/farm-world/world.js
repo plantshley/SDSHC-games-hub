@@ -558,9 +558,16 @@ function buildCropField() {
   const pre = new THREE.Group()
   const post = new THREE.Group()
 
-  group.add(place(box(16, 0.3, 11, C.soil), 0, 0.15, 0))
+  // whole field sits back from the hub a bit so the visit beacon's ring
+  // lands on grass instead of clipping into the raised bed
+  const Z_OFF = -1.6
+  const bed = place(box(16, 0.3, 11, C.soil), 0, 0.15, Z_OFF)
+  group.add(bed)
+  const walkables = [bed]
   for (let i = -2; i <= 2; i++) {
-    group.add(place(box(15, 0.3, 0.9, C.soilRidge), 0, 0.36, i * 2.1))
+    const ridge = place(box(15, 0.3, 0.9, C.soilRidge), 0, 0.36, i * 2.1 + Z_OFF)
+    group.add(ridge)
+    walkables.push(ridge)
   }
 
   // pre: dry stubble
@@ -584,8 +591,10 @@ function buildCropField() {
   post.add(instanced(new THREE.ConeGeometry(0.4, 1.5, 6), C.foliage[0], cropA))
   post.add(instanced(new THREE.ConeGeometry(0.4, 1.5, 6), C.foliage[1], cropB))
 
+  pre.position.z = Z_OFF
+  post.position.z = Z_OFF
   group.add(pre, post)
-  return { group, pre, post, colliders: [] }
+  return { group, pre, post, colliders: [], walkables }
 }
 
 function buildFarmstead() {
@@ -652,12 +661,15 @@ function buildSoilPit() {
   const pre = new THREE.Group()
   const post = new THREE.Group()
 
-  // the pit itself
-  group.add(place(box(5.2, 0.16, 4.2, 0x2e2018), 0, 0.06, 0.6))
-  group.add(place(box(5.6, 0.24, 0.35, C.path), 0, 0.12, 2.75))
-  group.add(place(box(5.6, 0.24, 0.35, C.path), 0, 0.12, -1.55))
-  group.add(place(box(0.35, 0.24, 4.65, C.path), 2.65, 0.12, 0.6))
-  group.add(place(box(0.35, 0.24, 4.65, C.path), -2.65, 0.12, 0.6))
+  // the pit itself (floor + raised rim curbs — all standable)
+  const walkables = [
+    place(box(5.2, 0.16, 4.2, 0x2e2018), 0, 0.06, 0.6),
+    place(box(5.6, 0.24, 0.35, C.path), 0, 0.12, 2.75),
+    place(box(5.6, 0.24, 0.35, C.path), 0, 0.12, -1.55),
+    place(box(0.35, 0.24, 4.65, C.path), 2.65, 0.12, 0.6),
+    place(box(0.35, 0.24, 4.65, C.path), -2.65, 0.12, 0.6),
+  ]
+  walkables.forEach(m => group.add(m))
 
   // exposed soil profile wall behind the pit
   group.add(place(box(5.2, 1.2, 0.9, C.stubble), 0, 0.6, -2.6))   // parent material
@@ -689,7 +701,7 @@ function buildSoilPit() {
   }
 
   group.add(pre, post)
-  return { group, pre, post, colliders: [{ x: 0, z: -2.6, r: 2.4 }] }
+  return { group, pre, post, colliders: [{ x: 0, z: -2.6, r: 2.4 }], walkables }
 }
 
 function buildPasture() {
@@ -828,7 +840,10 @@ function buildPond() {
   group.add(pre, post)
   return {
     group, pre, post,
-    colliders: [{ x: 0, z: 0, r: 5.4 }, { x: -5.8, z: -3.2, r: 0.8 }],
+    // water-only collider (r + PLAYER_R keeps the player's center at ~4.8,
+    // just inside the bank ring) so the bank itself is walkable
+    colliders: [{ x: 0, z: 0, r: 3.8 }, { x: -5.8, z: -3.2, r: 0.8 }],
+    walkables: [bank],
   }
 }
 
@@ -934,7 +949,11 @@ function buildHeritage() {
   })
 
   group.add(pre, post)
-  return { group, pre, post, colliders: [{ x: -3.4, z: -2.6, r: 2.5 }] }
+  return {
+    group, pre, post,
+    // tipi + one circle per planting mound
+    colliders: [{ x: -3.4, z: -2.6, r: 2.5 }, ...moundPos.map(([x, z]) => ({ x, z, r: 0.85 }))],
+  }
 }
 
 // ─── Layout ───
@@ -1147,6 +1166,8 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   // ── Stations ──
   const stations = {}
   const stationList = []
+  const walkables = [] // meshes the player can stand on top of (ground-height raycast)
+  const cowColliders = [] // roaming cows — world position read fresh each frame
   stationIds.forEach(id => {
     const layout = STATION_LAYOUT[id]
     const builder = BUILDERS[id]
@@ -1171,6 +1192,9 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     path.receiveShadow = true
     place(path, px, 0.05, pz, -a + Math.PI / 2)
     scene.add(path)
+    walkables.push(path)
+    if (built.walkables) walkables.push(...built.walkables)
+    if (built.group.userData.cows) cowColliders.push(...built.group.userData.cows)
 
     // beacon on the path, just before the station
     const bx = Math.cos(a) * (STATION_R - 6)
@@ -1366,7 +1390,25 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   ro.observe(host)
 
   // ── Movement + collisions ──
+  // Raised standable surfaces (sidewalks, crop-field bed + ridges, soil-pit
+  // floor + curbs, pond bank) are registered in `walkables`; a downward ray
+  // reports the surface height under the player so feet ride on top instead
+  // of sinking through. Everything else sits at y ≈ 0.
+  const groundRay = new THREE.Raycaster(undefined, undefined, 0, 12)
+  const groundOrigin = new THREE.Vector3()
+  const GROUND_DOWN = new THREE.Vector3(0, -1, 0)
+  const groundHits = []
+  function groundHeightAt(x, z) {
+    groundOrigin.set(x, 6, z)
+    groundRay.set(groundOrigin, GROUND_DOWN)
+    groundHits.length = 0
+    groundRay.intersectObjects(walkables, false, groundHits)
+    return groundHits.length ? Math.max(0, groundHits[0].point.y) : 0
+  }
+
   const camTarget = new THREE.Vector3()
+  const cowPos = new THREE.Vector3()
+  const cowScl = new THREE.Vector3()
   function movePlayer(dt) {
     const input = getInput()
     let ix = input.x
@@ -1403,6 +1445,22 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
         nz = c.z + (dz / d) * min
       }
     }
+    // cows roam, so their blocking circles follow their world position; the
+    // radius follows world scale (calf is 0.55, and it lives in the pasture's
+    // `post` group, which stays at ~0.001 until the station is restored)
+    for (const cow of cowColliders) {
+      cow.getWorldPosition(cowPos)
+      const s = cow.getWorldScale(cowScl).x
+      if (s < 0.4) continue
+      const min = 1.15 * s + PLAYER_R
+      const dx = nx - cowPos.x
+      const dz = nz - cowPos.z
+      const d = Math.hypot(dx, dz)
+      if (d < min && d > 0.0001) {
+        nx = cowPos.x + (dx / d) * min
+        nz = cowPos.z + (dz / d) * min
+      }
+    }
 
     player.position.x = nx
     player.position.z = nz
@@ -1425,6 +1483,11 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     const t = clock.elapsedTime
 
     const moved = movePlayer(dt)
+
+    // step up/down onto raised platforms — sidewalks, crop beds, pit curbs
+    // (eased so it reads as a hop, not a snap); the walk-cycle bob below rides
+    // on child groups, so the two never fight over the same transform
+    player.position.y += (groundHeightAt(player.position.x, player.position.z) - player.position.y) * Math.min(1, dt * 14)
 
     // walk cycle — limbs swing while moving, everything settles when idle
     if (activeCharacter === 'farmer') {
