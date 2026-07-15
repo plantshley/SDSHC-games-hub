@@ -1546,7 +1546,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
       // panel (docked on the left ⇒ character framed in the right half)
       const rx = Math.cos(camYaw)
       const rz = -Math.sin(camYaw)
-      camera.lookAt(player.position.x - rx * 1.7, player.position.y + 1.1, player.position.z - rz * 1.7)
+      camera.lookAt(player.position.x - rx * 1.45, player.position.y + 1.1, player.position.z - rz * 1.45)
     } else {
       camera.lookAt(player.position.x, player.position.y + 1.7, player.position.z)
     }
@@ -1704,7 +1704,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
       camSaved = { yaw: camYaw, pitch: camPitch, dist: camDist }
       camYaw = heading // offset along the facing direction = in front
       camPitch = 0.3
-      camDist = 7.6
+      camDist = 6.3
       customizeFocus = true
     } else if (!on && camSaved) {
       camYaw = camSaved.yaw
