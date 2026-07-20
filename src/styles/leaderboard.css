@@ -1268,7 +1268,7 @@
 
 .adv-admin-doclink {
   font-family: var(--font-body), monospace;
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   color: var(--adv-text-muted);
   text-decoration: none;
   border-bottom: 1px solid transparent;
@@ -1866,7 +1866,7 @@
   }
 
   .adv-admin-doclink {
-    font-size: 0.62rem;
+    font-size: 0.55rem;
     padding: 4px 0; /* a little vertical room for a fingertip */
   }
 
