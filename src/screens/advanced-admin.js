@@ -55,12 +55,22 @@ export function createAdvancedAdminScreen() {
   const screen = document.createElement('div')
   screen.className = 'screen adv-admin'
 
+  // Staff reference docs live in public/guides/ so they deploy with the app and
+  // resolve offline. BASE_URL carries the GitHub Pages sub-path in prod ('/' in
+  // some setups), so the links work in dev and on the deployed kiosk alike.
+  const guidesBase = `${import.meta.env.BASE_URL}guides/`
+
   screen.innerHTML = `
     <div class="adv-header">
       <div class="adv-header-left">
         <button class="adv-back-btn" id="adv-admin-back">${'←'} Back</button>
         <h1 class="adv-title">Admin</h1>
       </div>
+      <nav class="adv-admin-doclinks" aria-label="Staff reference documents">
+        <a class="adv-admin-doclink" href="${guidesBase}full-event-guide.docx" target="_blank" rel="noopener" title="Full event staff guide (Word document)">Full Guide (DOC)</a>
+        <a class="adv-admin-doclink" href="${guidesBase}cheat-sheet.html" target="_blank" rel="noopener" title="Event cheat sheet (opens in browser)">Cheat Sheet (WEB)</a>
+        <a class="adv-admin-doclink" href="${guidesBase}cheat-sheet-print.pdf" target="_blank" rel="noopener" title="Printable cheat sheet (PDF)">Cheat Sheet (PRINT)</a>
+      </nav>
       <div class="adv-header-right"></div>
     </div>
 
@@ -546,7 +556,7 @@ export function createAdvancedAdminScreen() {
         <p class="adv-roster-modal-sub">Teams you add here go on this event's roster pre-approved, so they're ready to pick the moment the event opens.</p>
         <form class="adv-roster-modal-add">
           <input class="adv-admin-input" data-act="add-name" placeholder="Team / school name" maxlength="40" spellcheck="false" autocomplete="off" />
-          <button class="adv-admin-btn-create" type="submit">Add team</button>
+          <button class="adv-admin-btn-create" type="submit">+ Add team</button>
         </form>
         <div class="adv-roster-modal-colors" data-host="colors"></div>
         <div class="adv-roster-modal-feedback" role="alert"></div>

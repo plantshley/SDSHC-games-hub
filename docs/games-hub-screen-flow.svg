@@ -1,0 +1,991 @@
+<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg width="1525.91px" height="922.64px"
+		style="transform-origin: 0px 0px 0px;" version="1.1"
+		xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><style xmlns="http://www.w3.org/2000/svg" type="text/css"><![CDATA[
+		* {
+			text-rendering: geometricprecision !important;
+		}
+		]]><![CDATA[
+
+
+
+]]><![CDATA[
+
+]]><![CDATA[
+
+
+
+
+
+
+
+]]><![CDATA[
+
+]]><![CDATA[
+
+]]></style><path id="LineHeadArrow2" d="M-12.727272727272727,-7.545454545454545 L0,0 L-12.727272727272727,7.545454545454545 Z"></path></defs><rect id="svg-board-background-color" width="100%" height="100%" fill="#f2f2f2"></rect><g data-widget-id="3458764678206070842"><g width="135.51px" height="135.51px"  transform="translate(18.38, 10.23) scale(1) rotate(0, 67.755, 67.755)"><svg
+	width="135.50542259203672"
+	height="135.50542259203675"
+	style="width:135.50542259203672px; height: 135.50542259203675px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="221409493517">
+		<ellipse cx="67.75271129601836" cy="67.75271129601838" rx="67.75271129601836" ry="67.75271129601838"></ellipse>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<ellipse
+			class="shape-element shape-element-ellipse"
+			cx="67.75271129601836"
+			cy="67.75271129601838"
+			rx="67.75271129601836"
+			ry="67.75271129601838"
+			stroke="#595959"
+			stroke-width="6"
+			stroke-dasharray="3 3"
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			clip-path="url(#221409493517)"
+		/>
+	</g>
+</svg>
+</g><g width="135.51px" height="135.51px"  transform="translate(18.38, 10.23) rotate(0, 67.755, 67.755)"><g transform="translate(19.844309694829377, 19.844309694829377)"><text xml:space="preserve" x="5.908401601188984" y="41.908401601189" width="96" textLength="96" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#1a1a1a" direction="ltr" >Opening </text><text xml:space="preserve" x="11.908401601188984" y="67.908401601189" width="72" textLength="72" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#1a1a1a" direction="ltr" >Screen</text></g></g></g><g data-widget-id="3458764678206176016"><g width="290.52px" height="62.14px"  transform="translate(243.76, 46.91) scale(1) rotate(0, 145.26, 31.07)"><g><g style="stroke: #ff45e4;stroke-width: 3;stroke-opacity: 1;stroke-dasharray: none;stroke-linecap: round;stroke-linejoin: round;fill: #f0d9f6;fill-opacity: 0.8"><rect x="0" y="0" width="290.522403070379" height="62.139643803821066" rx="30.069821901910533" /></g></g><g><g style="stroke: #ff45e4;stroke-width: 3;stroke-opacity: 1;stroke-dasharray: none;stroke-linecap: round;stroke-linejoin: round;fill: transparent;fill-opacity: 0"></g></g><g transform="translate(16, 16)"><clipPath id="stencil-text-clip-1"><rect x="0" y="0" width="258.522403070379" height="30.139643803821066"/></clipPath><g clip-path="url(#stencil-text-clip-1)"><text xml:space="preserve" x="71.51120153518951" y="24" width="115.5" textLength="115.5" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="24" 
+				fill="#f6298e" direction="ltr" font-weight="bold">KID MODE</text></g></g></g></g><g data-widget-id="3458764678206176263"><g width="290.52px" height="62.14px"  transform="translate(243.94, 217.38) scale(1) rotate(0, 145.26, 31.07)"><g><g style="stroke: #6fbe51;stroke-width: 3;stroke-opacity: 1;stroke-dasharray: none;stroke-linecap: round;stroke-linejoin: round;fill: #d6f2e8;fill-opacity: 0.9"><rect x="0" y="0" width="290.522403070379" height="62.13964380382101" rx="30.069821901910505" /></g></g><g><g style="stroke: #6fbe51;stroke-width: 3;stroke-opacity: 1;stroke-dasharray: none;stroke-linecap: round;stroke-linejoin: round;fill: transparent;fill-opacity: 0"></g></g><g transform="translate(16, 16)"><clipPath id="stencil-text-clip-2"><rect x="0" y="0" width="258.522403070379" height="30.13964380382101"/></clipPath><g clip-path="url(#stencil-text-clip-2)"><text xml:space="preserve" x="35.417451535189514" y="24" width="187.6875" textLength="187.6875" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="24" 
+				fill="#0a9684" direction="ltr" font-weight="bold">ADVANCED MODE</text></g></g></g></g><g data-widget-id="3458764678206176502"><g width="157.81px" height="102.72px"  transform="translate(86.13, 145.73) scale(1) rotate(0, 78.905, 51.36)"><path stroke-linecap="butt" 
+			stroke="#333333" stroke-width="2" fill="transparent"
+			d="M 0 0 C 0 71.9394521079069 75.69084665220066 102.71720740904533 147.6302987601075 102.71720740904533" /> <use xlink:href="#LineHeadArrow2" fill="#333333"
+			 transform="translate(157.81211694192552, 102.71720740904533)  rotate(0) "  /> </g></g><g data-widget-id="3458764678206176558"><g width="89.87px" height="0px"  transform="translate(153.88, 77.98) scale(1) rotate(0, 44.935, 0)"><path stroke-linecap="butt" 
+			stroke="#333333" stroke-width="2" fill="transparent"
+			d="M 0 1.1368683772161603e-13 L 44.936833358618344 1.1368683772161603e-13 Q 44.9368333586184 1.1368683772161603e-13 44.9368333586184 5.684341886080802e-14 L 44.9368333586184 5.684341886080802e-14 Q 44.9368333586184 0 44.93683335861846 0 L 79.6918485354185 0" /> <use xlink:href="#LineHeadArrow2" fill="#333333"
+			 transform="translate(89.87366671723657, 0)  rotate(0) "  /> </g></g><g data-widget-id="3458764678206358479"><g width="135.51px" height="87.98px"  transform="translate(597.28, 33.99) scale(1) rotate(0, 67.755, 43.99)"><svg
+	width="135.5054225920367"
+	height="87.97563294137686"
+	shape-border-width="shape-background"
+	style="width:135.5054225920367px; height: 87.97563294137686px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1161777157120">
+		<rect
+			x="0"
+			y="0"
+			width="135.5054225920367"
+			height="87.97563294137686"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="#ff45e4"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="135.5054225920367"
+			height="87.97563294137686"
+			rx="0"
+			ry="0"
+			clip-path="url(#1161777157120)"
+		></rect>
+	</g>
+</svg>
+</g><g width="135.51px" height="87.98px"  transform="translate(597.28, 33.99) rotate(0, 67.755, 43.99)"><g transform="translate(4.3987816470688434, 4.3987816470688434)"><text xml:space="preserve" x="33.3539296489495" y="33.589034823619585" width="60" textLength="60" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#7a28ff" direction="ltr" >grade</text><text xml:space="preserve" x="27.353929648949503" y="59.589034823619585" width="72" textLength="72" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#7a28ff" direction="ltr" >select</text></g></g></g><g data-widget-id="3458764678206483028"><g width="63px" height="0px"  transform="translate(534.28, 77.98) scale(1) rotate(0, 31.5, 0)"><path stroke-linecap="butt" 
+			stroke="#f6298e" stroke-width="2" fill="transparent"
+			d="M 0 0 L 52.81818181818182 0" /> <use xlink:href="#LineHeadArrow2" fill="#f6298e"
+			 transform="translate(63, 0)  rotate(0) "  /> </g></g><g data-widget-id="3458764678206483055"><g width="135.51px" height="87.98px"  transform="translate(795.78, 33.99) scale(1) rotate(0, 67.755, 43.99)"><svg
+	width="135.5054225920367"
+	height="87.97563294137686"
+	shape-border-width="shape-background"
+	style="width:135.5054225920367px; height: 87.97563294137686px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="111285523822">
+		<rect
+			x="0"
+			y="0"
+			width="135.5054225920367"
+			height="87.97563294137686"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="#ff45e4"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="135.5054225920367"
+			height="87.97563294137686"
+			rx="0"
+			ry="0"
+			clip-path="url(#111285523822)"
+		></rect>
+	</g>
+</svg>
+</g><g width="135.51px" height="87.98px"  transform="translate(795.78, 33.99) rotate(0, 67.755, 43.99)"><g transform="translate(4.3987816470688434, 4.3987816470688434)"><text xml:space="preserve" x="39.3539296489495" y="33.589034823619585" width="60" textLength="60" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#7a28ff" direction="ltr" >game </text><text xml:space="preserve" x="27.353929648949503" y="59.589034823619585" width="72" textLength="72" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#7a28ff" direction="ltr" >select</text></g></g></g><g data-widget-id="3458764678206483130"><g width="63px" height="0px"  transform="translate(732.78, 77.98) scale(1) rotate(0, 31.5, 0)"><path stroke-linecap="butt" 
+			stroke="#f6298e" stroke-width="2" fill="transparent"
+			d="M 0 0 L 31.49999999999997 0 Q 31.5 0 31.5 2.842170943040401e-14 L 31.5 2.842170943040401e-14 Q 31.5 5.684341886080802e-14 31.50000000000003 5.684341886080802e-14 L 52.818181818181806 5.684341886080802e-14" /> <use xlink:href="#LineHeadArrow2" fill="#f6298e"
+			 transform="translate(62.999999999999886, 5.684341886080802e-14)  rotate(0) "  /> </g></g><g data-widget-id="3458764678206483158"><g width="135.51px" height="135.51px"  transform="translate(1192.8, 10.23) scale(1) rotate(0, 67.755, 67.755)"><svg
+	width="135.5054225920367"
+	height="135.50542259203672"
+	style="width:135.5054225920367px; height: 135.50542259203672px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="484490745092">
+		<ellipse cx="67.75271129601835" cy="67.75271129601836" rx="67.75271129601835" ry="67.75271129601836"></ellipse>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<ellipse
+			class="shape-element shape-element-ellipse"
+			cx="67.75271129601835"
+			cy="67.75271129601836"
+			rx="67.75271129601835"
+			ry="67.75271129601836"
+			stroke="#ff45e4"
+			stroke-width="6"
+			stroke-dasharray="3 3"
+			stroke-opacity="1"
+			fill="#f0d9f6"
+			fill-opacity="0.9"
+			clip-path="url(#484490745092)"
+		/>
+	</g>
+</svg>
+</g><g width="135.51px" height="135.51px"  transform="translate(1192.8, 10.23) rotate(0, 67.755, 67.755)"><g transform="translate(19.84430969482937, 19.844309694829377)"><text xml:space="preserve" x="10.408401601188977" y="56.408401601188984" width="75" textLength="75" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="25" 
+				fill="#f6298e" direction="ltr" font-style="italic" font-weight="bold">PLAY!</text></g></g></g><g data-widget-id="3458764678206676026"><g width="211px" height="19px"  transform="translate(553.89, 234.88) scale(1.4285714285714286) rotate(0, 105.5, 9.5)"><svg
+	width="211"
+	height="19"
+	shape-border-width="shape-background"
+	style="width:211px; height: 19px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="515030594947">
+		<rect
+			x="0"
+			y="0"
+			width="211"
+			height="19"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="transparent"
+			stroke-width="0"
+			stroke-dasharray=""
+			stroke-opacity="0"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="211"
+			height="19"
+			rx="0"
+			ry="0"
+			clip-path="url(#515030594947)"
+		></rect>
+	</g>
+</svg>
+</g><g width="301.42857142857144px" height="27.142857142857142px"  transform="translate(553.89, 234.88) rotate(0, 150.71428571428572, 13.571428571428571)"><g transform="translate(0, 0)"><text xml:space="preserve" x="0" y="20" width="241.07142857142858" textLength="241.07142857142858" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#1a1a1a" direction="ltr" >how many events are </text><text xml:space="preserve" x="241.07142857142858" y="20" width="48.214285714285715" textLength="48.214285714285715" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#1a1a1a" direction="ltr" font-weight="bold">OPEN</text><text xml:space="preserve" x="289.2857142857143" y="20" width="12.053571428571429" textLength="12.053571428571429" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#1a1a1a" direction="ltr" >?</text></g></g></g><g data-widget-id="3458764678206676528"><g width="135.51px" height="135.51px"  transform="translate(321.45, 306.99) scale(1) rotate(0, 67.755, 67.755)"><svg
+	width="135.50542259203672"
+	height="135.50542259203672"
+	style="width:135.50542259203672px; height: 135.50542259203672px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="641579513430">
+		<path d="M67.75271129601836,0 L135.50542259203672,67.75271129601836 L67.75271129601836,135.50542259203672 L0,67.75271129601836 L67.75271129601836,0 Z"></path>
+	</clipPath>
+	<g stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<path
+			d="M67.75271129601836,0 L135.50542259203672,67.75271129601836 L67.75271129601836,135.50542259203672 L0,67.75271129601836 L67.75271129601836,0 Z"
+			class="shape-element shape-element-path"
+			stroke="#6fbe51"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			clip-path="url(#641579513430)"
+		></path>
+	</g>
+</svg>
+</g><g width="135.51px" height="135.51px"  transform="translate(321.45, 306.99) rotate(0, 67.755, 67.755)"><g transform="translate(35.23140987392955, 35.23140987392955)"><text xml:space="preserve" x="14.521301422088811" y="26.52130142208881" width="48" textLength="48" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#0055c9" direction="ltr" >ONE </text><text xml:space="preserve" x="8.521301422088811" y="52.52130142208881" width="48" textLength="48" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#0055c9" direction="ltr" >open</text></g></g></g><g data-widget-id="3458764678206811313"><g width="260.24px" height="19px"  transform="translate(483.55, 361.18) scale(1.4285714285714286) rotate(0, 130.12, 9.5)"><svg
+	width="260.24"
+	height="19"
+	shape-border-width="shape-background"
+	style="width:260.24px; height: 19px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="582174450494">
+		<rect
+			x="0"
+			y="0"
+			width="260.24"
+			height="19"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="transparent"
+			stroke-width="0"
+			stroke-dasharray=""
+			stroke-opacity="0"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="260.24"
+			height="19"
+			rx="0"
+			ry="0"
+			clip-path="url(#582174450494)"
+		></rect>
+	</g>
+</svg>
+</g><g width="371.7714285714286px" height="27.142857142857142px"  transform="translate(483.55, 361.18) rotate(0, 185.8857142857143, 13.571428571428571)"><g transform="translate(0, 0)"><text xml:space="preserve" x="0" y="20" width="361.6071428571429" textLength="361.6071428571429" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#1a1a1a" direction="ltr" font-style="italic"> device joins it automatically</text></g></g></g><g data-widget-id="3458764678206811554"><g width="26.59px" height="0px"  transform="translate(456.96, 374.75) scale(1) rotate(0, 13.295, 0)"><path stroke-linecap="butt" 
+			stroke="#0a9684" stroke-width="2" fill="transparent"
+			d="M 0 7.105427357601002e-15 L 11.766609610411475 7.105427357601002e-15 Q 11.766609610411479 7.105427357601002e-15 11.766609610411479 3.552713678800501e-15 L 11.766609610411479 3.552713678800501e-15 Q 11.766609610411479 0 11.766609610411482 0 L 16.41206415586607 0" /> <use xlink:href="#LineHeadArrow2" fill="#0a9684"
+			 transform="translate(26.59388233768425, 0)  rotate(0) "  /> </g></g><g data-widget-id="3458764678206811659"><g width="135.51px" height="135.51px"  transform="translate(321.45, 442.5) scale(1) rotate(0, 67.755, 67.755)"><svg
+	width="135.50542259203672"
+	height="135.50542259203672"
+	style="width:135.50542259203672px; height: 135.50542259203672px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1173760476636">
+		<path d="M67.75271129601836,0 L135.50542259203672,67.75271129601836 L67.75271129601836,135.50542259203672 L0,67.75271129601836 L67.75271129601836,0 Z"></path>
+	</clipPath>
+	<g stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<path
+			d="M67.75271129601836,0 L135.50542259203672,67.75271129601836 L67.75271129601836,135.50542259203672 L0,67.75271129601836 L67.75271129601836,0 Z"
+			class="shape-element shape-element-path"
+			stroke="#6fbe51"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			clip-path="url(#1173760476636)"
+		></path>
+	</g>
+</svg>
+</g><g width="135.51px" height="135.51px"  transform="translate(321.45, 442.5) rotate(0, 67.755, 67.755)"><g transform="translate(35.23140987392955, 35.23140987392955)"><text xml:space="preserve" x="20.52130142208881" y="26.52130142208881" width="36" textLength="36" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#0055c9" direction="ltr" >&gt;1 </text><text xml:space="preserve" x="8.521301422088811" y="52.52130142208881" width="48" textLength="48" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#0055c9" direction="ltr" >OPEN</text></g></g></g><g data-widget-id="3458764678206811660"><g width="227.87px" height="38px"  transform="translate(483.55, 483.11) scale(1.4285714285714286) rotate(0, 113.935, 19)"><svg
+	width="227.87"
+	height="38"
+	shape-border-width="shape-background"
+	style="width:227.87px; height: 38px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1711223247836">
+		<rect
+			x="0"
+			y="0"
+			width="227.87"
+			height="38"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="transparent"
+			stroke-width="0"
+			stroke-dasharray=""
+			stroke-opacity="0"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="227.87"
+			height="38"
+			rx="0"
+			ry="0"
+			clip-path="url(#1711223247836)"
+		></rect>
+	</g>
+</svg>
+</g><g width="325.52857142857147px" height="54.285714285714285px"  transform="translate(483.55, 483.11) rotate(0, 162.76428571428573, 27.142857142857142)"><g transform="translate(0, 0)"><text xml:space="preserve" x="0" y="20" width="313.39285714285717" textLength="313.39285714285717" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#1a1a1a" direction="ltr" font-style="italic"> &quot;Which event are you at?&quot;</text><text xml:space="preserve" x="0" y="47.14285714285714" width="216.96428571428572" textLength="216.96428571428572" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#1a1a1a" direction="ltr" font-style="italic" font-weight="bold">  pick one to join</text></g></g></g><g data-widget-id="3458764678206811661"><g width="26.59px" height="0px"  transform="translate(456.96, 510.25) scale(1) rotate(0, 13.295, 0)"><path stroke-linecap="butt" 
+			stroke="#0a9684" stroke-width="2" fill="transparent"
+			d="M 0 0 L 16.41206415586607 0" /> <use xlink:href="#LineHeadArrow2" fill="#0a9684"
+			 transform="translate(26.59388233768425, 0)  rotate(0) "  /> </g></g><g data-widget-id="3458764678206934328"><g width="135.51px" height="135.51px"  transform="translate(321.45, 578.01) scale(1) rotate(0, 67.755, 67.755)"><svg
+	width="135.50542259203672"
+	height="135.50542259203672"
+	style="width:135.50542259203672px; height: 135.50542259203672px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="406488699561">
+		<path d="M67.75271129601836,0 L135.50542259203672,67.75271129601836 L67.75271129601836,135.50542259203672 L0,67.75271129601836 L67.75271129601836,0 Z"></path>
+	</clipPath>
+	<g stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<path
+			d="M67.75271129601836,0 L135.50542259203672,67.75271129601836 L67.75271129601836,135.50542259203672 L0,67.75271129601836 L67.75271129601836,0 Z"
+			class="shape-element shape-element-path"
+			stroke="#96710a"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			clip-path="url(#406488699561)"
+		></path>
+	</g>
+</svg>
+</g><g width="135.51px" height="135.51px"  transform="translate(321.45, 578.01) rotate(0, 67.755, 67.755)"><g transform="translate(35.23140987392955, 35.23140987392955)"><text xml:space="preserve" x="8.521301422088811" y="26.52130142208881" width="60" textLength="60" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#96710a" direction="ltr" >NONE </text><text xml:space="preserve" x="8.521301422088811" y="52.52130142208881" width="48" textLength="48" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#96710a" direction="ltr" >OPEN</text></g></g></g><g data-widget-id="3458764678206934585"><g width="200.82px" height="86.95px"  transform="translate(1009.34, 416.66) scale(1) rotate(0, 100.41, 43.475)"><svg
+	width="200.82324352041616"
+	height="86.94864891304542"
+	shape-border-width="shape-background"
+	style="width:200.82324352041616px; height: 86.94864891304542px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="888787460272">
+		<rect
+			x="0"
+			y="0"
+			width="200.82324352041616"
+			height="86.94864891304542"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="#6fbe51"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="200.82324352041616"
+			height="86.94864891304542"
+			rx="0"
+			ry="0"
+			clip-path="url(#888787460272)"
+		></rect>
+	</g>
+</svg>
+</g><g width="200.82px" height="86.95px"  transform="translate(1009.34, 416.66) rotate(0, 100.41, 43.475)"><g transform="translate(4.347432445652271, 4.347432445652271)"><text xml:space="preserve" x="0.06418931455580434" y="33.126892010870435" width="204" textLength="204" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#0055c9" direction="ltr" >&quot;How do you want </text><text xml:space="preserve" x="42.064189314555804" y="59.126892010870435" width="108" textLength="108" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#0055c9" direction="ltr" >to play?&quot;</text></g></g></g><g data-widget-id="3458764678207108616"><g width="201.08px" height="62.14px"  transform="translate(878.11, 537.4) scale(1) rotate(0, 100.54, 31.07)"><g><g style="stroke: #5199be;stroke-width: 3;stroke-opacity: 1;stroke-dasharray: none;stroke-linecap: round;stroke-linejoin: round;fill: #d6e1f2;fill-opacity: 1"><rect x="0" y="0" width="201.0847868147706" height="62.13964380382103" rx="30.069821901910515" /></g></g><g><g style="stroke: #5199be;stroke-width: 3;stroke-opacity: 1;stroke-dasharray: none;stroke-linecap: round;stroke-linejoin: round;fill: transparent;fill-opacity: 0"></g></g><g transform="translate(16, 16)"><clipPath id="stencil-text-clip-3"><rect x="0" y="0" width="169.0847868147706" height="30.13964380382103"/></clipPath><g clip-path="url(#stencil-text-clip-3)"><text xml:space="preserve" x="19.573643407385305" y="24" width="129.9375" textLength="129.9375" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="24" 
+				fill="#0a0b96" direction="ltr" font-weight="bold">TEAM PLAY</text></g></g></g></g><g data-widget-id="3458764678207108761"><g width="201.08px" height="62.14px"  transform="translate(1141.22, 537.4) scale(1) rotate(0, 100.54, 31.07)"><g><g style="stroke: #bbbe51;stroke-width: 3;stroke-opacity: 1;stroke-dasharray: none;stroke-linecap: round;stroke-linejoin: round;fill: #f1f2d6;fill-opacity: 1"><rect x="0" y="0" width="201.0847868147706" height="62.139643803821045" rx="30.069821901910522" /></g></g><g><g style="stroke: #bbbe51;stroke-width: 3;stroke-opacity: 1;stroke-dasharray: none;stroke-linecap: round;stroke-linejoin: round;fill: transparent;fill-opacity: 0"></g></g><g transform="translate(16, 16)"><clipPath id="stencil-text-clip-4"><rect x="0" y="0" width="169.0847868147706" height="30.139643803821045"/></clipPath><g clip-path="url(#stencil-text-clip-4)"><text xml:space="preserve" x="5.136143407385305" y="24" width="158.8125" textLength="158.8125" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="24" 
+				fill="#96710a" direction="ltr" font-weight="bold">CASUAL PLAY</text></g></g></g></g><g data-widget-id="3458764678207108871"><g width="30.69px" height="77.26px"  transform="translate(978.65, 460.13) scale(1) rotate(0, 15.345, 38.63)"><path stroke-linecap="butt" 
+			stroke="#0a9684" stroke-width="2" fill="transparent"
+			d="M 30.686280825354608 0 L 8 0 Q 0 0 0 8 L 0 67.07892084018631" /> <use xlink:href="#LineHeadArrow2" fill="#0a9684"
+			 transform="translate(0, 77.26073902200454)  rotate(90) "  /> </g></g><g data-widget-id="3458764678207276940"><g width="31.6px" height="77.26px"  transform="translate(1210.16, 460.13) scale(1) rotate(0, 15.8, 38.63)"><path stroke-linecap="butt" 
+			stroke="#0a9684" stroke-width="2" fill="transparent"
+			d="M 0 0 L 23.59674903717854 0 Q 31.59674903717854 0 31.59674903717854 8 L 31.59674903717854 67.0789208401863" /> <use xlink:href="#LineHeadArrow2" fill="#0a9684"
+			 transform="translate(31.59674903717837, 77.26073902200454)  rotate(90) "  /> </g></g><g data-widget-id="3458764678207276974"><g width="0px" height="27.48px"  transform="translate(389.2, 279.52) scale(1) rotate(0, 0, 13.74)"><path stroke-linecap="butt" 
+			stroke="#0a9684" stroke-width="2" fill="transparent"
+			d="M 0 0 L 0 27.475774572957818" /></g></g><g data-widget-id="3458764678207409660"><g width="168.3px" height="44.21px"  transform="translate(894.5, 625.98) scale(1) rotate(0, 84.15, 22.105)"><svg
+	width="168.29510470340364"
+	height="44.20980061914793"
+	shape-border-width="shape-background"
+	style="width:168.29510470340364px; height: 44.20980061914793px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="877533674601">
+		<rect
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914793"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="#5199be"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914793"
+			rx="0"
+			ry="0"
+			clip-path="url(#877533674601)"
+		></rect>
+	</g>
+</svg>
+</g><g width="168.3px" height="44.21px"  transform="translate(894.5, 625.98) rotate(0, 84.15, 22.105)"><g transform="translate(2.2104900309573963, 2.2104900309573963)"><text xml:space="preserve" x="15.937062320744417" y="26.89441027861657" width="132" textLength="132" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#0a0b96" direction="ltr" >team roster</text></g></g></g><g data-widget-id="3458764678207558079"><g width="260.24px" height="19px"  transform="translate(483.55, 632.4) scale(1.4285714285714286) rotate(0, 130.12, 9.5)"><svg
+	width="260.24"
+	height="19"
+	shape-border-width="shape-background"
+	style="width:260.24px; height: 19px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1304099558351">
+		<rect
+			x="0"
+			y="0"
+			width="260.24"
+			height="19"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="transparent"
+			stroke-width="0"
+			stroke-dasharray=""
+			stroke-opacity="0"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="260.24"
+			height="19"
+			rx="0"
+			ry="0"
+			clip-path="url(#1304099558351)"
+		></rect>
+	</g>
+</svg>
+</g><g width="371.7714285714286px" height="27.142857142857142px"  transform="translate(483.55, 632.4) rotate(0, 185.8857142857143, 13.571428571428571)"><g transform="translate(0, 0)"><text xml:space="preserve" x="0" y="20" width="108.48214285714286" textLength="108.48214285714286" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#1a1a1a" direction="ltr" font-style="italic"> same as </text><text xml:space="preserve" x="108.48214285714286" y="20" width="132.58928571428572" textLength="132.58928571428572" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#96710a" direction="ltr" font-style="italic" font-weight="bold">CASUAL PLAY</text></g></g></g><g data-widget-id="3458764678207558080"><g width="26.59px" height="0.21px"  transform="translate(456.96, 645.76) scale(1) rotate(0, 13.295, 0.105)"><path stroke-linecap="butt" 
+			stroke="#96710a" stroke-width="2" fill="transparent"
+			d="M 0 0 L 11.662178049286837 0 Q 11.766609610411308 0 11.766609610411308 0.10443156112447127 L 11.766609610411308 0.10443156112447127 Q 11.766609610411308 0.20886312224894255 11.87104117153578 0.20886312224894255 L 16.4120641558659 0.20886312224894255" /> <use xlink:href="#LineHeadArrow2" fill="#96710a"
+			 transform="translate(26.593882337684136, 0.2088631222489994)  rotate(0) "  /> </g></g><g data-widget-id="3458764678207753790"><g width="135.51px" height="87.98px"  transform="translate(994.29, 33.99) scale(1) rotate(0, 67.755, 43.99)"><svg
+	width="135.5054225920367"
+	height="87.9756329413768"
+	shape-border-width="shape-background"
+	style="width:135.5054225920367px; height: 87.9756329413768px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="369775074805">
+		<rect
+			x="0"
+			y="0"
+			width="135.5054225920367"
+			height="87.9756329413768"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="#ff45e4"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="135.5054225920367"
+			height="87.9756329413768"
+			rx="0"
+			ry="0"
+			clip-path="url(#369775074805)"
+		></rect>
+	</g>
+</svg>
+</g><g width="135.51px" height="87.98px"  transform="translate(994.29, 33.99) rotate(0, 67.755, 43.99)"><g transform="translate(4.39878164706884, 4.39878164706884)"><text xml:space="preserve" x="39.35392964894951" y="33.58903482361956" width="48" textLength="48" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#7a28ff" direction="ltr" >game</text><text xml:space="preserve" x="33.35392964894951" y="59.58903482361956" width="60" textLength="60" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#7a28ff" direction="ltr" >intro</text></g></g></g><g data-widget-id="3458764678207753925"><g width="63px" height="0px"  transform="translate(931.29, 77.98) scale(1) rotate(0, 31.5, 0)"><path stroke-linecap="butt" 
+			stroke="#f6298e" stroke-width="2" fill="transparent"
+			d="M 0 0 L 31.49999999999997 0 Q 31.5 0 31.5 2.842170943040401e-14 L 31.5 2.842170943040401e-14 Q 31.5 5.684341886080802e-14 31.50000000000003 5.684341886080802e-14 L 52.81818181818185 5.684341886080802e-14" /> <use xlink:href="#LineHeadArrow2" fill="#f6298e"
+			 transform="translate(63, 0)  rotate(0) "  /> </g></g><g data-widget-id="3458764678207957929"><g width="63px" height="0px"  transform="translate(1129.8, 77.98) scale(1) rotate(0, 31.5, 0)"><path stroke-linecap="butt" 
+			stroke="#f6298e" stroke-width="2" fill="transparent"
+			d="M 0 1.1368683772161603e-13 L 31.499999999999943 1.1368683772161603e-13 Q 31.5 1.1368683772161603e-13 31.5 5.684341886080802e-14 L 31.5 5.684341886080802e-14 Q 31.5 0 31.500000000000057 0 L 52.81818181818182 0" /> <use xlink:href="#LineHeadArrow2" fill="#f6298e"
+			 transform="translate(63, 0)  rotate(0) "  /> </g></g><g data-widget-id="3458764678209080950"><g width="168.3px" height="44.21px"  transform="translate(1157.61, 625.98) scale(1) rotate(0, 84.15, 22.105)"><svg
+	width="168.29510470340364"
+	height="44.20980061914794"
+	shape-border-width="shape-background"
+	style="width:168.29510470340364px; height: 44.20980061914794px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1489826527396">
+		<rect
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914794"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="#bbbe51"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914794"
+			rx="0"
+			ry="0"
+			clip-path="url(#1489826527396)"
+		></rect>
+	</g>
+</svg>
+</g><g width="168.3px" height="44.21px"  transform="translate(1157.61, 625.98) rotate(0, 84.15, 22.105)"><g transform="translate(2.210490030957397, 2.210490030957397)"><text xml:space="preserve" x="15.937062320744417" y="26.894410278616572" width="132" textLength="132" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#96710a" direction="ltr" >game select</text></g></g></g><g data-widget-id="3458764678209502208"><g width="254.43px" height="41.91px"  transform="translate(855.32, 374.75) scale(1) rotate(0, 127.215, 20.955)"><path stroke-linecap="butt" 
+			stroke="#0a9684" stroke-width="2" fill="transparent"
+			d="M 0 0 L 246.429978104315 0 Q 254.429978104315 0 254.429978104315 7.999999999999999 L 254.429978104315 31.731398074548487" /> <use xlink:href="#LineHeadArrow2" fill="#0a9684"
+			 transform="translate(254.42997810431507, 41.91321625636664)  rotate(90) "  /> </g></g><g data-widget-id="3458764678209502224"><g width="92.97px" height="135.3px"  transform="translate(809.07, 374.95) scale(1) rotate(0, 46.485, 67.65)"><path stroke-linecap="butt" 
+			stroke="#0a9684" stroke-width="2" fill="transparent"
+			d="M 0 135.30442267623525 L 84.96879400125631 135.30442267623525 Q 92.96879400125631 135.30442267623525 92.96879400125631 127.30442267623525 L 92.96879400125631 0" /></g></g><g data-widget-id="3458764678209502669"><g width="0px" height="26.44px"  transform="translate(978.65, 599.54) scale(1) rotate(0, 0, 13.22)"><path stroke-linecap="butt" 
+			stroke="#5199be" stroke-width="2" fill="transparent"
+			d="M 0 0 L 0 16.262150115100873" /> <use xlink:href="#LineHeadArrow2" fill="#5199be"
+			 transform="translate(0, 26.443968296919138)  rotate(90) "  /> </g></g><g data-widget-id="3458764678209502677"><g width="0px" height="26.44px"  transform="translate(1241.76, 599.54) scale(1) rotate(0, 0, 13.22)"><path stroke-linecap="butt" 
+			stroke="#bbbe51" stroke-width="2" fill="transparent"
+			d="M 0 0 L 0 16.262150115100873" /> <use xlink:href="#LineHeadArrow2" fill="#bbbe51"
+			 transform="translate(0, 26.443968296919138)  rotate(90) "  /> </g></g><g data-widget-id="3458764678209502743"><g width="168.3px" height="44.21px"  transform="translate(894.5, 696.19) scale(1) rotate(0, 84.15, 22.105)"><svg
+	width="168.29510470340364"
+	height="44.20980061914794"
+	shape-border-width="shape-background"
+	style="width:168.29510470340364px; height: 44.20980061914794px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="505026892703">
+		<rect
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914794"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="#5199be"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914794"
+			rx="0"
+			ry="0"
+			clip-path="url(#505026892703)"
+		></rect>
+	</g>
+</svg>
+</g><g width="168.3px" height="44.21px"  transform="translate(894.5, 696.19) rotate(0, 84.15, 22.105)"><g transform="translate(2.210490030957397, 2.210490030957397)"><text xml:space="preserve" x="15.937062320744417" y="26.894410278616572" width="132" textLength="132" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#0a0b96" direction="ltr" >game select</text></g></g></g><g data-widget-id="3458764678209502899"><g width="168.3px" height="44.21px"  transform="translate(1157.61, 696.19) scale(1) rotate(0, 84.15, 22.105)"><svg
+	width="168.29510470340364"
+	height="44.20980061914794"
+	shape-border-width="shape-background"
+	style="width:168.29510470340364px; height: 44.20980061914794px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1231254490015">
+		<rect
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914794"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="#bbbe51"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914794"
+			rx="0"
+			ry="0"
+			clip-path="url(#1231254490015)"
+		></rect>
+	</g>
+</svg>
+</g><g width="168.3px" height="44.21px"  transform="translate(1157.61, 696.19) rotate(0, 84.15, 22.105)"><g transform="translate(2.210490030957397, 2.210490030957397)"><text xml:space="preserve" x="21.937062320744417" y="26.894410278616572" width="120" textLength="120" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#96710a" direction="ltr" >game intro</text></g></g></g><g data-widget-id="3458764678209682429"><g width="168.3px" height="44.21px"  transform="translate(894.5, 766.4) scale(1) rotate(0, 84.15, 22.105)"><svg
+	width="168.29510470340364"
+	height="44.20980061914794"
+	shape-border-width="shape-background"
+	style="width:168.29510470340364px; height: 44.20980061914794px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1681785655047">
+		<rect
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914794"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="#5199be"
+			stroke-width="4"
+			stroke-dasharray=""
+			stroke-opacity="1"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="168.29510470340364"
+			height="44.20980061914794"
+			rx="0"
+			ry="0"
+			clip-path="url(#1681785655047)"
+		></rect>
+	</g>
+</svg>
+</g><g width="168.3px" height="44.21px"  transform="translate(894.5, 766.4) rotate(0, 84.15, 22.105)"><g transform="translate(2.210490030957397, 2.210490030957397)"><text xml:space="preserve" x="21.937062320744417" y="26.894410278616572" width="120" textLength="120" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="20" 
+				fill="#0a0b96" direction="ltr" >game intro</text></g></g></g><g data-widget-id="3458764678209682464"><g width="0px" height="26px"  transform="translate(978.65, 670.19) scale(1) rotate(0, 0, 13)"><path stroke-linecap="butt" 
+			stroke="#5199be" stroke-width="2" fill="transparent"
+			d="M 0 0 L 0 15.818181818181847" /> <use xlink:href="#LineHeadArrow2" fill="#5199be"
+			 transform="translate(0, 26)  rotate(90) "  /> </g></g><g data-widget-id="3458764678209682473"><g width="0px" height="26px"  transform="translate(978.65, 740.4) scale(1) rotate(0, 0, 13)"><path stroke-linecap="butt" 
+			stroke="#5199be" stroke-width="2" fill="transparent"
+			d="M 0 0 L 0 11.172727272727201 Q 0 11.17272727272723 2.842170943040401e-14 11.17272727272723 L 2.842170943040401e-14 11.17272727272723 Q 5.684341886080802e-14 11.17272727272723 5.684341886080802e-14 11.172727272727258 L 5.684341886080802e-14 15.818181818181818" /> <use xlink:href="#LineHeadArrow2" fill="#5199be"
+			 transform="translate(0, 26)  rotate(90) "  /> </g></g><g data-widget-id="3458764678209682495"><g width="0px" height="26px"  transform="translate(1241.76, 670.19) scale(1) rotate(0, 0, 13)"><path stroke-linecap="butt" 
+			stroke="#bbbe51" stroke-width="2" fill="transparent"
+			d="M 0 0 L 0 15.818181818181847" /> <use xlink:href="#LineHeadArrow2" fill="#bbbe51"
+			 transform="translate(0, 26)  rotate(90) "  /> </g></g><g data-widget-id="3458764678209682739"><g width="156.2px" height="38px"  transform="translate(861.98, 818.61) scale(1.2857142857142858) rotate(0, 78.1, 19)"><svg
+	width="156.2"
+	height="38"
+	shape-border-width="shape-background"
+	style="width:156.2px; height: 38px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="845123502139">
+		<rect
+			x="0"
+			y="0"
+			width="156.2"
+			height="38"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="transparent"
+			stroke-width="0"
+			stroke-dasharray=""
+			stroke-opacity="0"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="156.2"
+			height="38"
+			rx="0"
+			ry="0"
+			clip-path="url(#845123502139)"
+		></rect>
+	</g>
+</svg>
+</g><g width="200.82857142857142px" height="48.85714285714286px"  transform="translate(861.98, 818.61) rotate(0, 100.41428571428571, 24.42857142857143)"><g transform="translate(0, 0)"><text xml:space="preserve" x="5.5553863775589605" y="18" width="195.26785714285717" textLength="195.26785714285717" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" font-style="italic">type player name &amp;</text><text xml:space="preserve" x="81.49288637755896" y="42.42857142857143" width="119.33035714285715" textLength="119.33035714285715" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" font-style="italic" font-weight="bold">select team</text></g></g></g><g data-widget-id="3458764678209831514"><g width="135.51px" height="135.51px"  transform="translate(675.31, 775.28) scale(1) rotate(0, 67.755, 67.755)"><svg
+	width="135.5054225920367"
+	height="135.50542259203672"
+	style="width:135.5054225920367px; height: 135.50542259203672px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1722019738756">
+		<ellipse cx="67.75271129601835" cy="67.75271129601836" rx="67.75271129601835" ry="67.75271129601836"></ellipse>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<ellipse
+			class="shape-element shape-element-ellipse"
+			cx="67.75271129601835"
+			cy="67.75271129601836"
+			rx="67.75271129601835"
+			ry="67.75271129601836"
+			stroke="#5199be"
+			stroke-width="6"
+			stroke-dasharray="3 3"
+			stroke-opacity="1"
+			fill="#d6e1f2"
+			fill-opacity="0.9"
+			clip-path="url(#1722019738756)"
+		/>
+	</g>
+</svg>
+</g><g width="135.51px" height="135.51px"  transform="translate(675.31, 775.28) rotate(0, 67.755, 67.755)"><g transform="translate(19.84430969482937, 19.844309694829377)"><text xml:space="preserve" x="10.408401601188977" y="56.408401601188984" width="75" textLength="75" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="25" 
+				fill="#0a0b96" direction="ltr" font-style="italic" font-weight="bold">PLAY!</text></g></g></g><g data-widget-id="3458764678209831602"><g width="165.45px" height="57px"  transform="translate(450.93, 806.39) scale(1.2857142857142858) rotate(0, 82.725, 28.5)"><svg
+	width="165.45"
+	height="57"
+	shape-border-width="shape-background"
+	style="width:165.45px; height: 57px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1111429477943">
+		<rect
+			x="0"
+			y="0"
+			width="165.45"
+			height="57"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="transparent"
+			stroke-width="0"
+			stroke-dasharray=""
+			stroke-opacity="0"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="165.45"
+			height="57"
+			rx="0"
+			ry="0"
+			clip-path="url(#1111429477943)"
+		></rect>
+	</g>
+</svg>
+</g><g width="212.72142857142856px" height="73.28571428571429px"  transform="translate(450.93, 806.39) rotate(0, 106.36071428571428, 36.642857142857146)"><g transform="translate(0, 0)"><text xml:space="preserve" x="28.298960497950063" y="18" width="184.41964285714286" textLength="184.41964285714286" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" font-style="italic" font-weight="bold">team scores saved</text><text xml:space="preserve" x="212.71860335509294" y="18" width="10.848214285714286" textLength="10.848214285714286" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" font-style="italic"> </text><text xml:space="preserve" x="6.60253192652149" y="42.42857142857143" width="216.96428571428572" textLength="216.96428571428572" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" >to event + All-​Time </text><text xml:space="preserve" x="82.5400319265215" y="66.85714285714286" width="130.17857142857144" textLength="130.17857142857144" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" >leaderboards</text></g></g></g><g data-widget-id="3458764678209964325"><g width="51.16px" height="0px"  transform="translate(810.82, 843.04) scale(1) rotate(0, 25.58, 0)"><path stroke-linecap="butt" 
+			stroke="#5199be" stroke-width="2" fill="transparent"
+			d="M 51.15765520393373 0 L 25.578827601966893 0 Q 25.578827601966864 0 25.578827601966864 2.842170943040401e-14 L 25.578827601966864 2.842170943040401e-14 Q 25.578827601966864 5.684341886080802e-14 25.578827601966836 5.684341886080802e-14 L 10.181818181818182 5.684341886080802e-14" /> <use xlink:href="#LineHeadArrow2" fill="#5199be"
+			 transform="translate(0, 1.1368683772161603e-13)  rotate(180) "  /> </g></g><g data-widget-id="3458764678209964534"><g width="156.2px" height="38px"  transform="translate(1157.61, 748.4) scale(1.2857142857142858) rotate(0, 78.1, 19)"><svg
+	width="156.2"
+	height="38"
+	shape-border-width="shape-background"
+	style="width:156.2px; height: 38px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1018415987163">
+		<rect
+			x="0"
+			y="0"
+			width="156.2"
+			height="38"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="transparent"
+			stroke-width="0"
+			stroke-dasharray=""
+			stroke-opacity="0"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="156.2"
+			height="38"
+			rx="0"
+			ry="0"
+			clip-path="url(#1018415987163)"
+		></rect>
+	</g>
+</svg>
+</g><g width="200.82857142857142px" height="48.85714285714286px"  transform="translate(1157.61, 748.4) rotate(0, 100.41428571428571, 24.42857142857143)"><g transform="translate(0, 0)"><text xml:space="preserve" x="0" y="18" width="173.57142857142858" textLength="173.57142857142858" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" font-style="italic">type player name</text><text xml:space="preserve" x="0" y="42.42857142857143" width="86.78571428571429" textLength="86.78571428571429" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" font-style="italic" font-weight="bold">NO teams</text></g></g></g><g data-widget-id="3458764678209964748"><g width="135.51px" height="135.51px"  transform="translate(1374.88, 650.54) scale(1) rotate(0, 67.755, 67.755)"><svg
+	width="135.5054225920367"
+	height="135.50542259203672"
+	style="width:135.5054225920367px; height: 135.50542259203672px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="1082852413065">
+		<ellipse cx="67.75271129601835" cy="67.75271129601836" rx="67.75271129601835" ry="67.75271129601836"></ellipse>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<ellipse
+			class="shape-element shape-element-ellipse"
+			cx="67.75271129601835"
+			cy="67.75271129601836"
+			rx="67.75271129601835"
+			ry="67.75271129601836"
+			stroke="#bbbe51"
+			stroke-width="6"
+			stroke-dasharray="3 3"
+			stroke-opacity="1"
+			fill="#f1f2d6"
+			fill-opacity="0.9"
+			clip-path="url(#1082852413065)"
+		/>
+	</g>
+</svg>
+</g><g width="135.51px" height="135.51px"  transform="translate(1374.88, 650.54) rotate(0, 67.755, 67.755)"><g transform="translate(19.84430969482937, 19.844309694829377)"><text xml:space="preserve" x="10.408401601188977" y="56.408401601188984" width="75" textLength="75" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="25" 
+				fill="#96710a" direction="ltr" font-style="italic" font-weight="bold">PLAY!</text></g></g></g><g data-widget-id="3458764678210115202"><g width="48.98px" height="0px"  transform="translate(1325.91, 718.29) scale(1) rotate(0, 24.49, 0)"><path stroke-linecap="butt" 
+			stroke="#bbbe51" stroke-width="2" fill="transparent"
+			d="M 0 0 L 38.79394736772776 0" /> <use xlink:href="#LineHeadArrow2" fill="#bbbe51"
+			 transform="translate(48.97576554954594, 0)  rotate(0) "  /> </g></g><g data-widget-id="3458764678210115334"><g width="165.45px" height="57px"  transform="translate(1297.67, 794.18) scale(1.2857142857142858) rotate(0, 82.725, 28.5)"><svg
+	width="165.45"
+	height="57"
+	shape-border-width="shape-background"
+	style="width:165.45px; height: 57px;"
+	class="shape-background"
+	preserveAspectRatio="none"
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	<clipPath id="638319465194">
+		<rect
+			x="0"
+			y="0"
+			width="165.45"
+			height="57"
+			rx="0"
+			ry="0"
+		></rect>
+	</clipPath>
+	<g id="Page-1" stroke="none" stroke-width="0" fill="none" fill-rule="evenodd">
+		<rect
+			class="shape-element shape-element-rect"
+			stroke="transparent"
+			stroke-width="0"
+			stroke-dasharray=""
+			stroke-opacity="0"
+			fill="transparent"
+			fill-opacity="0"
+			x="0"
+			y="0"
+			width="165.45"
+			height="57"
+			rx="0"
+			ry="0"
+			clip-path="url(#638319465194)"
+		></rect>
+	</g>
+</svg>
+</g><g width="212.72142857142856px" height="73.28571428571429px"  transform="translate(1297.67, 794.18) rotate(0, 106.36071428571428, 36.642857142857146)"><g transform="translate(0, 0)"><text xml:space="preserve" x="71.69181764080722" y="18" width="151.875" textLength="151.875" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" >player scores </text><text xml:space="preserve" x="39.14717478366435" y="42.42857142857143" width="184.41964285714286" textLength="184.41964285714286" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" >recorded in-​game </text><text xml:space="preserve" x="17.450746212235778" y="66.85714285714286" width="43.392857142857146" textLength="43.392857142857146" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" >but </text><text xml:space="preserve" x="60.843603355092924" y="66.85714285714286" width="151.875" textLength="151.875" lengthAdjust="spacingAndGlyphs" letter-spacing="0" font-family='"IBM Plex Mono", "Lucida Console", "Andale Mono", AndaleMono, monospace, Noto Sans Hebrew, Noto Sans, Noto Sans JP, Noto Sans KR' font-size="18" 
+				fill="#1a1a1a" direction="ltr" font-style="italic" font-weight="bold">no leaderboard</text></g></g></g></svg>

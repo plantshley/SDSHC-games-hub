@@ -1252,6 +1252,35 @@
   border-color: var(--adv-accent);
 }
 
+/* ─── Admin header: staff reference doc links ───
+   Small, muted text links (full guide / cheat sheet / print PDF) parked just
+   left of the sign-out + theme cluster. `margin-left: auto` pulls the group and
+   everything after it to the right edge; the space-between header has no leftover
+   space left to distribute, so header-right sits flush after. On the phone
+   breakpoint these drop to their own row below the header (see the ≤600px block). */
+.adv-admin-doclinks {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  margin-left: auto;
+  margin-right: 16px;
+}
+
+.adv-admin-doclink {
+  font-family: var(--font-body), monospace;
+  font-size: 0.8rem;
+  color: var(--adv-text-muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.adv-admin-doclink:hover,
+.adv-admin-doclink:active {
+  color: var(--adv-accent);
+  border-bottom-color: var(--adv-accent);
+}
+
 /* ─── Player Intro: Team Input Row (paired with name) ─── */
 
 .adv-team-row {
@@ -1815,11 +1844,30 @@
     padding: 8px 0;
     margin: 0 0 12px;
     gap: 10px;
+    flex-wrap: wrap;
   }
 
   .adv-admin .adv-header-left {
     gap: 12px;
     flex-wrap: wrap;
+  }
+
+  /* Doc links move off the cramped header row onto their own full-width row
+     below it. order:3 places them after header-right (order 0), so header-left +
+     the sign-out/theme cluster keep the top row and the links wrap beneath. */
+  .adv-admin-doclinks {
+    order: 3;
+    flex-basis: 100%;
+    margin: 4px 0 0;
+    gap: 28px;
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px solid var(--adv-border);
+  }
+
+  .adv-admin-doclink {
+    font-size: 0.62rem;
+    padding: 4px 0; /* a little vertical room for a fingertip */
   }
 
   .adv-admin .adv-back-btn {
