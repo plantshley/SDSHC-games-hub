@@ -22,6 +22,7 @@ import { shuffleArray, transitionTo } from '../../../utils/game-helpers.js'
 import { mountNarrowGate } from '../../../utils/narrow-gate.js'
 import { trackGameStart, trackGameComplete, trackGameQuit } from '../../../utils/analytics.js'
 import { STATIONS, QUESTIONS_PER_STATION, INSTRUCTIONS, RULES } from '../../../data/content/advanced/farm-world.js'
+import { NPCS } from '../../../data/content/advanced/farm-world-npcs.js'
 import { createFarmWorld } from './world.js'
 import { PROCEDURAL_CUSTOMIZATION_SCHEMA, PROCEDURAL_DEFAULTS } from './procedural-character.js'
 import { createJoystick, createKeyboardInput } from './controls.js'
@@ -39,10 +40,10 @@ const LOOK_KEY = 'sdshc-fw-look'
 // Colors are '#rrggbb' strings so the IDE shows inline swatch previews.
 // three.js Color.set() accepts them directly (and still accepts old numeric
 // values that may linger from before, so the format change is backward-safe).
-// `character` picks the explorer: the farmer mascot or the fairy-worlds doll
-// (see procedural-character.js). `doll` holds that character's full state
-// (colors/variants/accessories) — null means its built-in defaults.
-const LOOK_DEFAULT = { character: 'farmer', body: '#e295df', hat: 'beanie', hatColor: '#ff35d0', shoes: '#cd35ff', pack: '#ff7ca8', doll: null }
+// `character` picks the explorer: the fairy-worlds doll (default) or the
+// farmer mascot (see procedural-character.js). `doll` holds the doll's full
+// state (colors/variants/accessories) — null means its built-in defaults.
+const LOOK_DEFAULT = { character: 'doll', body: '#e295df', hat: 'beanie', hatColor: '#ff35d0', shoes: '#cd35ff', pack: '#ff7ca8', doll: null }
 const BODY_COLORS = ['#b9b0e6', '#92dbb4', '#f2a3b0', '#8fc9f5', '#e295df', '#f5d98f']
 const HAT_COLORS = ['#f2cf3e', '#e0596e', '#38cebc', '#3b4a8c', '#ff35d0', '#5cc257']
 const SHOE_COLORS = ['#ffa760', '#e0596e', '#3a3a3f', '#f2cf3e', '#cd35ff', '#38cebc']
@@ -101,7 +102,7 @@ function createIntroScreen() {
         <div class="adv-fw-feature">
           <span class="adv-fw-feature-icon">◈</span>
           <span class="adv-fw-feature-title">Explore</span>
-          <span class="adv-fw-feature-desc">Find the 7 glowing stations around the farm</span>
+          <span class="adv-fw-feature-desc">Find the glowing stations across both islands</span>
         </div>
         <div class="adv-fw-feature">
           <span class="adv-fw-feature-icon">☘</span>
@@ -150,7 +151,7 @@ function createWorldScreen() {
   let completedCount = 0
   let overlayOpen = false
   let customizerOpen = false
-  let nearId = null
+  let nearTarget = null // { type: 'station'|'npc', id } | null
   let finished = false
   const look = loadLook()
 
@@ -162,13 +163,17 @@ function createWorldScreen() {
       <h2 class="adv-sw-game-title">Farm World</h2>
     </div>
 
-    <div class="adv-fw-meter">
-      <span class="adv-fw-meter-label">Soil Health</span>
+    <div class="adv-fw-meter" id="adv-fw-meter">
+      <div class="adv-fw-meter-head">
+        <span class="adv-fw-meter-label">Soil Health</span>
+        <span class="adv-fw-meter-caret">▾</span>
+      </div>
       <div class="adv-fw-meter-bar"><div class="adv-fw-meter-fill" id="adv-fw-fill"></div></div>
       <div class="adv-fw-meter-row">
         <span id="adv-fw-count">0/${totalStations} restored</span>
         <span id="adv-fw-score">0 pts</span>
       </div>
+      <div class="adv-fw-meter-list" id="adv-fw-meter-list"></div>
     </div>
 
     <div class="adv-fw-prompt" id="adv-fw-prompt">
@@ -212,6 +217,28 @@ function createWorldScreen() {
 
   const promptEl = el.querySelector('#adv-fw-prompt')
   const promptName = el.querySelector('#adv-fw-prompt-name')
+  const promptBtn = el.querySelector('#adv-fw-visit')
+
+  // resolve a proximity target ({type,id}) to its display name + action verb
+  function targetInfo(target) {
+    if (!target) return null
+    if (target.type === 'npc') {
+      const npc = NPCS.find(n => n.id === target.id)
+      return npc ? { name: npc.name, verb: 'Talk', npc } : null
+    }
+    const station = runStations.find(s => s.def.id === target.id)
+    return station && !station.completed ? { name: station.def.name, verb: 'Visit', station } : null
+  }
+  function showPromptFor(target) {
+    const info = targetInfo(target)
+    if (info && !overlayOpen && !customizerOpen) {
+      promptName.textContent = info.name
+      promptBtn.textContent = info.verb
+      promptEl.classList.add('adv-fw-prompt-show')
+    } else {
+      promptEl.classList.remove('adv-fw-prompt-show')
+    }
+  }
 
   // ── Input + 3D world ──
 
@@ -240,19 +267,14 @@ function createWorldScreen() {
       host: el.querySelector('#adv-fw-canvas'),
       stationIds: runStations.map(s => s.def.id),
       getInput,
-      onNearStation: (id) => {
-        nearId = id
-        if (id && !overlayOpen && !customizerOpen) {
-          const station = runStations.find(s => s.def.id === id)
-          promptName.textContent = station ? station.def.name : ''
-          promptEl.classList.add('adv-fw-prompt-show')
-        } else {
-          promptEl.classList.remove('adv-fw-prompt-show')
-        }
+      onNearTarget: (target) => {
+        nearTarget = target
+        showPromptFor(target)
       },
       onDisposed: () => {
         disposeKeyboard()
         window.removeEventListener('keydown', onInteractKey)
+        delete window.fwExportLook
       },
     })
   } catch (err) {
@@ -499,14 +521,8 @@ function createWorldScreen() {
       panel.remove()
       world.setCustomizeFocus(false)
       world.setMovementEnabled(true)
-      // re-show the prompt if still parked at an unfinished station
-      if (nearId) {
-        const near = runStations.find(s => s.def.id === nearId)
-        if (near && !near.completed) {
-          promptName.textContent = near.def.name
-          promptEl.classList.add('adv-fw-prompt-show')
-        }
-      }
+      // re-show the prompt if still parked at an interactable
+      showPromptFor(nearTarget)
     }
 
     render()
@@ -521,6 +537,11 @@ function createWorldScreen() {
     el.querySelector('#adv-fw-fill').style.width = `${(completedCount / totalStations) * 100}%`
     el.querySelector('#adv-fw-count').textContent = `${completedCount}/${totalStations} restored`
     el.querySelector('#adv-fw-score').textContent = `${score} pts`
+    // the tap-to-open dropdown: which stations are restored so far
+    el.querySelector('#adv-fw-meter-list').innerHTML = runStations.map(s => `
+      <div class="adv-fw-meter-item${s.completed ? ' adv-fw-meter-item-done' : ''}">
+        <span class="adv-fw-meter-check">${s.completed ? '✓' : '○'}</span>${esc(s.def.name)}
+      </div>`).join('')
   }
 
   // ── Station overlay: lesson → questions → fact ──
@@ -627,14 +648,8 @@ function createWorldScreen() {
       overlayOpen = false
       world.setMovementEnabled(true)
       // Re-show the prompt if the player is still parked at an unfinished
-      // station (proximity hasn't changed, so onNearStation won't re-fire).
-      if (nearId) {
-        const near = runStations.find(s => s.def.id === nearId)
-        if (near && !near.completed) {
-          promptName.textContent = near.def.name
-          promptEl.classList.add('adv-fw-prompt-show')
-        }
-      }
+      // station (proximity hasn't changed, so onNearTarget won't re-fire).
+      showPromptFor(nearTarget)
     }
 
     showLesson()
@@ -760,16 +775,108 @@ function createWorldScreen() {
     })
   }
 
+  // ── NPC dialogue ──
+  // A speech bubble floating over the pair (the camera zooms to frame player +
+  // NPC together — see setTalkingNpc in world.js), NOT a scene-blurring modal.
+  // The bubble frame (name, buttons) stays put; only the line text transitions.
+  // Per-NPC, session-persistent line cursor so repeat chats surface new tips.
+  const npcLineIndex = {}
+  let npcAdvance = null // live while a bubble is open — E/Enter/Space advance it
+
+  function openNpcDialogue(npc) {
+    if (overlayOpen || customizerOpen) return
+    overlayOpen = true
+    world.setMovementEnabled(false)
+    world.setTalkingNpc(npc.id) // pause their patrol; they turn to face you
+    promptEl.classList.remove('adv-fw-prompt-show')
+
+    const bubble = document.createElement('div')
+    bubble.className = 'adv-fw-bubble'
+    bubble.innerHTML = `
+      <button class="adv-fw-card-close adv-fw-bubble-close" id="adv-fw-npc-close" title="Close">✕</button>
+      <span class="adv-fw-card-tag">${esc(npc.role || 'Farm Folk')}</span>
+      <h2 class="adv-fw-bubble-name">${esc(npc.name)}</h2>
+      <p class="adv-fw-bubble-text" id="adv-fw-npc-text"></p>
+      <button class="adv-fw-card-btn adv-fw-bubble-btn" id="adv-fw-npc-next">Next</button>
+    `
+    el.appendChild(bubble)
+    requestAnimationFrame(() => bubble.classList.add('adv-fw-bubble-show'))
+
+    const textEl = bubble.querySelector('#adv-fw-npc-text')
+    const nextBtn = bubble.querySelector('#adv-fw-npc-next')
+    const lines = npc.lines && npc.lines.length ? npc.lines : ['…']
+    let i = npcLineIndex[npc.id] || 0
+    if (i >= lines.length) i = 0
+    let swapTimer = 0
+
+    function setLine(idx, animate) {
+      nextBtn.textContent = idx >= lines.length - 1 ? 'Bye' : 'Next'
+      if (!animate) { textEl.textContent = lines[idx]; return }
+      // float the old line out, swap, float the new one in
+      textEl.classList.add('adv-fw-bubble-text-out')
+      clearTimeout(swapTimer)
+      swapTimer = setTimeout(() => {
+        textEl.textContent = lines[idx]
+        textEl.classList.remove('adv-fw-bubble-text-out')
+        textEl.classList.add('adv-fw-bubble-text-in')
+        // two frames so the -in start position paints before transitioning off
+        requestAnimationFrame(() => requestAnimationFrame(() => textEl.classList.remove('adv-fw-bubble-text-in')))
+      }, 170)
+    }
+
+    function close() {
+      clearTimeout(swapTimer)
+      npcAdvance = null
+      bubble.classList.remove('adv-fw-bubble-show')
+      setTimeout(() => bubble.remove(), 250)
+      overlayOpen = false
+      world.setMovementEnabled(true)
+      world.setTalkingNpc(null)
+      showPromptFor(nearTarget)
+    }
+
+    npcAdvance = () => {
+      if (i >= lines.length - 1) { npcLineIndex[npc.id] = 0; close() }
+      else { i++; npcLineIndex[npc.id] = i; setLine(i, true) }
+    }
+    onTap(bubble.querySelector('#adv-fw-npc-close'), close)
+    onTap(nextBtn, () => npcAdvance && npcAdvance())
+    setLine(i, false)
+  }
+
   // ── Interact wiring ──
 
   function tryInteract() {
-    if (!nearId || overlayOpen || customizerOpen) return
-    const stationRun = runStations.find(s => s.def.id === nearId)
+    if (!nearTarget || overlayOpen || customizerOpen) return
+    if (nearTarget.type === 'npc') {
+      const npc = NPCS.find(n => n.id === nearTarget.id)
+      if (npc) openNpcDialogue(npc)
+      return
+    }
+    const stationRun = runStations.find(s => s.def.id === nearTarget.id)
     if (stationRun) openStation(stationRun)
+  }
+
+  // Console helper: dump the current doll look as JSON to paste into an NPC's
+  // `look`. Design a look in the customizer, then run fwExportLook() in devtools.
+  window.fwExportLook = () => {
+    let state = null
+    try { state = world.getDollCharacter().getState() } catch { /* not built yet */ }
+    if (!state) { try { state = JSON.parse(sessionStorage.getItem('sdshc-fw-look'))?.doll || null } catch { state = null } }
+    console.log('Farm World doll look:\n' + JSON.stringify(state, null, 2))
+    return state
   }
 
   function onInteractKey(e) {
     if (e.code === 'KeyE' || e.code === 'Enter' || e.code === 'Space') {
+      if (e.repeat) return // a held key shouldn't machine-gun through dialogue
+      if (npcAdvance) {
+        // preventDefault stops a focused bubble button from ALSO firing its
+        // native Enter/Space click — which would double-advance the dialogue
+        e.preventDefault()
+        npcAdvance()
+        return
+      }
       tryInteract()
     }
   }
@@ -777,6 +884,30 @@ function createWorldScreen() {
 
   onTap(el.querySelector('#adv-fw-visit'), () => tryInteract())
   onTap(el.querySelector('#adv-fw-home'), () => confirmBack())
+  // Tap anywhere on the meter card to expand/collapse the restore checklist.
+  // Toggle on pointerup, NOT click: on the physical kiosk touchscreen the
+  // synthesized `click` fired unreliably across the card (only landing squarely
+  // on the count row), even though headless Chrome toggles from every point.
+  // pointerup fires natively for both touch and mouse on the actual element
+  // released — no 300ms delay, no driver-specific click suppression. Events
+  // bubble from whatever child was tapped (label, bar, row, caret), so the whole
+  // card is one hit target. A small move guard keeps a stray drag from toggling.
+  const meterEl = el.querySelector('#adv-fw-meter')
+  let meterDownX = 0
+  let meterDownY = 0
+  let meterDown = false
+  meterEl.addEventListener('pointerdown', (e) => {
+    meterDown = true
+    meterDownX = e.clientX
+    meterDownY = e.clientY
+  })
+  meterEl.addEventListener('pointercancel', () => { meterDown = false })
+  meterEl.addEventListener('pointerup', (e) => {
+    if (!meterDown) return
+    meterDown = false
+    if (Math.hypot(e.clientX - meterDownX, e.clientY - meterDownY) > 16) return
+    meterEl.classList.toggle('adv-fw-meter-open')
+  })
   onTap(camResetBtn, () => world.resetCamera())
   onTap(charBtn, () => {
     look.character = look.character === 'doll' ? 'farmer' : 'doll'

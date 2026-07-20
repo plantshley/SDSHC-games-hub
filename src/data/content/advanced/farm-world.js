@@ -20,7 +20,8 @@ function questionsFor(roundId) {
 export const QUESTIONS_PER_STATION = 2
 
 /**
- * The 7 stations around the farm. `id` must match STATION_LAYOUT in
+ * The stations across the farm — the original ring island plus the trail
+ * island reached by the bridge. `id` must match STATION_LAYOUT in
  * games/advanced/farm-world/world.js. Each station: a short lesson shown on
  * arrival, a pool of multiple-choice questions (sampled per run), and a
  * sourced fact shown after answering.
@@ -89,6 +90,53 @@ export const STATIONS = [
     questions: questionsFor('indigenous-farming'),
     restoredLabel: 'Three Sisters planted — the old wisdom lives on!',
   },
+
+  // ── Second island (trail stations) ──
+  {
+    id: 'conservation-practices',
+    name: 'Prairie Strips',
+    tag: 'Conservation Practices',
+    lesson: 'Conservation practices work with the land instead of against it: no-till keeps fungal networks and earthworms intact, contour farming and prairie strips slow runoff, and riparian buffers filter water before it reaches a stream. A few narrow bands of native plants can hold back most of a field’s lost soil.',
+    fact: TRIVIA_IMPACTS['conservation-practices'],
+    questions: questionsFor('conservation-practices'),
+    restoredLabel: 'Prairie strips restored — the field holds its soil now!',
+  },
+  {
+    id: 'phosphorus',
+    name: 'Runoff Buffer',
+    tag: 'Phosphorus & Water Quality',
+    lesson: 'Phosphorus builds the ATP, DNA, and membranes every plant needs — but unlike nitrogen it has no gas phase, so it travels bound to soil. When it washes into water it feeds algae blooms that choke out life. Vegetated buffers and the “4R” approach — right source, rate, time, and place — keep it in the field.',
+    fact: TRIVIA_IMPACTS['phosphorus'],
+    questions: questionsFor('phosphorus'),
+    restoredLabel: 'Buffers planted — the water runs clean again!',
+  },
+  {
+    id: 'soil-art-culture',
+    name: 'Soil Art Plaza',
+    tag: 'Soil Art & Culture',
+    lesson: 'Soil is one of humanity’s oldest art materials. Ochre pigments colored cave walls over 40,000 years ago, iron-rich mud dyes West African mudcloth, and Amazonian peoples engineered dark, fertile “terra preta” by adding charcoal and compost. Soil carries culture as well as crops.',
+    fact: 'Terra preta — the “dark earth” Amazonian peoples made centuries ago from charcoal, bone, and compost — is still remarkably fertile today, far richer than the tropical soils around it.',
+    questions: questionsFor('soil-art-culture'),
+    restoredLabel: 'The soil art plaza is vibrant again!',
+  },
+  {
+    id: 'agronomy-careers',
+    name: 'Research Station',
+    tag: 'Agronomy Careers',
+    lesson: 'Understanding soil opens a world of careers. Certified Crop Advisors plan nutrients and pest control, NRCS soil scientists map land and write conservation plans, plant breeders develop hardier varieties, and precision-ag specialists guide equipment by GPS and data.',
+    fact: 'Soil scientists with the NRCS map soils, judge what each parcel of land can support, and write the conservation plans that help farmers protect it — one of many careers built on understanding soil.',
+    questions: questionsFor('agronomy-careers'),
+    restoredLabel: 'Research station up and running — the future looks bright!',
+  },
+  {
+    id: 'electrical-conductivity',
+    name: 'Salinity Monitor',
+    tag: 'Electrical Conductivity',
+    lesson: 'Electrical conductivity (EC) measures the salt dissolved in soil. Too much salt causes “physiological drought” — plants can’t pull in water even when the soil is moist. EMI sensors map salty zones from a moving tractor, and leaching or gypsum can bring the soil back.',
+    fact: 'Once a soil’s electrical conductivity climbs past about 4 dS/m it counts as saline — salty enough to stunt sensitive crops even when the ground looks perfectly normal.',
+    questions: questionsFor('electrical-conductivity'),
+    restoredLabel: 'Salts leached out — the crops are recovering!',
+  },
 ]
 
 export const INSTRUCTIONS = {
@@ -100,8 +148,9 @@ export const RULES = [
   'Walk with the on-screen joystick or the WASD / arrow keys.',
   'Drag the view to look around and scroll or pinch to zoom — the ⊙ button resets the camera.',
   'Tap the ☺ button to customize your explorer, and the ☾ button to switch between day and night.',
-  'Visit the 7 glowing stations scattered around the farm.',
+  'Visit the glowing stations scattered across both islands — cross the bridge to reach the far trail.',
   'Each station teaches a soil health topic, then asks you 2 questions.',
   'A first-try correct answer earns 100 points; a second try earns 50.',
-  'Answer the questions to restore that corner of the farm — restore all 7 to bring the whole farm back to life!',
+  'Answer the questions to restore that corner of the farm — restore every station to bring the whole farm back to life!',
+  'Say hello to the folks wandering the farm — they have tips to share.',
 ]

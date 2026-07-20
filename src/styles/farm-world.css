@@ -142,6 +142,73 @@
   color: #3b3a5c;
 }
 
+/* tap the meter card to expand the per-station restore checklist */
+.adv-fw-meter {
+  cursor: pointer;
+}
+
+.adv-fw-meter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* full 44px touch target anchored over the card corner, so aiming at the
+   little triangle itself works as reliably as tapping the card body */
+.adv-fw-meter-caret {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9a9db4;
+  font-size: 0.8rem;
+  line-height: 1;
+  transition: transform 0.25s ease;
+}
+
+.adv-fw-meter-open .adv-fw-meter-caret {
+  transform: rotate(180deg);
+}
+
+.adv-fw-meter-list {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 3px;
+  padding-top: 8px;
+  border-top: 1px solid #e8eaf2;
+}
+
+.adv-fw-meter-open .adv-fw-meter-list {
+  display: flex;
+}
+
+.adv-fw-meter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.68rem;
+  color: #9a9db4;
+}
+
+.adv-fw-meter-item-done {
+  color: #3b3a5c;
+}
+
+.adv-fw-meter-check {
+  width: 1em;
+  text-align: center;
+}
+
+.adv-fw-meter-item-done .adv-fw-meter-check {
+  color: #27ae60;
+}
+
 /* ── HUD: interact prompt (bottom center) ── */
 
 .adv-fw-prompt {
@@ -553,6 +620,82 @@
   box-shadow: 0 8px 24px rgba(52, 201, 140, 0.5);
 }
 
+/* ── NPC speech bubble ──
+   Floats over the player + NPC (the camera zooms in to frame the pair) — the
+   scene stays fully visible, no backdrop blur. The bubble frame is static
+   while lines change; only the text floats/fades between lines. */
+
+.adv-fw-bubble {
+  position: absolute;
+  left: 50%;
+  top: 12%;
+  transform: translateX(-50%) translateY(10px) scale(0.97);
+  width: min(560px, calc(100% - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 26px 16px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 22px;
+  box-shadow: 0 14px 44px rgba(31, 41, 81, 0.28);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 18;
+}
+
+.adv-fw-bubble-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* speech-bubble tail pointing down at the characters */
+.adv-fw-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  transform: translateX(-50%);
+  border: 15px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.96);
+  border-bottom: none;
+}
+
+.adv-fw-bubble-name {
+  font-family: var(--font-title), sans-serif;
+  font-size: 1.1rem;
+  color: #32305a;
+}
+
+.adv-fw-bubble-text {
+  /* fixed at 3 lines (longest NPC line wraps to 3 at this width) so the
+     bubble keeps ONE height across every line — no resize on Next */
+  height: 4.8em;
+  font-family: var(--font-body), monospace;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #3b3a5c;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.17s ease, transform 0.17s ease;
+}
+
+.adv-fw-bubble-text-out {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.adv-fw-bubble-text-in {
+  opacity: 0;
+  transform: translateY(9px);
+  transition: none; /* jump to the entry pose, then transition back */
+}
+
+.adv-fw-bubble-btn {
+  align-self: flex-end;
+  padding: 10px 26px;
+  font-size: 0.85rem;
+}
+
 /* ── Restored toast (top center) ── */
 
 .adv-fw-toast {
@@ -715,6 +858,23 @@
 
   .adv-fw-card-title {
     font-size: 1.2rem;
+  }
+
+  .adv-fw-bubble {
+    top: 9%;
+    padding: 14px 18px 12px;
+  }
+
+  .adv-fw-bubble-name {
+    font-size: 0.95rem;
+  }
+
+  .adv-fw-bubble-text {
+    font-size: 0.8rem;
+  }
+
+  .adv-fw-meter-item {
+    font-size: 0.6rem;
   }
 
   .adv-fw-intro-features {

@@ -12,6 +12,7 @@
 
 import * as THREE from 'three'
 import { createProceduralCharacter } from './procedural-character.js'
+import { NPCS } from '../../../data/content/advanced/farm-world-npcs.js'
 
 // ─── Palette ───
 
@@ -66,6 +67,23 @@ const C = {
   beaconDone: 0xb8e84a,   // --adv-accent-secondary
   sun: 0xfff3b0,
   cloud: 0xffffff,
+  // trail-island station accents
+  prairieGold: 0xcaa94e,  // tallgrass prairie strips
+  bufferGreen: 0x4e9e57,  // buffer / cover vegetation
+  algae: 0x74a03a,        // algae-choked runoff (pre)
+  ochreY: 0xe0a83c,       // iron-oxide ochre — yellow
+  ochreR: 0xb5502e,       // ochre — red
+  ochreBrown: 0x7d4a2e,   // ochre — brown
+  adobe: 0xcf9866,        // adobe / rammed earth
+  pottery: 0x9c5a3c,      // onggi / clay vessels
+  charcoal: 0x453f3a,     // charcoal-black pigment (soil-art palette)
+  labWall: 0xeef1ee,      // research cabin walls
+  metal: 0x9aa0ad,        // instrument metal
+  salt: 0xe6e3da,         // salt crust (pre)
+  gypsum: 0xdcdfe4,       // gypsum remediation piles
+  solar: 0x2b3a5c,        // solar panel / antenna plate
+  sensorOrange: 0xe8873c, // sensor instrument housing
+  flowerWhite: 0xf3f0e8,  // second scatter flower color
 }
 
 // ─── Small builders ───
@@ -154,6 +172,50 @@ function makePine(scale = 1) {
   g.add(place(cone(0.75, 1.3, C.pine, 8), 0, 2.5, 0))
   g.add(place(cone(0.5, 1.1, C.pine, 8), 0, 3.3, 0))
   g.scale.setScalar(scale)
+  return g
+}
+
+/**
+ * Landmark rainbow tree — a grand pastel-rainbow canopy on a stout trunk,
+ * planted once at the far end of the trail island as a reward-in-the-distance.
+ * Same low-poly blob language as makeTree, just bigger and technicolor.
+ */
+function makeRainbowTree() {
+  const g = new THREE.Group()
+  // stout trunk + root flares
+  g.add(place(cyl(0.55, 0.85, 4.6, C.trunk, 9), 0, 2.3, 0))
+  for (let i = 0; i < 4; i++) {
+    const holder = new THREE.Group()
+    holder.rotation.y = (i * Math.PI * 2) / 4 + 0.4
+    const root = cyl(0.14, 0.34, 1.4, C.trunk, 6)
+    root.position.set(0.8, 0.45, 0)
+    root.rotation.z = 0.55
+    holder.add(root)
+    g.add(holder)
+  }
+  const RAINBOW = [0xe0596e, 0xf0955c, 0xf2d54a, 0x5cc257, 0x38cebc, 0x5a8ff0, 0x8f6ae0, 0xe87fae]
+  let ci = 0
+  const blobRing = (n, ringR, y, blobR, offset) => {
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + offset
+      g.add(place(sph(blobR * rand(0.9, 1.1), RAINBOW[ci++ % RAINBOW.length], 8),
+        Math.cos(a) * ringR, y + rand(-0.15, 0.15), Math.sin(a) * ringR))
+    }
+  }
+  blobRing(6, 1.9, 4.7, 1.15, 0)   // bottom dome ring
+  blobRing(4, 1.2, 6.0, 1.0, 0.5)  // upper ring
+  g.add(place(sph(0.95, RAINBOW[ci % RAINBOW.length], 8), 0, 7.0, 0)) // crown
+  // fallen petals dotting the grass under the canopy
+  const petalT = []
+  for (let i = 0; i < 10; i++) {
+    const a = rand(0, Math.PI * 2), r = rand(1.4, 3.0)
+    petalT.push({ x: Math.cos(a) * r, y: 0.06, z: Math.sin(a) * r, s: rand(0.5, 0.9) })
+  }
+  RAINBOW.slice(0, 3).forEach((c, i) => {
+    const petals = instanced(new THREE.SphereGeometry(0.12, 6, 5), c, petalT.filter((_, pi) => pi % 3 === i))
+    petals.castShadow = false
+    g.add(petals)
+  })
   return g
 }
 
@@ -265,6 +327,32 @@ function updateCow(cow, bounds, dt, t) {
     cow.position.y = Math.abs(Math.sin(t * 5 + u.phase)) * 0.04
   } else {
     cow.position.y += (0 - cow.position.y) * Math.min(1, dt * 5)
+  }
+}
+
+/**
+ * Procedural-doll walk cycle, shared by the player doll and the NPCs. `limbs`
+ * are the shoulder/hip pivots; `carrier` is the scaled holder group that bobs
+ * (and stashes walkT). While moving, limbs swing and the body bobs; idle, they
+ * settle to neutral with a gentle breathing bob. `amp` scales the limb arcs
+ * and `freq` the cycle rate — the slow-strolling NPCs use gentler values so
+ * their arms/legs don't windmill at player-sprint intensity.
+ */
+function stepGait(limbs, carrier, moving, dt, t, { phase = 0, amp = 1, freq = 10.5 } = {}) {
+  if (moving) {
+    carrier.userData.walkT = (carrier.userData.walkT || 0) + dt * freq
+    const s = Math.sin(carrier.userData.walkT)
+    limbs.legL.rotation.x = s * 0.65 * amp
+    limbs.legR.rotation.x = -s * 0.65 * amp
+    limbs.armL.rotation.x = -s * 0.5 * amp
+    limbs.armR.rotation.x = s * 0.5 * amp
+    carrier.position.y = Math.abs(s) * 0.05 * amp
+    carrier.rotation.x = 0.05 // slight forward lean
+  } else {
+    const settle = Math.min(1, dt * 8)
+    ;[limbs.legL, limbs.legR, limbs.armL, limbs.armR].forEach(p => { p.rotation.x -= p.rotation.x * settle })
+    carrier.rotation.x -= carrier.rotation.x * settle
+    carrier.position.y += (0.02 + Math.sin(t * 2.2 + phase) * 0.02 - carrier.position.y) * settle
   }
 }
 
@@ -956,10 +1044,389 @@ function buildHeritage() {
   }
 }
 
+// A small "4R Nutrient Stewardship" signboard: post + four colored R-bars.
+function make4RSign() {
+  const g = new THREE.Group()
+  g.add(place(box(0.16, 1.6, 0.16, C.trunk), 0, 0.8, 0))
+  g.add(place(box(1.5, 1.1, 0.12, C.trim), 0, 1.55, 0))
+  ;[C.beacon, C.beaconDone, C.flowerYellow, C.sensorOrange].forEach((c, i) => {
+    g.add(place(box(0.28, 0.7, 0.06, c), -0.52 + i * 0.35, 1.55, 0.1))
+  })
+  return g
+}
+
+// ── Trail-island station builders ──
+// Same { group, pre, post, colliders } contract as the ring builders. Colliders
+// sit only on persistent (always-visible) group props, never on pre/post-only
+// pieces — so restoring a station never leaves an invisible wall behind.
+
+function buildConservation() {
+  const group = new THREE.Group()
+  const pre = new THREE.Group()
+  const post = new THREE.Group()
+
+  // a thin stream across the back with low banks (persistent)
+  const stream = new THREE.Mesh(
+    new THREE.PlaneGeometry(13, 2.2),
+    new THREE.MeshPhongMaterial({ color: C.water, shininess: 80, transparent: true, opacity: 0.85 })
+  )
+  stream.rotation.x = -Math.PI / 2
+  stream.position.set(0, 0.07, -4.2)
+  group.add(stream)
+  group.userData.water = stream
+  const walkables = [
+    place(box(13, 0.24, 0.5, C.soilRidge), 0, 0.12, -3.0),
+    place(box(13, 0.24, 0.5, C.soilRidge), 0, 0.12, -5.4),
+  ]
+  walkables.forEach(m => group.add(m))
+
+  // pre: eroded gully + bare soil + a rusty tile outlet dumping to the stream
+  pre.add(place(flatDisc(2.4, C.soilPale, 12), -1.5, 0.05, 1.5))
+  const gully = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 5), mat(C.dirtDark))
+  gully.rotation.x = -Math.PI / 2
+  gully.position.set(1.5, 0.05, -0.8)
+  pre.add(gully)
+  pre.add(place(makeRock(0.7), 3.2, 0, 0.5))
+  pre.add(place(makeRock(0.5), -3.4, 0, -0.6))
+  const outlet = cyl(0.28, 0.28, 1.2, C.rust, 8)
+  outlet.rotation.x = Math.PI / 2
+  pre.add(place(outlet, 1.5, 0.35, -2.7))
+
+  // post: banded contour prairie strips (tallgrass + buffer + wildflowers)
+  ;[2.6, 0.9, -0.8].forEach((z, bi) => {
+    const tall = [], midg = []
+    for (let i = 0; i < 14; i++) {
+      const x = -6 + i * 0.92 + rand(-0.15, 0.15)
+      ;(i % 2 === 0 ? tall : midg).push({ x, y: 0.6, z: z + rand(-0.3, 0.3), s: rand(0.8, 1.15), ry: rand(0, Math.PI) })
+    }
+    post.add(instanced(new THREE.ConeGeometry(0.16, 1.5, 5), C.prairieGold, tall))
+    post.add(instanced(new THREE.ConeGeometry(0.2, 1.0, 5), C.bufferGreen, midg))
+    const fl = []
+    for (let i = 0; i < 6; i++) fl.push({ x: -5.5 + rand(0, 11), y: 0.75, z: z + rand(-0.3, 0.3), s: rand(0.7, 1.1) })
+    post.add(instanced(new THREE.SphereGeometry(0.12, 6, 5), bi % 2 ? C.flowerPink : C.flowerWhite, fl))
+  })
+  // riparian buffer trees lining the stream
+  ;[-5, -1.5, 2, 5].forEach((x, i) => {
+    post.add(place(i % 2 ? makeTree(rand(0.85, 1.05), C.foliage[2]) : makePine(rand(0.85, 1.05)), x, 0, -3.6 + rand(-0.3, 0.3)))
+  })
+
+  group.add(pre, post)
+  return { group, pre, post, colliders: [], walkables }
+}
+
+function buildPhosphorus() {
+  const group = new THREE.Group()
+  const pre = new THREE.Group()
+  const post = new THREE.Group()
+
+  // catch pond that collects field runoff (persistent)
+  const water = new THREE.Mesh(
+    new THREE.CircleGeometry(3.4, 24),
+    new THREE.MeshPhongMaterial({ color: C.water, shininess: 90, transparent: true, opacity: 0.85 })
+  )
+  water.rotation.x = -Math.PI / 2
+  water.position.set(0, 0.08, -3.2)
+  group.add(water)
+  group.userData.water = water
+  const bank = new THREE.Mesh(new THREE.RingGeometry(3.4, 4.2, 24), mat(C.path))
+  bank.rotation.x = -Math.PI / 2
+  bank.position.set(0, 0.06, -3.2)
+  bank.receiveShadow = true
+  group.add(bank)
+  // the field above the pond (soil bed with rows — standable)
+  const walkables = [place(box(11, 0.3, 6, C.soil), 0, 0.15, 3.0)]
+  for (let i = -2; i <= 2; i++) walkables.push(place(box(10.5, 0.32, 0.5, C.soilRidge), 0, 0.34, 3.0 + i * 1.1))
+  walkables.forEach(m => group.add(m))
+
+  // pre: algae-choked green water + a bare runoff channel + a dead tree
+  const algae = new THREE.Mesh(
+    new THREE.CircleGeometry(3.2, 20),
+    new THREE.MeshBasicMaterial({ color: C.algae, transparent: true, opacity: 0.85 })
+  )
+  algae.rotation.x = -Math.PI / 2
+  algae.position.set(0, 0.11, -3.2)
+  pre.add(algae)
+  const channel = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 4.5), mat(C.soilPale))
+  channel.rotation.x = -Math.PI / 2
+  channel.position.set(0, 0.34, 0.4)
+  pre.add(channel)
+  pre.add(place(makeDeadTree(), -3.8, 0, 0.2))
+
+  // post: clear water + cattail ring + a vegetated buffer + a 4R sign
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2
+    post.add(place(makeCattail(), Math.cos(a) * 3.7, 0, -3.2 + Math.sin(a) * 3.7))
+  }
+  const buf = []
+  for (let i = 0; i < 22; i++) buf.push({ x: -5 + rand(0, 10), y: 0.4, z: -0.4 + rand(-0.5, 0.5), s: rand(0.7, 1.1), ry: rand(0, Math.PI) })
+  post.add(instanced(new THREE.ConeGeometry(0.16, 0.9, 5), C.bufferGreen, buf))
+  const fl = []
+  for (let i = 0; i < 10; i++) fl.push({ x: -5 + rand(0, 10), y: 0.6, z: -0.4 + rand(-0.5, 0.5), s: rand(0.7, 1.1) })
+  post.add(instanced(new THREE.SphereGeometry(0.12, 6, 5), C.flowerYellow, fl))
+  post.add(place(make4RSign(), 4.2, 0, -0.6, -0.5))
+  post.add(place(flatDisc(0.4, C.foliage[1], 8), 1.2, 0.1, -3.6))
+  post.add(place(flatDisc(0.3, C.foliage[0], 8), -1.0, 0.1, -2.6))
+  // the field itself greens up too: healthy crop rows along the ridges
+  const cropA = [], cropB = []
+  for (let row = -2; row <= 2; row++) {
+    for (let i = 0; i < 7; i++) {
+      const tr = { x: -4.5 + i * 1.5 + rand(-0.2, 0.2), y: 1.0, z: 3.0 + row * 1.1, s: rand(0.8, 1.15), ry: rand(0, Math.PI) }
+      ;(row % 2 === 0 ? cropA : cropB).push(tr)
+    }
+  }
+  post.add(instanced(new THREE.ConeGeometry(0.3, 1.2, 6), C.foliage[0], cropA))
+  post.add(instanced(new THREE.ConeGeometry(0.3, 1.2, 6), C.foliage[1], cropB))
+
+  group.add(pre, post)
+  return { group, pre, post, colliders: [{ x: 0, z: -3.2, r: 3.0 }], walkables }
+}
+
+function buildSoilArt() {
+  const group = new THREE.Group()
+  const pre = new THREE.Group()
+  const post = new THREE.Group()
+
+  // paved plaza floor (persistent)
+  group.add(place(flatDisc(4.6, C.adobe, 24), 0, 0.04, 0))
+
+  // pre: a blank weathered earthen wall + empty pots + dull ground
+  pre.add(place(box(4.6, 2.2, 0.5, C.soilPale), 0, 1.1, -3.4))
+  ;[-1.4, 0, 1.4].forEach(x => pre.add(place(cyl(0.35, 0.28, 0.5, C.pottery, 8), x, 0.25, 2.4)))
+
+  // post: adobe archway + painted pigment panels + polished vessels + terra
+  // preta + geoglyphs + a mosaic tile ring — the full earth-pigment palette
+  // (yellow/red/brown ochre, chalk white, charcoal black)
+  const arch = new THREE.Group()
+  ;[-1.9, 1.9].forEach(x => arch.add(place(box(0.7, 3.0, 0.7, C.adobe), x, 1.5, 0)))
+  arch.add(place(box(4.5, 0.7, 0.7, C.adobe), 0, 3.2, 0))
+  // pennant string swinging under the crossbar, alternating pigment colors
+  arch.add(place(box(3.4, 0.03, 0.03, C.trunk), 0, 2.82, 0.1))
+  ;[C.ochreY, C.ochreR, C.salt, C.charcoal, C.ochreY].forEach((c, i) => {
+    arch.add(place(box(0.22, 0.32, 0.04, c), -1.3 + i * 0.65, 2.62, 0.1))
+  })
+  place(arch, 0, 0, -3.2)
+  post.add(arch)
+  // pigment panel gallery — seven panels, varied heights
+  ;[C.ochreY, C.ochreR, C.salt, C.ochreBrown, C.charcoal, C.ochreR, C.ochreY].forEach((c, i) => {
+    const h = i % 2 === 0 ? 1.5 : 1.2
+    post.add(place(box(0.62, h, 0.18, c), -2.25 + i * 0.75, h / 2 + 0.15, -2.4))
+  })
+  post.add(place(sph(0.4, C.soilRich, 10), -1.6, 0.4, 1.6)) // dorodango (polished dark ball)
+  // onggi vessel + striped painted pots
+  post.add(place(cyl(0.5, 0.35, 0.9, C.pottery, 10), 1.4, 0.45, 1.8))
+  post.add(place(cyl(0.51, 0.42, 0.16, C.ochreY, 10), 1.4, 0.62, 1.8)) // painted band
+  post.add(place(cyl(0.3, 0.24, 0.55, C.pottery, 9), 2.2, 0.28, 1.2))
+  post.add(place(cyl(0.31, 0.27, 0.1, C.salt, 9), 2.2, 0.38, 1.2))
+  post.add(place(sph(0.3, C.ochreR, 9), 0.2, 0.3, 2.2))
+  // terra preta bed (dark fertile soil + sprouts)
+  post.add(place(box(2.4, 0.3, 1.0, C.soilRich), 0, 0.15, 3.4))
+  for (let i = 0; i < 5; i++) post.add(place(cone(0.12, 0.5, C.foliage[0], 5), -0.9 + i * 0.45, 0.4, 3.4))
+  // a Nazca-style spiral geoglyph scratched into the plaza
+  for (let i = 0; i < 5; i++) {
+    const rr = 0.6 + i * 0.32
+    const glyph = new THREE.Mesh(new THREE.RingGeometry(rr, rr + 0.06, 22, 1, 0, Math.PI * 1.6), mat(C.salt))
+    glyph.rotation.x = -Math.PI / 2
+    glyph.rotation.z = i * 0.5
+    glyph.position.set(0, 0.06, 0.2)
+    post.add(glyph)
+  }
+  // second geoglyph: concentric ochre rings with a charcoal center dot
+  ;[0.35, 0.7].forEach(rr => {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(rr, rr + 0.07, 20), mat(C.ochreR))
+    ring.rotation.x = -Math.PI / 2
+    ring.position.set(2.6, 0.06, -0.4)
+    post.add(ring)
+  })
+  post.add(place(flatDisc(0.14, C.charcoal, 10), 2.6, 0.06, -0.4))
+  // mosaic tile ring inlaid around the plaza rim, colors alternating
+  const tileColors = [C.ochreR, C.salt, C.ochreY]
+  const tileT = tileColors.map(() => [])
+  const TILE_N = 21
+  for (let i = 0; i < TILE_N; i++) {
+    const a = (i / TILE_N) * Math.PI * 2
+    tileT[i % 3].push({ x: Math.cos(a) * 4.05, y: 0.07, z: Math.sin(a) * 4.05, ry: -a + Math.PI / 2 })
+  }
+  tileColors.forEach((c, ci) => {
+    const tiles = instanced(new THREE.BoxGeometry(0.55, 0.05, 0.32), c, tileT[ci])
+    tiles.castShadow = false
+    post.add(tiles)
+  })
+
+  group.add(pre, post)
+  // no colliders: the pre wall and post archway swap at the same spot, and a
+  // circle there would block walking under the restored arch
+  return { group, pre, post, colliders: [] }
+}
+
+function buildResearch() {
+  const group = new THREE.Group()
+  const pre = new THREE.Group()
+  const post = new THREE.Group()
+
+  // research field lab cabin (persistent)
+  const cabin = new THREE.Group()
+  cabin.add(place(box(4.0, 2.4, 3.0, C.labWall), 0, 1.2, 0))
+  const roof = box(2.4, 2.4, 3.3, C.roof)
+  roof.rotation.z = Math.PI / 4
+  roof.scale.y = 0.8
+  cabin.add(place(roof, 0, 2.4, 0))
+  cabin.add(place(box(0.9, 1.5, 0.12, C.trunk), 0, 0.95, 1.52)) // door
+  cabin.add(place(box(1.0, 0.8, 0.12, C.glass, { transparent: true, opacity: 0.5 }), -1.2, 1.5, 1.52))
+  place(cabin, 0, 0, -3.4)
+  group.add(cabin)
+
+  // gridded research plots (persistent low beds — standable)
+  const beds = []
+  const walkables = []
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+    const bx = -3 + c * 3, bz = 1.2 + r * 2.0
+    const bed = place(box(2.4, 0.24, 1.5, C.soil), bx, 0.12, bz)
+    group.add(bed)
+    walkables.push(bed)
+    beds.push([bx, bz])
+  }
+
+  // pre: leaning "closed" sign + weeds + a broken instrument
+  const lean = makeSign()
+  lean.scale.setScalar(0.7)
+  lean.rotation.z = 0.25
+  place(lean, 3.4, 0, -1.4, -0.5)
+  pre.add(lean)
+  const broken = place(cyl(0.1, 0.1, 1.4, C.rust, 6), -3.6, 0.5, -1.4)
+  broken.rotation.z = 0.5
+  pre.add(broken)
+  const weedT = []
+  beds.forEach(([bx, bz]) => { for (let i = 0; i < 4; i++) weedT.push({ x: bx + rand(-0.9, 0.9), y: 0.4, z: bz + rand(-0.5, 0.5), s: rand(0.6, 1) }) })
+  pre.add(instanced(new THREE.ConeGeometry(0.12, 0.5, 5), C.stubble, weedT))
+
+  // post: planted plots + colored trial flags + a GPS mast + a soil auger
+  beds.forEach(([bx, bz], i) => {
+    post.add(place(makeCorn(), bx - 0.6, 0.28, bz))
+    post.add(place(makeCorn(), bx + 0.6, 0.28, bz))
+    const flag = new THREE.Group()
+    flag.add(place(cyl(0.03, 0.03, 0.8, C.trim, 5), 0, 0.4, 0))
+    flag.add(place(box(0.3, 0.2, 0.02, [C.beacon, C.flowerYellow, C.sensorOrange][i % 3]), 0.16, 0.7, 0))
+    post.add(place(flag, bx + 0.95, 0, bz - 0.55))
+  })
+  const mast = new THREE.Group()
+  mast.add(place(cyl(0.1, 0.14, 3.2, C.metal, 7), 0, 1.6, 0))
+  mast.add(place(box(0.7, 0.12, 0.7, C.solar), 0, 3.3, 0))
+  mast.add(place(sph(0.16, C.beacon, 8), 0, 3.55, 0))
+  place(mast, 3.6, 0, 1.4)
+  post.add(mast)
+  const auger = new THREE.Group()
+  auger.add(place(cyl(0.04, 0.04, 2.0, C.metal, 6), 0, 1.0, 0))
+  auger.add(place(box(0.5, 0.06, 0.06, C.trunk), 0, 1.95, 0)) // T-handle
+  auger.add(place(new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.02, 0.5, 8), mat(C.metal)), 0, 0.15, 0))
+  auger.rotation.z = 0.25
+  place(auger, -3.5, 0, 0.4)
+  post.add(auger)
+
+  group.add(pre, post)
+  // cabin only — the GPS mast lives in `post`, and a collider on a
+  // not-yet-visible prop would read as an invisible wall
+  return { group, pre, post, colliders: [{ x: 0, z: -3.4, r: 2.4 }], walkables }
+}
+
+function buildSalinity() {
+  const group = new THREE.Group()
+  const pre = new THREE.Group()
+  const post = new THREE.Group()
+
+  // the field the rig monitors (persistent, standable)
+  const field = place(box(9, 0.3, 6, C.soil), 0, 0.15, 1.5)
+  group.add(field)
+  const walkables = [field]
+
+  // pre: salt-crusted barren patches + stunted crops + a broken sensor pole
+  ;[[-2, 1.5, 1.6], [1.5, 2.5, 1.3], [2.5, 0.5, 1.0]].forEach(([x, z, r]) => pre.add(place(flatDisc(r, C.salt, 12), x, 0.32, z)))
+  const stunt = []
+  for (let i = 0; i < 14; i++) stunt.push({ x: -3.5 + rand(0, 7), y: 0.4, z: rand(-1.5, 2.5), s: rand(0.4, 0.7) })
+  pre.add(instanced(new THREE.ConeGeometry(0.14, 0.5, 5), C.stubble, stunt))
+  const brokenPole = place(cyl(0.09, 0.09, 1.6, C.metal, 6), -3.4, 0.6, -1.6)
+  brokenPole.rotation.z = 0.6
+  pre.add(brokenPole)
+
+  // post: EMI sensor sled + data mast (solar panel + spinning anemometer) +
+  // gypsum remediation piles + recovering green crops
+  const sled = new THREE.Group()
+  sled.add(place(box(2.6, 0.16, 0.8, C.metal), 0, 0.2, 0)) // skid deck
+  ;[-1.0, 1.0].forEach(x => sled.add(place(box(0.12, 0.16, 1.0, C.wheel), x, 0.08, 0))) // runners
+  sled.add(place(box(1.4, 0.5, 0.6, C.sensorOrange), 0, 0.5, 0)) // coil/instrument box
+  sled.add(place(cyl(0.04, 0.04, 1.2, C.metal, 5), 1.2, 0.3, 0.7)) // tow bar
+  place(sled, -1.5, 0, 3.4, 0.3)
+  post.add(sled)
+  const rig = new THREE.Group()
+  rig.add(place(cyl(0.09, 0.12, 3.4, C.metal, 7), 0, 1.7, 0))
+  const panel = place(box(1.0, 0.08, 0.7, C.solar), 0.5, 3.0, 0)
+  panel.rotation.z = 0.35
+  rig.add(panel)
+  const rotor = new THREE.Group()
+  rotor.position.set(0, 3.5, 0)
+  for (let i = 0; i < 3; i++) {
+    const holder = new THREE.Group()
+    holder.rotation.y = (i * Math.PI * 2) / 3
+    holder.add(place(box(0.5, 0.04, 0.04, C.trim), 0, 0, 0))
+    holder.add(place(sph(0.1, C.trim, 6), 0.28, 0, 0))
+    rotor.add(holder)
+  }
+  rig.add(rotor)
+  rig.userData.rotor = rotor
+  place(rig, 3.0, 0, -0.5)
+  post.add(rig)
+  group.userData.anemometer = rig
+  ;[[-3.2, 2.5], [3.2, 2.8]].forEach(([x, z]) => post.add(place(cone(0.6, 0.7, C.gypsum, 7), x, 0.35, z)))
+  const crop = []
+  for (let i = 0; i < 16; i++) crop.push({ x: -3.5 + rand(0, 7), y: 0.5, z: rand(-1.5, 2.5), s: rand(0.8, 1.15) })
+  post.add(instanced(new THREE.ConeGeometry(0.18, 0.9, 6), C.foliage[0], crop))
+
+  group.add(pre, post)
+  // the sensor rig lives in `post` — no collider until it's actually visible
+  // (a thin pole is fine to pass through; matches the pre/post contract)
+  return { group, pre, post, colliders: [], walkables }
+}
+
 // ─── Layout ───
-// Stations sit on a ring of radius 26; rot turns each toward the island hub.
+// The original stations sit on a ring of radius 26; rot turns each toward the
+// island hub. Trail-island stations are placed explicitly (see below).
 
 const STATION_R = 26
+
+// ── Second island (trail island) geometry ──
+// A sibling island to the southwest (heading 235° — the mid-gap between the
+// heritage and farmstead stations), reached by a walkable bridge. Its five
+// stations follow a winding trail instead of a ring.
+const NEW_ISLAND_DIST = 78
+const NEW_ISLAND_R = 30
+const NEW_ISLAND_CLAMP_R = 26
+const NH = (235 * Math.PI) / 180
+const NC = { x: Math.cos(NH) * NEW_ISLAND_DIST, z: Math.sin(NH) * NEW_ISLAND_DIST }
+// local frame on the new island: NU points back toward the main island (the
+// bridge landing); NPERP is 90° from it. Stations are authored in this frame.
+const NU = { x: -Math.cos(NH), z: -Math.sin(NH) }
+const NPERP = { x: -NU.z, z: NU.x }
+function trailPoint(a, s) {
+  return { x: NC.x + NU.x * a + NPERP.x * s, z: NC.z + NU.z * a + NPERP.z * s }
+}
+// each: a = distance along NU (positive = toward the main island),
+// s = station center's perpendicular offset from the island spine,
+// wp = where the trail itself winds at that point,
+// as = the beacon/anchor offset — just past the path edge on the station's
+// side, so beacons sit beside the trail instead of on it
+// (beacon ring reaches ~1.35 from its anchor and the planks are 2.6 wide, so
+// |as| − |wp| ≥ 2.7 keeps the ring fully beside the path, and |s| − |as| ≥ 6.5
+// keeps it clear of the station geometry it fronts)
+const TRAIL_STATIONS = [
+  // conservation is the widest build (13-unit stream + strip rows along the
+  // spine), so it sits closer in than the others — at s 13 its stream jutted
+  // past the island rim
+  { id: 'conservation-practices', a: 16, s: 10.5, wp: 2, as: 5.2 },
+  { id: 'phosphorus', a: 8, s: -13, wp: -2, as: -5.2 },
+  { id: 'soil-art-culture', a: -2, s: 13, wp: 2, as: 5.2 },
+  { id: 'agronomy-careers', a: -11, s: -13, wp: -2, as: -5.2 },
+  { id: 'electrical-conductivity', a: -19, s: 10.5, wp: 1.2, as: 4.2 },
+]
+
 const STATION_LAYOUT = {
   'crop-field': { angle: 0 },
   pond: { angle: 51.4 },
@@ -968,6 +1435,35 @@ const STATION_LAYOUT = {
   heritage: { angle: 205.7 },
   farmstead: { angle: 257.1 },
   'soil-pit': { angle: 308.6 },
+}
+TRAIL_STATIONS.forEach(ts => {
+  const pos = trailPoint(ts.a, ts.s)
+  const anchor = trailPoint(ts.a, ts.as)
+  const rot = Math.atan2(anchor.x - pos.x, anchor.z - pos.z) // local +z faces the approach
+  STATION_LAYOUT[ts.id] = { trail: true, x: pos.x, z: pos.z, rot, anchor }
+})
+
+// The trail spine: bridge landing → a winding point beside each station →
+// tail. Rendered as plank segments (walkable) and reused as the NPC patrol
+// path on this island. Deliberately NOT through the anchors: beacons sit just
+// off the path edge on each station's side.
+const TRAIL_WAYPOINTS = [
+  trailPoint(31, 0),
+  ...TRAIL_STATIONS.map(ts => trailPoint(ts.a, ts.wp)),
+  trailPoint(-25, 0),
+]
+
+// NPC patrol routes (absolute world coords). Kept here — not in the NPC data
+// file — so the content stays coordinate-free. Old-island loops sit in the gaps
+// between the ring stations; the trail loops follow the plank waypoints so the
+// NPCs stay on the path.
+const NPC_ROUTES = {
+  hubLoop: [{ x: 10.0, z: 4.6 }, { x: -6.8, z: 8.7 }, { x: -6.9, z: -8.5 }, { x: 9.9, z: -4.8 }],
+  oldOuter: [{ x: 3.6, z: 15.6 }, { x: -16, z: 0 }, { x: 3.6, z: -15.6 }, { x: 14.5, z: 6.8 }],
+  // beside the trail, deliberately off the station anchors so an idling NPC
+  // doesn't stand inside a beacon ring
+  trailNear: [trailPoint(27, -3), trailPoint(21, -5), trailPoint(13, 3.5), trailPoint(4, -4.5)],
+  trailFar: [trailPoint(0, -3.5), trailPoint(-7, 4), trailPoint(-15, -4), trailPoint(-22, -1)],
 }
 
 const BUILDERS = {
@@ -978,13 +1474,70 @@ const BUILDERS = {
   heritage: buildHeritage,
   farmstead: buildFarmstead,
   'soil-pit': buildSoilPit,
+  'conservation-practices': buildConservation,
+  phosphorus: buildPhosphorus,
+  'soil-art-culture': buildSoilArt,
+  'agronomy-careers': buildResearch,
+  'electrical-conductivity': buildSalinity,
 }
 
 const ISLAND_R = 40
 const PLAYER_CLAMP_R = 36
 const PLAYER_R = 1.0
+const NPC_BLOCK_R = 0.6 // NPC personal-space radius for player push-out
 const SPEED = 10
 const INTERACT_R = 6.2
+// Talking needs you right next to the person (beacons trigger from further
+// away) — also keeps a wandering NPC from stealing a station's prompt
+const NPC_TALK_R = 3.4
+
+// Player-walkable regions: the two islands (circles) + the bridge corridor
+// (capsule between endpoints that overlap each island circle). Movement is
+// clamped to the union of these. Away from the bridge only the main-island
+// circle can match, so old-island movement is identical to the single-circle
+// clamp it replaces.
+const BRIDGE_A = { x: Math.cos(NH) * 30, z: Math.sin(NH) * 30 }
+const BRIDGE_B = { x: Math.cos(NH) * 56, z: Math.sin(NH) * 56 }
+const REGIONS = [
+  { type: 'circle', x: 0, z: 0, r: PLAYER_CLAMP_R },
+  { type: 'circle', x: NC.x, z: NC.z, r: NEW_ISLAND_CLAMP_R },
+  { type: 'capsule', ax: BRIDGE_A.x, az: BRIDGE_A.z, bx: BRIDGE_B.x, bz: BRIDGE_B.z, r: 3.5 },
+]
+function closestOnSegment(px, pz, ax, az, bx, bz) {
+  const dx = bx - ax, dz = bz - az
+  const len2 = dx * dx + dz * dz
+  let t = len2 > 0 ? ((px - ax) * dx + (pz - az) * dz) / len2 : 0
+  t = Math.max(0, Math.min(1, t))
+  return { x: ax + dx * t, z: az + dz * t }
+}
+// NOTE: inputs are always within one movement step (or a small collider
+// push-out) of a point already inside a region, so the projection below only
+// ever moves a point a comparable small distance. Far-outside points would
+// snap across region seams — but they can't occur in gameplay.
+function clampToRegions(x, z) {
+  for (const rg of REGIONS) {
+    if (rg.type === 'circle') {
+      if (Math.hypot(x - rg.x, z - rg.z) <= rg.r) return { x, z }
+    } else {
+      const c = closestOnSegment(x, z, rg.ax, rg.az, rg.bx, rg.bz)
+      if (Math.hypot(x - c.x, z - c.z) <= rg.r) return { x, z }
+    }
+  }
+  // outside every region → project onto the nearest region boundary
+  let best = { x, z }, bestD = Infinity
+  for (const rg of REGIONS) {
+    let cx, cz
+    if (rg.type === 'circle') { cx = rg.x; cz = rg.z } else {
+      const c = closestOnSegment(x, z, rg.ax, rg.az, rg.bx, rg.bz); cx = c.x; cz = c.z
+    }
+    const d = Math.hypot(x - cx, z - cz)
+    if (d < 0.0001) continue
+    const proj = { x: cx + ((x - cx) / d) * rg.r, z: cz + ((z - cz) / d) * rg.r }
+    const pd = Math.hypot(x - proj.x, z - proj.z)
+    if (pd < bestD) { bestD = pd; best = proj }
+  }
+  return best
+}
 // Default follow-camera orbit (equivalent to the old fixed offset
 // (0, 7.8, 11.4)). Yaw 0 = behind the player. The player can drag to orbit,
 // wheel/pinch to zoom, and reset via the ⊙ topbar button.
@@ -1010,13 +1563,13 @@ const easeOutBack = t => {
  * @param {HTMLElement} opts.host — container the canvas is appended to
  * @param {string[]} opts.stationIds — station ids to mount (from content file)
  * @param {() => {x:number, y:number}} opts.getInput — normalized input vector
- * @param {(id: string|null) => void} opts.onNearStation — nearest station in
- *   interact range changed (null = none)
+ * @param {(target: {type:'station'|'npc', id:string}|null) => void} opts.onNearTarget
+ *   — nearest interactable (uncompleted station or NPC) in range changed
  * @param {() => void} [opts.onDisposed]
  * @returns {{ dispose, upgradeStation, setMovementEnabled, resetCamera,
  *   applyLook, getDollCharacter, setCustomizeFocus, setTimeOfDay }}
  */
-export function createFarmWorld({ host, stationIds, getInput, onNearStation, onDisposed }) {
+export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDisposed }) {
   // ── Renderer / scene / camera ──
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75))
@@ -1041,6 +1594,8 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   let camDist = CAM_DIST
   let camSaved = null // stashed orbit while the customizer holds the camera
   let customizeFocus = false // frames the player beside the customizer panel
+  let talkingNpc = null // npc record mid-conversation — camera frames the pair
+  let talkSaved = null // stashed orbit while a conversation holds the camera
 
   const canvas = renderer.domElement
   const dragPts = new Map()
@@ -1103,6 +1658,11 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   sun.shadow.camera.updateProjectionMatrix()
   sun.shadow.bias = -0.0004
   scene.add(sun)
+  scene.add(sun.target)
+  // the sun's offset from its target — kept constant so the light direction
+  // never changes; only the shadow frustum re-centers under the player each
+  // frame (so shadows work on the far island without enlarging the map)
+  const SUN_OFFSET = sun.position.clone()
 
   // ── Island ──
   const grassTop = cyl(ISLAND_R, ISLAND_R, 1.4, C.grass, 44)
@@ -1115,6 +1675,18 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   const bottomCap = cyl(ISLAND_R * 0.76, ISLAND_R * 0.55, 3, C.sandDark, 44)
   bottomCap.position.y = -11.9
   scene.add(bottomCap)
+
+  // second island (trail island) — same three-layer profile as the main island
+  const nGrass = cyl(NEW_ISLAND_R, NEW_ISLAND_R, 1.4, C.grass, 40)
+  nGrass.position.set(NC.x, -0.7, NC.z)
+  nGrass.receiveShadow = true
+  scene.add(nGrass)
+  const nDirt = cyl(NEW_ISLAND_R, NEW_ISLAND_R * 0.76, 9, C.sand, 40)
+  nDirt.position.set(NC.x, -5.9, NC.z)
+  scene.add(nDirt)
+  const nCap = cyl(NEW_ISLAND_R * 0.76, NEW_ISLAND_R * 0.55, 3, C.sandDark, 40)
+  nCap.position.set(NC.x, -11.9, NC.z)
+  scene.add(nCap)
 
   // the sea — a huge unlit disc far below. fog: false keeps it solid blue all
   // the way out, so the horizon is a crisp sea-meets-sky line like the
@@ -1173,34 +1745,42 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     const builder = BUILDERS[id]
     if (!layout || !builder) return
 
-    const a = (layout.angle * Math.PI) / 180
-    const x = Math.cos(a) * STATION_R
-    const z = Math.sin(a) * STATION_R
-    const rot = -a - Math.PI / 2 // local +z faces the island hub
+    let x, z, rot, anchor
+    if (layout.trail) {
+      x = layout.x; z = layout.z; rot = layout.rot; anchor = layout.anchor
+    } else {
+      const a = (layout.angle * Math.PI) / 180
+      x = Math.cos(a) * STATION_R
+      z = Math.sin(a) * STATION_R
+      rot = -a - Math.PI / 2 // local +z faces the island hub
+      anchor = { x: Math.cos(a) * (STATION_R - 6), z: Math.sin(a) * (STATION_R - 6) }
+    }
 
     const built = builder()
     place(built.group, x, 0, z, rot)
     built.post.scale.setScalar(0.001)
     scene.add(built.group)
 
-    // path from plaza to station
-    const pathLen = STATION_R - 9
-    const px = Math.cos(a) * (4.5 + pathLen / 2)
-    const pz = Math.sin(a) * (4.5 + pathLen / 2)
-    const path = box(2.4, 0.1, pathLen, C.path)
-    path.castShadow = false
-    path.receiveShadow = true
-    place(path, px, 0.05, pz, -a + Math.PI / 2)
-    scene.add(path)
-    walkables.push(path)
+    // ring stations get a radial sidewalk from the plaza; trail stations share
+    // the winding trail path (built once, below) instead
+    if (!layout.trail) {
+      const a = (layout.angle * Math.PI) / 180
+      const pathLen = STATION_R - 9
+      const px = Math.cos(a) * (4.5 + pathLen / 2)
+      const pz = Math.sin(a) * (4.5 + pathLen / 2)
+      const path = box(2.4, 0.1, pathLen, C.path)
+      path.castShadow = false
+      path.receiveShadow = true
+      place(path, px, 0.05, pz, -a + Math.PI / 2)
+      scene.add(path)
+      walkables.push(path)
+    }
     if (built.walkables) walkables.push(...built.walkables)
     if (built.group.userData.cows) cowColliders.push(...built.group.userData.cows)
 
     // beacon on the path, just before the station
-    const bx = Math.cos(a) * (STATION_R - 6)
-    const bz = Math.sin(a) * (STATION_R - 6)
     const beacon = makeBeacon()
-    place(beacon, bx, 0, bz)
+    place(beacon, anchor.x, 0, anchor.z)
     scene.add(beacon)
 
     // transform local colliders to world space
@@ -1210,80 +1790,167 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
       colliders.push({ x: x + c.x * cos + c.z * sin, z: z - c.x * sin + c.z * cos, r: c.r })
     })
 
-    const station = { id, ...built, beacon, anchor: { x: bx, z: bz }, completed: false }
+    const station = { id, ...built, beacon, anchor, completed: false }
     stations[id] = station
     stationList.push(station)
   })
 
+  // ── Bridge (walkable boardwalk between the two islands) ──
+  const bridgeRy = -NH + Math.PI / 2
+  const bridgeMid = { x: Math.cos(NH) * 44, z: Math.sin(NH) * 44 }
+  const BRIDGE_LEN = 22
+  const deck = box(7.4, 0.22, BRIDGE_LEN, C.trunk)
+  deck.castShadow = false
+  deck.receiveShadow = true
+  place(deck, bridgeMid.x, 0.0, bridgeMid.z, bridgeRy) // top ≈ 0.11, matches paths
+  scene.add(deck)
+  walkables.push(deck)
+  // plank battens across the deck for texture
+  const battenT = []
+  for (let i = 0; i < 14; i++) battenT.push({ x: 0, y: 0.12, z: -BRIDGE_LEN / 2 + 0.9 + i * 1.6 })
+  const battens = new THREE.InstancedMesh(new THREE.BoxGeometry(7.2, 0.05, 0.25), mat(0x8a6a4a), battenT.length)
+  {
+    const d = new THREE.Object3D()
+    battenT.forEach((tr, i) => { d.position.set(tr.x, tr.y, tr.z); d.updateMatrix(); battens.setMatrixAt(i, d.matrix) })
+  }
+  battens.castShadow = false
+  const bridgeDeckGroup = new THREE.Group()
+  place(bridgeDeckGroup, bridgeMid.x, 0.0, bridgeMid.z, bridgeRy)
+  bridgeDeckGroup.add(battens)
+  scene.add(bridgeDeckGroup)
+  // low railings + support posts (decorative; the clamp keeps the player on deck)
+  const railPostT = [], underPostT = []
+  for (let i = 0; i <= 8; i++) {
+    const lz = -BRIDGE_LEN / 2 + i * (BRIDGE_LEN / 8)
+    ;[-3.5, 3.5].forEach(lx => {
+      railPostT.push({ x: lx, y: 0.55, z: lz })
+      underPostT.push({ x: lx, y: -6.5, z: lz })
+    })
+  }
+  const railPosts = new THREE.InstancedMesh(new THREE.BoxGeometry(0.16, 0.9, 0.16), mat(C.trunk), railPostT.length)
+  const underPosts = new THREE.InstancedMesh(new THREE.BoxGeometry(0.22, 13, 0.22), mat(C.deadwood), underPostT.length)
+  {
+    const d = new THREE.Object3D()
+    railPostT.forEach((tr, i) => { d.position.set(tr.x, tr.y, tr.z); d.updateMatrix(); railPosts.setMatrixAt(i, d.matrix) })
+    underPostT.forEach((tr, i) => { d.position.set(tr.x, tr.y, tr.z); d.updateMatrix(); underPosts.setMatrixAt(i, d.matrix) })
+  }
+  railPosts.castShadow = false
+  underPosts.castShadow = false
+  bridgeDeckGroup.add(railPosts, underPosts)
+  ;[-3.5, 3.5].forEach(lx => {
+    const rail = box(0.1, 0.1, BRIDGE_LEN, C.trunk)
+    rail.castShadow = false
+    place(rail, lx, 0.95, 0)
+    bridgeDeckGroup.add(rail)
+  })
+
+  // ── Trail (winding walkable path across the new island) ──
+  for (let i = 0; i < TRAIL_WAYPOINTS.length - 1; i++) {
+    const p1 = TRAIL_WAYPOINTS[i]
+    const p2 = TRAIL_WAYPOINTS[i + 1]
+    const dx = p2.x - p1.x, dz = p2.z - p1.z
+    const len = Math.hypot(dx, dz)
+    const plank = box(2.6, 0.1, len + 0.7, C.path)
+    plank.castShadow = false
+    plank.receiveShadow = true
+    place(plank, (p1.x + p2.x) / 2, 0.05, (p1.z + p2.z) / 2, Math.atan2(dx, dz))
+    scene.add(plank)
+    walkables.push(plank)
+  }
+
+  // ── Landmark: rainbow tree at the trail's end ──
+  const rtPos = trailPoint(-27.5, 0)
+  const rainbowTree = makeRainbowTree()
+  place(rainbowTree, rtPos.x, 0, rtPos.z, rand(0, Math.PI * 2))
+  scene.add(rainbowTree)
+  colliders.push({ x: rtPos.x, z: rtPos.z, r: 1.4 })
+
   // ── Decorations ──
-  const perimeterTrees = []
-  for (let i = 0; i < 11; i++) {
-    const a = (i / 11) * Math.PI * 2 + 0.28 // offset so trees fall between stations
-    const r = rand(32.5, 36.5)
-    const x = Math.cos(a) * r
-    const z = Math.sin(a) * r
-    // skip spots too close to a station cluster
-    if (stationList.some(s => Math.hypot(s.group.position.x - x, s.group.position.z - z) < 9)) continue
-    // every other broadleaf gets a candy accent color (orange/pink/yellow)
-    const tree = i % 3 === 0
-      ? makePine(rand(0.85, 1.25))
-      : makeTree(rand(0.85, 1.3), i % 2 === 0 ? pick(C.accentFoliage) : null)
-    place(tree, x, 0, z, rand(0, Math.PI * 2))
-    scene.add(tree)
-    colliders.push({ x, z, r: 0.9 })
-    perimeterTrees.push(tree)
+  // Scatter greenery on an island: perimeter trees/rocks, grass tufts, three
+  // flower colors and mottled splotches — skipping stations, the trail and the
+  // island hub. Runs for both islands (denser than the original single pass).
+  const nearStationCluster = (x, z, pad) =>
+    stationList.some(s => Math.hypot(s.group.position.x - x, s.group.position.z - z) < pad)
+  const nearTrail = (x, z, pad) => {
+    for (let i = 0; i < TRAIL_WAYPOINTS.length - 1; i++) {
+      const p1 = TRAIL_WAYPOINTS[i], p2 = TRAIL_WAYPOINTS[i + 1]
+      const c = closestOnSegment(x, z, p1.x, p1.z, p2.x, p2.z)
+      if (Math.hypot(x - c.x, z - c.z) < pad) return true
+    }
+    return false
   }
-  for (let i = 0; i < 6; i++) {
-    const a = rand(0, Math.PI * 2)
-    const r = rand(30, 37)
-    const rock = makeRock(rand(0.5, 1.1))
-    place(rock, Math.cos(a) * r, 0, Math.sin(a) * r)
-    scene.add(rock)
+  // keep decorations (especially collider-carrying trees) off the bridge
+  // corridor so a random spawn can never block the crossing
+  const nearBridge = (x, z, pad) => {
+    const c = closestOnSegment(x, z, BRIDGE_A.x, BRIDGE_A.z, BRIDGE_B.x, BRIDGE_B.z)
+    return Math.hypot(x - c.x, z - c.z) < pad
   }
+  // keep random scatter from crowding the landmark rainbow tree
+  const nearLandmark = (x, z) => Math.hypot(x - rtPos.x, z - rtPos.z) < 6
+  const addScatter = (mesh) => { mesh.castShadow = false; scene.add(mesh); return mesh }
 
-  // scattered grass tufts + flowers (instanced, island-wide)
-  const tuftT = []
-  const flowerT = []
-  for (let i = 0; i < 90; i++) {
-    const a = rand(0, Math.PI * 2)
-    const r = Math.sqrt(Math.random()) * 35
-    const x = Math.cos(a) * r
-    const z = Math.sin(a) * r
-    if (stationList.some(s => Math.hypot(s.group.position.x - x, s.group.position.z - z) < 8.5)) continue
-    if (Math.hypot(x, z) < 5.5) continue
-    ;(i % 3 === 0 ? flowerT : tuftT).push({ x, y: 0.2, z, s: rand(0.5, 1), ry: rand(0, Math.PI) })
+  function scatterIsland({ cx, cz, radius, hubR, treeCount, tuftCount, splotchCount }) {
+    for (let i = 0; i < treeCount; i++) {
+      const a = (i / treeCount) * Math.PI * 2 + 0.28
+      const r = radius * rand(0.82, 0.94)
+      const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r
+      if (nearStationCluster(x, z, 9) || nearTrail(x, z, 3.5) || nearBridge(x, z, 5.5) || nearLandmark(x, z)) continue
+      const tree = i % 3 === 0
+        ? makePine(rand(0.85, 1.25))
+        : makeTree(rand(0.85, 1.3), i % 2 === 0 ? pick(C.accentFoliage) : null)
+      place(tree, x, 0, z, rand(0, Math.PI * 2))
+      scene.add(tree)
+      colliders.push({ x, z, r: 0.9 })
+    }
+    for (let i = 0; i < Math.round(treeCount * 0.6); i++) {
+      const a = rand(0, Math.PI * 2), r = radius * rand(0.75, 0.92)
+      const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r
+      if (nearStationCluster(x, z, 9) || nearTrail(x, z, 2.5) || nearBridge(x, z, 4.5) || nearLandmark(x, z)) continue
+      const rock = makeRock(rand(0.5, 1.1))
+      rock.castShadow = false
+      scene.add(place(rock, x, 0, z))
+    }
+    // tufts + three flower colors
+    const tuftT = [], flowerPT = [], flowerYT = [], flowerWT = []
+    for (let i = 0; i < tuftCount; i++) {
+      const a = rand(0, Math.PI * 2), r = Math.sqrt(Math.random()) * (radius - 4)
+      const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r
+      if (nearStationCluster(x, z, 8) || nearTrail(x, z, 2.4) || nearBridge(x, z, 4.5) || nearLandmark(x, z) || (hubR && Math.hypot(x - cx, z - cz) < hubR)) continue
+      const t = { x, y: 0.2, z, s: rand(0.5, 1), ry: rand(0, Math.PI) }
+      if (i % 5 === 0) flowerPT.push(t)
+      else if (i % 5 === 1) flowerYT.push(t)
+      else if (i % 5 === 2) flowerWT.push(t)
+      else tuftT.push(t)
+    }
+    addScatter(instanced(new THREE.ConeGeometry(0.15, 0.45, 5), C.grassDark, tuftT))
+    addScatter(instanced(new THREE.SphereGeometry(0.14, 6, 5), C.flowerPink, flowerPT))
+    addScatter(instanced(new THREE.SphereGeometry(0.14, 6, 5), C.flowerYellow, flowerYT))
+    addScatter(instanced(new THREE.SphereGeometry(0.13, 6, 5), C.flowerWhite, flowerWT))
+    // mottled darker-green lawn splotches
+    const splotchGeo = new THREE.CircleGeometry(1, 12)
+    splotchGeo.rotateX(-Math.PI / 2)
+    const splotchT = []
+    for (let i = 0; i < splotchCount; i++) {
+      const a = rand(0, Math.PI * 2), r = Math.sqrt(Math.random()) * (radius - 5)
+      const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r
+      if (nearStationCluster(x, z, 9) || nearTrail(x, z, 2.4) || nearBridge(x, z, 4.5) || nearLandmark(x, z) || (hubR && Math.hypot(x - cx, z - cz) < hubR)) continue
+      splotchT.push({ x, y: 0.02, z, s: rand(1.3, 3.2), sy: 1, ry: rand(0, Math.PI) })
+    }
+    const splotches = instanced(splotchGeo, C.grassDark, splotchT)
+    splotches.castShadow = false
+    splotches.receiveShadow = true
+    scene.add(splotches)
   }
-  // decorative scatter — no shadow casting (biggest cheap GPU saving on iGPU)
-  const scatterTufts = instanced(new THREE.ConeGeometry(0.15, 0.45, 5), C.grassDark, tuftT)
-  scatterTufts.castShadow = false
-  scene.add(scatterTufts)
-  const scatterFlowers = instanced(new THREE.SphereGeometry(0.14, 6, 5), C.flowerPink, flowerT)
-  scatterFlowers.castShadow = false
-  scene.add(scatterFlowers)
+  // main island — denser than before, hub kept clear
+  scatterIsland({ cx: 0, cz: 0, radius: 38, hubR: 6.5, treeCount: 14, tuftCount: 130, splotchCount: 32 })
+  // trail island
+  scatterIsland({ cx: NC.x, cz: NC.z, radius: 30, hubR: 0, treeCount: 10, tuftCount: 90, splotchCount: 22 })
 
-  // darker-green grass splotches — the mottled lawn look from the reference
-  const splotchGeo = new THREE.CircleGeometry(1, 12)
-  splotchGeo.rotateX(-Math.PI / 2)
-  const splotchT = []
-  for (let i = 0; i < 22; i++) {
-    const a = rand(0, Math.PI * 2)
-    const r = Math.sqrt(Math.random()) * 33
-    const x = Math.cos(a) * r
-    const z = Math.sin(a) * r
-    if (stationList.some(s => Math.hypot(s.group.position.x - x, s.group.position.z - z) < 9)) continue
-    if (Math.hypot(x, z) < 6.5) continue
-    splotchT.push({ x, y: 0.02, z, s: rand(1.3, 3.2), sy: 1, ry: rand(0, Math.PI) })
-  }
-  const splotches = instanced(splotchGeo, C.grassDark, splotchT)
-  splotches.castShadow = false
-  splotches.receiveShadow = true
-  scene.add(splotches)
-
-  // clouds
+  // clouds — cover both islands
   const clouds = []
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 11; i++) {
     const cloud = makeCloud()
-    place(cloud, rand(-80, 80), rand(22, 34), rand(-70, 40))
+    place(cloud, rand(-95, 60), rand(22, 34), rand(-95, 45))
     cloud.userData.speed = rand(0.6, 1.6)
     scene.add(cloud)
     clouds.push(cloud)
@@ -1291,27 +1958,56 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   // one shared material per cloud (see makeCloud) — collected for day/night tint
   const cloudMats = clouds.map(c => c.children[0].material)
 
-  // circling birds — two thin boxes in a V, on a rotating carrier
-  const birdCarrier = new THREE.Group()
-  for (let i = 0; i < 3; i++) {
-    const bird = new THREE.Group()
-    const w1 = box(0.5, 0.04, 0.14, C.roof)
-    w1.rotation.z = 0.5
-    w1.position.x = -0.2
-    const w2 = box(0.5, 0.04, 0.14, C.roof)
-    w2.rotation.z = -0.5
-    w2.position.x = 0.2
-    bird.add(w1, w2)
-    place(bird, 24 + i * 2.5, 19 + i * 1.2, i * 3)
-    bird.rotation.y = Math.PI / 2
-    birdCarrier.add(bird)
+  // circling birds — a rotating carrier over each island
+  function makeBirdCarrier(cx, cz, baseR, baseY) {
+    const carrier = new THREE.Group()
+    carrier.position.set(cx, 0, cz)
+    for (let i = 0; i < 3; i++) {
+      const bird = new THREE.Group()
+      const w1 = box(0.5, 0.04, 0.14, C.roof); w1.rotation.z = 0.5; w1.position.x = -0.2
+      const w2 = box(0.5, 0.04, 0.14, C.roof); w2.rotation.z = -0.5; w2.position.x = 0.2
+      bird.add(w1, w2)
+      place(bird, baseR + i * 2.5, baseY + i * 1.2, i * 3)
+      bird.rotation.y = Math.PI / 2
+      carrier.add(bird)
+    }
+    scene.add(carrier)
+    return carrier
   }
-  scene.add(birdCarrier)
+  const birdCarrier = makeBirdCarrier(0, 0, 24, 19)
+  const birdCarrier2 = makeBirdCarrier(NC.x, NC.z, 20, 17)
+
+  // ── NPCs ──
+  // Wandering doll characters the player can walk up to and talk to. Each is a
+  // procedural character (its own geometry + materials — fine at 4, not dozens)
+  // on a 1.7 scaled holder, driven along a patrol route by updateNpc.
+  const npcs = []
+  const npcColliders = [] // wrappers whose XZ blocks the player (like cows)
+  NPCS.forEach(def => {
+    const char = createProceduralCharacter(def.look || {})
+    char.root.traverse(obj => {
+      if (obj.isMesh && !obj.material.transparent && obj.material.type !== 'MeshBasicMaterial') obj.castShadow = true
+    })
+    const holder = new THREE.Group()
+    holder.scale.setScalar(1.7)
+    holder.userData.walkT = 0
+    holder.add(char.root)
+    const g = new THREE.Group() // world wrapper: position + heading
+    g.add(holder)
+    const route = NPC_ROUTES[def.route] || NPC_ROUTES.hubLoop
+    g.position.set(route[0].x, 0, route[0].z)
+    scene.add(g)
+    npcs.push({
+      def, char, holder, root: g, route,
+      wpIndex: 0, mode: 'walk', timer: rand(0.5, 2.5), heading: 0, phase: rand(0, Math.PI * 2),
+    })
+    npcColliders.push(g)
+  })
 
   // ── Player ──
   // `player` is a movable wrapper: movement/heading/camera all target it, and
-  // it carries whichever character is active — the farmer mascot (default) or
-  // the ported fairy-worlds doll (built lazily on first switch).
+  // it carries whichever character is active — the fairy-worlds doll (default,
+  // built lazily by the initial applyLook) or the farmer mascot.
   const player = new THREE.Group()
   const farmer = makeFarmer()
   player.add(farmer)
@@ -1373,7 +2069,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
 
   // ── State ──
   let movementEnabled = true
-  let nearStationId = null
+  let nearTargetKey = null
   let disposed = false
   const clock = new THREE.Clock()
 
@@ -1407,6 +2103,10 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
   }
 
   const camTarget = new THREE.Vector3()
+  // eased lookAt target — smooths the view-point jump when a talk/customize
+  // focus grabs the camera, instead of snapping the frame
+  const lookCur = new THREE.Vector3(0, 1.7, 8)
+  const lookGoal = new THREE.Vector3()
   const cowPos = new THREE.Vector3()
   const cowScl = new THREE.Vector3()
   function movePlayer(dt) {
@@ -1428,12 +2128,10 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     let nx = player.position.x + wx * dist
     let nz = player.position.z + wz * dist
 
-    // island edge
-    const r = Math.hypot(nx, nz)
-    if (r > PLAYER_CLAMP_R) {
-      nx = (nx / r) * PLAYER_CLAMP_R
-      nz = (nz / r) * PLAYER_CLAMP_R
-    }
+    // island edges + bridge corridor
+    const clamped = clampToRegions(nx, nz)
+    nx = clamped.x
+    nz = clamped.z
     // circle colliders — push out
     for (const c of colliders) {
       const dx = nx - c.x
@@ -1461,6 +2159,22 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
         nz = cowPos.z + (dz / d) * min
       }
     }
+    // NPCs block the player too (they stay full-scale on the ground)
+    for (const g of npcColliders) {
+      const dx = nx - g.position.x
+      const dz = nz - g.position.z
+      const d = Math.hypot(dx, dz)
+      const min = NPC_BLOCK_R + PLAYER_R
+      if (d < min && d > 0.0001) {
+        nx = g.position.x + (dx / d) * min
+        nz = g.position.z + (dz / d) * min
+      }
+    }
+    // re-clamp: a push-out could otherwise shove the player off a region
+    // (the bridge corridor is only 3.5 wide — an NPC squeeze-past matters)
+    const reclamped = clampToRegions(nx, nz)
+    nx = reclamped.x
+    nz = reclamped.z
 
     player.position.x = nx
     player.position.z = nz
@@ -1509,35 +2223,35 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
         pu.bodyG.position.y += (0.02 + Math.sin(t * 2.2) * 0.02 - pu.bodyG.position.y) * settle
       }
     } else if (dollG) {
-      // same gait as the farmer: the doll's shoulder/hip pivots carry the
-      // limbs AND their outfit parts (sleeves, socks, trouser legs), so
-      // everything swings together
-      const L = doll.limbs
-      if (moved > 0) {
-        dollG.userData.walkT += dt * 10.5
-        const s = Math.sin(dollG.userData.walkT)
-        L.legL.rotation.x = s * 0.65
-        L.legR.rotation.x = -s * 0.65
-        L.armL.rotation.x = -s * 0.5
-        L.armR.rotation.x = s * 0.5
-        dollG.position.y = Math.abs(s) * 0.05
-        dollG.rotation.x = 0.05 // slight forward lean
-      } else {
-        const settle = Math.min(1, dt * 8)
-        ;[L.legL, L.legR, L.armL, L.armR].forEach(p => { p.rotation.x -= p.rotation.x * settle })
-        dollG.rotation.x -= dollG.rotation.x * settle
-        // gentle idle breathing bob
-        dollG.position.y += (0.02 + Math.sin(t * 2.2) * 0.02 - dollG.position.y) * settle
-      }
+      // the doll's shoulder/hip pivots carry the limbs AND their outfit parts
+      // (sleeves, socks, trouser legs), so the shared gait swings everything
+      stepGait(doll.limbs, dollG, moved > 0, dt, t)
     }
 
+    // NPCs — patrol their routes, ride ground height, walk-cycle their limbs
+    npcs.forEach(npc => updateNpc(npc, dt, t))
+
+    // keep the shadow frustum under the player so shadows work on both islands
+    sun.position.set(player.position.x + SUN_OFFSET.x, SUN_OFFSET.y, player.position.z + SUN_OFFSET.z)
+    sun.target.position.set(player.position.x, 0, player.position.z)
+
     // camera: orbitable follow with exponential smoothing — snappier while a
-    // drag is active so orbiting doesn't feel like it's dragging through mud
+    // drag is active so orbiting doesn't feel like it's dragging through mud.
+    // The orbit anchor is the player, except mid-conversation, where it's the
+    // player↔NPC midpoint so the zoomed talk framing holds both characters.
+    let ax = player.position.x
+    let ay = player.position.y
+    let az = player.position.z
+    if (talkingNpc) {
+      ax = (ax + talkingNpc.root.position.x) / 2
+      ay = (ay + talkingNpc.root.position.y) / 2
+      az = (az + talkingNpc.root.position.z) / 2
+    }
     const cp = Math.cos(camPitch)
     camTarget.set(
-      player.position.x + Math.sin(camYaw) * cp * camDist,
-      player.position.y + Math.sin(camPitch) * camDist,
-      player.position.z + Math.cos(camYaw) * cp * camDist
+      ax + Math.sin(camYaw) * cp * camDist,
+      ay + Math.sin(camPitch) * camDist,
+      az + Math.cos(camYaw) * cp * camDist
     )
     const k = 1 - Math.exp(-(dragPts.size > 0 ? 10 : 2.6) * dt)
     camera.position.lerp(camTarget, k)
@@ -1546,10 +2260,16 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
       // panel (docked on the left ⇒ character framed in the right half)
       const rx = Math.cos(camYaw)
       const rz = -Math.sin(camYaw)
-      camera.lookAt(player.position.x - rx * 1.45, player.position.y + 1.1, player.position.z - rz * 1.45)
+      lookGoal.set(player.position.x - rx * 1.45, player.position.y + 1.1, player.position.z - rz * 1.45)
+    } else if (talkingNpc) {
+      // aim well above head height: the pair drops into the lower half of the
+      // frame, leaving the upper half clear for the speech bubble
+      lookGoal.set(ax, ay + 2.55, az)
     } else {
-      camera.lookAt(player.position.x, player.position.y + 1.7, player.position.z)
+      lookGoal.set(player.position.x, player.position.y + 1.7, player.position.z)
     }
+    lookCur.lerp(lookGoal, 1 - Math.exp(-5.5 * dt))
+    camera.lookAt(lookCur)
 
     // beacons
     stationList.forEach(s => {
@@ -1572,34 +2292,91 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
       if (s.group.userData.windmill) {
         s.group.userData.windmill.userData.rotor.rotation.z += dt * 1.3
       }
+      if (s.group.userData.anemometer) {
+        s.group.userData.anemometer.userData.rotor.rotation.y += dt * 2.5
+      }
       if (s.group.userData.water) {
         s.group.userData.water.material.opacity = 0.8 + Math.sin(t * 1.4) * 0.06
       }
     })
     clouds.forEach(cloud => {
       cloud.position.x += cloud.userData.speed * dt
-      if (cloud.position.x > 95) cloud.position.x = -95
+      if (cloud.position.x > 100) cloud.position.x = -100
     })
     birdCarrier.rotation.y += dt * 0.12
+    birdCarrier2.rotation.y -= dt * 0.09
 
     stepTweens(dt)
 
-    // proximity → HUD prompt
-    let nearest = null
+    // proximity → HUD prompt. One nearest interactable among uncompleted
+    // station anchors and NPCs (you can only visit-or-talk to one at a time).
+    let target = null
     let nearestD = Infinity
     stationList.forEach(s => {
       if (s.completed) return
       const d = Math.hypot(player.position.x - s.anchor.x, player.position.z - s.anchor.z)
-      if (d < INTERACT_R && d < nearestD) { nearest = s.id; nearestD = d }
+      if (d < INTERACT_R && d < nearestD) { nearestD = d; target = { type: 'station', id: s.id } }
     })
-    if (nearest !== nearStationId) {
-      nearStationId = nearest
-      onNearStation(nearest)
+    npcs.forEach(npc => {
+      const d = Math.hypot(player.position.x - npc.root.position.x, player.position.z - npc.root.position.z)
+      if (d < NPC_TALK_R && d < nearestD) { nearestD = d; target = { type: 'npc', id: npc.def.id } }
+    })
+    const key = target ? `${target.type}:${target.id}` : null
+    if (key !== nearTargetKey) {
+      nearTargetKey = key
+      onNearTarget(target)
     }
 
     renderer.render(scene, camera)
   }
   renderer.setAnimationLoop(frame)
+
+  // NPC patrol: walk toward the current waypoint, idle a beat on arrival, then
+  // advance (looping). Rides ground height like the player and drives the gait.
+  function updateNpc(npc, dt, t) {
+    const g = npc.root
+    if (npc.talking) {
+      // mid-conversation: stand still and face the player
+      const dx = player.position.x - g.position.x
+      const dz = player.position.z - g.position.z
+      if (Math.hypot(dx, dz) > 0.001) {
+        const targetH = Math.atan2(dx, dz)
+        let delta = targetH - npc.heading
+        while (delta > Math.PI) delta -= Math.PI * 2
+        while (delta < -Math.PI) delta += Math.PI * 2
+        npc.heading += delta * Math.min(1, dt * 6)
+        g.rotation.y = npc.heading
+      }
+      stepGait(npc.char.limbs, npc.holder, false, dt, t, { phase: npc.phase })
+      return
+    }
+    npc.timer -= dt
+    if (npc.mode === 'idle') {
+      if (npc.timer <= 0) { npc.mode = 'walk'; npc.wpIndex = (npc.wpIndex + 1) % npc.route.length }
+    } else {
+      const wp = npc.route[npc.wpIndex]
+      const dx = wp.x - g.position.x
+      const dz = wp.z - g.position.z
+      const d = Math.hypot(dx, dz)
+      if (d < 0.4) {
+        npc.mode = 'idle'
+        npc.timer = rand(2, 5)
+      } else {
+        const step = Math.min(d, (npc.def.speed || 1.4) * dt)
+        g.position.x += (dx / d) * step
+        g.position.z += (dz / d) * step
+        const targetH = Math.atan2(dx, dz) // model faces +z
+        let delta = targetH - npc.heading
+        while (delta > Math.PI) delta -= Math.PI * 2
+        while (delta < -Math.PI) delta += Math.PI * 2
+        npc.heading += delta * Math.min(1, dt * 6)
+        g.rotation.y = npc.heading
+      }
+    }
+    g.position.y += (groundHeightAt(g.position.x, g.position.z) - g.position.y) * Math.min(1, dt * 14)
+    // gentler arcs + slower cadence than the player: NPCs stroll at ~1.4 u/s
+    stepGait(npc.char.limbs, npc.holder, npc.mode === 'walk', dt, t, { phase: npc.phase, amp: 0.55, freq: 6.5 })
+  }
 
   // ── Facade ──
 
@@ -1654,11 +2431,45 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     movementEnabled = v
   }
 
+  /** Pause an NPC's patrol while its dialogue is open (it turns to face the
+      player) and zoom the camera in on the two of them — a side-on two-shot
+      the speech bubble floats over; pass null to resume everyone. */
+  function setTalkingNpc(id) {
+    npcs.forEach(npc => { npc.talking = npc.def.id === id })
+    const npc = id != null ? npcs.find(n => n.def.id === id) || null : null
+    if (npc && !talkingNpc) {
+      talkSaved = { yaw: camYaw, pitch: camPitch, dist: camDist }
+      // aim perpendicular to the player→NPC axis so both stand in frame,
+      // swinging toward whichever side is closer to the current orbit
+      const axis = Math.atan2(npc.root.position.x - player.position.x, npc.root.position.z - player.position.z)
+      const turn = (a) => {
+        let d = a - camYaw
+        while (d > Math.PI) d -= Math.PI * 2
+        while (d < -Math.PI) d += Math.PI * 2
+        return d
+      }
+      const d1 = turn(axis + Math.PI / 2)
+      const d2 = turn(axis - Math.PI / 2)
+      camYaw += Math.abs(d1) <= Math.abs(d2) ? d1 : d2
+      camPitch = 0.3
+      camDist = 7.5
+    } else if (!npc && talkSaved) {
+      camYaw = talkSaved.yaw
+      camPitch = talkSaved.pitch
+      camDist = talkSaved.dist
+      talkSaved = null
+    }
+    talkingNpc = npc
+  }
+
   /** Return the camera orbit to the default behind-the-player view. */
   function resetCamera() {
     if (camSaved) {
       // customizer holds the camera — reset what gets restored on close
       camSaved = { yaw: 0, pitch: CAM_PITCH, dist: CAM_DIST }
+    } else if (talkSaved) {
+      // conversation holds the camera — same deal
+      talkSaved = { yaw: 0, pitch: CAM_PITCH, dist: CAM_DIST }
     } else {
       camYaw = 0
       camPitch = CAM_PITCH
@@ -1788,5 +2599,5 @@ export function createFarmWorld({ host, stationIds, getInput, onNearStation, onD
     if (onDisposed) onDisposed()
   }
 
-  return { dispose, upgradeStation, setMovementEnabled, resetCamera, applyLook, getDollCharacter, setCustomizeFocus, setTimeOfDay }
+  return { dispose, upgradeStation, setMovementEnabled, setTalkingNpc, resetCamera, applyLook, getDollCharacter, setCustomizeFocus, setTimeOfDay }
 }
