@@ -48,6 +48,12 @@ const C = {
   cowWhite: 0xf5f2ea,
   cowBlack: 0x3a3a3f,
   cowNose: 0xe8a3a0,
+  chickenBody: 0xf3ede2,
+  chickenComb: 0xdd5b4e,
+  chickenBeak: 0xf0a83c,
+  pigBody: 0xe6a6ad,
+  pigSnout: 0xd98a94,
+  pigHoof: 0x6b4f47,
   hay: 0xe0c068,
   tipi: 0xe8dcc4,
   tipiBand: 0xc06040,
@@ -281,6 +287,64 @@ function makeCow(scale = 1) {
   return g
 }
 
+// A plump box-style chicken in the same low-poly aesthetic as the cow. `head`
+// (comb + wattle + beak) dips to peck while grazing; `tail` feathers swish —
+// both driven by updateCow via the userData hooks.
+function makeChicken(scale = 1) {
+  const g = new THREE.Group()
+  g.add(place(box(0.5, 0.42, 0.36, C.chickenBody), 0, 0.42, 0)) // body
+  // upswept tail feathers
+  const tail = new THREE.Group()
+  tail.position.set(-0.26, 0.55, 0)
+  const tf = place(box(0.26, 0.3, 0.28, C.chickenBody), -0.04, 0.02, 0)
+  tf.rotation.z = 0.7
+  tail.add(tf)
+  g.add(tail)
+  g.userData.tail = tail
+  // head on a short neck
+  const head = new THREE.Group()
+  head.position.set(0.24, 0.62, 0)
+  head.add(place(box(0.26, 0.26, 0.24, C.chickenBody), 0, 0, 0))
+  head.add(place(box(0.06, 0.12, 0.18, C.chickenComb), 0.02, 0.2, 0))  // comb
+  head.add(place(box(0.05, 0.1, 0.08, C.chickenComb), 0.13, -0.14, 0)) // wattle
+  head.add(place(box(0.15, 0.08, 0.1, C.chickenBeak), 0.18, 0, 0))     // beak
+  g.add(head)
+  g.userData.head = head
+  ;[[0.05, 0.1], [0.05, -0.1]].forEach(([x, z]) => {
+    g.add(place(cyl(0.03, 0.03, 0.3, C.chickenBeak, 5), x, 0.15, z)) // legs
+  })
+  g.scale.setScalar(scale)
+  return g
+}
+
+// A stout box-style pig. `head` (with darker snout) roots the ground while
+// grazing; `tail` gives a little curl-wag. Same updateCow hooks as the cow.
+function makePig(scale = 1) {
+  const g = new THREE.Group()
+  g.add(place(box(1.05, 0.62, 0.62, C.pigBody), 0, 0.62, 0))  // barrel body
+  g.add(place(box(0.5, 0.56, 0.58, C.pigBody), -0.4, 0.6, 0)) // rump
+  // head + snout + ears
+  const head = new THREE.Group()
+  head.position.set(0.62, 0.66, 0)
+  head.add(place(box(0.46, 0.44, 0.46, C.pigBody), 0, 0, 0))
+  head.add(place(box(0.16, 0.18, 0.24, C.pigSnout), 0.28, -0.06, 0))    // snout
+  head.add(place(box(0.06, 0.14, 0.14, C.pigBody), -0.02, 0.26, 0.16))  // ear
+  head.add(place(box(0.06, 0.14, 0.14, C.pigBody), -0.02, 0.26, -0.16)) // ear
+  g.add(head)
+  g.userData.head = head
+  // curly tail
+  const tail = new THREE.Group()
+  tail.position.set(-0.62, 0.78, 0)
+  tail.add(place(cyl(0.04, 0.04, 0.24, C.pigBody, 5), 0, 0, 0))
+  g.add(tail)
+  g.userData.tail = tail
+  ;[[0.42, 0.22], [0.42, -0.22], [-0.42, 0.22], [-0.42, -0.22]].forEach(([x, z]) => {
+    g.add(place(cyl(0.1, 0.09, 0.34, C.pigHoof, 6), x, 0.2, z)) // stubby legs
+  })
+  g.scale.setScalar(scale)
+  return g
+}
+
 /**
  * Ambient cow behavior: a tiny state machine per cow (idle / graze / walk)
  * driving head dips, tail swishes, an amble-bob and slow wandering. Positions
@@ -310,11 +374,19 @@ function updateCow(cow, bounds, dt, t) {
   u.tail.rotation.x = Math.sin(t * (ai.mode === 'graze' ? 4.5 : 2.2) + u.phase) * 0.3
 
   if (ai.mode === 'walk') {
-    const nx = cow.position.x + Math.cos(ai.heading) * 0.55 * dt
-    const nz = cow.position.z + Math.sin(ai.heading) * 0.55 * dt
-    if (Math.abs(nx) > bounds.w || Math.abs(nz) > bounds.d) {
-      // turn back toward the middle of the pasture
-      ai.heading = Math.atan2(-cow.position.z, -cow.position.x) + rand(-0.5, 0.5)
+    const speed = u.speed ?? 0.55
+    const nx = cow.position.x + Math.cos(ai.heading) * speed * dt
+    const nz = cow.position.z + Math.sin(ai.heading) * speed * dt
+    // bounds are either a rectangular pasture fence ({w,d}, group-local) or a
+    // circular island region ({cx,cz,r}, world space) for free roamers
+    const out = bounds.r != null
+      ? Math.hypot(nx - bounds.cx, nz - bounds.cz) > bounds.r
+      : (Math.abs(nx) > bounds.w || Math.abs(nz) > bounds.d)
+    if (out) {
+      // turn back toward the middle of the region
+      ai.heading = bounds.r != null
+        ? Math.atan2(bounds.cz - cow.position.z, bounds.cx - cow.position.x) + rand(-0.5, 0.5)
+        : Math.atan2(-cow.position.z, -cow.position.x) + rand(-0.5, 0.5)
     } else {
       cow.position.x = nx
       cow.position.z = nz
@@ -2004,6 +2076,33 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     npcColliders.push(g)
   })
 
+  // ── Roaming barnyard animals ──
+  // Chickens and pigs amble around both islands with the same idle/graze/walk
+  // state machine as the pasture cows (updateCow), but bounded to a circle per
+  // island instead of a rectangular fence. Pigs are solid enough to nudge the
+  // player (pushed into cowColliders); chickens are too small to bother.
+  const roamers = []
+  const spawnRoamer = (make, scale, cx, cz, roamR, speed, blocks) => {
+    const a = make(scale)
+    const ang = rand(0, Math.PI * 2)
+    const rr = Math.sqrt(Math.random()) * roamR * 0.8 // bias inward, off the rim
+    a.position.set(cx + Math.cos(ang) * rr, 0, cz + Math.sin(ang) * rr)
+    a.rotation.y = rand(0, Math.PI * 2)
+    a.userData.phase = rand(0, Math.PI * 2)
+    a.userData.speed = speed
+    a.userData.ai = { mode: 'idle', timer: rand(0.5, 4), heading: rand(0, Math.PI * 2) }
+    a.userData.bounds = { cx, cz, r: roamR }
+    scene.add(a)
+    roamers.push(a)
+    if (blocks) cowColliders.push(a)
+  }
+  // main island (center 0,0) — a small flock + a couple of pigs
+  for (let i = 0; i < 3; i++) spawnRoamer(makeChicken, rand(0.42, 0.5), 0, 0, 30, 0.7, false)
+  for (let i = 0; i < 2; i++) spawnRoamer(makePig, rand(0.6, 0.72), 0, 0, 30, 0.5, true)
+  // trail island
+  for (let i = 0; i < 2; i++) spawnRoamer(makeChicken, rand(0.42, 0.5), NC.x, NC.z, 22, 0.7, false)
+  spawnRoamer(makePig, rand(0.6, 0.72), NC.x, NC.z, 22, 0.5, true)
+
   // ── Player ──
   // `player` is a movable wrapper: movement/heading/camera all target it, and
   // it carries whichever character is active — the fairy-worlds doll (default,
@@ -2299,6 +2398,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
         s.group.userData.water.material.opacity = 0.8 + Math.sin(t * 1.4) * 0.06
       }
     })
+    roamers.forEach(a => updateCow(a, a.userData.bounds, dt, t))
     clouds.forEach(cloud => {
       cloud.position.x += cloud.userData.speed * dt
       if (cloud.position.x > 100) cloud.position.x = -100

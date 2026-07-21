@@ -142,9 +142,13 @@
   color: #3b3a5c;
 }
 
-/* tap the meter card to expand the per-station restore checklist */
+/* tap the meter card to expand the per-station restore checklist.
+   touch-action: none so a tap on the card body isn't hijacked as a scroll/pan
+   gesture (which fires pointercancel and swallows the toggle) — matches the
+   canvas, so pointerdown/up fire natively across the whole card surface. */
 .adv-fw-meter {
   cursor: pointer;
+  touch-action: none;
 }
 
 .adv-fw-meter-head {
@@ -168,6 +172,8 @@
   font-size: 0.8rem;
   line-height: 1;
   transition: transform 0.25s ease;
+  touch-action: none;
+  cursor: pointer;
 }
 
 .adv-fw-meter-open .adv-fw-meter-caret {
@@ -628,7 +634,7 @@
 .adv-fw-bubble {
   position: absolute;
   left: 50%;
-  top: 12%;
+  top: 20%;
   transform: translateX(-50%) translateY(10px) scale(0.97);
   width: min(560px, calc(100% - 48px));
   display: flex;
@@ -690,10 +696,24 @@
   transition: none; /* jump to the entry pose, then transition back */
 }
 
+/* the Next/Bye button floats centered well below the bubble (outside the white
+   card), clear of the downward speech tail */
 .adv-fw-bubble-btn {
-  align-self: flex-end;
+  position: absolute;
+  top: calc(100% + 40px);
+  left: 50%;
+  transform: translateX(-50%);
   padding: 10px 26px;
   font-size: 0.85rem;
+}
+
+/* Override .adv-fw-card-btn's translateY hover: that would clobber the
+   translateX(-50%) centering and shove the button sideways. Keep it centered
+   and just grow + glow instead. */
+.adv-fw-bubble-btn:hover,
+.adv-fw-bubble-btn:active {
+  transform: translateX(-50%) scale(1.06);
+  box-shadow: 0 8px 26px rgba(52, 201, 140, 0.6);
 }
 
 /* ── Restored toast (top center) ── */
@@ -788,6 +808,21 @@
   font-family: var(--font-body), monospace;
   font-size: 0.9rem;
   color: var(--adv-text-muted);
+}
+
+/* ─── Responsive (below kiosk width) ─── */
+
+/* Below 1920px the shared gameplay topbar becomes position:fixed + z-index:100
+   + pointer-events:auto (advanced.css), so its full-width box covers the top of
+   the meter card that overlaps the topbar strip — swallowing taps on the label,
+   bar, and caret (only the lower count row pokes out, which is why that was the
+   only tappable part). Lift the meter above the topbar so the whole card stays
+   tappable. At exactly 1920 (kiosk) this never fires: the topbar keeps
+   pointer-events:none there, so the whole card already works and z-index stays 5. */
+@media (max-width: 1919px) {
+  .adv-fw-meter {
+    z-index: 101;
+  }
 }
 
 /* ─── Responsive (≤ 1279px: laptops / tablets) ─── */

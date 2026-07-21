@@ -193,13 +193,20 @@ function createWorldScreen() {
   camResetBtn.title = 'Reset view'
   topbar.appendChild(camResetBtn)
   // character swap — toggles between the farmer mascot and the doll explorer;
-  // sits left of the customizer, which follows whichever character is active
+  // sits left of the customizer, which follows whichever character is active.
+  // Currently DISABLED: the event only uses the doll explorer. Flip
+  // ENABLE_CHARACTER_SWAP back to true to restore the topbar toggle — the swap
+  // handler (onTap below) and both characters stay fully wired so it's a
+  // one-line re-enable. With it off we also pin the look to the doll so a
+  // stale saved 'farmer' look can't strand the player on a hidden character.
+  const ENABLE_CHARACTER_SWAP = false
+  if (!ENABLE_CHARACTER_SWAP) look.character = 'doll'
   const charBtn = document.createElement('button')
   charBtn.className = 'adv-help-btn adv-fw-topbar-btn'
   charBtn.textContent = '✿'
   charBtn.title = 'Switch character'
   charBtn.classList.toggle('adv-fw-charswap-on', look.character === 'doll')
-  topbar.appendChild(charBtn)
+  if (ENABLE_CHARACTER_SWAP) topbar.appendChild(charBtn)
   const customizeBtn = document.createElement('button')
   customizeBtn.className = 'adv-help-btn adv-fw-topbar-btn'
   customizeBtn.textContent = '☺'
