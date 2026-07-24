@@ -43,7 +43,7 @@ import {
 } from '../utils/leaderboard-api.js'
 import { derivedEventStatus, eventEndsAt } from '../utils/event-status.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
-import { createThemeToggle } from '../utils/theme-toggle.js'
+import { createThemeToggle, getTheme } from '../utils/theme-toggle.js'
 import { clearPlayMode } from './advanced-play-mode.js'
 import { getTeamColors, openColorPopover, createColorSwatchPicker, deriveTeamColors } from '../utils/team-colors.js'
 import { isClean } from '../utils/profanity.js'
@@ -59,6 +59,9 @@ export function createAdvancedAdminScreen() {
   // resolve offline. BASE_URL carries the GitHub Pages sub-path in prod ('/' in
   // some setups), so the links work in dev and on the deployed kiosk alike.
   const guidesBase = `${import.meta.env.BASE_URL}guides/`
+  // The cheat sheet defaults to dark on its own; pass the site's current theme
+  // so opening it from here mirrors whatever mode the admin is viewing in.
+  const cheatSheetTheme = `?theme=${getTheme()}`
 
   screen.innerHTML = `
     <div class="adv-header">
@@ -68,7 +71,7 @@ export function createAdvancedAdminScreen() {
       </div>
       <nav class="adv-admin-doclinks" aria-label="Staff reference documents">
         <a class="adv-admin-doclink" href="${guidesBase}full-event-guide.docx" target="_blank" rel="noopener" title="Full event staff guide (Word document)">Full Guide (DOC)</a>
-        <a class="adv-admin-doclink" href="${guidesBase}cheat-sheet.html" target="_blank" rel="noopener" title="Event cheat sheet (opens in browser)">Cheat Sheet (WEB)</a>
+        <a class="adv-admin-doclink" href="${guidesBase}cheat-sheet.html${cheatSheetTheme}" target="_blank" rel="noopener" title="Event cheat sheet (opens in browser)">Cheat Sheet (WEB)</a>
         <a class="adv-admin-doclink" href="${guidesBase}cheat-sheet-print.pdf" target="_blank" rel="noopener" title="Printable cheat sheet (PDF)">Cheat Sheet (PRINT)</a>
       </nav>
       <div class="adv-header-right"></div>

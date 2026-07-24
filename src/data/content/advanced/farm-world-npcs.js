@@ -38,14 +38,15 @@ export const NPCS = [
     ],
   },
   {
-    id: 'marcus',
-    name: 'Marcus',
+    id: 'fred',
+    name: 'Fred',
     role: 'Farmer',
     route: 'oldOuter',
     look: {
-      colors: { skin: '#d2a36e', hair: '#d1d0c4', shirt: '#5aa64a', bottom: '#6e4a30', shoes: '#4a3524', eyes: '#2a1c10' },
-      variants: { hair: 'bob', shirt: 'tee', bottom: 'pants', wings: 'off' },
-      accessories: { blush: false, halo: false, ears: false, lashes: false, mustache: true, freckles: true, blushHeart: false, socks: false },
+      colors: { skin: '#c78f72', hair: '#d0cabd', shirt: '#ab2124', bottom: '#92b3cb', wings: '#ffaee1', eyes: '#5a84a3', blush: '#462c15', shoes: '#800040' },
+      variants: { hair: 'bob', bottom: 'pants', wings: 'off', shirt: 'overalls' },
+      accessories: { bow: false, halo: false, horns: false, ears: false, lashes: false, mustache: false, star: false, socks: true, glasses: false, freckles: true, flowerCrown: false, antennae: false, blushHeart: false, blushStar: false },
+      accessoryColors: { socks: '#800040', freckles: '#c07836', lashes: '#5a413a' },
     },
     lines: [
       'I switched to no-till years back. Fewer passes with the tractor, and the soil stays soft instead of packed hard.',

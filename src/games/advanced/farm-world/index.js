@@ -416,9 +416,13 @@ function createWorldScreen() {
       // per-accessory color pickers — visible only while that accessory is worn
       const accSpheres = {}
       schema.accessories.forEach(({ id, label, defaultColor }) => {
-        const sphere = colorSphere(label, state.accessoryColors[id] ?? defaultColor,
+        // `lashes` color always tints the eyeline, so its picker stays visible
+        // even when the lash accessory is off — it just relabels "lashes"/"eyeline".
+        const isLash = id === 'lashes'
+        const shownLabel = isLash ? (state.accessories[id] ? 'lashes' : 'eyeline') : label
+        const sphere = colorSphere(shownLabel, state.accessoryColors[id] ?? defaultColor,
           hex => { doll.setAccessoryColor(id, hex); commit() })
-        sphere.hidden = !state.accessories[id]
+        sphere.hidden = isLash ? false : !state.accessories[id]
         accSpheres[id] = sphere
         colorRow.appendChild(sphere)
       })
@@ -450,7 +454,12 @@ function createWorldScreen() {
           const on = !b.classList.contains('adv-fw-chip-active')
           b.classList.toggle('adv-fw-chip-active', on)
           doll.setAccessory(id, on)
-          accSpheres[id].hidden = !on
+          if (id === 'lashes') {
+            // eyeline picker stays visible; only its label flips
+            accSpheres[id].querySelector('.adv-fw-color-name').textContent = on ? 'lashes' : 'eyeline'
+          } else {
+            accSpheres[id].hidden = !on
+          }
           commit()
         })
         accRow.appendChild(b)
@@ -870,6 +879,16 @@ function createWorldScreen() {
     let state = null
     try { state = world.getDollCharacter().getState() } catch { /* not built yet */ }
     if (!state) { try { state = JSON.parse(sessionStorage.getItem('sdshc-fw-look'))?.doll || null } catch { state = null } }
+    // Prune accessoryColors for accessories that are turned off — an NPC `look`
+    // only needs the colors for accessories it actually wears. `lashes` is kept
+    // regardless: its color tints the eyeline even when the lash accessory is off.
+    if (state && state.accessories && state.accessoryColors) {
+      const pruned = {}
+      for (const [k, v] of Object.entries(state.accessoryColors)) {
+        if (state.accessories[k] || k === 'lashes') pruned[k] = v
+      }
+      state = { ...state, accessoryColors: pruned }
+    }
     console.log('Farm World doll look:\n' + JSON.stringify(state, null, 2))
     return state
   }
