@@ -12,6 +12,7 @@
 
 import * as THREE from 'three'
 import { createProceduralCharacter } from './procedural-character.js'
+import { createCritterFx } from './critter-fx.js'
 import { NPCS } from '../../../data/content/advanced/farm-world-npcs.js'
 
 // ─── Palette ───
@@ -283,6 +284,7 @@ function makeCow(scale = 1) {
   tail.add(place(sph(0.08, C.cowBlack, 6), 0, -0.52, 0))
   g.add(tail)
   g.userData.tail = tail
+  g.userData.kind = 'cow'
   g.scale.setScalar(scale)
   return g
 }
@@ -313,6 +315,18 @@ function makeChicken(scale = 1) {
   ;[[0.05, 0.1], [0.05, -0.1]].forEach(([x, z]) => {
     g.add(place(cyl(0.03, 0.03, 0.3, C.chickenBeak, 5), x, 0.15, z)) // legs
   })
+  // wings — folded flat against the body at rest, flapped by the startle
+  // reaction. Pivot sits at the shoulder so rotation.x swings them up.
+  const wings = [0.18, -0.18].map(z => {
+    const w = new THREE.Group()
+    w.position.set(0.02, 0.52, z)
+    w.add(place(box(0.3, 0.06, 0.14, C.chickenBody), 0, -0.05, Math.sign(z) * 0.03))
+    g.add(w)
+    return w
+  })
+  g.userData.wingL = wings[0]
+  g.userData.wingR = wings[1]
+  g.userData.kind = 'chicken'
   g.scale.setScalar(scale)
   return g
 }
@@ -341,6 +355,7 @@ function makePig(scale = 1) {
   ;[[0.42, 0.22], [0.42, -0.22], [-0.42, 0.22], [-0.42, -0.22]].forEach(([x, z]) => {
     g.add(place(cyl(0.1, 0.09, 0.34, C.pigHoof, 6), x, 0.2, z)) // stubby legs
   })
+  g.userData.kind = 'pig'
   g.scale.setScalar(scale)
   return g
 }
@@ -350,18 +365,35 @@ function makePig(scale = 1) {
  * driving head dips, tail swishes, an amble-bob and slow wandering. Positions
  * are in the pasture's local space; `bounds` keeps the cow inside the fence.
  * Cows flagged `ai.still` (the calf) never wander.
+ *
+ * Also drives the tap/walk-up reactions (see reactTo): while `ai.reacting` is
+ * counting down the random mode re-roll is suspended, and a per-kind overlay
+ * runs after the normal pose so it wins on any transform they both touch.
  */
 function updateCow(cow, bounds, dt, t) {
   const u = cow.userData
   const ai = u.ai
   if (!ai) return
-  ai.timer -= dt
-  if (ai.timer <= 0) {
-    const r = Math.random()
-    ai.mode = r < 0.4 ? 'idle' : r < 0.75 ? 'graze' : 'walk'
-    if (ai.still && ai.mode === 'walk') ai.mode = 'graze'
-    ai.timer = ai.mode === 'walk' ? rand(2, 5) : rand(2.5, 6)
-    if (ai.mode === 'walk') ai.heading = rand(0, Math.PI * 2)
+  if (ai.cooldown > 0) ai.cooldown -= dt
+  if (ai.reacting > 0) {
+    // hold the reaction's mode/heading for its full duration, then hand back
+    // to the ambient state machine
+    ai.reacting -= dt
+    if (ai.reacting <= 0) {
+      ai.react = null
+      ai.boost = 1
+      ai.faceHeading = null
+      ai.timer = rand(0.4, 1.5)
+    }
+  } else {
+    ai.timer -= dt
+    if (ai.timer <= 0) {
+      const r = Math.random()
+      ai.mode = r < 0.4 ? 'idle' : r < 0.75 ? 'graze' : 'walk'
+      if (ai.still && ai.mode === 'walk') ai.mode = 'graze'
+      ai.timer = ai.mode === 'walk' ? rand(2, 5) : rand(2.5, 6)
+      if (ai.mode === 'walk') ai.heading = rand(0, Math.PI * 2)
+    }
   }
 
   // head: dip and nibble while grazing, lazy sway otherwise
@@ -374,7 +406,9 @@ function updateCow(cow, bounds, dt, t) {
   u.tail.rotation.x = Math.sin(t * (ai.mode === 'graze' ? 4.5 : 2.2) + u.phase) * 0.3
 
   if (ai.mode === 'walk') {
-    const speed = u.speed ?? 0.55
+    // `boost` is the reaction multiplier — a startled chicken scurries, a
+    // curious cow ambles a single slow step. Bounds handling is shared.
+    const speed = (u.speed ?? 0.55) * (ai.boost ?? 1)
     const nx = cow.position.x + Math.cos(ai.heading) * speed * dt
     const nz = cow.position.z + Math.sin(ai.heading) * speed * dt
     // bounds are either a rectangular pasture fence ({w,d}, group-local) or a
@@ -399,6 +433,48 @@ function updateCow(cow, bounds, dt, t) {
     cow.position.y = Math.abs(Math.sin(t * 5 + u.phase)) * 0.04
   } else {
     cow.position.y += (0 - cow.position.y) * Math.min(1, dt * 5)
+  }
+
+  // ── Reaction overlay ──
+  // Runs last so it wins over the ambient pose on head/tail/position.y.
+  if (ai.react) {
+    const p = 1 - Math.max(0, ai.reacting) / ai.reactDur
+    // turn to look at the player — only set for reactions that stay put; a
+    // walking reaction is already facing its travel heading above
+    if (ai.faceHeading != null) {
+      let dr = -ai.faceHeading - cow.rotation.y
+      while (dr > Math.PI) dr -= Math.PI * 2
+      while (dr < -Math.PI) dr += Math.PI * 2
+      cow.rotation.y += dr * Math.min(1, dt * 6)
+    }
+    if (ai.react === 'startle') {
+      cow.position.y = Math.sin(Math.min(1, p * 2.2) * Math.PI) * 0.28
+      u.head.rotation.z = 0.35
+      if (u.wingL) {
+        const flap = Math.sin(t * 26) * 0.9
+        u.wingL.rotation.x = -flap
+        u.wingR.rotation.x = flap
+      }
+    } else if (ai.react === 'wiggle') {
+      u.head.rotation.z = -0.5 + Math.sin(t * 16) * 0.18 // snout rooting
+      // wrapped so the settle below unwinds from at most one turn, not from
+      // however many radians elapsed time had accumulated
+      u.tail.rotation.y = (t * 14) % (Math.PI * 2)        // curl spinning
+      cow.position.y = Math.abs(Math.sin(t * 9)) * 0.05
+    } else if (ai.react === 'perk') {
+      u.head.rotation.z = 0.3 + Math.sin(t * 3 + u.phase) * 0.05
+      u.tail.rotation.x = Math.sin(t * 12) * 0.5
+      cow.position.y += Math.sin(Math.min(1, p * 2.2) * Math.PI) * 0.1
+    }
+  } else {
+    // settle whatever the reaction left off-axis (the ambient pose only drives
+    // head.rotation.z and tail.rotation.x, so these would otherwise stick)
+    const settle = Math.min(1, dt * 8)
+    if (u.wingL) {
+      u.wingL.rotation.x -= u.wingL.rotation.x * settle
+      u.wingR.rotation.x -= u.wingR.rotation.x * settle
+    }
+    if (u.tail.rotation.y) u.tail.rotation.y -= u.tail.rotation.y * settle
   }
 }
 
@@ -919,7 +995,7 @@ function buildPasture() {
     const cow = makeCow(rand(0.85, 1.05))
     place(cow, x, 0, z, ry)
     cow.userData.phase = rand(0, Math.PI * 2)
-    cow.userData.ai = { mode: 'idle', timer: rand(1, 4), heading: rand(0, Math.PI * 2) }
+    cow.userData.ai = { mode: 'idle', timer: rand(1, 4), heading: rand(0, Math.PI * 2), armed: true }
     group.add(cow)
     cows.push(cow)
   })
@@ -947,7 +1023,7 @@ function buildPasture() {
   const calf = makeCow(0.55)
   place(calf, -0.5, 0, 0.5, 1.8)
   calf.userData.phase = rand(0, Math.PI * 2)
-  calf.userData.ai = { mode: 'idle', timer: rand(1, 3), heading: 0, still: true }
+  calf.userData.ai = { mode: 'idle', timer: rand(1, 3), heading: 0, still: true, armed: true }
   post.add(calf)
   cows.push(calf)
 
@@ -1672,12 +1748,41 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
   const canvas = renderer.domElement
   const dragPts = new Map()
   let lastPinch = 0
+  // Tap-vs-orbit: every pointerdown on the canvas starts an orbit, so a tap is
+  // only recognized on release, and only if the gesture stayed a single finger,
+  // barely moved, and was short. Anything else is a camera drag.
+  const TAP_MAX_DRIFT = 8   // px
+  const TAP_MAX_MS = 350
+  const TAP_MAX_D = 18      // world units — no poking animals across the island
+  let multiTouch = false
+  const raycaster = new THREE.Raycaster()
+  const ndc = new THREE.Vector2()
+
+  function tryTapPick(e) {
+    // the camera is staged during a conversation or in the customizer — a
+    // stray tap shouldn't poke an animal somewhere off-screen
+    if (talkingNpc || customizeFocus) return
+    const r = canvas.getBoundingClientRect()
+    if (!r.width || !r.height) return
+    ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1
+    ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1
+    raycaster.setFromCamera(ndc, camera)
+    const hits = raycaster.intersectObjects(tappables, true)
+    for (const hit of hits) {
+      if (hit.distance > TAP_MAX_D) break // sorted near→far
+      let o = hit.object
+      while (o && !o.userData.ai) o = o.parent // hit a child mesh — find the animal
+      if (o) { reactTo(o); return }
+    }
+  }
+
   canvas.addEventListener('pointerdown', (e) => {
     // orbiting stays enabled during customize so you can spin around the
     // explorer (e.g. to see the backpack); the frame-loop pan keeps them framed
     canvas.setPointerCapture(e.pointerId)
-    dragPts.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    dragPts.set(e.pointerId, { x: e.clientX, y: e.clientY, ox: e.clientX, oy: e.clientY, t: performance.now(), drift: 0 })
     if (dragPts.size === 2) {
+      multiTouch = true
       const [a, b] = [...dragPts.values()]
       lastPinch = Math.hypot(a.x - b.x, a.y - b.y)
     }
@@ -1689,6 +1794,9 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     const dy = e.clientY - p.y
     p.x = e.clientX
     p.y = e.clientY
+    // drift from where the finger landed, not a sum of per-move deltas: a
+    // wobbly finger that returns to the same spot is still a tap
+    p.drift = Math.max(p.drift, Math.hypot(e.clientX - p.ox, e.clientY - p.oy))
     if (dragPts.size === 1) {
       camYaw -= dx * 0.005
       camPitch = clamp(camPitch + dy * 0.004, CAM_PITCH_MIN, CAM_PITCH_MAX)
@@ -1701,12 +1809,18 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
       lastPinch = d
     }
   })
-  const endDrag = (e) => {
+  const endDrag = (e, tappable) => {
+    const p = dragPts.get(e.pointerId)
     dragPts.delete(e.pointerId)
     lastPinch = 0
+    if (tappable && p && !multiTouch && dragPts.size === 0 &&
+        p.drift < TAP_MAX_DRIFT && performance.now() - p.t < TAP_MAX_MS) {
+      tryTapPick(e)
+    }
+    if (dragPts.size === 0) multiTouch = false
   }
-  canvas.addEventListener('pointerup', endDrag)
-  canvas.addEventListener('pointercancel', endDrag)
+  canvas.addEventListener('pointerup', (e) => endDrag(e, true))
+  canvas.addEventListener('pointercancel', (e) => endDrag(e, false))
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault() // don't let the page scroll under the world
     camDist = clamp(camDist * (1 + e.deltaY * 0.0012), CAM_DIST_MIN, CAM_DIST_MAX)
@@ -1812,6 +1926,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
   const stationList = []
   const walkables = [] // meshes the player can stand on top of (ground-height raycast)
   const cowColliders = [] // roaming cows — world position read fresh each frame
+  const tappables = []    // every animal that reacts to a tap or a walk-up
   stationIds.forEach(id => {
     const layout = STATION_LAYOUT[id]
     const builder = BUILDERS[id]
@@ -1848,7 +1963,10 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
       walkables.push(path)
     }
     if (built.walkables) walkables.push(...built.walkables)
-    if (built.group.userData.cows) cowColliders.push(...built.group.userData.cows)
+    if (built.group.userData.cows) {
+      cowColliders.push(...built.group.userData.cows)
+      tappables.push(...built.group.userData.cows)
+    }
 
     // beacon on the path, just before the station
     const beacon = makeBeacon()
@@ -2072,6 +2190,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     npcs.push({
       def, char, holder, root: g, route,
       wpIndex: 0, mode: 'walk', timer: rand(0.5, 2.5), heading: 0, phase: rand(0, Math.PI * 2),
+      greetArmed: true, // walk-up bubble; re-arms once you wander back off
     })
     npcColliders.push(g)
   })
@@ -2090,10 +2209,11 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     a.rotation.y = rand(0, Math.PI * 2)
     a.userData.phase = rand(0, Math.PI * 2)
     a.userData.speed = speed
-    a.userData.ai = { mode: 'idle', timer: rand(0.5, 4), heading: rand(0, Math.PI * 2) }
+    a.userData.ai = { mode: 'idle', timer: rand(0.5, 4), heading: rand(0, Math.PI * 2), armed: true }
     a.userData.bounds = { cx, cz, r: roamR }
     scene.add(a)
     roamers.push(a)
+    tappables.push(a)
     if (blocks) cowColliders.push(a)
   }
   // main island (center 0,0) — a small flock + a couple of pigs
@@ -2114,6 +2234,96 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
   scene.add(player)
   let heading = Math.PI // facing the hub sign
   player.rotation.y = heading
+
+  // ── Critter reactions ──
+  // Tap an animal, or just walk up to one, and it reacts: a per-kind animation
+  // (the overlay at the end of updateCow), a particle burst and a symbol above
+  // its head. Purely ambient — nothing is counted, scored or persisted.
+  const critterFx = createCritterFx({ scene, camera, tween })
+  const REACT_DUR = { chicken: 0.95, pig: 1.1, cow: 1.3 }
+  const REACT_COOLDOWN = 0.5 // quiet time after a reaction, so taps can't spam
+  const WALKUP_R = 2.2       // walk-up trigger radius
+  const WALKUP_REARM_R = 4.0 // must leave this radius before it fires again
+  const GREET_R = NPC_TALK_R       // NPC bubble pops as the Talk prompt appears
+  const GREET_REARM_R = NPC_TALK_R + 2.2
+  const _rv = new THREE.Vector3()
+  const _wv = new THREE.Vector3()
+
+  function reactTo(animal) {
+    const u = animal.userData
+    const ai = u.ai
+    if (!ai || ai.reacting > 0 || ai.cooldown > 0) return
+    const kind = u.kind || 'cow'
+    const dur = REACT_DUR[kind] ?? 1
+    ai.reacting = dur
+    ai.reactDur = dur
+    ai.cooldown = dur + REACT_COOLDOWN
+
+    // Pasture cows hang under a placed-and-rotated station group while the
+    // roamers are direct children of the scene — convert the player into the
+    // animal's own parent space so one heading calculation covers both.
+    _rv.copy(player.position)
+    animal.parent.worldToLocal(_rv)
+    const away = Math.atan2(animal.position.z - _rv.z, animal.position.x - _rv.x)
+    const toward = away + Math.PI
+
+    if (kind === 'chicken') {
+      ai.react = 'startle'
+      ai.mode = 'walk'
+      ai.heading = away
+      ai.boost = 2.8
+      ai.faceHeading = null // the walk branch already faces the flee heading
+    } else if (kind === 'pig') {
+      ai.react = 'wiggle'
+      ai.mode = 'idle'
+      ai.boost = 1
+      ai.faceHeading = toward
+    } else {
+      ai.react = 'perk'
+      if (ai.still) { // the calf never wanders — perk in place
+        ai.mode = 'idle'
+        ai.boost = 1
+        ai.faceHeading = toward
+      } else {
+        ai.mode = 'walk'
+        ai.heading = toward
+        ai.boost = 0.35 // one curious step toward you
+        ai.faceHeading = null
+      }
+    }
+    critterFx.playReaction(animal, kind)
+  }
+
+  /** Walk-up trigger, with hysteresis so standing beside a pig fires once. */
+  function checkWalkUp() {
+    for (const a of tappables) {
+      const ai = a.userData.ai
+      if (!ai) continue
+      a.getWorldPosition(_wv)
+      const d = Math.hypot(player.position.x - _wv.x, player.position.z - _wv.z)
+      if (ai.armed === false) {
+        if (d > WALKUP_REARM_R) ai.armed = true
+      } else if (d < WALKUP_R) {
+        ai.armed = false
+        reactTo(a)
+      }
+    }
+  }
+
+  /** Walk-up greeting bubble over an NPC's head. Same hysteresis as the
+      animals, and silent mid-conversation so it can't double up with the
+      dialogue bubble. */
+  function checkNpcGreet() {
+    for (const npc of npcs) {
+      const d = Math.hypot(player.position.x - npc.root.position.x, player.position.z - npc.root.position.z)
+      if (!npc.greetArmed) {
+        if (d > GREET_REARM_R) npc.greetArmed = true
+      } else if (d < GREET_R && !talkingNpc && !customizeFocus) {
+        npc.greetArmed = false
+        critterFx.playNpcBubble(npc.root)
+      }
+    }
+  }
 
   let doll = null // procedural character handle (see procedural-character.js)
   let dollG = null // scaled holder; also carries the doll's walk bob/waddle
@@ -2329,6 +2539,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
 
     // NPCs — patrol their routes, ride ground height, walk-cycle their limbs
     npcs.forEach(npc => updateNpc(npc, dt, t))
+    checkNpcGreet()
 
     // keep the shadow frustum under the player so shadows work on both islands
     sun.position.set(player.position.x + SUN_OFFSET.x, SUN_OFFSET.y, player.position.z + SUN_OFFSET.z)
@@ -2399,6 +2610,8 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
       }
     })
     roamers.forEach(a => updateCow(a, a.userData.bounds, dt, t))
+    checkWalkUp()
+    critterFx.update(t)
     clouds.forEach(cloud => {
       cloud.position.x += cloud.userData.speed * dt
       if (cloud.position.x > 100) cloud.position.x = -100
@@ -2538,6 +2751,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     npcs.forEach(npc => { npc.talking = npc.def.id === id })
     const npc = id != null ? npcs.find(n => n.def.id === id) || null : null
     if (npc && !talkingNpc) {
+      critterFx.clearNpcBubbles() // the DOM dialogue bubble takes over from here
       talkSaved = { yaw: camYaw, pitch: camPitch, dist: camDist }
       // aim perpendicular to the player→NPC axis so both stand in frame,
       // swinging toward whichever side is closer to the current orbit
@@ -2680,6 +2894,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     disposed = true
     renderer.setAnimationLoop(null)
     ro.disconnect()
+    critterFx.dispose() // pull live symbols before the scene traverse below
     // The module-level matCache is shared across instances and kept for the
     // app's lifetime (a few dozen tiny Lambert materials) — never dispose
     // those, only per-instance geometries and non-cached materials.
