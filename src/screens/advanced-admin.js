@@ -910,9 +910,22 @@ function buildSignInGate(onSubmit) {
     <form class="adv-admin-gate-card" novalidate autocomplete="off">
       <h2 class="adv-admin-gate-title">Admin sign-in</h2>
       <p class="adv-admin-gate-sub">Enter the admin password to manage teams, events, and scores.</p>
-      <input class="adv-admin-gate-input" type="password" placeholder="Password"
-        name="admin-unlock-${Math.random().toString(36).slice(2, 8)}"
-        autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      <div class="adv-admin-gate-field">
+        <input class="adv-admin-gate-input" type="password" placeholder="Password"
+          name="admin-unlock-${Math.random().toString(36).slice(2, 8)}"
+          autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <button class="adv-admin-gate-reveal" type="button" aria-label="Show password" aria-pressed="false" title="Show password">
+          <svg class="adv-admin-gate-eye" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M1.8 12S5.8 5.2 12 5.2 22.2 12 22.2 12 18.2 18.8 12 18.8 1.8 12 1.8 12z" />
+            <circle cx="12" cy="12" r="3.2" />
+          </svg>
+          <svg class="adv-admin-gate-eye-off" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M1.8 12S5.8 5.2 12 5.2 22.2 12 22.2 12 18.2 18.8 12 18.8 1.8 12 1.8 12z" />
+            <circle cx="12" cy="12" r="3.2" />
+            <line x1="3.5" y1="20.5" x2="20.5" y2="3.5" />
+          </svg>
+        </button>
+      </div>
       <button class="adv-admin-gate-btn" type="submit">Unlock</button>
       <div class="adv-admin-gate-error" role="alert"></div>
     </form>
@@ -921,6 +934,24 @@ function buildSignInGate(onSubmit) {
   const input = el.querySelector('.adv-admin-gate-input')
   const btn = el.querySelector('.adv-admin-gate-btn')
   const error = el.querySelector('.adv-admin-gate-error')
+  const reveal = el.querySelector('.adv-admin-gate-reveal')
+
+  const setRevealed = (on) => {
+    input.type = on ? 'text' : 'password'
+    reveal.classList.toggle('is-on', on)
+    reveal.setAttribute('aria-pressed', String(on))
+    const label = on ? 'Hide password' : 'Show password'
+    reveal.setAttribute('aria-label', label)
+    reveal.setAttribute('title', label)
+  }
+
+  reveal.addEventListener('click', () => {
+    setRevealed(input.type === 'password')
+    // Keep the caret where it was so toggling mid-type doesn't cost a tap.
+    const end = input.value.length
+    input.focus()
+    input.setSelectionRange(end, end)
+  })
 
   el.querySelector('form').addEventListener('submit', async (e) => {
     e.preventDefault()
@@ -954,6 +985,7 @@ function buildSignInGate(onSubmit) {
       el.style.display = 'none'
       input.value = ''
       error.textContent = ''
+      setRevealed(false)
     },
   }
 }

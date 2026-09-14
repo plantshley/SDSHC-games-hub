@@ -1180,8 +1180,15 @@
   opacity: 0.65;
 }
 
+.adv-admin-gate-field {
+  position: relative;
+  display: flex;
+}
+
 .adv-admin-gate-input {
-  padding: 12px 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 12px 52px 12px 14px;
   font-family: var(--font-body), monospace;
   font-size: 1rem;
   color: var(--adv-text);
@@ -1194,6 +1201,47 @@
 .adv-admin-gate-input:focus {
   border-color: var(--adv-accent);
 }
+
+.adv-admin-gate-reveal {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--adv-text);
+  background: none;
+  border: none;
+  border-radius: 10px;
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.adv-admin-gate-reveal:hover,
+.adv-admin-gate-reveal:active,
+.adv-admin-gate-reveal.is-on {
+  color: var(--adv-accent);
+  opacity: 1;
+}
+
+.adv-admin-gate-reveal svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.adv-admin-gate-reveal .adv-admin-gate-eye-off { display: none; }
+.adv-admin-gate-reveal.is-on .adv-admin-gate-eye { display: none; }
+.adv-admin-gate-reveal.is-on .adv-admin-gate-eye-off { display: block; }
 
 .adv-admin-gate-btn {
   padding: 12px 14px;
