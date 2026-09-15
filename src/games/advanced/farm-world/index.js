@@ -165,7 +165,7 @@ function createWorldScreen() {
 
     <div class="adv-fw-meter" id="adv-fw-meter">
       <div class="adv-fw-meter-head">
-        <span class="adv-fw-meter-label">Soil Health</span>
+        <span class="adv-fw-meter-label">Soil Health Stations</span>
         <span class="adv-fw-meter-caret">▾</span>
       </div>
       <div class="adv-fw-meter-bar"><div class="adv-fw-meter-fill" id="adv-fw-fill"></div></div>
@@ -313,6 +313,7 @@ function createWorldScreen() {
 
   let renderCustomizer = null // live while the panel is open, so the character
                               // toggle can re-render it for the other option set
+  let closeActiveCustomizer = null // live while open, so the ☺ button can toggle it shut
 
   function openCustomizer() {
     if (customizerOpen || overlayOpen) return
@@ -533,6 +534,7 @@ function createWorldScreen() {
     function closeCustomizer() {
       customizerOpen = false
       renderCustomizer = null
+      closeActiveCustomizer = null
       el.classList.remove('adv-fw-customizing')
       panel.remove()
       world.setCustomizeFocus(false)
@@ -543,6 +545,7 @@ function createWorldScreen() {
 
     render()
     renderCustomizer = render
+    closeActiveCustomizer = closeCustomizer
   }
 
   const pickFrom = (arr) => arr[Math.floor(Math.random() * arr.length)]
@@ -942,7 +945,10 @@ function createWorldScreen() {
     charBtn.classList.toggle('adv-fw-charswap-on', look.character === 'doll')
     if (renderCustomizer) renderCustomizer() // open panel follows the character
   })
-  onTap(customizeBtn, () => openCustomizer())
+  onTap(customizeBtn, () => {
+    if (closeActiveCustomizer) closeActiveCustomizer()
+    else openCustomizer()
+  })
   onTap(dayNightBtn, () => {
     isNight = !isNight
     world.setTimeOfDay(isNight ? 'night' : 'day')

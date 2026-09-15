@@ -12,7 +12,9 @@
 
 import * as THREE from 'three'
 import { createProceduralCharacter } from './procedural-character.js'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { createCritterFx } from './critter-fx.js'
+import { createLightStrings, ring } from './lights-fx.js'
 import { NPCS } from '../../../data/content/advanced/farm-world-npcs.js'
 
 // ─── Palette ───
@@ -91,6 +93,11 @@ const C = {
   solar: 0x2b3a5c,        // solar panel / antenna plate
   sensorOrange: 0xe8873c, // sensor instrument housing
   flowerWhite: 0xf3f0e8,  // second scatter flower color
+  flowerLavender: 0xb58ae6,
+  flowerOrange: 0xf29a4a,
+  flowerRed: 0xe8505b,
+  flowerBlue: 0x7fb8f0,
+  flowerMagenta: 0xd46fd6,
 }
 
 // ─── Small builders ───
@@ -162,6 +169,104 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
 // ─── Props ───
 
+/**
+ * Low-poly flower lying open on the ground: five nearly flat petals around a
+ * round center, no stem. Petals and center are separate geometries so each is
+ * drawn by its own InstancedMesh with per-instance color (see flowers()).
+ * FLOWER_LIFT raises both so the lowest vertex sits at y = 0 at any scale.
+ * Fresh geometry per call, since world.js's teardown disposes whatever geometry
+ * it finds and a shared one would be disposed repeatedly.
+ */
+const FLOWER_LIFT = 0.009
+function flowerPetalGeometry() {
+  const PETALS = 5
+  const parts = []
+  for (let i = 0; i < PETALS; i++) {
+    const pt = new THREE.SphereGeometry(0.06, 5, 3)
+    pt.scale(1.25, 0.32, 0.7) // flat oval, long axis along +x
+    pt.translate(0.07, 0, 0)
+    pt.rotateZ(0.2)           // tips just lifted: open and lying flat
+    pt.rotateY((i / PETALS) * Math.PI * 2)
+    parts.push(pt)
+  }
+  const geo = mergeGeometries(parts)
+  parts.forEach(g => g.dispose())
+  // mergeGeometries logs and returns null on an attribute mismatch rather than
+  // throwing, which would otherwise surface as a vague null read below
+  if (!geo) throw new Error('flowerPetalGeometry: merge failed')
+  geo.translate(0, FLOWER_LIFT, 0)
+  return geo
+}
+
+function flowerCenterGeometry() {
+  const geo = new THREE.SphereGeometry(0.038, 6, 4)
+  geo.scale(1, 0.7, 1)
+  geo.translate(0, FLOWER_LIFT + 0.018, 0)
+  return geo
+}
+
+// petal colors for flowers that aren't tied to a station's own theme
+const FLOWER_PALETTE = [
+  C.flowerPink, C.flowerYellow, C.flowerWhite, C.flowerLavender,
+  C.flowerOrange, C.flowerRed, C.flowerBlue, C.flowerMagenta,
+]
+
+/** Mostly small, the occasional big bloom: squaring skews toward the low end. */
+const flowerSize = () => 0.6 + Math.pow(Math.random(), 2) * 1.4
+
+const _fc = new THREE.Color()
+const _fhsl = { h: 0, s: 0, l: 0 }
+/** A center that contrasts with its petals: brown for warm yellows and
+    oranges, yellow for everything else. The lightness cap matters: HSL
+    saturation reads high for near-whites, so a warm white would otherwise
+    pass as a yellow and get a brown center. */
+function flowerCenter(petal) {
+  _fc.setHex(petal).getHSL(_fhsl, THREE.SRGBColorSpace)
+  const warm = _fhsl.h > 0.04 && _fhsl.h < 0.2 && _fhsl.s > 0.3 && _fhsl.l < 0.85
+  return warm ? C.trunk : C.flowerYellow
+}
+
+/**
+ * Instanced flowers lying flat: two draw calls however many colors are mixed.
+ * `petal` colors every flower in the call; omit it and each transform's own
+ * `petal` is used. Materials are white and uncached (mat() with opts skips the
+ * shared cache), so per-instance color tints them and teardown disposes them.
+ * Shadows off: something this flat casts nothing visible.
+ */
+function flowers(transforms, petal = null) {
+  const n = transforms.length
+  const petals = new THREE.InstancedMesh(flowerPetalGeometry(), mat(0xffffff, {}), n)
+  const centers = new THREE.InstancedMesh(flowerCenterGeometry(), mat(0xffffff, {}), n)
+  const d = new THREE.Object3D()
+  const col = new THREE.Color()
+  transforms.forEach((tr, i) => {
+    d.position.set(tr.x || 0, tr.y || 0, tr.z || 0)
+    d.rotation.set(0, tr.ry || 0, 0)
+    d.scale.setScalar(tr.s != null ? tr.s : 1)
+    d.updateMatrix()
+    petals.setMatrixAt(i, d.matrix)
+    centers.setMatrixAt(i, d.matrix)
+    const pc = petal ?? tr.petal ?? C.flowerPink
+    petals.setColorAt(i, col.setHex(pc))
+    centers.setColorAt(i, col.setHex(flowerCenter(pc)))
+  })
+  petals.castShadow = false
+  centers.castShadow = false
+  const g = new THREE.Group()
+  g.add(petals, centers)
+  return g
+}
+
+/**
+ * Move a prop-local set of light points into station-group space, for props
+ * that are themselves placed with their own rotation (the parked tractor).
+ * Mirrors three.js's Y-rotation: x' = x·cos + z·sin, z' = -x·sin + z·cos.
+ */
+function atProp(pts, px, pz, ry = 0) {
+  const c = Math.cos(ry), sn = Math.sin(ry)
+  return pts.map(p => ({ x: px + p.x * c + p.z * sn, y: p.y, z: pz - p.x * sn + p.z * c }))
+}
+
 function makeTree(scale = 1, color = null) {
   const g = new THREE.Group()
   g.add(place(cyl(0.18, 0.26, 1.4, C.trunk, 7), 0, 0.7, 0))
@@ -202,27 +307,33 @@ function makeRainbowTree() {
   }
   const RAINBOW = [0xe0596e, 0xf0955c, 0xf2d54a, 0x5cc257, 0x38cebc, 0x5a8ff0, 0x8f6ae0, 0xe87fae]
   let ci = 0
+  // canopy spheres, recorded so world.js can set lights on their surface
+  const blobs = []
   const blobRing = (n, ringR, y, blobR, offset) => {
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2 + offset
-      g.add(place(sph(blobR * rand(0.9, 1.1), RAINBOW[ci++ % RAINBOW.length], 8),
-        Math.cos(a) * ringR, y + rand(-0.15, 0.15), Math.sin(a) * ringR))
+      const r = blobR * rand(0.9, 1.1)
+      const bx = Math.cos(a) * ringR, by = y + rand(-0.15, 0.15), bz = Math.sin(a) * ringR
+      g.add(place(sph(r, RAINBOW[ci++ % RAINBOW.length], 8), bx, by, bz))
+      blobs.push({ x: bx, y: by, z: bz, r })
     }
   }
   blobRing(6, 1.9, 4.7, 1.15, 0)   // bottom dome ring
   blobRing(4, 1.2, 6.0, 1.0, 0.5)  // upper ring
   g.add(place(sph(0.95, RAINBOW[ci % RAINBOW.length], 8), 0, 7.0, 0)) // crown
-  // fallen petals dotting the grass under the canopy
+  blobs.push({ x: 0, y: 7.0, z: 0, r: 0.95 })
+  g.userData.blobs = blobs
+  // fallen blossoms dotting the grass under the canopy, in every rainbow color
   const petalT = []
-  for (let i = 0; i < 10; i++) {
-    const a = rand(0, Math.PI * 2), r = rand(1.4, 3.0)
-    petalT.push({ x: Math.cos(a) * r, y: 0.06, z: Math.sin(a) * r, s: rand(0.5, 0.9) })
+  for (let i = 0; i < 18; i++) {
+    // 1.75 keeps even the largest blossom clear of the root flares (reach 1.46)
+    const a = rand(0, Math.PI * 2), r = rand(1.75, 3.4)
+    petalT.push({
+      x: Math.cos(a) * r, y: 0.022, z: Math.sin(a) * r,
+      s: flowerSize(), ry: rand(0, Math.PI * 2), petal: RAINBOW[i % RAINBOW.length],
+    })
   }
-  RAINBOW.slice(0, 3).forEach((c, i) => {
-    const petals = instanced(new THREE.SphereGeometry(0.12, 6, 5), c, petalT.filter((_, pi) => pi % 3 === i))
-    petals.castShadow = false
-    g.add(petals)
-  })
+  g.add(flowers(petalT))
   return g
 }
 
@@ -830,7 +941,14 @@ function buildCropField() {
   pre.position.z = Z_OFF
   post.position.z = Z_OFF
   group.add(pre, post)
-  return { group, pre, post, colliders: [], walkables }
+  return {
+    group, pre, post, colliders: [], walkables,
+    // marker lights set into both long edges of the raised bed
+    lights: [-4, -2, 0, 2, 4].flatMap(zz => [
+      { x: -7.8, y: 0.36, z: zz + Z_OFF },
+      { x: 7.8, y: 0.36, z: zz + Z_OFF },
+    ]),
+  }
 }
 
 function buildFarmstead() {
@@ -889,6 +1007,24 @@ function buildFarmstead() {
       { x: -5.6, z: -2.5, r: 1.3 }, // windmill
       { x: -4.4, z: 3.6, r: 1.9 }, // parked tractor
     ],
+    lights: [
+      // barn eaves, both gable sides (barn body is 7 x 5.5 at z -2.5)
+      ...[-3, -1, 1, 3].flatMap(x => [
+        { x, y: 4.25, z: 0.25 },
+        { x, y: 4.25, z: -5.25 },
+      ]),
+      // silo: a ring under the cap plus a beacon on the apex
+      ...ring(5.4, -3.5, 1.5, 6.55, 6),
+      { x: 5.4, y: 8.2, z: -3.5 },
+      // on the windmill's rotor hub. NOT on the tower axis: the tower is solid
+      // there and swallows the bulb, and the rotor sits 0.55 forward of it.
+      { x: -5.6, y: 7.6, z: -1.52 },
+      // the parked tractor's own headlights and tail lights
+      ...atProp([
+        { x: 0.45, y: 1.45, z: 1.37 }, { x: -0.45, y: 1.45, z: 1.37 },
+        { x: 0.5, y: 1.95, z: -1.18 }, { x: -0.5, y: 1.95, z: -1.18 },
+      ], -4.4, 3.6, 2.3),
+    ],
   }
 }
 
@@ -937,7 +1073,20 @@ function buildSoilPit() {
   }
 
   group.add(pre, post)
-  return { group, pre, post, colliders: [{ x: 0, z: -2.6, r: 2.4 }], walkables }
+  return {
+    group, pre, post, colliders: [{ x: 0, z: -2.6, r: 2.4 }], walkables,
+    // lights set into the rim curbs around the open pit
+    lights: [
+      ...[-2, -0.7, 0.7, 2].flatMap(x => [
+        { x, y: 0.3, z: 2.78 },
+        { x, y: 0.3, z: -1.58 },
+      ]),
+      ...[-0.6, 1.8].flatMap(z => [
+        { x: 2.68, y: 0.3, z },
+        { x: -2.68, y: 0.3, z },
+      ]),
+    ],
+  }
 }
 
 function buildPasture() {
@@ -1028,7 +1177,16 @@ function buildPasture() {
   cows.push(calf)
 
   group.add(pre, post)
-  return { group, pre, post, colliders }
+  return {
+    group, pre, post, colliders,
+    // A cap light on every fence post — the posts are already there. Dedupe
+    // first: addSide() re-adds each corner from both of its adjoining sides,
+    // so the raw list double-counts all four corners.
+    lights: postT
+      .filter((pt, i) => postT.findIndex(q =>
+        Math.abs(q.x - pt.x) < 1e-6 && Math.abs(q.z - pt.z) < 1e-6) === i)
+      .map(pt => ({ x: pt.x, y: 1.16, z: pt.z })),
+  }
 }
 
 function buildPond() {
@@ -1080,6 +1238,8 @@ function buildPond() {
     // just inside the bank ring) so the bank itself is walkable
     colliders: [{ x: 0, z: 0, r: 3.8 }, { x: -5.8, z: -3.2, r: 0.8 }],
     walkables: [bank],
+    // inset around the gravel bank ring, reflecting off the water
+    lights: ring(0, 0, 5.05, 0.12, 10),
   }
 }
 
@@ -1114,20 +1274,33 @@ function buildGreenhouse() {
     pre.add(wilt)
   })
 
-  // post: bushes + blooms on the beds, flower boxes outside
+  // post: bushes + blooms on the beds, flower boxes outside. Blooms perch on
+  // the bush surface; box flowers lie on the box soil.
+  // one flowers() call for all of them: per-flower colors keep it to two draws.
+  // Bloom and bud heights sit on the bush's faceted low-poly surface, which
+  // dips below a true sphere between vertices.
+  const blooms = []
   ;[-2.2, -1.0, 1.0, 2.2].forEach(x => {
     post.add(place(sph(0.34, pick(C.foliage), 7), x, 0.95, 0))
-    post.add(place(sph(0.1, x < 0 ? C.flowerPink : C.flowerYellow, 6), x + 0.1, 1.25, 0.1))
-    post.add(place(sph(0.08, C.trim, 6), x - 0.12, 1.18, -0.1))
+    blooms.push({ x: x + 0.1, y: 1.249, z: 0.1, s: 0.75, ry: rand(0, Math.PI * 2), petal: x < 0 ? C.flowerPink : C.flowerYellow })
+    blooms.push({ x: x - 0.12, y: 1.246, z: -0.1, s: 0.55, ry: rand(0, Math.PI * 2), petal: C.trim })
   })
   ;[-1.5, 1.5].forEach(x => {
     post.add(place(box(1.4, 0.35, 0.4, C.trunk), x, 0.3, 2.5))
-    post.add(place(sph(0.16, C.flowerPink, 6), x - 0.3, 0.55, 2.5))
-    post.add(place(sph(0.16, C.flowerYellow, 6), x + 0.3, 0.55, 2.5))
+    blooms.push({ x: x - 0.3, y: 0.476, z: 2.5, s: 1.15, ry: rand(0, Math.PI * 2), petal: C.flowerPink })
+    blooms.push({ x: x + 0.3, y: 0.476, z: 2.5, s: 1.15, ry: rand(0, Math.PI * 2), petal: C.flowerYellow })
   })
+  post.add(flowers(blooms))
 
   group.add(pre, post)
-  return { group, pre, post, colliders: [{ x: 0, z: 0, r: 4.2 }] }
+  return {
+    group, pre, post, colliders: [{ x: 0, z: 0, r: 4.2 }],
+    lights: [
+      ...[-2.6, -1.3, 0, 1.3, 2.6].map(x => ({ x, y: 4.02, z: 0 })), // ridge beam
+      ...[-2.4, 0, 2.4].map(x => ({ x, y: 2.62, z: 2.24 })),         // front eave
+      { x: 0, y: 2.05, z: 2.3 },                                      // over the door
+    ],
+  }
 }
 
 function buildHeritage() {
@@ -1189,6 +1362,11 @@ function buildHeritage() {
     group, pre, post,
     // tipi + one circle per planting mound
     colliders: [{ x: -3.4, z: -2.6, r: 2.5 }, ...moundPos.map(([x, z]) => ({ x, z, r: 0.85 }))],
+    lights: [
+      { x: 0.5, y: 0.16, z: -3.4 },        // the fire itself
+      ...ring(0.5, -3.4, 0.5, 0.13, 5),    // embers inside the stone ring
+      ...ring(-3.4, -2.6, 2.3, 0.95, 7),   // along the tipi's banded skirt
+    ],
   }
 }
 
@@ -1241,7 +1419,8 @@ function buildConservation() {
   pre.add(place(outlet, 1.5, 0.35, -2.7))
 
   // post: banded contour prairie strips (tallgrass + buffer + wildflowers)
-  ;[2.6, 0.9, -0.8].forEach((z, bi) => {
+  const prairieFlowers = [] // every strip's flowers, drawn by one flowers() call
+  ;[2.6, 0.9, -0.8].forEach(z => {
     const tall = [], midg = []
     for (let i = 0; i < 14; i++) {
       const x = -6 + i * 0.92 + rand(-0.15, 0.15)
@@ -1249,17 +1428,24 @@ function buildConservation() {
     }
     post.add(instanced(new THREE.ConeGeometry(0.16, 1.5, 5), C.prairieGold, tall))
     post.add(instanced(new THREE.ConeGeometry(0.2, 1.0, 5), C.bufferGreen, midg))
-    const fl = []
-    for (let i = 0; i < 6; i++) fl.push({ x: -5.5 + rand(0, 11), y: 0.75, z: z + rand(-0.3, 0.3), s: rand(0.7, 1.1) })
-    post.add(instanced(new THREE.SphereGeometry(0.12, 6, 5), bi % 2 ? C.flowerPink : C.flowerWhite, fl))
+    // lying in the grass between the prairie stems
+    for (let i = 0; i < 9; i++) prairieFlowers.push({ x: -5.5 + rand(0, 11), y: 0.022, z: z + rand(-0.3, 0.3), s: flowerSize(), ry: rand(0, Math.PI * 2), petal: pick(FLOWER_PALETTE) })
   })
+  post.add(flowers(prairieFlowers))
   // riparian buffer trees lining the stream
   ;[-5, -1.5, 2, 5].forEach((x, i) => {
     post.add(place(i % 2 ? makeTree(rand(0.85, 1.05), C.foliage[2]) : makePine(rand(0.85, 1.05)), x, 0, -3.6 + rand(-0.3, 0.3)))
   })
 
   group.add(pre, post)
-  return { group, pre, post, colliders: [], walkables }
+  return {
+    group, pre, post, colliders: [], walkables,
+    // bank markers down both sides of the stream crossing
+    lights: [-5, -2.5, 0, 2.5, 5].flatMap(x => [
+      { x, y: 0.3, z: -3.0 },
+      { x, y: 0.3, z: -5.4 },
+    ]),
+  }
 }
 
 function buildPhosphorus() {
@@ -1309,8 +1495,16 @@ function buildPhosphorus() {
   for (let i = 0; i < 22; i++) buf.push({ x: -5 + rand(0, 10), y: 0.4, z: -0.4 + rand(-0.5, 0.5), s: rand(0.7, 1.1), ry: rand(0, Math.PI) })
   post.add(instanced(new THREE.ConeGeometry(0.16, 0.9, 5), C.bufferGreen, buf))
   const fl = []
-  for (let i = 0; i < 10; i++) fl.push({ x: -5 + rand(0, 10), y: 0.6, z: -0.4 + rand(-0.5, 0.5), s: rand(0.7, 1.1) })
-  post.add(instanced(new THREE.SphereGeometry(0.12, 6, 5), C.flowerYellow, fl))
+  // on the grass between the pond bank and the field. Rejection-sampled: lying
+  // flat, a flower under the water, the gravel bank, or the raised bed would
+  // simply vanish.
+  for (let tries = 0; fl.length < 14 && tries < 400; tries++) {
+    const fs = flowerSize(), foot = 0.14 * fs
+    const x = -5 + rand(0, 10), z = rand(-1.0, -0.05)
+    if (z + foot > 0 || Math.hypot(x, z + 3.2) < 4.2 + foot) continue
+    fl.push({ x, y: 0.022, z, s: fs, ry: rand(0, Math.PI * 2), petal: pick(FLOWER_PALETTE) })
+  }
+  post.add(flowers(fl))
   post.add(place(make4RSign(), 4.2, 0, -0.6, -0.5))
   post.add(place(flatDisc(0.4, C.foliage[1], 8), 1.2, 0.1, -3.6))
   post.add(place(flatDisc(0.3, C.foliage[0], 8), -1.0, 0.1, -2.6))
@@ -1326,7 +1520,13 @@ function buildPhosphorus() {
   post.add(instanced(new THREE.ConeGeometry(0.3, 1.2, 6), C.foliage[1], cropB))
 
   group.add(pre, post)
-  return { group, pre, post, colliders: [{ x: 0, z: -3.2, r: 3.0 }], walkables }
+  return {
+    group, pre, post, colliders: [{ x: 0, z: -3.2, r: 3.0 }], walkables,
+    lights: [
+      ...ring(0, -3.2, 3.8, 0.12, 8),                                // catch-pond bank
+      ...[-5, -2.5, 0, 2.5, 5].map(x => ({ x, y: 0.36, z: 5.8 })),   // field's front edge
+    ],
+  }
 }
 
 function buildSoilArt() {
@@ -1403,7 +1603,13 @@ function buildSoilArt() {
   group.add(pre, post)
   // no colliders: the pre wall and post archway swap at the same spot, and a
   // circle there would block walking under the restored arch
-  return { group, pre, post, colliders: [] }
+  return {
+    group, pre, post, colliders: [],
+    lights: [
+      ...ring(0, 0, 4.4, 0.1, 12),                                  // inlaid in the plaza rim
+      ...[-1.5, 0, 1.5].map(x => ({ x, y: 2.92, z: -2.85 })),       // under the arch crossbar
+    ],
+  }
 }
 
 function buildResearch() {
@@ -1473,7 +1679,16 @@ function buildResearch() {
   group.add(pre, post)
   // cabin only — the GPS mast lives in `post`, and a collider on a
   // not-yet-visible prop would read as an invisible wall
-  return { group, pre, post, colliders: [{ x: 0, z: -3.4, r: 2.4 }], walkables }
+  return {
+    group, pre, post, colliders: [{ x: 0, z: -3.4, r: 2.4 }], walkables,
+    lights: [
+      { x: 0, y: 1.98, z: -1.83 },                                  // porch light over the door
+      { x: -1.2, y: 1.5, z: -1.82 },                                // the lit window
+      ...[-1.6, 0, 1.6].map(x => ({ x, y: 2.5, z: -1.9 })),         // cabin eave
+      // marker at the front edge of each research plot
+      ...beds.map(([bx, bz]) => ({ x: bx, y: 0.3, z: bz - 0.6 })),
+    ],
+  }
 }
 
 function buildSalinity() {
@@ -1531,7 +1746,19 @@ function buildSalinity() {
   group.add(pre, post)
   // the sensor rig lives in `post` — no collider until it's actually visible
   // (a thin pole is fine to pass through; matches the pre/post contract)
-  return { group, pre, post, colliders: [], walkables }
+  return {
+    group, pre, post, colliders: [], walkables,
+    // the rig lights sit on post-only props, which is fine: a station's lights
+    // only ever switch on at restore, which is exactly when post appears
+    lights: [
+      ...[-3, -1, 1, 3].flatMap(x => [
+        { x, y: 0.36, z: 4.3 },    // field's front edge
+        { x, y: 0.36, z: -1.3 },   // and its back edge
+      ]),
+      { x: 3.0, y: 3.62, z: -0.5 },  // nav light atop the data mast
+      { x: 3.5, y: 3.06, z: -0.5 },  // solar-panel indicator
+    ],
+  }
 }
 
 // ─── Layout ───
@@ -1889,25 +2116,48 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
   sunDisc.lookAt(0, 0, 0)
   scene.add(sunDisc)
 
-  // stars — a dome of tiny unlit dots, faded in at night
+  // stars — a dome of tiny unlit dots, faded in at night. Per-instance color
+  // carries a slow per-star twinkle; the shared material's opacity still does
+  // the overall night fade, so the two stack rather than fight.
   const starMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, fog: false })
   const starGeo = new THREE.SphereGeometry(0.5, 4, 3)
-  const STAR_N = 130
+  const STAR_N = 420
   const stars = new THREE.InstancedMesh(starGeo, starMat, STAR_N)
+  // assigned before the first render so the shader picks up the instancing-color
+  // define without a material recompile
+  stars.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(STAR_N * 3), 3)
+  stars.instanceColor.setUsage(THREE.DynamicDrawUsage)
+  const starTwinkle = new Float32Array(STAR_N * 2) // [rate, phase] per star
   {
     const d = new THREE.Object3D()
     for (let i = 0; i < STAR_N; i++) {
       const a = rand(0, Math.PI * 2)
-      const elev = rand(0.12, Math.PI / 2 - 0.06)
+      const elev = rand(0.1, Math.PI / 2 - 0.05)
       const R = 230
       d.position.set(Math.cos(a) * Math.cos(elev) * R, Math.sin(elev) * R, Math.sin(a) * Math.cos(elev) * R)
-      d.scale.setScalar(rand(0.5, 1.4))
+      // a handful of bright ones among many faint — a uniform field reads as
+      // static noise rather than as a sky
+      d.scale.setScalar(i % 17 === 0 ? rand(1.8, 2.7) : rand(0.45, 1.5))
       d.updateMatrix()
       stars.setMatrixAt(i, d.matrix)
+      starTwinkle[i * 2] = rand(0.35, 1.1)
+      starTwinkle[i * 2 + 1] = rand(0, Math.PI * 2)
+      stars.instanceColor.setXYZ(i, 1, 1, 1)
     }
   }
+  stars.frustumCulled = false
   stars.visible = false
   scene.add(stars)
+
+  // ── String lights ──
+  // Lights along the walking paths, a wrap on the landmark rainbow tree, and a
+  // set per station — mounted on that station's own structures — that
+  // switches on in rainbow once restored. All unlit geometry in a single
+  // instanced draw call; see lights-fx.js for why these aren't real lights.
+  const PATH_LIGHT_STEP = 1.7 // one spacing for every walking path
+  const lightStrings = createLightStrings({ scene, tween })
+  const pathLightPts = []  // ground lights straddling the sidewalk/trail edges
+  const pathLightHues = [] // parallel: starting hue per point, paired L/R
 
   // ── Hub plaza + paths ──
   scene.add(place(flatDisc(4.5, C.path, 26), 0, 0.03, 0))
@@ -1948,6 +2198,17 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     built.post.scale.setScalar(0.001)
     scene.add(built.group)
 
+    // Each builder authors its own lights on its own structures (barn eaves,
+    // silo cap, the tractor's headlights, pond banks, the fire ring...) in
+    // group-local space. The group is only translated and spun about Y, so one
+    // rotate + offset moves them into the world.
+    const rc = Math.cos(rot), rs = Math.sin(rot)
+    lightStrings.addStationString(id, (built.lights || []).map(pt => ({
+      x: x + pt.x * rc + pt.z * rs,
+      y: pt.y,
+      z: z - pt.x * rs + pt.z * rc,
+    })))
+
     // ring stations get a radial sidewalk from the plaza; trail stations share
     // the winding trail path (built once, below) instead
     if (!layout.trail) {
@@ -1961,6 +2222,27 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
       place(path, px, 0.05, pz, -a + Math.PI / 2)
       scene.add(path)
       walkables.push(path)
+      // Lights straddling both edges of the sidewalk — offset is exactly the
+      // path's half-width, so each bulb sits half on concrete, half on grass.
+      // Matched pairs at an equal step, both halves sharing a hue so the
+      // rainbow runs along the path rather than across it. The run stops short
+      // of the beacon, which sits on the path end and would otherwise end up
+      // ringed by lights at this density.
+      const HALF_W = 1.2 // matches the 2.4-wide path above
+      const runStart = 4.5
+      const runEnd = Math.hypot(anchor.x, anchor.z) - 1.9 // clear of the beacon ring
+      const pairs = Math.max(1, Math.round((runEnd - runStart) / PATH_LIGHT_STEP))
+      for (let k = 0; k < pairs; k++) {
+        const rr = runStart + (runEnd - runStart) * ((k + 0.5) / pairs)
+        ;[1, -1].forEach(sd => {
+          pathLightPts.push({
+            x: Math.cos(a) * rr - Math.sin(a) * sd * HALF_W,
+            y: 0.12,
+            z: Math.sin(a) * rr + Math.cos(a) * sd * HALF_W,
+          })
+          pathLightHues.push(k / pairs)
+        })
+      }
     }
     if (built.walkables) walkables.push(...built.walkables)
     if (built.group.userData.cows) {
@@ -2048,12 +2330,97 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     walkables.push(plank)
   }
 
+  // Lights straddling both edges of the trail planks, a matched pair at every
+  // equal step. `next` carries the leftover spacing across the waypoint joins
+  // so the run stays evenly spaced rather than restarting at every corner.
+  {
+    const SPACING = PATH_LIGHT_STEP
+    const HALF_W = 1.3 // matches the 2.6-wide planks above
+    // The trail's first waypoint sits at radius 47 and the deck spans 32-54,
+    // so its opening steps land ON the bridge. Test in the deck's own frame:
+    // an exact rectangle, not a capsule that would also blank the landing.
+    const bc = Math.cos(bridgeRy), bs = Math.sin(bridgeRy)
+    const onBridge = (px, pz) => {
+      const dx = px - bridgeMid.x, dz = pz - bridgeMid.z
+      return Math.abs(dx * bc - dz * bs) < 4.0 &&
+        Math.abs(dx * bs + dz * bc) < BRIDGE_LEN / 2 + 0.4
+    }
+    // trail beacons sit just off the plank edge; keep lights out of their rings
+    const nearBeacon = (px, pz) =>
+      stationList.some(st => Math.hypot(px - st.anchor.x, pz - st.anchor.z) < 1.7)
+    let next = SPACING / 2
+    let step = 0
+    for (let i = 0; i < TRAIL_WAYPOINTS.length - 1; i++) {
+      const p1 = TRAIL_WAYPOINTS[i], p2 = TRAIL_WAYPOINTS[i + 1]
+      const dx = p2.x - p1.x, dz = p2.z - p1.z
+      const len = Math.hypot(dx, dz)
+      if (len < 1e-4) continue
+      const nx = -dz / len, nz = dx / len // segment normal, for the pair offset
+      let d = next
+      while (d < len) {
+        const u = d / len
+        const mx = p1.x + dx * u, mz = p1.z + dz * u
+        const pair = [1, -1].map(sd => ({ x: mx + nx * HALF_W * sd, y: 0.12, z: mz + nz * HALF_W * sd }))
+        // skip the whole pair, never one half, so the run stays symmetrical
+        if (!pair.some(pt => onBridge(pt.x, pt.z) || nearBeacon(pt.x, pt.z))) {
+          const hue = (step / 21) % 1 // about one spectrum per 36 units of trail
+          pair.forEach(pt => { pathLightPts.push(pt); pathLightHues.push(hue) })
+        }
+        step++
+        d += SPACING
+      }
+      next = d - len
+    }
+  }
+
+  // Quieter than the station rainbows: smaller bulbs, and `dim` holds them
+  // part-way off the unlit grey so they read as tinted markers, not beacons.
+  lightStrings.addBulbs(pathLightPts, {
+    scale: 0.6, rainbow: true, dim: 0.6, hues: pathLightHues,
+  })
+
   // ── Landmark: rainbow tree at the trail's end ──
   const rtPos = trailPoint(-27.5, 0)
   const rainbowTree = makeRainbowTree()
   place(rainbowTree, rtPos.x, 0, rtPos.z, rand(0, Math.PI * 2))
   scene.add(rainbowTree)
   colliders.push({ x: rtPos.x, z: rtPos.z, r: 1.4 })
+  // The landmark is the one thing already rainbow, so its lights are too: on
+  // from the start rather than waiting on a station, and blinking. They sit on
+  // the canopy's own surface, spread over each foliage ball with a Fibonacci
+  // sphere, skipping any point buried inside a neighboring ball, on a ball's
+  // shaded underside, or facing in toward the trunk where the canopy hides it.
+  // The hue follows the angle around the trunk, so the travelling rainbow
+  // reads as spinning round the tree.
+  rainbowTree.updateMatrixWorld(true)
+  {
+    const blobs = rainbowTree.userData.blobs || []
+    const pts = [], hues = []
+    const v = new THREE.Vector3()
+    const GOLDEN = Math.PI * (3 - Math.sqrt(5))
+    blobs.forEach((bl, bi) => {
+      const n = Math.round(14 * bl.r * bl.r) + 2
+      const bh = Math.hypot(bl.x, bl.z)
+      for (let k = 0; k < n; k++) {
+        const dy = 1 - ((k + 0.5) / n) * 2
+        if (dy < -0.5) continue // underside
+        const rr = Math.sqrt(1 - dy * dy), th = k * GOLDEN
+        const dx = Math.cos(th) * rr, dz = Math.sin(th) * rr
+        const outward = bh < 1e-6 ? 1 : (dx * bl.x + dz * bl.z) / bh
+        if (dy < 0.35 && outward < -0.2) continue // faces the trunk
+        // 0.97r: the balls are 8-segment spheres whose faces sit inside the
+        // true radius, so this touches the flat faces and still shows at the
+        // corners instead of floating clear of the faces
+        const R = bl.r * 0.97
+        const lx = bl.x + dx * R, ly = bl.y + dy * R, lz = bl.z + dz * R
+        if (blobs.some((o, oi) => oi !== bi && Math.hypot(lx - o.x, ly - o.y, lz - o.z) < o.r + 0.02)) continue
+        v.set(lx, ly, lz).applyMatrix4(rainbowTree.matrixWorld)
+        pts.push({ x: v.x, y: v.y, z: v.z })
+        hues.push((Math.atan2(lz, lx) / (Math.PI * 2) + 1) % 1)
+      }
+    })
+    lightStrings.addBulbs(pts, { rainbow: true, blink: true, scale: 1.1, hues })
+  }
 
   // ── Decorations ──
   // Scatter greenery on an island: perimeter trees/rocks, grass tufts, three
@@ -2077,9 +2444,24 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
   }
   // keep random scatter from crowding the landmark rainbow tree
   const nearLandmark = (x, z) => Math.hypot(x - rtPos.x, z - rtPos.z) < 6
+  // the main island's radial sidewalks — same run as the paths laid in the
+  // station loop (radius 4.5 out to 4.5 + STATION_R - 9). nearTrail only ever
+  // covered the trail island, so grass scatter was landing on these.
+  const sidewalkSegs = stationList
+    .map(st => STATION_LAYOUT[st.id])
+    .filter(l => l && !l.trail)
+    .map(l => {
+      const a = (l.angle * Math.PI) / 180
+      const r1 = 4.5, r2 = 4.5 + (STATION_R - 9)
+      return { ax: Math.cos(a) * r1, az: Math.sin(a) * r1, bx: Math.cos(a) * r2, bz: Math.sin(a) * r2 }
+    })
+  const nearSidewalk = (x, z, pad) => sidewalkSegs.some(sg => {
+    const c = closestOnSegment(x, z, sg.ax, sg.az, sg.bx, sg.bz)
+    return Math.hypot(x - c.x, z - c.z) < pad
+  })
   const addScatter = (mesh) => { mesh.castShadow = false; scene.add(mesh); return mesh }
 
-  function scatterIsland({ cx, cz, radius, hubR, treeCount, tuftCount, splotchCount }) {
+  function scatterIsland({ cx, cz, radius, hubR, treeCount, tuftCount, flowerCount, splotchCount }) {
     for (let i = 0; i < treeCount; i++) {
       const a = (i / treeCount) * Math.PI * 2 + 0.28
       const r = radius * rand(0.82, 0.94)
@@ -2100,22 +2482,30 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
       rock.castShadow = false
       scene.add(place(rock, x, 0, z))
     }
-    // tufts + three flower colors
-    const tuftT = [], flowerPT = [], flowerYT = [], flowerWT = []
-    for (let i = 0; i < tuftCount; i++) {
+    // tufts and flowers go on grass only, never on a walking path
+    const offGrass = (x, z) =>
+      nearStationCluster(x, z, 8) || nearTrail(x, z, 2.4) || nearSidewalk(x, z, 2.3) ||
+      nearBridge(x, z, 4.5) || nearLandmark(x, z) || (hubR && Math.hypot(x - cx, z - cz) < hubR)
+    const randomSpot = () => {
       const a = rand(0, Math.PI * 2), r = Math.sqrt(Math.random()) * (radius - 4)
-      const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r
-      if (nearStationCluster(x, z, 8) || nearTrail(x, z, 2.4) || nearBridge(x, z, 4.5) || nearLandmark(x, z) || (hubR && Math.hypot(x - cx, z - cz) < hubR)) continue
-      const t = { x, y: 0.2, z, s: rand(0.5, 1), ry: rand(0, Math.PI) }
-      if (i % 5 === 0) flowerPT.push(t)
-      else if (i % 5 === 1) flowerYT.push(t)
-      else if (i % 5 === 2) flowerWT.push(t)
-      else tuftT.push(t)
+      return { x: cx + Math.cos(a) * r, z: cz + Math.sin(a) * r }
+    }
+    const tuftT = []
+    for (let i = 0; i < tuftCount; i++) {
+      const { x, z } = randomSpot()
+      if (offGrass(x, z)) continue
+      tuftT.push({ x, y: 0.2, z, s: rand(0.5, 1), ry: rand(0, Math.PI) })
     }
     addScatter(instanced(new THREE.ConeGeometry(0.15, 0.45, 5), C.grassDark, tuftT))
-    addScatter(instanced(new THREE.SphereGeometry(0.14, 6, 5), C.flowerPink, flowerPT))
-    addScatter(instanced(new THREE.SphereGeometry(0.14, 6, 5), C.flowerYellow, flowerYT))
-    addScatter(instanced(new THREE.SphereGeometry(0.13, 6, 5), C.flowerWhite, flowerWT))
+    // flowers lying in the grass: every palette color, mixed sizes. y clears the
+    // lawn splotches (y 0.02), so a flower on one isn't half hidden under it.
+    const flowerT = []
+    for (let i = 0; i < flowerCount; i++) {
+      const { x, z } = randomSpot()
+      if (offGrass(x, z)) continue
+      flowerT.push({ x, y: 0.022, z, s: flowerSize(), ry: rand(0, Math.PI * 2), petal: pick(FLOWER_PALETTE) })
+    }
+    scene.add(flowers(flowerT)) // flowers() turns off its own shadows
     // mottled darker-green lawn splotches
     const splotchGeo = new THREE.CircleGeometry(1, 12)
     splotchGeo.rotateX(-Math.PI / 2)
@@ -2123,7 +2513,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     for (let i = 0; i < splotchCount; i++) {
       const a = rand(0, Math.PI * 2), r = Math.sqrt(Math.random()) * (radius - 5)
       const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r
-      if (nearStationCluster(x, z, 9) || nearTrail(x, z, 2.4) || nearBridge(x, z, 4.5) || nearLandmark(x, z) || (hubR && Math.hypot(x - cx, z - cz) < hubR)) continue
+      if (nearStationCluster(x, z, 9) || nearTrail(x, z, 2.4) || nearSidewalk(x, z, 2.3) || nearBridge(x, z, 4.5) || nearLandmark(x, z) || (hubR && Math.hypot(x - cx, z - cz) < hubR)) continue
       splotchT.push({ x, y: 0.02, z, s: rand(1.3, 3.2), sy: 1, ry: rand(0, Math.PI) })
     }
     const splotches = instanced(splotchGeo, C.grassDark, splotchT)
@@ -2132,9 +2522,9 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     scene.add(splotches)
   }
   // main island — denser than before, hub kept clear
-  scatterIsland({ cx: 0, cz: 0, radius: 38, hubR: 6.5, treeCount: 14, tuftCount: 130, splotchCount: 32 })
+  scatterIsland({ cx: 0, cz: 0, radius: 38, hubR: 6.5, treeCount: 14, tuftCount: 52, flowerCount: 190, splotchCount: 32 })
   // trail island
-  scatterIsland({ cx: NC.x, cz: NC.z, radius: 30, hubR: 0, treeCount: 10, tuftCount: 90, splotchCount: 22 })
+  scatterIsland({ cx: NC.x, cz: NC.z, radius: 30, hubR: 0, treeCount: 10, tuftCount: 36, flowerCount: 130, splotchCount: 22 })
 
   // clouds — cover both islands
   const clouds = []
@@ -2612,6 +3002,14 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     roamers.forEach(a => updateCow(a, a.userData.bounds, dt, t))
     checkWalkUp()
     critterFx.update(t)
+    lightStrings.update(t)
+    if (stars.visible) {
+      for (let i = 0; i < STAR_N; i++) {
+        const b = 0.55 + 0.45 * Math.sin(t * starTwinkle[i * 2] + starTwinkle[i * 2 + 1])
+        stars.instanceColor.setXYZ(i, b, b, b * 0.97 + 0.03) // faintly cool
+      }
+      stars.instanceColor.needsUpdate = true
+    }
     clouds.forEach(cloud => {
       cloud.position.x += cloud.userData.speed * dt
       if (cloud.position.x > 100) cloud.position.x = -100
@@ -2708,6 +3106,9 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     u.glow.material.color.setHex(C.beaconDone)
     u.glow.material.opacity = 0.08
     u.ring.scale.setScalar(1)
+
+    // the station's own lights chase alight, then hold as a moving rainbow
+    lightStrings.lightStation(id)
 
     // celebratory ring pulse
     const pulse = new THREE.Mesh(
@@ -2847,14 +3248,16 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     day: {
       sky: new THREE.Color(C.sky), hemiSky: new THREE.Color(0xe8f7ff), hemiGround: new THREE.Color(0xa8c98a),
       hemiI: 1.3, sunI: 1.8, sunC: new THREE.Color(0xfff6e0), sea: new THREE.Color(C.water),
-      disc: new THREE.Color(C.sun), cloud: new THREE.Color(0xffffff), stars: 0,
+      disc: new THREE.Color(C.sun), cloud: new THREE.Color(0xffffff), stars: 0, bulbs: 0,
     },
     night: {
       sky: new THREE.Color(0x1e2a52), hemiSky: new THREE.Color(0x7d90cc), hemiGround: new THREE.Color(0x2e3d55),
       hemiI: 0.55, sunI: 0.75, sunC: new THREE.Color(0xc3d3ff), sea: new THREE.Color(0x143a68),
-      disc: new THREE.Color(0xf0f4ff), cloud: new THREE.Color(0x93a3c8), stars: 0.9,
+      disc: new THREE.Color(0xf0f4ff), cloud: new THREE.Color(0x93a3c8), stars: 0.9, bulbs: 1,
     },
   }
+
+  let bulbLevel = 0 // 0 day, 1 night — string-light brightness blend
 
   /** Fade the world between 'day' and 'night' (default day). */
   function setTimeOfDay(mode) {
@@ -2870,6 +3273,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
       disc: sunDisc.material.color.clone(),
       cloud: cloudMats[0] ? cloudMats[0].color.clone() : new THREE.Color(0xffffff),
       stars: starMat.opacity,
+      bulbs: bulbLevel,
     }
     stars.visible = true
     tween(0.9, p => {
@@ -2884,6 +3288,8 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
       sunDisc.material.color.lerpColors(from.disc, to.disc, p)
       cloudMats.forEach(m => m.color.lerpColors(from.cloud, to.cloud, p))
       starMat.opacity = from.stars + (to.stars - from.stars) * p
+      bulbLevel = from.bulbs + (to.bulbs - from.bulbs) * p
+      lightStrings.setNight(bulbLevel)
     }, {
       onDone: () => { if (to.stars === 0) stars.visible = false },
     })
@@ -2895,6 +3301,7 @@ export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDi
     renderer.setAnimationLoop(null)
     ro.disconnect()
     critterFx.dispose() // pull live symbols before the scene traverse below
+    lightStrings.dispose() // ditto — it owns its instanced mesh's geo + material
     // The module-level matCache is shared across instances and kept for the
     // app's lifetime (a few dozen tiny Lambert materials) — never dispose
     // those, only per-instance geometries and non-cached materials.

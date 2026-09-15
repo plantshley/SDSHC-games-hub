@@ -278,7 +278,7 @@ export function createCritterFx({ scene, camera, tween }) {
     box3.setFromObject(anchor)
     anchor.getWorldPosition(_wp)
     const entry = {
-      group, anchor, dots, mats: [shellMat, dotMat],
+      group, anchor, dots, mats: [shellMat, dotMat], removed: false,
       topY: box3.max.y - _wp.y + 0.34,
       rise: 0,
     }
@@ -294,7 +294,12 @@ export function createCritterFx({ scene, camera, tween }) {
     }, { ease: t => t, onDone: () => removeBubble(entry) })
   }
 
+  // Idempotent: a bubble cut short by clearNpcBubbles() still has a live tween
+  // whose onDone fires later and would otherwise dispose its materials twice.
+  // `tween()` returns no handle, so guarding here is the only cancel we have.
   function removeBubble(entry) {
+    if (entry.removed) return
+    entry.removed = true
     scene.remove(entry.group)
     entry.mats.forEach(m => m.dispose())
     const i = bubbles.indexOf(entry)
