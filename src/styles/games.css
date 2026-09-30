@@ -4491,7 +4491,7 @@
   aspect-ratio: 1 / 1;
   height: 130%;
   max-width: 130%;
-  margin-top: -5%;
+  margin-top: -10%;
 }
 
 .fw-diagram-bg {
@@ -8873,4 +8873,41 @@
     font-size: 0.72rem !important;
     min-height: 0 !important;
   }
+}
+
+/* ── Food web: tap-for-hint on empty (?) zones ── */
+.fw-drop-zone:not(.fw-zone-filled) {
+  cursor: pointer;
+}
+
+.fw-zone-hinted {
+  border-style: solid;
+  border-color: var(--color-guardians);
+  box-shadow: 0 0 12px rgba(56, 206, 188, 0.6);
+}
+
+.fw-zone-hint {
+  position: absolute;
+  z-index: 9;
+  max-width: 260px;
+  padding: 10px 14px;
+  background: rgba(253, 246, 227, 0.97);
+  border: 3px solid var(--color-guardians);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--color-text-light);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+}
+
+.fw-zone-hint.fw-zone-hint-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
 }

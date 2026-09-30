@@ -2,6 +2,10 @@
  * Soil Food Web Builder — content data
  *
  * 12 organisms to place on the arrows-only diagram.
+ *
+ * `hint` shows after a wrong drop (describes the dragged organism).
+ * `zoneHint` shows when a player taps an empty (?) spot (describes what
+ * belongs there without naming it).
  */
 
 export const ORGANISMS = [
@@ -12,6 +16,7 @@ export const ORGANISMS = [
     snapX: 18, snapY: 35, displaySize: 192,
     fact: 'Plants capture sunlight and convert it to energy through photosynthesis. Their roots release sugars that feed billions of soil organisms.',
     hint: 'These are producers — they form a cornerstone of the food web.',
+    zoneHint: 'Something green goes here. It makes its own food from sunlight, and its roots feed soil life.',
   },
   {
     id: 'organic-matter',
@@ -20,6 +25,7 @@ export const ORGANISMS = [
     snapX: 22, snapY: 56, displaySize: 136,
     fact: 'Organic matter is dead plant and animal material. It is the primary food source for decomposers like bacteria and fungi.',
     hint: 'This is not alive — it is what remains after organisms die and decay.',
+    zoneHint: 'This one isn\'t alive. It\'s dead plant and animal material that decomposers feed on.',
   },
   {
     id: 'earthworms',
@@ -28,6 +34,7 @@ export const ORGANISMS = [
     snapX: 16, snapY: 71, displaySize: 188,
     fact: 'Earthworms mix and aerate soil as they burrow, creating channels for water and roots. They can eat their body weight in organic matter each day.',
     hint: 'These tunnel through soil and break down dead material at the bottom of the web.',
+    zoneHint: 'A tunneler goes here. It burrows through soil and eats dead plant material.',
   },
   {
     id: 'bacteria',
@@ -36,6 +43,7 @@ export const ORGANISMS = [
     snapX: 42, snapY: 76, displaySize: 107,
     fact: 'A single teaspoon of healthy soil contains up to 1 billion bacteria. They decompose organic matter and convert nitrogen into forms plants can use.',
     hint: 'These are microscopic decomposers that some nematodes, protozoa, and arthropods eat.',
+    zoneHint: 'Something microscopic goes here. A teaspoon of healthy soil holds up to a billion of them!',
   },
   {
     id: 'protozoa',
@@ -44,6 +52,7 @@ export const ORGANISMS = [
     snapX: 57, snapY: 69, displaySize: 98,
     fact: 'Protozoa are single-celled organisms that eat bacteria, releasing excess nitrogen that plants absorb as fertilizer.',
     hint: 'These single-celled predators eat bacteria — look for them near the bacteria.',
+    zoneHint: 'A single-celled hunter goes here. It eats bacteria.',
   },
   {
     id: 'nematode-predators',
@@ -52,6 +61,7 @@ export const ORGANISMS = [
     snapX: 74, snapY: 63, displaySize: 136,
     fact: 'Predatory nematodes hunt other nematodes and small soil organisms, keeping their populations in check — a form of natural pest control.',
     hint: 'These are predators that eat other nematodes — they sit higher in the web.',
+    zoneHint: 'A tiny roundworm goes here. This one hunts other roundworms.',
   },
   {
     id: 'nematode-fungi-bacteria',
@@ -60,6 +70,7 @@ export const ORGANISMS = [
     snapX: 43, snapY: 64, displaySize: 142,
     fact: 'These nematodes graze on fungi and bacteria, releasing nutrients locked inside microbial cells back into the soil for plants.',
     hint: 'These tiny roundworms feed on fungi and bacteria — they sit in the middle of the web.',
+    zoneHint: 'A tiny roundworm goes here. This one grazes on fungi and bacteria.',
   },
   {
     id: 'nematode-root-eaters',
@@ -68,6 +79,7 @@ export const ORGANISMS = [
     snapX: 43, snapY: 34, displaySize: 142,
     fact: 'Root-feeding nematodes pierce plant roots with a needle-like mouth part called a stylet. In large numbers, they can damage crops.',
     hint: 'These feed directly on plant roots — look for them near the plants.',
+    zoneHint: 'A tiny roundworm goes here. This one feeds on plant roots.',
   },
   {
     id: 'fungi',
@@ -76,6 +88,7 @@ export const ORGANISMS = [
     snapX: 43, snapY: 47, displaySize: 123,
     fact: 'Fungal networks called mycorrhizae extend plant root systems by up to 1,000 times, trading nutrients for the sugars plants produce.',
     hint: 'These decomposers form underground networks — they sit in the center-left of the web.',
+    zoneHint: 'A decomposer goes here. It builds underground networks that trade nutrients with plant roots.',
   },
   {
     id: 'arthropod-shredders',
@@ -84,6 +97,7 @@ export const ORGANISMS = [
     snapX: 68, snapY: 34, displaySize: 110,
     fact: 'Shredder arthropods like millipedes and woodlice physically break apart dead leaves and wood, increasing surface area for bacteria and fungi.',
     hint: 'These shred dead plant material — they sit on the left side of the web.',
+    zoneHint: 'A many-legged critter goes here. It shreds dead leaves and wood into smaller pieces.',
   },
   {
     id: 'arthropod-predators',
@@ -92,6 +106,7 @@ export const ORGANISMS = [
     snapX: 63, snapY: 52, displaySize: 110,
     fact: 'Predatory arthropods like centipedes and predatory mites hunt smaller organisms, helping regulate soil food web populations.',
     hint: 'These are predators — they sit higher in the web, above the organisms they hunt.',
+    zoneHint: 'A many-legged hunter goes here, like a centipede or a predatory mite.',
   },
   {
     id: 'birds-animals',
@@ -100,6 +115,7 @@ export const ORGANISMS = [
     snapX: 87, snapY: 38, displaySize: 171,
     fact: 'Birds and small mammals are the top predators of the soil food web. They eat arthropods, worms, and other soil organisms.',
     hint: 'These are the top predators — they belong at the very top of the food web.',
+    zoneHint: 'The top predators go here. They eat bugs, worms, and other soil critters.',
   },
 ]
 
@@ -163,7 +179,7 @@ export const QUIZ_QUESTIONS = [
 
 export const INSTRUCTIONS = {
   intro: 'Soil is alive! Billions of tiny organisms live underground, forming a food web. Can you build it?',
-  gameplay: 'Drag each organism to its correct position in the soil food web!',
+  gameplay: 'Drag each organism to its correct position in the soil food web! Stuck? Tap a ? for a hint.',
   quizIntro: 'Great work! Now let\'s test what you\'ve learned about how these organisms are connected.',
   complete: 'You built the soil food web! Healthy soil depends on every organism doing its part.',
 }

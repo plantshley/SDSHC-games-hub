@@ -3160,6 +3160,21 @@
   color: var(--adv-accent-secondary);
 }
 
+/* Desktop / tablet: drop the Farm World button out of the header row and park
+   it directly under the theme toggle (the right-most item). Phones (including
+   short landscape phones) keep it inline in the row. Intentionally applies to
+   the kiosk too. */
+@media (min-width: 600px) and (min-height: 501px) {
+  .adv-game-select .adv-header-right {
+    position: relative;
+  }
+  .adv-game-select .adv-fw-hub-btn {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+  }
+}
+
 /* ================================================================
  * RESPONSIVE
  * All rules below live inside @media (max-width: …) blocks so the
@@ -3308,6 +3323,15 @@
     margin: 0 auto 20px;
     max-width: 940px;
     align-content: flex-start;
+  }
+  /* Once the grid's right edge reaches the viewport edge (below ~1080px), the
+     Farm World button hanging under the theme toggle would sit over the
+     scrolling cards. Start the scroll container below it instead (button
+     bottom is ~100px with the 38px buttons at >= 900px, ~94px below that). */
+  @media (min-width: 600px) and (max-width: 1079px) and (min-height: 501px) {
+    .adv-game-select .adv-game-grid {
+      top: 104px;
+    }
   }
   .adv-game-select .adv-game-grid::after {
     content: "";

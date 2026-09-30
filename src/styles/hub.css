@@ -1070,3 +1070,24 @@
     min-height: 0;
   }
 }
+
+/* ─── Grade select: center the tier cards on desktop / tablet ───
+   Below kiosk width .character-area joins the flex flow (see the ≤1919 block),
+   so centering the whole column (cards + bottom margin + 280px character area)
+   left the cards riding near the top. Auto margins center the cards in the
+   space above the character area instead, and the character area settles at
+   the bottom. When the content is taller than the viewport, auto margins
+   collapse to 0 and the screen scrolls from the top as before. Phones and
+   landscape phones keep their own layouts. */
+@media (min-width: 600px) and (max-width: 1919px) and (min-height: 501px) {
+  .grade-screen {
+    justify-content: flex-start !important;
+  }
+  .grade-content {
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+  .character-area {
+    flex-shrink: 0;
+  }
+}

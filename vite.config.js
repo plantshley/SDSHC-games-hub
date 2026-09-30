@@ -13,6 +13,9 @@ const BUILD_ID = Date.now().toString()
 // installs/updates in ~1s instead of choking on ~109 MB). These are cached at
 // runtime (StaleWhileRevalidate) and bulk-prefetched by the offline warm-up.
 const MEDIA_RE = /\.(?:svg|webp|png|gif|jpe?g|JPG)$/
+// Staff guides (docx / pdf / html) also go in the warm-up list so admins can
+// open them on an offline kiosk.
+const GUIDES_RE = /[\\/]guides[\\/]/
 
 // After the build, enumerate every media file in dist into asset-manifest.json.
 // The app fetches this list while online and warms the runtime cache so the
@@ -29,7 +32,7 @@ const emitAssetManifest = {
       for (const name of readdirSync(dir)) {
         const full = join(dir, name)
         if (statSync(full).isDirectory()) walk(full)
-        else if (MEDIA_RE.test(name)) files.push(BASE + relative(distDir, full).split('\\').join('/'))
+        else if (MEDIA_RE.test(name) || GUIDES_RE.test(full)) files.push(BASE + relative(distDir, full).split('\\').join('/'))
       }
     }
     try {
@@ -84,10 +87,30 @@ export default defineConfig({
         // apply reliably on phones — the old setup precached ~109 MB up front,
         // which routinely failed to install on mobile and left stale builds.
         globPatterns: ['**/*.{js,css,html,ico,woff2,ttf,webmanifest}'],
+        // Guides are served by their own NetworkFirst route below, not the precache.
+        globIgnores: ['guides/**'],
         cleanupOutdatedCaches: true,
+        // The SPA fallback serves index.html for any navigation it can't match
+        // in the precache. Opening a staff guide (.docx / .pdf, or the cheat
+        // sheet with its ?theme= param) in a new tab is a navigation, so without
+        // this they all loaded the hub's home page instead of the document.
+        navigateFallbackDenylist: [/\/guides\//],
         // Media: serve from cache instantly (works offline), refresh in the
         // background when online so renamed-in-place assets still update.
         runtimeCaching: [
+          // Staff guides: always fetch the latest when online (they get edited
+          // in place), fall back to the last cached copy offline.
+          {
+            urlPattern: /\/guides\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'sdshc-guides',
+              networkTimeoutSeconds: 3,
+              // The cheat sheet link carries ?theme=…; match the cached copy regardless.
+              matchOptions: { ignoreSearch: true },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /\.(?:svg|webp|png|gif|jpe?g|JPG)$/,
             handler: 'StaleWhileRevalidate',

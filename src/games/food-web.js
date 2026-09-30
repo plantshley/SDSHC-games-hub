@@ -204,6 +204,7 @@ function createGameScreen() {
   let factDismissCallback = null
 
   function showFact(org, onDismiss) {
+    hideZoneHint()
     factTitle.textContent = org.name.replace(/\n/g, ' ')
     factText.textContent = org.fact
     factDismissCallback = onDismiss || null
@@ -263,6 +264,59 @@ function createGameScreen() {
     instrEl.textContent = INSTRUCTIONS.gameplay
   }
 
+  // ─── Zone hints: tap an empty (?) spot for a clue about what goes there ───
+  // The bubble lives in the canvas panel (not the oversized diagram) so it can
+  // be clamped to the visible area.
+  const canvasPanel = el.querySelector('.fw-canvas-panel')
+  const hintBubble = document.createElement('div')
+  hintBubble.className = 'fw-zone-hint'
+  canvasPanel.appendChild(hintBubble)
+  let hintZone = null
+  let hintTimer = null
+
+  function hideZoneHint() {
+    clearTimeout(hintTimer)
+    hintBubble.classList.remove('fw-zone-hint-visible')
+    if (hintZone) hintZone.classList.remove('fw-zone-hinted')
+    hintZone = null
+  }
+
+  function showZoneHint(zone) {
+    const org = ORGANISMS.find(o => o.id === zone.dataset.acceptsId)
+    if (!org) return
+    if (hintZone) hintZone.classList.remove('fw-zone-hinted')
+    hintZone = zone
+    zone.classList.add('fw-zone-hinted')
+    hintBubble.textContent = `💡 ${org.zoneHint}`
+
+    // Above the zone, or below it when there's no room; clamped to the panel.
+    const pr = canvasPanel.getBoundingClientRect()
+    const zr = zone.getBoundingClientRect()
+    const bw = hintBubble.offsetWidth
+    const bh = hintBubble.offsetHeight
+    const gap = 10
+    const pad = 8
+    let left = zr.left - pr.left + zr.width / 2 - bw / 2
+    left = Math.max(pad, Math.min(left, pr.width - bw - pad))
+    let top = zr.top - pr.top - bh - gap
+    if (top < pad) top = zr.bottom - pr.top + gap
+    top = Math.max(pad, Math.min(top, pr.height - bh - pad))
+    hintBubble.style.left = left + 'px'
+    hintBubble.style.top = top + 'px'
+    hintBubble.classList.add('fw-zone-hint-visible')
+
+    clearTimeout(hintTimer)
+    hintTimer = setTimeout(hideZoneHint, 8000)
+  }
+
+  diagram.querySelectorAll('.fw-drop-zone').forEach(zone => {
+    onTap(zone, () => {
+      if (quizStarted || zone.classList.contains('fw-zone-filled')) return
+      if (hintZone === zone) hideZoneHint()
+      else showZoneHint(zone)
+    })
+  })
+
   // ─── Drag from sidebar ───
   el.querySelectorAll('.fw-organism-item').forEach(item => {
     let dragging = false, clone = null
@@ -271,6 +325,7 @@ function createGameScreen() {
       if (item.classList.contains('fw-item-done') || quizStarted || dragging) return
       e.preventDefault()
       dragging = true
+      hideZoneHint()
 
       clone = document.createElement('div')
       clone.className = 'fw-drag-clone'
