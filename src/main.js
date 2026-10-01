@@ -20,7 +20,7 @@ import { createAdvancedRosterScreen } from './screens/advanced-roster.js'
 import { createAdvancedAdminScreen } from './screens/advanced-admin.js'
 import { getGameById } from './data/game-registry.js'
 import { getAdvancedGameById } from './data/advanced-game-registry.js'
-import { getActiveEventId, setActiveEventId, listEvents } from './utils/leaderboard-api.js'
+import { getActiveEventId, setActiveEventId, listEventsWithSource } from './utils/leaderboard-api.js'
 import { chooseEvent } from './utils/event-status.js'
 import { warmOfflineCache, isWarmedForBuild } from './utils/offline-warmup.js'
 import { USE_FIRESTORE } from './firebase/config.js'
@@ -211,17 +211,18 @@ async function handleAdvancedGameSelect() {
  * @returns {'joined' | 'ambiguous' | 'none' | 'unknown'}
  */
 async function resolveActiveEvent() {
-  let events
+  let events, fromCache
   try {
-    // listEvents is a cached collection read; unlike a single-doc get it does
-    // not throw offline for an id the cache has never seen.
-    events = await listEvents()
+    // A cached collection read; unlike a single-doc get it does not throw
+    // offline for an id the cache has never seen. fromCache tells an empty
+    // server result (events deleted) from an empty cold cache.
+    ;({ events, fromCache } = await listEventsWithSource())
   } catch {
     return 'unknown' // transient read failure — keep any pointer, don't prompt
   }
 
   const activeId = getActiveEventId()
-  const { decision, eventId } = chooseEvent(events, activeId, Date.now())
+  const { decision, eventId } = chooseEvent(events, activeId, Date.now(), { fromCache })
 
   // 'unknown' means we can't tell — never write, never clear.
   if (decision !== 'unknown' && eventId !== activeId) setActiveEventId(eventId)

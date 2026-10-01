@@ -1497,6 +1497,18 @@
   color: var(--adv-text-muted);
 }
 
+/* Shown above the player rows when the event was deleted mid-session. */
+.adv-team-notice {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255, 186, 107, 0.5);
+  border-radius: 8px;
+  font-family: var(--font-body), monospace;
+  font-size: 0.8rem;
+  color: #ffba6b;
+  line-height: 1.4;
+}
+
 /* ─── Player row add / remove animations (advanced game intros) ───
    Applied to a single row when the +/- player picker grows or shrinks the
    list, so existing rows stay put and only the changed one grows in / collapses

@@ -32,6 +32,7 @@ export const setTeamColors = impl.setTeamColors
 export const deleteTeam = impl.deleteTeam
 export const mergeTeams = impl.mergeTeams
 export const listEvents = impl.listEvents
+export const listEventsWithSource = impl.listEventsWithSource
 export const listOpenEvents = impl.listOpenEvents
 export const getEventById = impl.getEventById
 export const startEvent = impl.startEvent

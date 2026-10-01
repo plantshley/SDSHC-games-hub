@@ -296,6 +296,11 @@ export async function listEvents() {
   return [...getEventsRaw().events].sort((a, b) => b.startedAt - a.startedAt)
 }
 
+/** Same surface as the Firestore impl. localStorage is the source of truth, never a cache. */
+export async function listEventsWithSource() {
+  return { events: await listEvents(), fromCache: false }
+}
+
 /**
  * Events running right now, per the derived clock rules in event-status.js —
  * NOT a raw `status === 'open'` filter. A scheduled event becomes joinable at

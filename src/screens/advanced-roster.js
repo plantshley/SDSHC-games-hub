@@ -19,6 +19,7 @@ import { navigate, navigateRaw } from '../router.js'
 import { onTap } from '../utils/tap.js'
 import {
   getActiveEventId,
+  setActiveEventId,
   getEventById,
   getOrCreateTeam,
   addTeamToEventRoster,
@@ -30,6 +31,7 @@ import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle } from '../utils/theme-toggle.js'
 import { isClean } from '../utils/profanity.js'
 import { createColorSwatchPicker, deriveTeamColors } from '../utils/team-colors.js'
+import { setPlayMode } from './advanced-play-mode.js'
 
 const DATALIST_ID = 'adv-roster-datalist'
 
@@ -84,7 +86,7 @@ export function createAdvancedRosterScreen() {
   const returnTo = sessionStorage.getItem('sdshc-roster-return')
   sessionStorage.removeItem('sdshc-roster-return')
   onTap(screen.querySelector('#adv-roster-back'), () => {
-    if (returnTo === 'game-select') {
+    if (returnTo === 'game-select' || eventGone) {
       navigate('game-select')
     } else {
       navigateRaw('advanced/play-mode')
@@ -110,6 +112,32 @@ export function createAdvancedRosterScreen() {
     errorEl.textContent = msg || ''
   }
 
+  // The event can be deleted from another device while this screen is open
+  // (or before it opened, if the pointer went stale mid-session). Drop the
+  // stale pointer, switch this session to casual play, and say so instead of
+  // failing every add with a generic error.
+  let eventGone = false
+  function handleEventGone() {
+    if (eventGone) return
+    eventGone = true
+    // Only clear state that still points at this event. The load-time check is
+    // async, and by the time it lands the device may have joined another one.
+    if (getActiveEventId() === eventId) {
+      setActiveEventId(null)
+      setPlayMode('casual')
+    }
+    // Inline display, not [hidden]: these rows have display: flex in CSS.
+    for (const node of [
+      screen.querySelector('#adv-roster-sub'),
+      screen.querySelector('.adv-roster-add'),
+      colorsHost,
+      screen.querySelector('#adv-roster-list'),
+      screen.querySelector('.adv-roster-hint'),
+    ]) node.style.display = 'none'
+    screen.querySelector('#adv-roster-continue').textContent = 'Play casually →'
+    showError("This event was removed, so teams can't be added. You're now in casual play.")
+  }
+
   let isAdding = false
   async function handleAdd() {
     const val = input.value.trim()
@@ -119,7 +147,7 @@ export function createAdvancedRosterScreen() {
       return
     }
     if (!isClean(val)) {
-      showError('That name isn\'t allowed — try another.')
+      showError('That name isn\'t allowed. Try another.')
       return
     }
     // Guard against concurrent adds — e.g. tapping "+ Add team" then "Start
@@ -130,6 +158,12 @@ export function createAdvancedRosterScreen() {
     showError('')
     isAdding = true
     try {
+      // Check the event still exists BEFORE creating the team, so a deleted
+      // event doesn't leave behind an orphaned pending team.
+      if (!(await getEventById(eventId))) {
+        handleEventGone()
+        return
+      }
       const result = await getOrCreateTeam(val, colorPicker.getValue())
       await addTeamToEventRoster(eventId, result.teamId)
       input.value = ''
@@ -138,6 +172,11 @@ export function createAdvancedRosterScreen() {
       renderRoster()
       input.focus()
     } catch (err) {
+      // Deleted between the check above and the roster write.
+      if (err && err.message === 'Event not found') {
+        handleEventGone()
+        return
+      }
       console.error('roster add failed', err)
       showError('Could not add team. Try again.')
     } finally {
@@ -150,7 +189,7 @@ export function createAdvancedRosterScreen() {
     handleAdd()
   })
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !eventGone) {
       e.preventDefault()
       handleAdd()
     }
@@ -160,8 +199,10 @@ export function createAdvancedRosterScreen() {
     // If the player typed a team name but didn't tap "+ Add team", commit it now
     // so it isn't silently dropped. handleAdd clears the input on success and
     // leaves it (with an error shown) on failure — only navigate once it's clean.
-    if (input.value.trim()) {
+    if (input.value.trim() && !eventGone) {
       await handleAdd()
+      // Event was deleted mid-add: stay put so the player sees why.
+      if (eventGone) return
       if (input.value.trim()) return // add failed (e.g. blocked name) — let them fix it
     }
     navigate('game-select')
@@ -186,7 +227,17 @@ export function createAdvancedRosterScreen() {
       onTap(btn, async (e) => {
         e.preventDefault()
         const id = btn.dataset.id
-        await removeTeamFromEventRoster(eventId, id)
+        try {
+          await removeTeamFromEventRoster(eventId, id)
+        } catch (err) {
+          if (err && err.message === 'Event not found') {
+            handleEventGone()
+            return
+          }
+          console.error('roster remove failed', err)
+          showError('Could not remove team. Try again.')
+          return
+        }
         renderRoster()
       })
     })
@@ -194,9 +245,18 @@ export function createAdvancedRosterScreen() {
 
   // Header subtitle with event name
   ;(async () => {
-    const ev = eventId ? await getEventById(eventId) : null
     const sub = screen.querySelector('#adv-roster-sub')
+    let ev
+    try {
+      ev = eventId ? await getEventById(eventId) : null
+    } catch {
+      // Offline with a cold cache: can't read the event, but that doesn't mean
+      // it's gone. Leave the screen usable, unnamed.
+      if (sub) sub.textContent = ''
+      return
+    }
     if (ev && sub) sub.innerHTML = `Joining: <strong>${escapeHtml(ev.name)}</strong>`
+    else if (eventId) handleEventGone()
     else if (sub) sub.textContent = ''
   })()
 

@@ -21,12 +21,14 @@
 
 import {
   getActiveEventId,
+  setActiveEventId,
+  getEventById,
   getEventRoster,
   getOrCreateTeam,
   addTeamToEventRoster,
 } from './leaderboard-api.js'
 import { isClean } from './profanity.js'
-import { getPlayMode } from '../screens/advanced-play-mode.js'
+import { getPlayMode, setPlayMode } from '../screens/advanced-play-mode.js'
 
 const DATALIST_ID = 'adv-team-datalist'
 
@@ -117,7 +119,10 @@ export function commitTeams(players) {
 // toward the live row total, so a quick −then−+ doesn't double-build.
 function liveRows(container) {
   return [...container.children].filter(
-    r => !r.classList.contains('adv-row-removing') && !r.classList.contains('adv-team-loading')
+    r =>
+      !r.classList.contains('adv-row-removing') &&
+      !r.classList.contains('adv-team-loading') &&
+      !r.classList.contains('adv-team-notice')
   )
 }
 
@@ -183,6 +188,31 @@ function reconcileCasualRows(container, players, opts) {
   }
 }
 
+/* ─── Deleted event ─── */
+
+/**
+ * The event was deleted from another device while this one was in team play.
+ * Drop the stale pointer, switch the session to casual, rebuild the rows
+ * without team fields, and say why. Without this, team names never register
+ * and scores save under an event that no longer exists.
+ */
+function switchToCasualForDeletedEvent(container, players, eventId, opts) {
+  // Already handled by another row, or the device has since joined a
+  // different event. Returns whether it switched.
+  if (container.dataset.rowMode !== 'team' || getActiveEventId() !== eventId) return false
+  setActiveEventId(null)
+  setPlayMode('casual')
+  // Old rows' resolvers would read their detached team inputs and create teams.
+  players.forEach(p => resolverByPlayer.delete(p))
+  buildCasualRows(container, players, opts)
+  const notice = document.createElement('div')
+  notice.className = 'adv-team-notice'
+  notice.setAttribute('role', 'status')
+  notice.textContent = "This event was removed, so you're now in casual play. Scores won't count toward a team."
+  container.prepend(notice)
+  return true
+}
+
 /* ─── Team mode ─── */
 
 function buildTeamRow(player, i, players, eventId, roster, opts) {
@@ -222,7 +252,8 @@ function buildTeamRow(player, i, players, eventId, roster, opts) {
   return row
 }
 
-function attachTeamRowHandlers(row, player, i, players, eventId, roster, { namePlaceholderPrefix }) {
+function attachTeamRowHandlers(row, player, i, players, eventId, roster, opts) {
+  const { namePlaceholderPrefix } = opts
   // Name input handler
   const nameInput = row.querySelector('.adv-team-name-input')
   nameInput.addEventListener('input', () => {
@@ -267,8 +298,13 @@ function attachTeamRowHandlers(row, player, i, players, eventId, roster, { nameP
     chain = chain.then(async () => {
       // A prior queued resolution may have already handled this exact value.
       if (val === resolvedVal && player.teamId) return
+      // The event was deleted and the rows switched to casual while this was queued.
+      if (getPlayMode() !== 'team') return
       try {
         const result = await getOrCreateTeam(val)
+        // Another row may have switched to casual while this lookup was in
+        // flight. Assigning now would leak a teamId into a casual run.
+        if (getPlayMode() !== 'team') return
         // Tag the player as early as possible — before the (idempotent) roster
         // writes — so teamId is set the moment the team doc exists. A game's
         // Start handler awaits commitTeams() before snapshotting players, so
@@ -295,6 +331,17 @@ function attachTeamRowHandlers(row, player, i, players, eventId, roster, { nameP
           fb.textContent = '↻ awaiting approval'
         }
       } catch (err) {
+        // addTeamToEventRoster reads the event doc first, so a deleted event
+        // surfaces here without an extra read before every team commit.
+        if (err && err.message === 'Event not found') {
+          // Cleared here too in case the switch below is skipped (another row
+          // already switched, so this row is detached).
+          player.teamId = null
+          player.teamName = ''
+          const owner = row.parentElement
+          if (owner) switchToCasualForDeletedEvent(owner, players, eventId, opts)
+          return
+        }
         console.error('team lookup failed', err)
       }
     })
@@ -350,7 +397,21 @@ async function buildTeamModeRows(container, players, eventId, opts) {
   container.dataset.rowMode = 'team'
   // Show a loading placeholder while we fetch the roster.
   container.innerHTML = `<div class="adv-team-loading">Loading roster…</div>`
-  const roster = await getEventRoster(eventId)
+  // getEventRoster returns [] for a missing event, so read the event too to
+  // tell "deleted" (null) from "no teams yet". A rejected read (offline, cold
+  // cache) is NOT deletion: stay in team mode.
+  const [roster, ev] = await Promise.all([
+    getEventRoster(eventId),
+    getEventById(eventId).catch(() => undefined),
+  ])
+  if (ev === null) {
+    // If the device joined a different event meanwhile, rebuild for that one
+    // instead of leaving the loading placeholder up.
+    if (!switchToCasualForDeletedEvent(container, players, eventId, opts)) {
+      renderTeamPlayerRows(container, players, opts)
+    }
+    return
+  }
   ensureRosterDatalist(roster)
   rosterByContainer.set(container, roster)
   container.innerHTML = ''

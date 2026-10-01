@@ -320,7 +320,20 @@ function reconcileRoster(roster, fromId, toId) {
 /* ─── Events ─── */
 
 export async function listEvents() {
-  return (await readAll(C_EVENTS)).sort((a, b) => b.startedAt - a.startedAt)
+  return (await listEventsWithSource()).events
+}
+
+/**
+ * listEvents plus whether the result came from the local cache. An empty list
+ * from the SERVER means every event really was deleted; an empty list from a
+ * cold offline cache means nothing. Event auto-join needs to tell them apart.
+ */
+export async function listEventsWithSource() {
+  const snap = await getDocs(collection(getDb(), C_EVENTS))
+  const events = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => b.startedAt - a.startedAt)
+  return { events, fromCache: snap.metadata.fromCache }
 }
 
 /**

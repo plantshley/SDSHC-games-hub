@@ -94,15 +94,22 @@ export function derivedEventStatus(ev, now = Date.now()) {
  * started event, so an event created at 2pm would silently capture a device
  * already running a 9am event. Any automatic pick mis-tags someone.
  *
+ * The ignorance rule only applies to a CACHED empty list. An empty list read
+ * from the server is authoritative: the event was deleted, so the pointer is
+ * stale and must be cleared. Otherwise a device that was in a since-deleted
+ * event keeps prompting for team play against an event that no longer exists.
+ *
  * @param {Array|null} events   all known events (any status)
  * @param {string|null} activeId this device's current pointer
+ * @param {{ fromCache?: boolean }} [source] whether `events` came from the
+ *   local cache. Defaults to true (the cautious reading).
  * @returns {{ decision: 'joined'|'ambiguous'|'none'|'unknown', eventId: string|null }}
  */
-export function chooseEvent(events, activeId, now = Date.now()) {
+export function chooseEvent(events, activeId, now = Date.now(), { fromCache = true } = {}) {
   if (!Array.isArray(events)) return { decision: 'unknown', eventId: activeId || null }
 
   if (events.length === 0) {
-    return activeId
+    return activeId && fromCache
       ? { decision: 'unknown', eventId: activeId }
       : { decision: 'none', eventId: null }
   }
