@@ -36,7 +36,7 @@ export const firebaseConfig = {
 export const ADMIN_EMAIL = 'admin@sdshc.local'
 
 /** Master switch for the Firestore backend (see "Backend switch" above). */
-export const USE_FIRESTORE = true
+export const USE_FIRESTORE = false
 
 /** True once the placeholder values have actually been replaced. */
 export const FIREBASE_CONFIGURED =

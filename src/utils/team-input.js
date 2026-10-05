@@ -2,9 +2,11 @@
  * Shared player + team input rows for advanced game intros.
  *
  * Behavior depends on the current Play Mode (sessionStorage):
- *   - "team":  each player gets a Team/School dropdown sourced from the
- *              active event's roster. Free-typing a new name adds it to the
- *              roster as pending (and creates the team if needed).
+ *   - "team":  each player gets a Team/School dropdown (combobox.js) sourced
+ *              from the active event's APPROVED roster, labeled "Name · School".
+ *              Free-typing resolves against the whole roster first (pending
+ *              teams included), then creates a pending team, linking it to a
+ *              school only on an exact school-name match.
  *   - "casual" or unset: NO team line is rendered — just the player-name
  *              input. Scores still record (with teamId=null) but won't roll
  *              up to any team's leaderboard row.
@@ -29,8 +31,8 @@ import {
 } from './leaderboard-api.js'
 import { isClean } from './profanity.js'
 import { getPlayMode, setPlayMode } from '../screens/advanced-play-mode.js'
-
-const DATALIST_ID = 'adv-team-datalist'
+import { attachCombobox } from './combobox.js'
+import { normalizeName } from './leaderboard-shared.js'
 
 // Last-fetched roster per container, so reconcile (sync) can build appended
 // team rows without re-fetching and wiping the whole list.
@@ -41,21 +43,28 @@ const rosterByContainer = new WeakMap()
 const resolverByPlayer = new WeakMap()
 
 /**
- * Refresh the shared <datalist> with this event's APPROVED roster names only.
- * Pending teams are intentionally excluded — players shouldn't see unmoderated
- * names autocomplete-suggested. They can still type their team manually if
- * theirs is still awaiting approval.
- * Mounts the datalist on document.body the first time.
+ * Dropdown options for a row: this event's APPROVED roster only. Pending teams
+ * are intentionally excluded so players don't see unmoderated names suggested.
+ * They can still type their team manually if it's awaiting approval.
  */
-async function ensureRosterDatalist(rosterTeams) {
-  let dl = document.getElementById(DATALIST_ID)
-  if (!dl) {
-    dl = document.createElement('datalist')
-    dl.id = DATALIST_ID
-    document.body.appendChild(dl)
-  }
-  const approved = rosterTeams.filter(t => t.rosterStatus === 'approved')
-  dl.innerHTML = approved.map(t => `<option value="${escapeAttr(t.teamName)}">`).join('')
+function teamOptions(roster) {
+  return roster
+    .filter(t => t.rosterStatus === 'approved' && t.teamStatus !== 'hidden')
+    .map(t => ({ value: t.teamId, label: t.label || t.teamName }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+}
+
+/**
+ * Find the roster team a typed value refers to: an exact label match
+ * ("Team 1 · Brookings") first, then a bare name shared by exactly one roster
+ * team. Pending roster teams count, so a team awaiting approval still resolves.
+ */
+function findRosterTeam(roster, val) {
+  const norm = normalizeName(val)
+  const byLabel = roster.find(r => normalizeName(r.label || r.teamName) === norm)
+  if (byLabel) return byLabel
+  const byName = roster.filter(r => normalizeName(r.teamName) === norm)
+  return byName.length === 1 ? byName[0] : null
 }
 
 /**
@@ -238,7 +247,6 @@ function buildTeamRow(player, i, players, eventId, roster, opts) {
       <input
         class="adv-team-input"
         data-idx="${i}"
-        list="${DATALIST_ID}"
         value="${escapeAttr(player.teamName || '')}"
         maxlength="40"
         spellcheck="false"
@@ -263,6 +271,9 @@ function attachTeamRowHandlers(row, player, i, players, eventId, roster, opts) {
   // Team input handler — debounced resolve on input + immediate on blur/Enter
   const input = row.querySelector('.adv-team-input')
   const fb = row.querySelector('.adv-team-feedback')
+  // The roster this row should see: the container's cache (kept fresh as teams
+  // register) or the one it was built with.
+  const currentRoster = () => rosterByContainer.get(row.parentElement) || roster
 
   // Serialize this row's resolutions through one chain so two commits never run
   // getOrCreateTeam concurrently. Concurrent "does this name exist?" queries are
@@ -301,7 +312,13 @@ function attachTeamRowHandlers(row, player, i, players, eventId, roster, opts) {
       // The event was deleted and the rows switched to casual while this was queued.
       if (getPlayMode() !== 'team') return
       try {
-        const result = await getOrCreateTeam(val)
+        // A team already on this event's roster wins over a global lookup, so
+        // "Team 1 · Brookings" and a bare "Team 1" both land on the right team
+        // even when another school also has a "Team 1".
+        const hit = findRosterTeam(currentRoster(), val)
+        const result = hit
+          ? { teamId: hit.teamId, name: hit.label || hit.teamName }
+          : await getOrCreateTeam(val, undefined, { autoMatch: true })
         // Another row may have switched to casual while this lookup was in
         // flight. Assigning now would leak a teamId into a casual run.
         if (getPlayMode() !== 'team') return
@@ -311,13 +328,12 @@ function attachTeamRowHandlers(row, player, i, players, eventId, roster, opts) {
         // this is what keeps scores carrying the team instead of recording
         // teamless.
         player.teamId = result.teamId
-        player.teamName = result.name
+        player.teamName = val
         resolvedVal = val
         // Whether pre-existing or just created, add it to the event roster
         // (idempotent) so future player setups can pick it.
         await addTeamToEventRoster(eventId, result.teamId)
         const updatedRoster = await getEventRoster(eventId)
-        ensureRosterDatalist(updatedRoster)
         // Keep the per-container roster cache fresh so rows added afterward see
         // the team that was just registered.
         const owner = row.parentElement
@@ -364,6 +380,17 @@ function attachTeamRowHandlers(row, player, i, players, eventId, roster, opts) {
     player.teamName = input.value.trim()
     fb.className = 'adv-team-feedback'
     fb.textContent = ''
+  })
+  // Attached before the Enter handler below so picking a row with Enter wins
+  // over Enter's blur-to-commit.
+  attachCombobox(input, {
+    getOptions: () => teamOptions(currentRoster()),
+    emptyText: 'No approved teams yet. Type your team name.',
+    onSelect: (option) => {
+      input.value = option.label
+      player.teamName = option.label
+      resolveTeam()
+    },
   })
   input.addEventListener('change', resolveTeam)
   input.addEventListener('blur', resolveTeam)
@@ -412,7 +439,6 @@ async function buildTeamModeRows(container, players, eventId, opts) {
     }
     return
   }
-  ensureRosterDatalist(roster)
   rosterByContainer.set(container, roster)
   container.innerHTML = ''
   players.forEach((p, i) =>

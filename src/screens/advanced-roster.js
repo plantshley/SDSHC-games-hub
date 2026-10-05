@@ -4,15 +4,18 @@
  * Reached after picking Team Play. Lets the player(s) register the team(s)
  * that will play at this kiosk during the event. New names create teams as
  * `pending` and add them to the event roster as `pending` — admin approves
- * them from the admin panel. The autocomplete dropdown on game intros lists
- * APPROVED teams only (see team-input.js `ensureRosterDatalist`) so unmoderated
- * names don't get suggested — but a pending team is still immediately playable:
+ * them from the admin panel. The team dropdown on game intros lists APPROVED
+ * roster teams only (see team-input.js) so unmoderated names don't get
+ * suggested — but a pending team is still immediately playable:
  * typing its name manually resolves to the existing pending team and tags
  * scores correctly. Those scores just don't appear on the public event
  * leaderboard until approval.
  *
  * Approved teams from prior events (in the global teams registry) show up in
- * the autocomplete suggestions so returning teams don't get duplicated.
+ * the team dropdown so returning teams don't get duplicated.
+ *
+ * Each team can carry a school (school-picker.js). Team identity is name +
+ * school, so "Team 1" from two schools stays two teams.
  */
 
 import { navigate, navigateRaw } from '../router.js'
@@ -26,14 +29,16 @@ import {
   removeTeamFromEventRoster,
   getEventRoster,
   listApprovedTeams,
+  listApprovedSchools,
 } from '../utils/leaderboard-api.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle } from '../utils/theme-toggle.js'
 import { isClean } from '../utils/profanity.js'
 import { createColorSwatchPicker, deriveTeamColors } from '../utils/team-colors.js'
 import { setPlayMode } from './advanced-play-mode.js'
-
-const DATALIST_ID = 'adv-roster-datalist'
+import { attachCombobox } from '../utils/combobox.js'
+import { createSchoolPicker } from '../utils/school-picker.js'
+import { teamLabel } from '../utils/leaderboard-shared.js'
 
 export function createAdvancedRosterScreen() {
   const screen = document.createElement('div')
@@ -54,9 +59,12 @@ export function createAdvancedRosterScreen() {
       <p class="adv-roster-sub" id="adv-roster-sub">…</p>
 
       <div class="adv-roster-add">
-        <input class="adv-roster-input" id="adv-roster-input" list="${DATALIST_ID}" maxlength="40"
-          placeholder="School / team name" spellcheck="false" />
+        <input class="adv-roster-input" id="adv-roster-input" maxlength="40"
+          placeholder="Team or school name" spellcheck="false" autocomplete="off" aria-label="Team name" />
         <button class="adv-roster-add-btn" id="adv-roster-add">+ Add team</button>
+      </div>
+      <div class="adv-roster-school" id="adv-roster-school">
+        <span class="adv-roster-field-label">School</span>
       </div>
       <div class="adv-roster-colors" id="adv-roster-colors"></div>
       <p class="adv-roster-error" id="adv-roster-error"></p>
@@ -76,9 +84,23 @@ export function createAdvancedRosterScreen() {
   addGradientBackground(screen, 'game-select')
   screen.querySelector('.adv-header-right').appendChild(createThemeToggle())
 
-  // Set up the shared datalist of previously-approved teams so returning teams
-  // surface as autocomplete suggestions instead of getting created fresh.
-  ensureDatalist()
+  // Approved teams (any event) for the team dropdown, so returning teams get
+  // picked instead of created fresh. Labeled with their approved school only;
+  // a team whose school isn't approved keeps that link (so picking it doesn't
+  // create a duplicate) but never shows the unapproved name.
+  let knownTeams = []
+  async function loadKnownTeams() {
+    try {
+      const [teams, schools] = await Promise.all([listApprovedTeams(), listApprovedSchools()])
+      const schoolMap = new Map(schools.map(sc => [sc.id, sc]))
+      knownTeams = teams
+        .map(t => ({ team: t, school: t.schoolId ? schoolMap.get(t.schoolId) || null : null, label: teamLabel(t, schoolMap) }))
+        .sort((a, b) => a.label.localeCompare(b.label))
+    } catch (err) {
+      console.error('team list failed', err)
+    }
+  }
+  loadKnownTeams()
 
   // The Back button returns to wherever the user came from. Coming from
   // "Manage roster" on game-select sets a sessionStorage hint; otherwise we
@@ -97,6 +119,38 @@ export function createAdvancedRosterScreen() {
   const addBtn = screen.querySelector('#adv-roster-add')
   const errorEl = screen.querySelector('#adv-roster-error')
   const colorsHost = screen.querySelector('#adv-roster-colors')
+  const schoolRow = screen.querySelector('#adv-roster-school')
+
+  const schoolPicker = createSchoolPicker()
+  schoolRow.appendChild(schoolPicker.el)
+
+  const teamCombo = attachCombobox(input, {
+    getOptions: () => knownTeams.map(k => ({
+      value: k.team.id,
+      label: k.team.name,
+      sublabel: k.school ? k.school.name : '',
+      known: k,
+    })),
+    emptyText: 'No saved teams yet. Type a new name.',
+    onSelect: (option) => {
+      input.value = option.label
+      const { team, school } = option.known
+      schoolPicker.setValue(
+        school ? { id: school.id, name: school.name }
+          : team.schoolId ? { id: team.schoolId, pending: true }
+          : null
+      )
+      showError('')
+    },
+  })
+
+  // Suggest a school from the team name as it's typed (debounced). The picker
+  // ignores this once someone picks a school by hand.
+  let suggestTimer = 0
+  input.addEventListener('input', () => {
+    clearTimeout(suggestTimer)
+    suggestTimer = setTimeout(() => schoolPicker.suggestFrom(input.value), 150)
+  })
 
   // Mount a fresh swatch picker, seeded with a random pair so each team a
   // player adds gets distinct colors unless they deliberately pick.
@@ -130,6 +184,7 @@ export function createAdvancedRosterScreen() {
     for (const node of [
       screen.querySelector('#adv-roster-sub'),
       screen.querySelector('.adv-roster-add'),
+      schoolRow,
       colorsHost,
       screen.querySelector('#adv-roster-list'),
       screen.querySelector('.adv-roster-hint'),
@@ -142,7 +197,7 @@ export function createAdvancedRosterScreen() {
   async function handleAdd() {
     const val = input.value.trim()
     if (!val) {
-      showError('Enter a school or team name.')
+      showError('Enter a team or school name.')
       input.focus()
       return
     }
@@ -164,11 +219,18 @@ export function createAdvancedRosterScreen() {
         handleEventGone()
         return
       }
-      const result = await getOrCreateTeam(val, colorPicker.getValue())
+      clearTimeout(suggestTimer)
+      // Finish any school pick still in progress (a new school being saved, or
+      // a typed name the field hasn't committed) before reading it.
+      await schoolPicker.commit()
+      const { schoolId } = schoolPicker.getValue()
+      const result = await getOrCreateTeam(val, colorPicker.getValue(), { schoolId })
       await addTeamToEventRoster(eventId, result.teamId)
+      teamCombo.close()
       input.value = ''
+      schoolPicker.reset()
       mountColorPicker()
-      ensureDatalist()
+      loadKnownTeams()
       renderRoster()
       input.focus()
     } catch (err) {
@@ -218,7 +280,7 @@ export function createAdvancedRosterScreen() {
     list.innerHTML = roster.map(r => `
       <li class="adv-roster-row" data-id="${r.teamId}">
         <span class="adv-roster-color" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>
-        <span class="adv-roster-name">${escapeHtml(r.teamName)}</span>
+        <span class="adv-roster-name">${escapeHtml(r.label)}</span>
         <span class="adv-roster-status adv-roster-status-${r.rosterStatus}">${r.rosterStatus}</span>
         <button class="adv-roster-remove" data-id="${r.teamId}" title="Remove">${'✕'}</button>
       </li>
@@ -265,17 +327,6 @@ export function createAdvancedRosterScreen() {
   return screen
 }
 
-async function ensureDatalist() {
-  let dl = document.getElementById(DATALIST_ID)
-  if (!dl) {
-    dl = document.createElement('datalist')
-    dl.id = DATALIST_ID
-    document.body.appendChild(dl)
-  }
-  const teams = await listApprovedTeams()
-  dl.innerHTML = teams.map(t => `<option value="${escapeAttr(t.name)}">`).join('')
-}
-
 function genLocalSeed() {
   return `${Date.now()}_${Math.random()}`
 }
@@ -285,10 +336,5 @@ function escapeHtml(s) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-function escapeAttr(s) {
-  return String(s || '')
-    .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
 }

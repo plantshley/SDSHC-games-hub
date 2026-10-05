@@ -20,8 +20,9 @@
  *    from cache when offline; writes queue and auto-sync on reconnect.
  *
  * Firestore collections:
- *   /teams/{teamId}    { name, normalized, status, color1, color2, createdAt, createdByKiosk }
- *   /events/{eventId}  { name, startedAt, scheduledStart, endedAt, status, roster: [...] }
+ *   /teams/{teamId}    { name, normalized, status, schoolId?, color1, color2, createdAt, createdByKiosk }
+ *   /schools/{id}      { name, normalized, status, createdAt, createdByKiosk }
+ *   /events/{eventId}  { name, group?, startedAt, scheduledStart, endedAt, status, roster: [...] }
  *   /scores/{scoreId}  { runId, ts, gameId, playerName, teamId, points, eventId, kioskId }
  */
 
@@ -43,11 +44,18 @@ import { getDb } from '../firebase/init.js'
 import { getGamePar } from '../data/advanced-game-registry.js'
 import { deriveTeamColors, getTeamColors } from './team-colors.js'
 import { effectivelyOpen, eventEndsAt, DEFAULT_EVENT_DURATION_MS } from './event-status.js'
+import {
+  normalizeName,
+  joinRoster,
+  resolveTeamIdentity,
+  aggregateLeaderboard,
+} from './leaderboard-shared.js'
 
 const K_ACTIVE = 'sdshc-lb-active-event'
 const K_KIOSK = 'sdshc-lb-kiosk-id'
 
 const C_TEAMS = 'teams'
+const C_SCHOOLS = 'schools'
 const C_EVENTS = 'events'
 const C_SCORES = 'scores'
 
@@ -58,10 +66,6 @@ const BATCH_LIMIT = 450 // Firestore hard cap is 500 ops/batch; stay under it.
 function genId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
   return `id_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
-}
-
-function normalizeName(name) {
-  return String(name || '').toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
 /* ─── Firestore read helpers ─── */
@@ -115,7 +119,7 @@ async function deleteRefsInChunks(refs) {
  * repeatedly. See docs/pwa_kiosk_guide.md §4.
  */
 export async function warmLeaderboardCache() {
-  await Promise.all([readAll(C_TEAMS), readAll(C_EVENTS), readAll(C_SCORES)])
+  await Promise.all([readAll(C_TEAMS), readAll(C_SCHOOLS), readAll(C_EVENTS), readAll(C_SCORES)])
 }
 
 /* ─── Kiosk identity (device-local) ─── */
@@ -132,27 +136,30 @@ export function getKioskId() {
 /* ─── Teams ─── */
 
 /**
- * Look up a team by normalized name; return it if found (any status), else
- * create one with status "pending". `colors` sets the accent pair on creation;
- * omitted → deterministic pair derived from the new id. Existing teams are
- * returned unchanged (colors never overwritten here).
+ * Look up a team by name + school; return it if found (any status), else
+ * create one with status "pending". See `resolveTeamIdentity` in
+ * leaderboard-shared.js for how `schoolId` and `autoMatch` pick the team.
+ * `colors` sets the accent pair on creation; omitted → deterministic pair
+ * derived from the new id. Existing teams are returned unchanged (colors never
+ * overwritten here).
  *
  * Offline caveat: the name lookup only sees teams already in the local cache,
  * so two devices inventing the same name offline can create duplicates — clean
  * up with admin merge/rename. Single-kiosk-per-event is unaffected.
  */
-export async function getOrCreateTeam(name, colors) {
+export async function getOrCreateTeam(name, colors, { schoolId = null, autoMatch = false } = {}) {
   const cleaned = String(name || '').trim()
   if (!cleaned) throw new Error('Team name required')
 
   const norm = normalizeName(cleaned)
-  const snap = await getDocs(
-    query(collection(getDb(), C_TEAMS), where('normalized', '==', norm), fbLimit(1))
-  )
-  if (!snap.empty) {
-    const d = snap.docs[0]
-    const t = d.data()
-    return { teamId: d.id, status: t.status, name: t.name }
+  const [sameName, schools] = await Promise.all([
+    teamsNamed(norm),
+    autoMatch ? readAll(C_SCHOOLS) : [],
+  ])
+  const resolved = resolveTeamIdentity({ name: cleaned, teams: sameName, schools, schoolId, autoMatch })
+  const existing = resolved.existing
+  if (existing) {
+    return { teamId: existing.id, status: existing.status, name: existing.name, schoolId: existing.schoolId || null }
   }
 
   const id = genId()
@@ -161,6 +168,7 @@ export async function getOrCreateTeam(name, colors) {
     name: cleaned,
     normalized: norm,
     status: 'pending',
+    schoolId: resolved.schoolId,
     color1: picked.color1,
     color2: picked.color2,
     createdAt: Date.now(),
@@ -170,7 +178,13 @@ export async function getOrCreateTeam(name, colors) {
   // (the doc is cached + replays on reconnect) instead of hanging on the write,
   // so a team created offline can still tag scores. Online it awaits as before.
   await settleWrite(setDoc(doc(getDb(), C_TEAMS, id), newTeam))
-  return { teamId: id, status: newTeam.status, name: newTeam.name }
+  return { teamId: id, status: newTeam.status, name: newTeam.name, schoolId: newTeam.schoolId }
+}
+
+/** Every team sharing a normalized name (any school). */
+async function teamsNamed(norm) {
+  const snap = await getDocs(query(collection(getDb(), C_TEAMS), where('normalized', '==', norm)))
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
 }
 
 export async function listApprovedTeams() {
@@ -201,20 +215,40 @@ export async function renameTeam(id, newName) {
   const cleaned = String(newName || '').trim()
   if (!cleaned) throw new Error('Name required')
   const norm = normalizeName(cleaned)
-  // If another team already uses this normalized name, merge into it.
-  const snap = await getDocs(
-    query(collection(getDb(), C_TEAMS), where('normalized', '==', norm))
+  const self = await readDoc(C_TEAMS, id)
+  if (!self) throw new Error('Team not found')
+  // If another team at the SAME school already uses this name, merge into it.
+  // Same name at a different school is a different team.
+  const collision = (await teamsNamed(norm)).find(t =>
+    t.id !== id && (t.schoolId || null) === (self.schoolId || null)
   )
-  const collision = snap.docs.find(d => d.id !== id)
   if (collision) {
     await mergeTeams(id, collision.id)
-    return { id: collision.id, ...collision.data() }
+    return collision
   }
   return updateTeam(id, { name: cleaned, normalized: norm })
 }
 
 export async function setTeamColors(id, color1, color2) {
   return updateTeam(id, { color1, color2 })
+}
+
+/**
+ * Set or clear a team's school (admin). If a team with the same name already
+ * belongs to the target school, the two are the same team: merge into it.
+ */
+export async function setTeamSchool(id, schoolId) {
+  const sid = schoolId || null
+  const self = await readDoc(C_TEAMS, id)
+  if (!self) throw new Error('Team not found')
+  const collision = (await teamsNamed(self.normalized)).find(t =>
+    t.id !== id && (t.schoolId || null) === sid
+  )
+  if (collision) {
+    await mergeTeams(id, collision.id)
+    return collision
+  }
+  return updateTeam(id, { schoolId: sid })
 }
 
 async function updateTeam(id, patch) {
@@ -279,6 +313,13 @@ export async function mergeTeams(fromId, toId) {
     }
   }
 
+  // A survivor with no school adopts the loser's, so a merge never drops a
+  // school link the organizer set.
+  const fromSchool = fromSnap.data().schoolId
+  if (!toSnap.data().schoolId && fromSchool) {
+    await settleWrite(updateDoc(doc(getDb(), C_TEAMS, toId), { schoolId: fromSchool }))
+  }
+
   await settleWrite(deleteDoc(fromRef))
 }
 
@@ -315,6 +356,138 @@ function reconcileRoster(roster, fromId, toId) {
       return true
     })
     .map(r => (r.teamId === toId ? { ...r, status } : r))
+}
+
+/* ─── Schools ─── */
+
+/**
+ * Look up a school by normalized name (any status); create it as "pending" if
+ * missing. Kiosk path: a typed-in new school waits for admin approval before it
+ * appears on any board or in kiosk search.
+ *
+ * Offline caveat (same as teams): the name lookup only sees cached schools, so
+ * a device offline with a cold cache can create a duplicate pending school.
+ * Clean up with admin Merge into….
+ * @returns {Promise<{ schoolId: string, status: string, name: string }>}
+ */
+export async function getOrCreateSchool(name) {
+  const cleaned = String(name || '').trim()
+  if (!cleaned) throw new Error('School name required')
+  const norm = normalizeName(cleaned)
+  const snap = await getDocs(
+    query(collection(getDb(), C_SCHOOLS), where('normalized', '==', norm), fbLimit(1))
+  )
+  if (!snap.empty) {
+    const d = snap.docs[0]
+    const s = d.data()
+    return { schoolId: d.id, status: s.status, name: s.name }
+  }
+  const id = genId()
+  const school = {
+    name: cleaned,
+    normalized: norm,
+    status: 'pending',
+    createdAt: Date.now(),
+    createdByKiosk: getKioskId(),
+  }
+  // settleWrite: offline, the id is usable right away and the doc replays later.
+  await settleWrite(setDoc(doc(getDb(), C_SCHOOLS, id), school))
+  return { schoolId: id, status: school.status, name: school.name }
+}
+
+/**
+ * Admin path: create a school already approved, or approve the existing one
+ * with that name. Either way, an unlinked team named exactly like it is linked.
+ */
+export async function createApprovedSchool(name) {
+  const { schoolId } = await getOrCreateSchool(name)
+  return approveSchool(schoolId)
+}
+
+export async function listApprovedSchools() {
+  return (await readAll(C_SCHOOLS)).filter(s => s.status === 'approved')
+}
+
+export async function listPendingSchools() {
+  return (await readAll(C_SCHOOLS)).filter(s => s.status === 'pending')
+}
+
+export async function listAllSchools() {
+  return readAll(C_SCHOOLS)
+}
+
+export async function getSchoolById(id) {
+  return readDoc(C_SCHOOLS, id)
+}
+
+export async function approveSchool(id) {
+  const updated = await updateSchool(id, { status: 'approved' })
+  await linkTeamsToSchool(updated)
+  return updated
+}
+
+export async function hideSchool(id) {
+  return updateSchool(id, { status: 'hidden' })
+}
+
+export async function renameSchool(id, newName) {
+  const cleaned = String(newName || '').trim()
+  if (!cleaned) throw new Error('Name required')
+  const norm = normalizeName(cleaned)
+  const snap = await getDocs(
+    query(collection(getDb(), C_SCHOOLS), where('normalized', '==', norm))
+  )
+  const collision = snap.docs.find(d => d.id !== id)
+  if (collision) {
+    await mergeSchools(id, collision.id)
+    return { id: collision.id, ...collision.data() }
+  }
+  return updateSchool(id, { name: cleaned, normalized: norm })
+}
+
+/**
+ * Fold `fromId` into `toId`: every team re-pointed, source school removed. A
+ * team that now collides by name with a team already at `toId` merges into it.
+ */
+export async function mergeSchools(fromId, toId) {
+  if (fromId === toId) return
+  const [from, to] = await Promise.all([readDoc(C_SCHOOLS, fromId), readDoc(C_SCHOOLS, toId)])
+  if (!from || !to) throw new Error('School not found')
+  const snap = await getDocs(query(collection(getDb(), C_TEAMS), where('schoolId', '==', fromId)))
+  for (const d of snap.docs) await setTeamSchool(d.id, toId)
+  await settleWrite(deleteDoc(doc(getDb(), C_SCHOOLS, fromId)))
+}
+
+/** Delete a school. Its teams and their scores stay, just unlinked. */
+export async function deleteSchool(id) {
+  const snap = await getDocs(query(collection(getDb(), C_TEAMS), where('schoolId', '==', id)))
+  for (let i = 0; i < snap.docs.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(getDb())
+    for (const d of snap.docs.slice(i, i + BATCH_LIMIT)) batch.update(d.ref, { schoolId: null })
+    await settleWrite(batch.commit())
+  }
+  await settleWrite(deleteDoc(doc(getDb(), C_SCHOOLS, id)))
+}
+
+async function updateSchool(id, patch) {
+  const ref = doc(getDb(), C_SCHOOLS, id)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) throw new Error('School not found')
+  await settleWrite(updateDoc(ref, patch))
+  return { id, ...snap.data(), ...patch }
+}
+
+/**
+ * Link an unlinked team whose name exactly matches this school's ("link on
+ * save" for a team created before the school existed). Skipped when the school
+ * already has a team by that name, which would make two identical teams.
+ */
+async function linkTeamsToSchool(school) {
+  const sameName = await teamsNamed(school.normalized)
+  if (sameName.some(t => t.schoolId === school.id)) return
+  const team = sameName.find(t => !t.schoolId)
+  if (!team) return
+  await settleWrite(updateDoc(doc(getDb(), C_TEAMS, team.id), { schoolId: school.id }))
 }
 
 /* ─── Events ─── */
@@ -355,16 +528,18 @@ export async function getEventById(id) {
  * Create a new event. With `options.scheduledStart` in the future, the event
  * is created "scheduled"; otherwise it opens immediately. `options.endsAt`
  * overrides the default 24h window (a multi-day event needs this, or it would
- * age out overnight).
+ * age out overnight). `options.group` ties events (e.g. a morning and an
+ * afternoon session) into one Day leaderboard.
  */
 export async function startEvent(name, options = {}) {
   const cleaned = String(name || '').trim() || 'Untitled Event'
-  const { scheduledStart = null, endsAt = null } = options
+  const { scheduledStart = null, endsAt = null, group = null } = options
   const now = Date.now()
   const id = genId()
   const startedAt = scheduledStart || now
   const event = {
     name: cleaned,
+    group: String(group || '').trim() || null,
     startedAt,
     scheduledStart: scheduledStart || null,
     endedAt: null,
@@ -412,6 +587,11 @@ export async function reopenEvent(id) {
     endedAt: null,
     endsAt: now + DEFAULT_EVENT_DURATION_MS,
   })
+}
+
+/** Set or clear an event's group (Day). Admin-only per firestore.rules. */
+export async function setEventGroup(id, group) {
+  return updateEvent(id, { group: String(group || '').trim() || null })
 }
 
 /** Move an event's auto-end time (admin-only per firestore.rules). */
@@ -491,21 +671,8 @@ async function updateRosterEntry(eventId, teamId, patch) {
 export async function getEventRoster(eventId) {
   const ev = await readDoc(C_EVENTS, eventId)
   if (!ev) return []
-  const teams = await readAll(C_TEAMS)
-  const teamMap = new Map(teams.map(t => [t.id, t]))
-  return (ev.roster || []).map(r => {
-    const t = teamMap.get(r.teamId)
-    const colors = getTeamColors(t)
-    return {
-      teamId: r.teamId,
-      teamName: t ? t.name : '(deleted team)',
-      rosterStatus: r.status,
-      teamStatus: t ? t.status : 'hidden',
-      color1: colors.color1,
-      color2: colors.color2,
-      addedAt: r.addedAt,
-    }
-  })
+  const [teams, schools] = await Promise.all([readAll(C_TEAMS), readAll(C_SCHOOLS)])
+  return joinRoster(ev, teams, schools, getTeamColors)
 }
 
 /* ─── Per-kiosk active event (device-local) ─── */
@@ -584,70 +751,26 @@ export async function deleteScore(id) {
 /* ─── Leaderboards ─── */
 
 /**
- * Aggregated leaderboard rows for a given scope. Same shape and normalization
- * as the local impl: `normPoints` (per-game-par normalized, the headline rank)
- * and `points` (raw sum). Computed at read time so changing a `par`
- * re-normalizes the whole history.
+ * Aggregated leaderboard rows. See `aggregateLeaderboard` in
+ * leaderboard-shared.js for scopes and row shape. Computed at read time so
+ * changing a `par` re-normalizes the whole history.
  */
-export async function getLeaderboard({ scope, eventId } = {}) {
-  const [teams, scores] = await Promise.all([readAll(C_TEAMS), readAll(C_SCORES)])
-  const teamMap = new Map(teams.map(t => [t.id, t]))
-
-  let visibilityCheck
-  if (scope === 'event') {
-    if (!eventId) return []
-    const ev = await readDoc(C_EVENTS, eventId)
-    if (!ev) return []
-    const approvedRosterIds = new Set(
-      (ev.roster || []).filter(r => r.status === 'approved').map(r => r.teamId)
-    )
-    // Require the team to still exist — a stale roster entry pointing at a
-    // deleted team (e.g. a cross-kiosk offline delete that couldn't reach the
-    // other kiosk's roster) must not surface as a "(deleted)" leaderboard row.
-    visibilityCheck = (teamId) => approvedRosterIds.has(teamId) && teamMap.has(teamId)
-  } else {
-    visibilityCheck = (teamId) => teamMap.get(teamId)?.status === 'approved'
-  }
-
-  let filtered = scores.filter(s => s.teamId && visibilityCheck(s.teamId))
-
-  if (scope === 'event') {
-    filtered = filtered.filter(s => s.eventId === eventId)
-  } else if (scope === 'month') {
-    const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
-    filtered = filtered.filter(s => s.ts >= monthStart)
-  }
-
-  const agg = new Map()
-  for (const s of filtered) {
-    const t = teamMap.get(s.teamId)
-    const row = agg.get(s.teamId) || {
-      teamId: s.teamId,
-      teamName: t ? t.name : '(deleted)',
-      points: 0,
-      normPoints: 0,
-      gamesPlayed: 0,
-      runs: new Set(),
-    }
-    row.points += s.points
-    row.normPoints += Math.max(0, s.points) / getGamePar(s.gameId) * 100
-    row.runs.add(s.runId)
-    agg.set(s.teamId, row)
-  }
-
-  return [...agg.values()]
-    .map(r => {
-      const colors = getTeamColors(teamMap.get(r.teamId))
-      return {
-        teamId: r.teamId,
-        teamName: r.teamName,
-        normPoints: Math.round(r.normPoints),
-        points: r.points,
-        gamesPlayed: r.runs.size,
-        color1: colors.color1,
-        color2: colors.color2,
-      }
-    })
-    .sort((a, b) => b.normPoints - a.normPoints || b.points - a.points)
+export async function getLeaderboard({ scope, eventId, groupBy = 'team' } = {}) {
+  const [teams, schools, events, scores] = await Promise.all([
+    readAll(C_TEAMS),
+    readAll(C_SCHOOLS),
+    readAll(C_EVENTS),
+    readAll(C_SCORES),
+  ])
+  return aggregateLeaderboard({
+    teams,
+    schools,
+    events,
+    scores,
+    scope,
+    eventId,
+    groupBy,
+    getPar: getGamePar,
+    getColors: getTeamColors,
+  })
 }

@@ -136,6 +136,10 @@ src/
     team-input.js        # shared player+team input rows for advanced game intros
     team-colors.js       # team accent palette, deterministic fallback, swatch picker
     profanity.js         # isClean(name) wordlist filter for team-name submissions
+    leaderboard-shared.js # pure logic both backends share: team identity, roster join, aggregation
+    combobox.js          # styled dropdown wrapped around a text input (replaces native <datalist>)
+    school-picker.js     # combobox + None/Add-new-school/fuzzy auto-pick, for roster + admin modal
+    school-match.js      # pure fuzzy school suggestion (suggestSchool) used by the picker
 ```
 
 ## Fonts
@@ -313,7 +317,7 @@ Session play-mode lives in `sessionStorage['sdshc-lb-play-mode']`. Returning to 
 
 [src/utils/leaderboard-api.js](src/utils/leaderboard-api.js) is a thin **backend selector**: it re-exports either `leaderboard-api.firestore.js` (when `USE_FIRESTORE`) or `leaderboard-api.local.js`. Both expose the identical Promise-returning surface, so callers never change. Every consumer imports from `leaderboard-api.js`, never the impls directly.
 
-**Firestore mode (live):** collections `/teams`, `/events`, `/scores`, plus `/admins/{uid}` (admin allow-list checked by `firestore.rules`) and `/config`. Offline persistence is `persistentLocalCache` + `persistentSingleTabManager` — **single browser tab only**. Writes made offline cache immediately and replay on reconnect; idempotency is by deterministic score doc ids `{runId}__{i}`.
+**Firestore mode (live):** collections `/teams`, `/schools`, `/events`, `/scores`, plus `/admins/{uid}` (admin allow-list checked by `firestore.rules`) and `/config`. Offline persistence is `persistentLocalCache` + `persistentSingleTabManager` — **single browser tab only**. Writes made offline cache immediately and replay on reconnect; idempotency is by deterministic score doc ids `{runId}__{i}`.
 
 **Per-kiosk / session keys (used in both modes):**
 ```
@@ -322,24 +326,44 @@ sdshc-lb-kiosk-id      stable UUID (per-kiosk, localStorage)
 sdshc-lb-play-mode     "team" | "casual" (sessionStorage, see above)
 ```
 
-**localStorage mode only** (`USE_FIRESTORE = false`) additionally stores the full dataset under `sdshc-lb-teams` / `sdshc-lb-events` / `sdshc-lb-scores` (`{ schemaVersion, … }`). In Firestore mode those are superseded by the collections above.
+**localStorage mode only** (`USE_FIRESTORE = false`) additionally stores the full dataset under `sdshc-lb-teams` / `sdshc-lb-schools` / `sdshc-lb-events` / `sdshc-lb-scores` (`{ schemaVersion, … }`). In Firestore mode those are superseded by the collections above.
 
 ### Team status model
 
 - **Global team status** (`team.status`): `pending | approved | hidden`. Controls visibility on the All-Time leaderboard.
 - **Per-event roster status** (entry in `event.roster`): `pending | approved`. Controls visibility on the Current-Event leaderboard. Independent of global status — an organizer can approve a team for one event without committing to statewide visibility.
-- The team/school **dropdown** (autocomplete `<datalist>`) on game intros lists **approved teams only** — pending teams are intentionally excluded so unmoderated names don't autocomplete-suggest ([team-input.js](src/utils/team-input.js) `ensureRosterDatalist`). A pending team is still immediately playable: typing its name manually resolves to the existing pending team and tags scores correctly. Scores just don't appear publicly until the team is approved.
+- The team **dropdown** on game intros ([combobox.js](src/utils/combobox.js), not a native `<datalist>`) lists the event's **approved roster teams only**, labeled "Name · School". Pending teams are intentionally excluded so unmoderated names don't get suggested. A pending team is still immediately playable: typing its name resolves against the whole roster first (label, then a unique bare name) and tags scores correctly. Scores just don't appear publicly until the team is approved.
 - Profane names blocked inline by `isClean()` in [profanity.js](src/utils/profanity.js) before they hit the queue.
+
+### Schools
+
+- **Schools** (`/schools`): `{ name, normalized, status: pending | approved | hidden }`. Admin-added schools are approved immediately; schools added from a kiosk ("Add new school" in the picker) are pending and never appear on leaderboards or in kiosk search until approved.
+- **Team identity is name + school** (`team.schoolId`, optional). "Team 1" at two schools is two teams. `renameTeam` and `setTeamSchool` merge only on a same-name, same-school collision. Shared logic lives in [leaderboard-shared.js](src/utils/leaderboard-shared.js) (`resolveTeamIdentity`).
+- **How a team gets its school:**
+  - Roster screen and admin Manage Teams modal: the school picker ([school-picker.js](src/utils/school-picker.js)) starts on None, fuzzy-suggests a school as the team name is typed ([school-match.js](src/utils/school-match.js)), and stops suggesting once someone picks by hand. What it shows is saved (`getOrCreateTeam(name, colors, { schoolId })`).
+  - Game-intro free text (no picker): exact normalized school-name match only (`{ autoMatch: true }`).
+  - Approving or creating a school links an unlinked team with exactly that name.
+  - Admin can set any team's school from the team rows.
+
+### Event groups (Day board)
+
+Events carry an optional `group` string (set on create or edited per event row in admin). Events whose normalized group matches form one **Day**; `getLeaderboard({ scope: 'group', eventId })` aggregates them, checking each score against its own event's roster. An event with no group makes the Day scope equal the Session scope.
+
+### Leaderboard modal
+
+Tabs: active event (Session), its group (Day, only when the event has a group), All-Time. A **Teams / Schools** toggle sits under the tabs. It starts at the first tab's default (Teams for Session and Day, Schools for All-Time); until someone flips it, switching tabs moves it to that tab's default, and once flipped the choice carries across tabs. Closing the modal resets it.
 
 ### Scoring (Phase 2 — par-normalized)
 
 Headline ranking metric is **normalized par × 100**, summed across all runs. For each score record: `displayed = max(0, raw) ÷ par × 100`. A "par" run scores ~100; great runs go higher. Negative runs floor at 0.
 
-Both columns are shown — **Score** (normalized, sorted) and **Raw** (actual points, muted). All 6 games count (the "official games subset" idea from the original sketch was dropped — normalization handles fairness). Computed at read time inside `getLeaderboard()`, not on write, so changing a `par` recomputes the entire history instantly.
+Both columns are shown — **Score** (normalized, sorted) and **Raw** (actual points, muted). The **school** board sums the same normalized points across a school's approved teams (same team visibility as the team board for that scope, so a school total equals the sum of its visible team rows) and adds unranked **Teams** and **Avg / team** columns. All 6 games count (the "official games subset" idea from the original sketch was dropped — normalization handles fairness). Computed at read time inside `getLeaderboard()`, not on write, so changing a `par` recomputes the entire history instantly.
 
 ### Admin (`#advanced/admin`)
 
-Sections: active event, pending teams, all teams, events (start / schedule / end / reopen / delete), recent scores (with per-row delete), per-event roster moderation, team color picker, offline cache warm-up. Idle timer is force-disabled here. In Firestore mode the panel sits behind a **Firebase-Auth sign-in gate** (password only; the screen signs in as `ADMIN_EMAIL` under the hood and requires an `/admins/{uid}` doc per `firestore.rules`); session persists via `browserLocalPersistence`. In localStorage mode the panel renders with no auth.
+Sections: active event (create with optional group), pending teams, all teams (with per-team school dropdown), schools (add / approve / rename / merge / hide / delete), events (start / schedule / end / reopen / delete / group), recent scores (with per-row delete), per-event roster moderation, team color picker, offline cache warm-up. Idle timer is force-disabled here. In Firestore mode the panel sits behind a **Firebase-Auth sign-in gate** (password only; the screen signs in as `ADMIN_EMAIL` under the hood and requires an `/admins/{uid}` doc per `firestore.rules`); session persists via `browserLocalPersistence`. In localStorage mode the panel renders with no auth.
+
+Firestore rules deploy from the CLI: `firebase deploy --only firestore:rules` ([firebase.json](firebase.json) targets `sdshc-games-hub`).
 
 ### Game-side integration
 

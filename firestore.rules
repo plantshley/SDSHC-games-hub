@@ -6,7 +6,7 @@ rules_version = '2';
 // not a determined attacker. The moderation queue + admin delete-score controls
 // handle the rest. Known accepted soft spots are noted inline.
 //
-// Deploy: Firebase Console → Firestore → Rules → paste → Publish.
+// Deploy: `firebase deploy --only firestore:rules` (firebase.json points here).
 // Admins are identified by a doc at /admins/{uid} (create it in the console for
 // your admin user's UID).
 
@@ -34,6 +34,21 @@ service cloud.firestore {
         && request.resource.data.normalized is string;
 
       // Status changes, renames, merges, deletes are admin-only.
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Schools ────────────────────────────────────────────────────────────
+    // Same shape as teams. Kiosks may add a new school only as pending (the
+    // roster screen's "Add new school"); admins create approved schools
+    // directly and own every status change, rename, merge, and delete.
+    match /schools/{schoolId} {
+      allow read: if true;
+      allow create: if isAdmin()
+        || (request.resource.data.status == 'pending'
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 40
+          && request.resource.data.normalized is string);
       allow update, delete: if isAdmin();
     }
 

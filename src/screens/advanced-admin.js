@@ -6,8 +6,9 @@
  * Sections:
  *   - Active event for this kiosk
  *   - Pending team names
- *   - All teams
- *   - Events
+ *   - All teams (with each team's school)
+ *   - Schools (add, approve, rename, merge, hide, delete)
+ *   - Events (with optional group, which drives the Day leaderboard)
  *   - Recent scores
  *
  * Phase 1B will add a password sign-in at the top of this screen.
@@ -40,6 +41,16 @@ import {
   approveTeamForEvent,
   setTeamColors,
   setEventEndsAt,
+  setEventGroup,
+  setTeamSchool,
+  listApprovedTeams,
+  listAllSchools,
+  createApprovedSchool,
+  approveSchool,
+  hideSchool,
+  renameSchool,
+  mergeSchools,
+  deleteSchool,
 } from '../utils/leaderboard-api.js'
 import { derivedEventStatus, eventEndsAt } from '../utils/event-status.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
@@ -50,6 +61,9 @@ import { isClean } from '../utils/profanity.js'
 import { USE_FIRESTORE } from '../firebase/config.js'
 import { adminSignIn, adminSignOut, onAdminAuthChange } from '../firebase/auth.js'
 import { warmOfflineCache, onWarmupProgress } from '../utils/offline-warmup.js'
+import { attachCombobox } from '../utils/combobox.js'
+import { createSchoolPicker } from '../utils/school-picker.js'
+import { teamLabel } from '../utils/leaderboard-shared.js'
 
 export function createAdvancedAdminScreen() {
   const screen = document.createElement('div')
@@ -98,6 +112,11 @@ export function createAdvancedAdminScreen() {
         <div class="adv-admin-section-content" id="sec-teams">Loading…</div>
       </section>
 
+      <section class="adv-admin-section" data-section="schools">
+        <h2 class="adv-admin-section-title">Schools <span class="adv-admin-badge" id="schools-pending-count"></span></h2>
+        <div class="adv-admin-section-content" id="sec-schools">Loading…</div>
+      </section>
+
       <section class="adv-admin-section" data-section="events">
         <h2 class="adv-admin-section-title">Events</h2>
         <div class="adv-admin-section-content" id="sec-events">Loading…</div>
@@ -126,7 +145,7 @@ export function createAdvancedAdminScreen() {
 
   async function renderActiveEvent() {
     const el = screen.querySelector('#sec-active-event')
-    const [open, currentId] = await Promise.all([listOpenEvents(), getActiveEventId()])
+    const [open, currentId, allEvents] = await Promise.all([listOpenEvents(), getActiveEventId(), listEvents()])
     const current = currentId ? await getEventById(currentId) : null
 
     el.innerHTML = `
@@ -147,11 +166,11 @@ export function createAdvancedAdminScreen() {
         </span>
       </div>
       <p class="adv-admin-hint">
-        You normally don't need this. A device joins the running event by itself.
-        Override it here only when more than one event is running at once.
+        A device joins the running event by itself, but you can 
+        override it here when more than one event is running at once.
       </p>
       <div class="adv-admin-event-creator-row">
-        <input class="adv-admin-input" id="new-event-name" placeholder="New event name (e.g. FFA Day Spring)" maxlength="60" />
+        <input class="adv-admin-input" id="new-event-name" placeholder="Event name (e.g. FFA Day Spring)" maxlength="60" />
         <label class="adv-admin-radio">
           <input type="radio" name="when" value="now" checked />
           <span>Start now</span>
@@ -161,9 +180,16 @@ export function createAdvancedAdminScreen() {
           <span>Schedule for</span>
         </label>
         <input class="adv-admin-input adv-admin-datetime" type="datetime-local" id="new-event-when" />
+        <input class="adv-admin-input adv-admin-group-input" id="new-event-group" maxlength="60"
+          placeholder="Group (optional, e.g. Soil Health Day)" autocomplete="off" spellcheck="false" />
         <button class="adv-admin-btn-create" id="start-event-btn">Create event</button>
       </div>
+      <p class="adv-admin-hint">
+        Events with the same group (a morning and an afternoon session, for example) get a
+        combined Day leaderboard.
+      </p>
     `
+    attachGroupCombobox(el.querySelector('#new-event-group'), allEvents)
 
     el.querySelector('#active-event-select').addEventListener('change', async (e) => {
       const v = e.target.value
@@ -203,7 +229,8 @@ export function createAdvancedAdminScreen() {
         el.querySelector('#new-event-when').focus()
         return
       }
-      const ev = await startEvent(name, { scheduledStart })
+      const group = el.querySelector('#new-event-group').value.trim() || null
+      const ev = await startEvent(name, { scheduledStart, group })
       // Auto-activate only if starting now
       if (!scheduledStart) {
         setActiveEventId(ev.id)
@@ -211,6 +238,7 @@ export function createAdvancedAdminScreen() {
       }
       input.value = ''
       el.querySelector('#new-event-when').value = ''
+      el.querySelector('#new-event-group').value = ''
       el.querySelector('input[name="when"][value="now"]').checked = true
       await renderActiveEvent()
       await renderEvents()
@@ -238,7 +266,7 @@ export function createAdvancedAdminScreen() {
       <ul class="adv-admin-list">
         ${roster.map(r => `
           <li class="adv-admin-row" data-id="${r.teamId}">
-            <span class="adv-admin-row-name">${escapeHtml(r.teamName)}</span>
+            <span class="adv-admin-row-name">${escapeHtml(r.label)}</span>
             ${rosterStatusPill(r.rosterStatus, 'Event')}
             ${rosterStatusPill(r.teamStatus, 'Statewide')}
             <span class="adv-admin-row-actions">
@@ -276,7 +304,7 @@ export function createAdvancedAdminScreen() {
 
   async function renderPending() {
     const el = screen.querySelector('#sec-pending')
-    const teams = await listPendingTeams()
+    const [teams, schools] = await Promise.all([listPendingTeams(), listAllSchools()])
     const badge = screen.querySelector('#pending-count')
     badge.textContent = teams.length ? String(teams.length) : ''
     if (teams.length === 0) {
@@ -292,6 +320,7 @@ export function createAdvancedAdminScreen() {
             <span class="adv-admin-row-color" style="background: linear-gradient(135deg, ${c.color1}, ${c.color2})"></span>
             <span class="adv-admin-row-name">${escapeHtml(t.name)}</span>
             <span class="adv-admin-row-meta">created ${formatDate(t.createdAt)}</span>
+            ${schoolSelectHtml(t, schools)}
             <span class="adv-admin-row-actions">
               <button class="adv-admin-btn adv-admin-btn-good" data-act="approve">Approve statewide</button>
               <button class="adv-admin-btn" data-act="colors">Colors</button>
@@ -304,6 +333,7 @@ export function createAdvancedAdminScreen() {
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
       const id = row.dataset.id
+      bindSchoolSelect(row, id)
       onTap(row.querySelector('[data-act="approve"]'), async () => {
         await approveTeam(id)
         await renderPending(); await renderTeams(); await renderRoster(); await renderScores()
@@ -332,7 +362,8 @@ export function createAdvancedAdminScreen() {
 
   async function renderTeams() {
     const el = screen.querySelector('#sec-teams')
-    const [teams, events] = await Promise.all([listAllTeams(), listEvents()])
+    const [teams, events, schools] = await Promise.all([listAllTeams(), listEvents(), listAllSchools()])
+    const schoolName = new Map(schools.map(sc => [sc.id, sc.name]))
     if (teams.length === 0) {
       el.innerHTML = `<div class="adv-admin-empty">No teams yet.</div>`
       return
@@ -353,7 +384,7 @@ export function createAdvancedAdminScreen() {
         membershipsByTeam.set(r.teamId, arr)
       }
     }
-    const rowFor = (t) => teamRowHtml(t, membershipsByTeam.get(t.id) || [])
+    const rowFor = (t) => teamRowHtml(t, membershipsByTeam.get(t.id) || [], schools)
     el.innerHTML = `
       <input class="adv-admin-input adv-admin-search" id="teams-search" placeholder="Search teams…" />
       <ul class="adv-admin-list" id="teams-list">
@@ -365,7 +396,10 @@ export function createAdvancedAdminScreen() {
     search.addEventListener('input', () => {
       const q = search.value.toLowerCase()
       list.innerHTML = teams
-        .filter(t => t.name.toLowerCase().includes(q))
+        .filter(t =>
+          t.name.toLowerCase().includes(q) ||
+          (schoolName.get(t.schoolId) || '').toLowerCase().includes(q)
+        )
         .map(rowFor)
         .join('')
       bindTeamRows()
@@ -375,6 +409,7 @@ export function createAdvancedAdminScreen() {
     function bindTeamRows() {
       list.querySelectorAll('.adv-admin-row').forEach(row => {
         const id = row.dataset.id
+        bindSchoolSelect(row, id)
         onTap(row.querySelector('[data-act="approve"]'), async () => {
           await approveTeam(id); await renderTeams(); await renderPending(); await renderRoster(); await renderScores()
         })
@@ -401,7 +436,7 @@ export function createAdvancedAdminScreen() {
     }
   }
 
-  function teamRowHtml(t, memberships = []) {
+  function teamRowHtml(t, memberships = [], schools = []) {
     const c = getTeamColors(t)
     const eventPills = memberships.map(m => scopePill(m.rosterStatus, m.eventName)).join('')
     return `
@@ -410,6 +445,7 @@ export function createAdvancedAdminScreen() {
         <span class="adv-admin-row-name">${escapeHtml(t.name)}</span>
         ${scopePill(t.status, 'statewide')}
         ${eventPills}
+        ${schoolSelectHtml(t, schools)}
         <span class="adv-admin-row-actions">
           ${t.status !== 'approved' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="approve">Approve</button>` : ''}
           <button class="adv-admin-btn" data-act="colors">Colors</button>
@@ -418,6 +454,194 @@ export function createAdvancedAdminScreen() {
         </span>
       </li>
     `
+  }
+
+  /**
+   * Per-team school dropdown: No school, every approved school, plus the
+   * team's current school when it isn't approved (so the select shows the
+   * truth instead of silently reading "No school").
+   */
+  function schoolSelectHtml(t, schools) {
+    const opts = schools
+      .filter(sc => sc.status === 'approved' || sc.id === t.schoolId)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(sc => {
+        const tag = sc.status === 'approved' ? '' : ` (${sc.status})`
+        return `<option value="${sc.id}" ${sc.id === t.schoolId ? 'selected' : ''}>${escapeHtml(sc.name)}${tag}</option>`
+      })
+      .join('')
+    return `
+      <select class="adv-admin-select adv-admin-school-select" data-act="school" aria-label="School for ${escapeHtml(t.name)}">
+        <option value="" ${t.schoolId ? '' : 'selected'}>No school</option>
+        ${opts}
+      </select>
+    `
+  }
+
+  function bindSchoolSelect(row, teamId) {
+    row.querySelector('[data-act="school"]')?.addEventListener('change', async (e) => {
+      try {
+        await setTeamSchool(teamId, e.target.value || null)
+        flashMessage('School updated')
+      } catch (err) {
+        console.error('set team school failed', err)
+        flashMessage('Could not update the school')
+      }
+      await renderPending(); await renderTeams(); await renderRoster(); await renderSchools()
+    })
+  }
+
+  async function renderSchools() {
+    const el = screen.querySelector('#sec-schools')
+    const [schools, teams] = await Promise.all([listAllSchools(), listAllTeams()])
+    const badge = screen.querySelector('#schools-pending-count')
+    const pendingCount = schools.filter(sc => sc.status === 'pending').length
+    badge.textContent = pendingCount ? String(pendingCount) : ''
+    const teamCount = new Map()
+    for (const t of teams) {
+      if (t.schoolId) teamCount.set(t.schoolId, (teamCount.get(t.schoolId) || 0) + 1)
+    }
+    const order = { pending: 0, approved: 1, hidden: 2 }
+    const sorted = [...schools].sort((a, b) =>
+      (order[a.status] ?? 3) - (order[b.status] ?? 3) || a.name.localeCompare(b.name)
+    )
+    const rowFor = (sc) => {
+      const n = teamCount.get(sc.id) || 0
+      const others = sorted.filter(o => o.id !== sc.id && o.status !== 'hidden')
+      return `
+        <li class="adv-admin-row" data-id="${sc.id}">
+          <span class="adv-admin-row-name">${escapeHtml(sc.name)}</span>
+          ${scopePill(sc.status, 'school')}
+          <span class="adv-admin-row-meta">${n} ${n === 1 ? 'team' : 'teams'}</span>
+          <span class="adv-admin-row-actions">
+            ${sc.status !== 'approved' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="approve">Approve</button>` : ''}
+            <button class="adv-admin-btn" data-act="rename">Rename</button>
+            ${others.length ? `
+              <select class="adv-admin-select adv-admin-merge-select" data-act="merge" aria-label="Merge ${escapeHtml(sc.name)} into another school">
+                <option value="">Merge into…</option>
+                ${others.map(o => `<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('')}
+              </select>` : ''}
+            ${sc.status !== 'hidden' ? `<button class="adv-admin-btn adv-admin-btn-warn" data-act="hide">Hide</button>` : ''}
+            <button class="adv-admin-btn adv-admin-btn-danger" data-act="delete">Delete</button>
+          </span>
+        </li>
+      `
+    }
+    el.innerHTML = `
+      <div class="adv-admin-event-creator-row">
+        <input class="adv-admin-input" id="new-school-name" placeholder="New school name" maxlength="40" spellcheck="false" autocomplete="off" />
+        <button class="adv-admin-btn-create" id="add-school-btn">Add school</button>
+      </div>
+      <p class="adv-admin-hint">
+        Schools added here are approved right away. Schools added from the roster show as pending until approved here and do not count towards the leaderboard.
+      </p>
+      ${sorted.length ? `
+        <input class="adv-admin-input adv-admin-search" id="schools-search" placeholder="Search schools…" />
+        <ul class="adv-admin-list" id="schools-list">${sorted.map(rowFor).join('')}</ul>
+      ` : `<div class="adv-admin-empty">No schools yet.</div>`}
+    `
+
+    const nameInput = el.querySelector('#new-school-name')
+    const addSchool = async () => {
+      const name = nameInput.value.trim()
+      if (!name) {
+        nameInput.focus()
+        return
+      }
+      try {
+        await createApprovedSchool(name)
+        flashMessage(`Added ${name}`)
+      } catch (err) {
+        console.error('add school failed', err)
+        flashMessage('Could not add that school')
+        return
+      }
+      await renderSchools(); await renderTeams(); await renderPending()
+    }
+    onTap(el.querySelector('#add-school-btn'), addSchool)
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        addSchool()
+      }
+    })
+
+    const list = el.querySelector('#schools-list')
+    const search = el.querySelector('#schools-search')
+    if (!list) return
+    search.addEventListener('input', () => {
+      const q = search.value.toLowerCase()
+      list.innerHTML = sorted.filter(sc => sc.name.toLowerCase().includes(q)).map(rowFor).join('')
+      bindSchoolRows()
+    })
+    bindSchoolRows()
+
+    function bindSchoolRows() {
+      const refresh = async () => {
+        await renderSchools(); await renderTeams(); await renderPending(); await renderRoster()
+      }
+      list.querySelectorAll('.adv-admin-row').forEach(row => {
+        const id = row.dataset.id
+        const school = schools.find(sc => sc.id === id)
+        onTap(row.querySelector('[data-act="approve"]'), async () => {
+          await approveSchool(id)
+          await refresh()
+        })
+        onTap(row.querySelector('[data-act="hide"]'), async () => {
+          await hideSchool(id)
+          await refresh()
+        })
+        // `click`, not `pointerdown`: mobile browsers suppress prompt/confirm
+        // called from pointerdown.
+        row.querySelector('[data-act="rename"]')?.addEventListener('click', async () => {
+          const next = window.prompt('Rename school to (merges if the name matches another school):', school.name)
+          if (next && next.trim()) {
+            await renameSchool(id, next.trim())
+            await refresh()
+          }
+        })
+        row.querySelector('[data-act="merge"]')?.addEventListener('change', async (e) => {
+          const toId = e.target.value
+          if (!toId) return
+          const target = schools.find(sc => sc.id === toId)
+          if (!window.confirm(`Merge ${school.name} into ${target ? target.name : 'that school'}? Its teams move over and ${school.name} is removed.`)) {
+            e.target.value = ''
+            return
+          }
+          await mergeSchools(id, toId)
+          await refresh()
+        })
+        row.querySelector('[data-act="delete"]')?.addEventListener('click', async () => {
+          if (!window.confirm(`Delete ${school.name}? Its teams and scores stay, with no school.`)) return
+          await deleteSchool(id)
+          await refresh()
+        })
+      })
+    }
+  }
+
+  /** Free-text group field with the existing group names as dropdown options. */
+  function attachGroupCombobox(input, events) {
+    const groups = [...new Set(events.map(e => (e.group || '').trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b))
+    attachCombobox(input, {
+      getOptions: () => groups.map(g => ({ value: g, label: g })),
+      emptyText: 'No groups yet. Type a new one.',
+      onSelect: (option) => {
+        input.value = option.label
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+      },
+    })
+    // Enter commits a typed group (the combobox handles Enter first when a
+    // row is highlighted). The create-event field commits with its button.
+    if (input.id !== 'new-event-group') {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          input.blur()
+        }
+      })
+    }
   }
 
   async function renderEvents() {
@@ -442,6 +666,10 @@ export function createAdvancedAdminScreen() {
           <li class="adv-admin-row" data-id="${e.id}">
             <span class="adv-admin-row-name">${escapeHtml(e.name)}</span>
             <span class="adv-admin-row-meta">${eventMeta(e, ds, ends)}</span>
+            <label class="adv-admin-group" title="Events in the same group share a Day leaderboard">Group
+              <input class="adv-admin-input adv-admin-group-input" data-act="group" maxlength="60"
+                value="${escapeHtml(e.group || '')}" placeholder="None" autocomplete="off" spellcheck="false" />
+            </label>
             <span class="adv-admin-row-status adv-admin-status-${pillClass(ds)}"${agedOut ? ' title="No one ended this event — it closed itself at its end time."' : ''}>${ds}${agedOut ? ' (auto)' : ''}</span>
             <span class="adv-admin-row-actions">
               ${ds !== 'ended' && ends
@@ -460,14 +688,23 @@ export function createAdvancedAdminScreen() {
         `}).join('')}
       </ul>
       <p class="adv-admin-hint">
-        Devices join the running event on their own — no sign-in needed on the kiosk.
-        An event closes itself at its end time, so nothing stays joinable forever.
-        New events end 24 hours after they start; for anything longer, push the
+        Devices automatically join the running event, and an event closes itself at its end time.
+        New events default to end 24 hours after they start; for anything longer, push the
         <strong>Ends</strong> time out on its row.
       </p>
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
       const id = row.dataset.id
+      const groupInput = row.querySelector('[data-act="group"]')
+      attachGroupCombobox(groupInput, events)
+      groupInput.addEventListener('change', async () => {
+        const ev = events.find(x => x.id === id)
+        const next = groupInput.value.trim()
+        if (next === (ev?.group || '')) return
+        await setEventGroup(id, next || null)
+        flashMessage(next ? `Group set to ${next}` : 'Group cleared')
+        await renderEvents()
+      })
       onTap(row.querySelector('[data-act="precreate"]'), () => {
         const ev = events.find(x => x.id === id)
         openRosterModal(id, ev ? ev.name : 'Event')
@@ -558,9 +795,12 @@ export function createAdvancedAdminScreen() {
         </div>
         <p class="adv-roster-modal-sub">Teams you add here go on this event's roster pre-approved, so they're ready to pick the moment the event opens.</p>
         <form class="adv-roster-modal-add">
-          <input class="adv-admin-input" data-act="add-name" placeholder="Team / school name" maxlength="40" spellcheck="false" autocomplete="off" />
+          <input class="adv-admin-input" data-act="add-name" placeholder="Team or school name" maxlength="40" spellcheck="false" autocomplete="off" aria-label="Team name" />
           <button class="adv-admin-btn-create" type="submit">+ Add team</button>
         </form>
+        <div class="adv-roster-school" data-host="school">
+          <span class="adv-roster-field-label">School</span>
+        </div>
         <div class="adv-roster-modal-colors" data-host="colors"></div>
         <div class="adv-roster-modal-feedback" role="alert"></div>
         <div class="adv-roster-modal-list">Loading…</div>
@@ -572,6 +812,44 @@ export function createAdvancedAdminScreen() {
     const feedback = overlay.querySelector('.adv-roster-modal-feedback')
     const listEl = overlay.querySelector('.adv-roster-modal-list')
     const colorsHost = overlay.querySelector('[data-host="colors"]')
+
+    const schoolPicker = createSchoolPicker({ inputClass: 'adv-admin-input' })
+    overlay.querySelector('[data-host="school"]').appendChild(schoolPicker.el)
+
+    // Approved teams from any event, so a returning team gets picked (with its
+    // school link, approved or not) instead of created again.
+    let knownTeams = []
+    Promise.all([listApprovedTeams(), listAllSchools()]).then(([teams, schools]) => {
+      const approved = new Map(schools.filter(sc => sc.status === 'approved').map(sc => [sc.id, sc]))
+      knownTeams = teams
+        .map(t => ({ team: t, school: approved.get(t.schoolId) || null, label: teamLabel(t, approved) }))
+        .sort((a, b) => a.label.localeCompare(b.label))
+    }).catch(err => console.error('team list failed', err))
+
+    const teamCombo = attachCombobox(nameInput, {
+      getOptions: () => knownTeams.map(k => ({
+        value: k.team.id,
+        label: k.team.name,
+        sublabel: k.school ? k.school.name : '',
+        known: k,
+      })),
+      emptyText: 'No saved teams yet. Type a new name.',
+      onSelect: (option) => {
+        nameInput.value = option.label
+        const { team, school } = option.known
+        schoolPicker.setValue(
+          school ? { id: school.id, name: school.name }
+            : team.schoolId ? { id: team.schoolId, pending: true }
+            : null
+        )
+      },
+    })
+
+    let suggestTimer = 0
+    nameInput.addEventListener('input', () => {
+      clearTimeout(suggestTimer)
+      suggestTimer = setTimeout(() => schoolPicker.suggestFrom(nameInput.value), 150)
+    })
 
     let touchedTeams = false // did we create/approve anything worth refreshing on close?
 
@@ -601,7 +879,7 @@ export function createAdvancedAdminScreen() {
           ${roster.map(r => `
             <li class="adv-admin-row" data-id="${r.teamId}">
               <span class="adv-admin-row-color" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>
-              <span class="adv-admin-row-name">${escapeHtml(r.teamName)}</span>
+              <span class="adv-admin-row-name">${escapeHtml(r.label)}</span>
               ${rosterStatusPill(r.rosterStatus, 'Event')}
               ${rosterStatusPill(r.teamStatus, 'Statewide')}
               <span class="adv-admin-row-actions">
@@ -661,11 +939,16 @@ export function createAdvancedAdminScreen() {
       }
       setFeedback('')
       try {
-        const { teamId } = await getOrCreateTeam(name, colorPicker.getValue())
+        clearTimeout(suggestTimer)
+        await schoolPicker.commit()
+        const { schoolId } = schoolPicker.getValue()
+        const { teamId } = await getOrCreateTeam(name, colorPicker.getValue(), { schoolId })
         await addTeamToEventRoster(eventId, teamId)
         await approveTeamForEvent(eventId, teamId)
         touchedTeams = true
+        teamCombo.close()
         nameInput.value = ''
+        schoolPicker.reset()
         mountColorPicker()
         await paintList()
         setFeedback(`Added ${'"'}${name}${'"'} — approved for this event.`, 'ok')
@@ -683,7 +966,7 @@ export function createAdvancedAdminScreen() {
       // sections that reflect that. The active-event roster may overlap if the
       // modal targeted the active event.
       if (touchedTeams) {
-        renderPending(); renderTeams(); renderRoster()
+        renderPending(); renderTeams(); renderRoster(); renderSchools()
       }
     }
     function onKey(e) { if (e.key === 'Escape') close() }
@@ -824,6 +1107,7 @@ export function createAdvancedAdminScreen() {
     renderRoster()
     renderPending()
     renderTeams()
+    renderSchools()
     renderEvents()
     renderScores()
     renderOffline()
