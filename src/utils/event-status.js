@@ -37,6 +37,23 @@ export function eventEndsAt(ev) {
   return null
 }
 
+/**
+ * Fields to write when an admin moves an event's start. A future start makes
+ * the event scheduled; a past one leaves an open event open and lets a
+ * scheduled one open itself by the rules below. Ended events keep their status.
+ */
+export function eventStartPatch(ev, startAt, now = Date.now()) {
+  if (ev && ev.status !== 'ended' && startAt > now) {
+    return { status: 'scheduled', scheduledStart: startAt, startedAt: startAt }
+  }
+  const patch = { startedAt: startAt }
+  // Keep scheduledStart in step too: the Day a session belongs to reads it first.
+  if (ev && (ev.status === 'scheduled' || typeof ev.scheduledStart === 'number')) {
+    patch.scheduledStart = startAt
+  }
+  return patch
+}
+
 /** Ended by hand, or aged out. */
 export function effectivelyEnded(ev, now = Date.now()) {
   if (!ev) return true

@@ -6,13 +6,13 @@
  *
  * Keys:
  *   sdshc-lb-teams        { schemaVersion, teams: [{ id, name, normalized, status, schoolId?, color1, color2, createdAt }] }
- *   sdshc-lb-schools      { schemaVersion, schools: [{ id, name, normalized, status, createdAt }] }
- *   sdshc-lb-events       { events: [{ id, name, group?, startedAt, endedAt|null, status }] }
+ *   sdshc-lb-schools      { schemaVersion, schools: [{ id, name, normalized, status, color1?, color2?, createdAt }] }
+ *   sdshc-lb-events       { events: [{ id, name, session?, startedAt, endedAt|null, status }] }
  *   sdshc-lb-scores       { scores: [ScoreEntry] }
  *   sdshc-lb-active-event eventId|null (per-kiosk)
  *   sdshc-lb-kiosk-id     stable UUID for this device
  *
- *   ScoreEntry = { id, runId, ts, gameId, playerName, teamId|null, points,
+ *   ScoreEntry = { id, runId, ts, gameId, playerName, teamId|null, schoolId|null, points,
  *                  eventId|null, kioskId }
  *
  * Team status (`team.status`): "pending" | "approved" | "hidden". Controls
@@ -28,7 +28,7 @@
 
 import { getGamePar } from '../data/advanced-game-registry.js'
 import { deriveTeamColors, getTeamColors } from './team-colors.js'
-import { effectivelyOpen, eventEndsAt, DEFAULT_EVENT_DURATION_MS } from './event-status.js'
+import { effectivelyOpen, eventEndsAt, eventStartPatch, DEFAULT_EVENT_DURATION_MS } from './event-status.js'
 import {
   normalizeName,
   joinRoster,
@@ -399,8 +399,8 @@ export async function approveSchool(id) {
   return updated
 }
 
-export async function hideSchool(id) {
-  return updateSchool(id, { status: 'hidden' })
+export async function setSchoolColors(id, color1, color2) {
+  return updateSchool(id, { color1, color2 })
 }
 
 export async function renameSchool(id, newName) {
@@ -427,6 +427,16 @@ export async function mergeSchools(fromId, toId) {
   }
   const movers = getTeamsRaw().teams.filter(t => t.schoolId === fromId).map(t => t.id)
   for (const teamId of movers) await setTeamSchool(teamId, toId)
+  // School-play scores (no team) carry the school directly.
+  const scoresData = getScoresRaw()
+  let moved = false
+  for (const s of scoresData.scores) {
+    if (s.schoolId === fromId) {
+      s.schoolId = toId
+      moved = true
+    }
+  }
+  if (moved) writeJSON(K_SCORES, scoresData)
   const data = getSchoolsRaw()
   data.schools = data.schools.filter(s => s.id !== fromId)
   writeJSON(K_SCHOOLS, data)
@@ -510,19 +520,20 @@ export async function getEventById(id) {
  *   it opens immediately at now.
  * @param {number|null} [options.endsAt] - overrides the default 24h window.
  *   A multi-day event needs this, or it ages out overnight.
- * @param {string|null} [options.group] - events sharing a group (e.g. a
- *   morning and an afternoon session) roll up into one Day leaderboard.
+ * @param {string|null} [options.session] - session name (e.g. "Morning").
+ *   Sessions sharing an event name and start date roll up into one Day
+ *   leaderboard (see eventDayKey in leaderboard-shared.js).
  */
 export async function startEvent(name, options = {}) {
   const cleaned = String(name || '').trim() || 'Untitled Event'
-  const { scheduledStart = null, endsAt = null, group = null } = options
+  const { scheduledStart = null, endsAt = null, session = null } = options
   const data = getEventsRaw()
   const now = Date.now()
   const startedAt = scheduledStart || now
   const event = {
     id: genId(),
     name: cleaned,
-    group: String(group || '').trim() || null,
+    session: String(session || '').trim() || null,
     startedAt,
     scheduledStart: scheduledStart || null,
     endedAt: null,
@@ -594,12 +605,13 @@ export async function reopenEvent(id) {
   return data.events[idx]
 }
 
-/** Set or clear an event's group (Day). */
-export async function setEventGroup(id, group) {
+/** Move when an event opens (see eventStartPatch). */
+export async function setEventStart(id, startAt) {
   const data = getEventsRaw()
   const idx = data.events.findIndex(e => e.id === id)
   if (idx === -1) throw new Error('Event not found')
-  data.events[idx] = { ...data.events[idx], group: String(group || '').trim() || null }
+  const ev = data.events[idx]
+  data.events[idx] = { ...ev, ...eventStartPatch(ev, startAt) }
   writeJSON(K_EVENTS, data)
   return data.events[idx]
 }
@@ -739,6 +751,8 @@ export async function recordScores({ gameId, runId, entries, eventId }) {
       gameId,
       playerName: String(e.playerName || ''),
       teamId: e.teamId || null,
+      // School play (no event): the score counts for this school, with no team.
+      schoolId: e.teamId ? null : (e.schoolId || null),
       points: Math.round(e.points),
       eventId: eventId || null,
       kioskId,
@@ -765,8 +779,8 @@ export async function deleteScore(id) {
  * leaderboard-shared.js for scopes and row shape.
  *
  * @param {Object} args
- * @param {'event'|'group'|'month'|'all'} args.scope
- * @param {string} [args.eventId] - required for 'event' and 'group'
+ * @param {'event'|'day'|'month'|'all'} args.scope
+ * @param {string} [args.eventId] - required for 'event' and 'day'
  * @param {'team'|'school'} [args.groupBy]
  */
 export async function getLeaderboard({ scope, eventId, groupBy = 'team' } = {}) {

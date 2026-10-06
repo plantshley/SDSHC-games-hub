@@ -15,13 +15,21 @@ import { createSplashScreen } from './screens/splash.js'
 import { createGradeSelectScreen } from './screens/grade-select.js'
 import { createGameSelectScreen } from './screens/game-select.js'
 import { createAdvancedGameSelectScreen } from './screens/advanced-game-select.js'
-import { createAdvancedPlayModeScreen, getPlayMode, clearPlayMode } from './screens/advanced-play-mode.js'
+import {
+  createAdvancedPlayModeScreen,
+  getPlayMode,
+  clearPlayMode,
+  getPlayEventId,
+  getSessionSchool,
+  getPinnedEventId,
+  setPinnedEventId,
+} from './screens/advanced-play-mode.js'
 import { createAdvancedRosterScreen } from './screens/advanced-roster.js'
 import { createAdvancedAdminScreen } from './screens/advanced-admin.js'
 import { getGameById } from './data/game-registry.js'
 import { getAdvancedGameById } from './data/advanced-game-registry.js'
 import { getActiveEventId, setActiveEventId, listEventsWithSource } from './utils/leaderboard-api.js'
-import { chooseEvent } from './utils/event-status.js'
+import { chooseEvent, effectivelyOpen } from './utils/event-status.js'
 import { warmOfflineCache, isWarmedForBuild } from './utils/offline-warmup.js'
 import { USE_FIRESTORE } from './firebase/config.js'
 
@@ -136,14 +144,17 @@ function handleRoute(route) {
       case 'play-mode':
         switchScreen(createAdvancedPlayModeScreen())
         break
-      case 'roster':
-        // Roster only makes sense in team mode with an active event.
-        if (!getActiveEventId() || getPlayMode() !== 'team') {
+      case 'roster': {
+        // Roster serves Team Play in an event, or picks the school for
+        // school play (no event).
+        const pm = getPlayMode()
+        if (!(pm === 'school' || (pm === 'team' && getActiveEventId()))) {
           navigate('game-select')
           return
         }
         switchScreen(createAdvancedRosterScreen())
         break
+      }
       case 'admin':
         switchScreen(createAdvancedAdminScreen())
         break
@@ -167,34 +178,64 @@ function handleRoute(route) {
  *
  * The device no longer has to be pointed at an event by hand from the admin
  * panel: if exactly one event is running, it joins it. See resolveActiveEvent.
+ *
+ * The prompt shows on every fresh entry, event or not: with no event, players
+ * can still play for their school, which counts toward All-Time. A school
+ * session ignores events that open later, so a classroom playing on its own
+ * never shows up in an event it didn't choose.
  */
 async function handleAdvancedGameSelect() {
   const entryHash = location.hash
+  // A Team Play session whose event has since ended (staff ended the morning
+  // session and opened the afternoon one) starts over at the prompt, so its
+  // scores land in the event that's running now instead of the closed one.
+  if (getPlayMode() === 'team' && await sessionEventEnded()) {
+    if (location.hash !== entryHash) return
+    clearPlayMode()
+  }
+  // School play needs its school before any game runs; scores without one
+  // would count for nothing. (Back from the chooser, or a typed URL.)
+  if (getPlayMode() === 'school' && !getSessionSchool()) {
+    navigateRaw('advanced/roster')
+    return
+  }
   if (!getPlayMode()) {
-    const resolution = await resolveActiveEvent()
+    await resolveActiveEvent()
     // A newer navigation superseded us while awaiting the event read — let it
     // own the screen instead of switching on top of it.
     if (location.hash !== entryHash) return
-
-    // 'joined'    — one event, now active on this device.
-    // 'ambiguous' — several running; the play-mode screen shows a picker.
-    // 'unknown'   — we couldn't read the events (cold offline cache), but this
-    //   device still holds a pointer from when it *could*. Prompt anyway. Not
-    //   prompting would leave play-mode unset, which every caller treats as
-    //   casual — so a kiosk booted offline would silently record a whole event
-    //   with no team and no eventId, the exact failure auto-join exists to fix.
-    const prompt =
-      resolution === 'joined' ||
-      resolution === 'ambiguous' ||
-      (resolution === 'unknown' && getActiveEventId())
-
-    if (prompt) {
-      navigateRaw('advanced/play-mode')
-      return
-    }
+    navigateRaw('advanced/play-mode')
+    return
   }
   if (location.hash !== entryHash) return
   switchScreen(createAdvancedGameSelectScreen())
+}
+
+/**
+ * Whether this Team Play session joined an event that is no longer running.
+ * False when unsure (unreadable events, cold cache, a session from before the
+ * joined event was recorded) or when the session had no event.
+ */
+async function sessionEventEnded() {
+  const joined = getPlayEventId()
+  if (!joined) return false
+  let events, fromCache
+  try {
+    // Capped so a flaky connection can't hold the finished game on screen;
+    // a slow read counts as unsure.
+    const res = await Promise.race([
+      listEventsWithSource(),
+      new Promise(resolve => setTimeout(() => resolve(null), 2500)),
+    ])
+    if (!res) return false
+    ;({ events, fromCache } = res)
+  } catch {
+    return false
+  }
+  const ev = events.find(e => e.id === joined)
+  // Missing from a server read means deleted; missing from the cache proves nothing.
+  if (!ev) return !fromCache
+  return !effectivelyOpen(ev)
 }
 
 /**
@@ -222,6 +263,20 @@ async function resolveActiveEvent() {
   }
 
   const activeId = getActiveEventId()
+
+  // An admin's "Set kiosk to" pick holds while that event is open, even with
+  // several running (chooseEvent would otherwise ask players to pick). It is
+  // dropped once the event ends or is deleted, and the device goes back to auto.
+  const pinned = getPinnedEventId()
+  if (pinned) {
+    const ev = events.find(e => e.id === pinned)
+    if (ev && effectivelyOpen(ev)) {
+      if (activeId !== pinned) setActiveEventId(pinned)
+      return 'joined'
+    }
+    if (ev || !fromCache) setPinnedEventId(null)
+  }
+
   const { decision, eventId } = chooseEvent(events, activeId, Date.now(), { fromCache })
 
   // 'unknown' means we can't tell — never write, never clear.

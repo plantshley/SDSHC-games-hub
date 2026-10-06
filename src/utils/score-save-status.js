@@ -18,6 +18,7 @@
  */
 
 import { recordScores } from './leaderboard-api.js'
+import { getScoreSchoolId } from '../screens/advanced-play-mode.js'
 
 // Only `error` is rendered today (success/offline are silent per owner
 // preference); the other entries are retained as the CSS-class map in case
@@ -66,10 +67,21 @@ const isOffline = () =>
   typeof navigator !== 'undefined' && navigator.onLine === false
 
 /**
+ * In school play (no event running), every teamless entry is tagged with the
+ * session's school, so the games don't each need to know about school play.
+ */
+function withSessionSchool(payload) {
+  const schoolId = getScoreSchoolId()
+  if (!schoolId || !payload || !Array.isArray(payload.entries)) return payload
+  return { ...payload, entries: payload.entries.map(e => (e && !e.teamId ? { ...e, schoolId } : e)) }
+}
+
+/**
  * @param {{ gameId: string, runId: string, entries: Array, eventId: string|null }} payload
  * @returns {Promise<boolean>}
  */
 export function recordScoresWithStatus(payload) {
+  payload = withSessionSchool(payload)
   // Success + offline-queued saves are SILENT (owner preference); only a real
   // failure surfaces a pill. Offline writes still queue and replay on reconnect.
   if (isOffline()) {

@@ -11,11 +11,15 @@
  * scores correctly. Those scores just don't appear on the public event
  * leaderboard until approval.
  *
- * Approved teams from prior events (in the global teams registry) show up in
- * the team dropdown so returning teams don't get duplicated.
+ * The team dropdown lists teams approved for this event or another session of
+ * its Day, so a returning team gets picked instead of duplicated. Picking one
+ * from another session still adds it here as pending.
  *
  * Each team can carry a school (school-picker.js). Team identity is name +
  * school, so "Team 1" from two schools stays two teams.
+ *
+ * In school play (no event running), this route shows a single approved-school
+ * chooser instead (createSchoolChoiceScreen below).
  */
 
 import { navigate, navigateRaw } from '../router.js'
@@ -28,19 +32,22 @@ import {
   addTeamToEventRoster,
   removeTeamFromEventRoster,
   getEventRoster,
-  listApprovedTeams,
+  listAllTeams,
+  listEvents,
   listApprovedSchools,
 } from '../utils/leaderboard-api.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle } from '../utils/theme-toggle.js'
 import { isClean } from '../utils/profanity.js'
-import { createColorSwatchPicker, deriveTeamColors } from '../utils/team-colors.js'
-import { setPlayMode } from './advanced-play-mode.js'
+import { createColorSwatchPicker, deriveTeamColors, getTeamColors } from '../utils/team-colors.js'
+import { getPlayMode, setPlayMode, getSessionSchool, setSessionSchool } from './advanced-play-mode.js'
 import { attachCombobox } from '../utils/combobox.js'
 import { createSchoolPicker } from '../utils/school-picker.js'
-import { teamLabel } from '../utils/leaderboard-shared.js'
+import { teamLabel, eventLabel, dayApprovedTeamIds, normalizeName } from '../utils/leaderboard-shared.js'
 
 export function createAdvancedRosterScreen() {
+  if (getPlayMode() === 'school') return createSchoolChoiceScreen()
+
   const screen = document.createElement('div')
   screen.className = 'screen adv-roster'
 
@@ -84,16 +91,19 @@ export function createAdvancedRosterScreen() {
   addGradientBackground(screen, 'game-select')
   screen.querySelector('.adv-header-right').appendChild(createThemeToggle())
 
-  // Approved teams (any event) for the team dropdown, so returning teams get
-  // picked instead of created fresh. Labeled with their approved school only;
-  // a team whose school isn't approved keeps that link (so picking it doesn't
-  // create a duplicate) but never shows the unapproved name.
+  // Teams approved for this event or another session of its Day, for the team
+  // dropdown, so returning teams get picked instead of created fresh. Labeled
+  // with their approved school only; a team whose school isn't approved keeps
+  // that link (so picking it doesn't create a duplicate) but never shows the
+  // unapproved name.
   let knownTeams = []
   async function loadKnownTeams() {
     try {
-      const [teams, schools] = await Promise.all([listApprovedTeams(), listApprovedSchools()])
+      const [teams, events, schools] = await Promise.all([listAllTeams(), listEvents(), listApprovedSchools()])
       const schoolMap = new Map(schools.map(sc => [sc.id, sc]))
+      const approvedIds = dayApprovedTeamIds(events, eventId)
       knownTeams = teams
+        .filter(t => approvedIds.has(t.id) && t.status !== 'hidden')
         .map(t => ({ team: t, school: t.schoolId ? schoolMap.get(t.schoolId) || null : null, label: teamLabel(t, schoolMap) }))
         .sort((a, b) => a.label.localeCompare(b.label))
     } catch (err) {
@@ -131,7 +141,7 @@ export function createAdvancedRosterScreen() {
       sublabel: k.school ? k.school.name : '',
       known: k,
     })),
-    emptyText: 'No saved teams yet. Type a new name.',
+    emptyText: 'No approved teams yet. Type a new name.',
     onSelect: (option) => {
       input.value = option.label
       const { team, school } = option.known
@@ -140,6 +150,7 @@ export function createAdvancedRosterScreen() {
           : team.schoolId ? { id: team.schoolId, pending: true }
           : null
       )
+      mountColorPicker(getTeamColors(team))
       showError('')
     },
   })
@@ -153,11 +164,12 @@ export function createAdvancedRosterScreen() {
   })
 
   // Mount a fresh swatch picker, seeded with a random pair so each team a
-  // player adds gets distinct colors unless they deliberately pick.
+  // player adds gets distinct colors unless they deliberately pick. Picking a
+  // saved team passes its colors instead.
   let colorPicker = null
-  function mountColorPicker() {
+  function mountColorPicker(colors) {
     colorsHost.innerHTML = ''
-    colorPicker = createColorSwatchPicker(deriveTeamColors(genLocalSeed()))
+    colorPicker = createColorSwatchPicker(colors || deriveTeamColors(genLocalSeed()))
     colorsHost.appendChild(colorPicker.el)
   }
   mountColorPicker()
@@ -277,10 +289,14 @@ export function createAdvancedRosterScreen() {
       list.innerHTML = `<li class="adv-roster-empty">No teams added yet. Add at least one to start playing.</li>`
       return
     }
+    // A school still awaiting approval shows by name with a pending pill.
+    const nameHtml = (r) => r.pendingSchoolName
+      ? `${escapeHtml(r.teamName)} ${'·'} ${escapeHtml(r.pendingSchoolName)} <span class="adv-school-pending-pill" title="School awaiting approval">pending</span>`
+      : escapeHtml(r.label)
     list.innerHTML = roster.map(r => `
       <li class="adv-roster-row" data-id="${r.teamId}">
         <span class="adv-roster-color" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>
-        <span class="adv-roster-name">${escapeHtml(r.label)}</span>
+        <span class="adv-roster-name">${nameHtml(r)}</span>
         <span class="adv-roster-status adv-roster-status-${r.rosterStatus}">${r.rosterStatus}</span>
         <button class="adv-roster-remove" data-id="${r.teamId}" title="Remove">${'✕'}</button>
       </li>
@@ -317,7 +333,7 @@ export function createAdvancedRosterScreen() {
       if (sub) sub.textContent = ''
       return
     }
-    if (ev && sub) sub.innerHTML = `Joining: <strong>${escapeHtml(ev.name)}</strong>`
+    if (ev && sub) sub.innerHTML = `Joining: <strong>${escapeHtml(eventLabel(ev))}</strong>`
     else if (eventId) handleEventGone()
     else if (sub) sub.textContent = ''
   })()
@@ -337,4 +353,115 @@ function escapeHtml(s) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+}
+
+/**
+ * School play (no event running): pick one approved school to play for. Every
+ * score this session then counts toward that school's All-Time total. Only
+ * approved schools are offered, and none can be added here, so a classroom
+ * can't put an unmoderated name on the board.
+ */
+function createSchoolChoiceScreen() {
+  const screen = document.createElement('div')
+  screen.className = 'screen adv-roster'
+  screen.innerHTML = `
+    <div class="adv-header">
+      <div class="adv-header-left">
+        <button class="adv-back-btn" id="adv-roster-back">${'←'} Back</button>
+        <h1 class="adv-title">Your School</h1>
+      </div>
+      <div class="adv-header-right"></div>
+    </div>
+
+    <div class="adv-roster-card">
+      <p class="adv-roster-sub">Choose the school you're playing for. Your scores count toward its All-Time total.</p>
+      <div class="adv-roster-school">
+        <span class="adv-roster-field-label">School</span>
+        <div class="adv-school-picker">
+          <input class="adv-roster-input adv-school-input" id="adv-school-choice" maxlength="40"
+            spellcheck="false" autocomplete="off" placeholder="Type to search approved schools" aria-label="School" />
+        </div>
+      </div>
+      <p class="adv-roster-error" id="adv-roster-error"></p>
+      <div class="adv-roster-actions">
+        <button class="adv-roster-continue" id="adv-roster-continue">Start playing ${'→'}</button>
+      </div>
+      <p class="adv-roster-hint">
+        Only schools an organizer has approved are listed. Don't see yours? Go back and play casually.
+      </p>
+    </div>
+  `
+  addGradientBackground(screen, 'game-select')
+  screen.querySelector('.adv-header-right').appendChild(createThemeToggle())
+
+  const input = screen.querySelector('#adv-school-choice')
+  const errorEl = screen.querySelector('#adv-roster-error')
+  const showError = (msg) => { errorEl.textContent = msg || '' }
+
+  let schools = []
+  let selected = getSessionSchool()
+  if (selected) input.value = selected.name
+
+  const combo = attachCombobox(input, {
+    getOptions: () => schools.map(sc => ({ value: sc.id, label: sc.name })),
+    emptyText: 'No approved schools match.',
+    onSelect: (option) => {
+      selected = { id: option.value, name: option.label }
+      input.value = option.label
+      showError('')
+    },
+  })
+
+  // Typing a school's exact name counts as picking it; anything else clears
+  // the pick so Start can't go ahead with a half-typed name.
+  function syncTyped() {
+    const typed = input.value.trim()
+    if (selected && typed === selected.name) return
+    const exact = schools.find(sc => sc.normalized === normalizeName(typed))
+    selected = exact ? { id: exact.id, name: exact.name } : null
+    if (exact) input.value = exact.name
+  }
+  input.addEventListener('blur', syncTyped)
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      input.blur()
+    }
+  })
+
+  listApprovedSchools()
+    .then(list => {
+      schools = list.sort((a, b) => a.name.localeCompare(b.name))
+      // A school picked earlier may have been merged away or deleted since.
+      if (selected && !schools.some(sc => sc.id === selected.id)) {
+        selected = null
+        input.value = ''
+      }
+      if (schools.length === 0) showError('No schools have been approved yet. Go back and play casually.')
+      combo.refresh()
+    })
+    .catch(err => {
+      console.error('school list failed', err)
+      showError("Couldn't load the school list. Check the connection and try again.")
+    })
+
+  const returnTo = sessionStorage.getItem('sdshc-roster-return')
+  sessionStorage.removeItem('sdshc-roster-return')
+  onTap(screen.querySelector('#adv-roster-back'), () => {
+    if (returnTo === 'game-select' && getSessionSchool()) navigate('game-select')
+    else navigateRaw('advanced/play-mode')
+  })
+
+  onTap(screen.querySelector('#adv-roster-continue'), () => {
+    syncTyped()
+    if (!selected) {
+      showError('Pick your school from the list.')
+      input.focus()
+      return
+    }
+    setSessionSchool(selected)
+    navigate('game-select')
+  })
+
+  return screen
 }

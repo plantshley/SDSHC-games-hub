@@ -6,7 +6,11 @@
  *              from the active event's APPROVED roster, labeled "Name · School".
  *              Free-typing resolves against the whole roster first (pending
  *              teams included), then creates a pending team, linking it to a
- *              school only on an exact school-name match.
+ *              school only on an exact school-name match. Teams approved for
+ *              another session of the event's Day are listed too; picking one
+ *              adds it to this session as pending.
+ *   - "school": no event running. No team line; a notice names the school
+ *              this session plays for (score-save-status.js tags the scores).
  *   - "casual" or unset: NO team line is rendered — just the player-name
  *              input. Scores still record (with teamId=null) but won't roll
  *              up to any team's leaderboard row.
@@ -28,11 +32,15 @@ import {
   getEventRoster,
   getOrCreateTeam,
   addTeamToEventRoster,
+  listEvents,
+  listAllTeams,
+  listAllSchools,
 } from './leaderboard-api.js'
 import { isClean } from './profanity.js'
-import { getPlayMode, setPlayMode } from '../screens/advanced-play-mode.js'
+import { getPlayMode, setPlayMode, getSessionSchool } from '../screens/advanced-play-mode.js'
 import { attachCombobox } from './combobox.js'
-import { normalizeName } from './leaderboard-shared.js'
+import { normalizeName, dayEventIds, joinRoster } from './leaderboard-shared.js'
+import { getTeamColors } from './team-colors.js'
 
 // Last-fetched roster per container, so reconcile (sync) can build appended
 // team rows without re-fetching and wiping the whole list.
@@ -45,11 +53,12 @@ const resolverByPlayer = new WeakMap()
 /**
  * Dropdown options for a row: this event's APPROVED roster only. Pending teams
  * are intentionally excluded so players don't see unmoderated names suggested.
- * They can still type their team manually if it's awaiting approval.
+ * They can still type their team manually if it's awaiting approval. Teams
+ * approved for another session of the same Day (`listed`) show too.
  */
 function teamOptions(roster) {
   return roster
-    .filter(t => t.rosterStatus === 'approved' && t.teamStatus !== 'hidden')
+    .filter(t => (t.rosterStatus === 'approved' || t.listed) && t.teamStatus !== 'hidden')
     .map(t => ({ value: t.teamId, label: t.label || t.teamName }))
     .sort((a, b) => a.label.localeCompare(b.label))
 }
@@ -59,8 +68,48 @@ function teamOptions(roster) {
  * ("Team 1 · Brookings") first, then a bare name shared by exactly one roster
  * team. Pending roster teams count, so a team awaiting approval still resolves.
  */
+/**
+ * The event's roster plus teams approved for another session of its Day. Those
+ * extra rows are `listed` but count as pending here (that's what they become
+ * once picked), so feedback and the leaderboard stay per session.
+ */
+async function loadRoster(eventId) {
+  const [roster, events] = await Promise.all([
+    getEventRoster(eventId),
+    listEvents().catch(() => []),
+  ])
+  const dayIds = new Set(dayEventIds(events, eventId))
+  dayIds.delete(eventId)
+  if (dayIds.size === 0) return roster
+  // One teams/schools read for all sibling sessions (their rosters already
+  // came with the events list), so a Day with several sessions stays cheap.
+  let teams, schools
+  try {
+    ;[teams, schools] = await Promise.all([listAllTeams(), listAllSchools()])
+  } catch {
+    return roster
+  }
+  const approvedElsewhere = new Map()
+  for (const ev of events) {
+    if (!dayIds.has(ev.id)) continue
+    const approved = { roster: (ev.roster || []).filter(r => r.status === 'approved') }
+    for (const r of joinRoster(approved, teams, schools, getTeamColors)) {
+      if (!approvedElsewhere.has(r.teamId)) approvedElsewhere.set(r.teamId, r)
+    }
+  }
+  // A team pending here but approved in another session stays listed.
+  const rows = roster.map(r => (approvedElsewhere.has(r.teamId) ? { ...r, listed: true } : r))
+  const here = new Set(roster.map(r => r.teamId))
+  for (const [teamId, r] of approvedElsewhere) {
+    if (!here.has(teamId)) rows.push({ ...r, rosterStatus: 'pending', listed: true })
+  }
+  return rows
+}
+
 function findRosterTeam(roster, val) {
   const norm = normalizeName(val)
+  // A hidden team was moderated away; typing its name must not attach it.
+  roster = roster.filter(r => r.teamStatus !== 'hidden')
   const byLabel = roster.find(r => normalizeName(r.label || r.teamName) === norm)
   if (byLabel) return byLabel
   const byName = roster.filter(r => normalizeName(r.teamName) === norm)
@@ -78,7 +127,7 @@ export function renderTeamPlayerRows(container, players, options = {}) {
   const opts = { maxNameLen: 16, namePlaceholderPrefix: 'Player', ...options }
   const mode = getPlayMode()
   const eventId = getActiveEventId()
-  const wantMode = (mode === 'team' && eventId) ? 'team' : 'casual'
+  const wantMode = mode === 'team' && eventId ? 'team' : mode === 'school' ? 'school' : 'casual'
 
   // Already built in this same mode? Reconcile in place. Otherwise (first
   // render, mode switch, or still showing the loading placeholder) full build.
@@ -89,6 +138,7 @@ export function renderTeamPlayerRows(container, players, options = {}) {
 
   if (!alreadyBuilt) {
     if (wantMode === 'team') buildTeamModeRows(container, players, eventId, opts)
+    else if (wantMode === 'school') buildSchoolRows(container, players, opts)
     else buildCasualRows(container, players, opts)
     return
   }
@@ -184,6 +234,23 @@ function buildCasualRows(container, players, opts) {
   players.forEach((p, i) => container.appendChild(buildCasualRow(p, i, players, opts)))
 }
 
+/**
+ * School play: casual rows (no team line) under a notice naming the school
+ * every score this session counts for.
+ */
+function buildSchoolRows(container, players, opts) {
+  buildCasualRows(container, players, opts)
+  container.dataset.rowMode = 'school'
+  const school = getSessionSchool()
+  const notice = document.createElement('div')
+  notice.className = 'adv-team-notice'
+  notice.setAttribute('role', 'status')
+  notice.textContent = school
+    ? `Playing for ${school.name}. Scores count toward its All-Time total.`
+    : 'No school chosen, so scores won\'t count toward a school.'
+  container.prepend(notice)
+}
+
 function reconcileCasualRows(container, players, opts) {
   players.forEach(p => { p.teamId = null; p.teamName = '' })
   const rows = liveRows(container)
@@ -251,7 +318,7 @@ function buildTeamRow(player, i, players, eventId, roster, opts) {
         maxlength="40"
         spellcheck="false"
         autocomplete="off"
-        placeholder="Select or type your school"
+        placeholder="Select or type"
       />
     </div>
     <span class="adv-team-feedback" data-idx="${i}"></span>
@@ -331,9 +398,10 @@ function attachTeamRowHandlers(row, player, i, players, eventId, roster, opts) {
         player.teamName = val
         resolvedVal = val
         // Whether pre-existing or just created, add it to the event roster
-        // (idempotent) so future player setups can pick it.
+        // (idempotent) so future player setups can pick it. With no event, the
+        // session's own list plays that role.
         await addTeamToEventRoster(eventId, result.teamId)
-        const updatedRoster = await getEventRoster(eventId)
+        const updatedRoster = await loadRoster(eventId)
         // Keep the per-container roster cache fresh so rows added afterward see
         // the team that was just registered.
         const owner = row.parentElement
@@ -428,7 +496,12 @@ async function buildTeamModeRows(container, players, eventId, opts) {
   // tell "deleted" (null) from "no teams yet". A rejected read (offline, cold
   // cache) is NOT deletion: stay in team mode.
   const [roster, ev] = await Promise.all([
-    getEventRoster(eventId),
+    // Offline with a cold cache this can reject; fall back to an empty list
+    // (typing a team still works) instead of hanging on "Loading roster…".
+    loadRoster(eventId).catch(err => {
+      console.error('roster load failed', err)
+      return []
+    }),
     getEventById(eventId).catch(() => undefined),
   ])
   if (ev === null) {

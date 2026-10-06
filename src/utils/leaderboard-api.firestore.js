@@ -22,8 +22,8 @@
  * Firestore collections:
  *   /teams/{teamId}    { name, normalized, status, schoolId?, color1, color2, createdAt, createdByKiosk }
  *   /schools/{id}      { name, normalized, status, createdAt, createdByKiosk }
- *   /events/{eventId}  { name, group?, startedAt, scheduledStart, endedAt, status, roster: [...] }
- *   /scores/{scoreId}  { runId, ts, gameId, playerName, teamId, points, eventId, kioskId }
+ *   /events/{eventId}  { name, session?, startedAt, scheduledStart, endedAt, status, roster: [...] }
+ *   /scores/{scoreId}  { runId, ts, gameId, playerName, teamId, schoolId?, points, eventId, kioskId }
  */
 
 import {
@@ -43,7 +43,7 @@ import {
 import { getDb } from '../firebase/init.js'
 import { getGamePar } from '../data/advanced-game-registry.js'
 import { deriveTeamColors, getTeamColors } from './team-colors.js'
-import { effectivelyOpen, eventEndsAt, DEFAULT_EVENT_DURATION_MS } from './event-status.js'
+import { effectivelyOpen, eventEndsAt, eventStartPatch, DEFAULT_EVENT_DURATION_MS } from './event-status.js'
 import {
   normalizeName,
   joinRoster,
@@ -426,8 +426,8 @@ export async function approveSchool(id) {
   return updated
 }
 
-export async function hideSchool(id) {
-  return updateSchool(id, { status: 'hidden' })
+export async function setSchoolColors(id, color1, color2) {
+  return updateSchool(id, { color1, color2 })
 }
 
 export async function renameSchool(id, newName) {
@@ -455,6 +455,13 @@ export async function mergeSchools(fromId, toId) {
   if (!from || !to) throw new Error('School not found')
   const snap = await getDocs(query(collection(getDb(), C_TEAMS), where('schoolId', '==', fromId)))
   for (const d of snap.docs) await setTeamSchool(d.id, toId)
+  // School-play scores (no team) carry the school directly.
+  const scoreSnap = await getDocs(query(collection(getDb(), C_SCORES), where('schoolId', '==', fromId)))
+  for (let i = 0; i < scoreSnap.docs.length; i += BATCH_LIMIT) {
+    const batch = writeBatch(getDb())
+    for (const d of scoreSnap.docs.slice(i, i + BATCH_LIMIT)) batch.update(d.ref, { schoolId: toId })
+    await settleWrite(batch.commit())
+  }
   await settleWrite(deleteDoc(doc(getDb(), C_SCHOOLS, fromId)))
 }
 
@@ -528,18 +535,19 @@ export async function getEventById(id) {
  * Create a new event. With `options.scheduledStart` in the future, the event
  * is created "scheduled"; otherwise it opens immediately. `options.endsAt`
  * overrides the default 24h window (a multi-day event needs this, or it would
- * age out overnight). `options.group` ties events (e.g. a morning and an
- * afternoon session) into one Day leaderboard.
+ * age out overnight). `options.session` names a session (e.g. "Morning");
+ * sessions sharing an event name and start date roll up into one Day
+ * leaderboard (see eventDayKey in leaderboard-shared.js).
  */
 export async function startEvent(name, options = {}) {
   const cleaned = String(name || '').trim() || 'Untitled Event'
-  const { scheduledStart = null, endsAt = null, group = null } = options
+  const { scheduledStart = null, endsAt = null, session = null } = options
   const now = Date.now()
   const id = genId()
   const startedAt = scheduledStart || now
   const event = {
     name: cleaned,
-    group: String(group || '').trim() || null,
+    session: String(session || '').trim() || null,
     startedAt,
     scheduledStart: scheduledStart || null,
     endedAt: null,
@@ -589,9 +597,11 @@ export async function reopenEvent(id) {
   })
 }
 
-/** Set or clear an event's group (Day). Admin-only per firestore.rules. */
-export async function setEventGroup(id, group) {
-  return updateEvent(id, { group: String(group || '').trim() || null })
+/** Move when an event opens (see eventStartPatch). Admin-only per firestore.rules. */
+export async function setEventStart(id, startAt) {
+  const ev = await readDoc(C_EVENTS, id)
+  if (!ev) throw new Error('Event not found')
+  return updateEvent(id, eventStartPatch(ev, startAt))
 }
 
 /** Move an event's auto-end time (admin-only per firestore.rules). */
@@ -728,6 +738,8 @@ export async function recordScores({ gameId, runId, entries, eventId }) {
       gameId,
       playerName: String(e.playerName || ''),
       teamId: e.teamId || null,
+      // School play (no event): the score counts for this school, with no team.
+      schoolId: e.teamId ? null : (e.schoolId || null),
       points: Math.round(e.points),
       eventId: eventId || null,
       kioskId,

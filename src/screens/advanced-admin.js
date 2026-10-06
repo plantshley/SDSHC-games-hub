@@ -7,8 +7,8 @@
  *   - Active event for this kiosk
  *   - Pending team names
  *   - All teams (with each team's school)
- *   - Schools (add, approve, rename, merge, hide, delete)
- *   - Events (with optional group, which drives the Day leaderboard)
+ *   - Schools (add, approve, rename, merge, colors, delete)
+ *   - Events (optionally split into sessions, which share a Day leaderboard)
  *   - Recent scores
  *
  * Phase 1B will add a password sign-in at the top of this screen.
@@ -41,13 +41,12 @@ import {
   approveTeamForEvent,
   setTeamColors,
   setEventEndsAt,
-  setEventGroup,
+  setEventStart,
   setTeamSchool,
-  listApprovedTeams,
   listAllSchools,
   createApprovedSchool,
   approveSchool,
-  hideSchool,
+  setSchoolColors,
   renameSchool,
   mergeSchools,
   deleteSchool,
@@ -55,7 +54,7 @@ import {
 import { derivedEventStatus, eventEndsAt } from '../utils/event-status.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
 import { createThemeToggle, getTheme } from '../utils/theme-toggle.js'
-import { clearPlayMode } from './advanced-play-mode.js'
+import { clearPlayMode, setPinnedEventId } from './advanced-play-mode.js'
 import { getTeamColors, openColorPopover, createColorSwatchPicker, deriveTeamColors } from '../utils/team-colors.js'
 import { isClean } from '../utils/profanity.js'
 import { USE_FIRESTORE } from '../firebase/config.js'
@@ -63,7 +62,7 @@ import { adminSignIn, adminSignOut, onAdminAuthChange } from '../firebase/auth.j
 import { warmOfflineCache, onWarmupProgress } from '../utils/offline-warmup.js'
 import { attachCombobox } from '../utils/combobox.js'
 import { createSchoolPicker } from '../utils/school-picker.js'
-import { teamLabel } from '../utils/leaderboard-shared.js'
+import { teamLabel, eventLabel, selectableTeams } from '../utils/leaderboard-shared.js'
 
 export function createAdvancedAdminScreen() {
   const screen = document.createElement('div')
@@ -143,34 +142,65 @@ export function createAdvancedAdminScreen() {
 
   // ─── Section renderers ───
 
+  // Event creator state, kept outside renderActiveEvent so a half-filled form
+  // survives the section re-rendering after an action elsewhere on the page.
+  // `sessions` is null for a single event, else one entry per session row.
+  const creator = { name: '', sessions: null }
+  // Set while events are being written, so a double tap can't create twice.
+  let creatingEvent = false
+  const blankSession = () => ({ session: '', start: '', end: '' })
+
   async function renderActiveEvent() {
     const el = screen.querySelector('#sec-active-event')
-    const [open, currentId, allEvents] = await Promise.all([listOpenEvents(), getActiveEventId(), listEvents()])
+    const [open, currentId] = await Promise.all([listOpenEvents(), getActiveEventId()])
     const current = currentId ? await getEventById(currentId) : null
 
     el.innerHTML = `
       <div class="adv-admin-active-row">
-        <label class="adv-admin-label" for="active-event-select">Set kiosk to</label>
+        <label class="adv-admin-label" for="active-event-select">Set device to</label>
         <select class="adv-admin-select" id="active-event-select">
           <option value="">${'—'} None (auto)</option>
-          ${open.map(e => `<option value="${e.id}" ${e.id === currentId ? 'selected' : ''}>${escapeHtml(e.name)}</option>`).join('')}
+          ${open.map(e => `<option value="${e.id}" ${e.id === currentId ? 'selected' : ''}>${escapeHtml(eventLabel(e))}</option>`).join('')}
         </select>
         <span class="adv-admin-active-inline">
           ${current
-            ? `Currently active: <strong>${escapeHtml(current.name)}</strong>`
+            ? `Currently active: <strong>${escapeHtml(eventLabel(current))}</strong>`
             : open.length === 1
-              ? `Will join <strong>${escapeHtml(open[0].name)}</strong> automatically.`
+              ? `Will join <strong>${escapeHtml(eventLabel(open[0]))}</strong> automatically.`
               : open.length > 1
                 ? `${open.length} events running ${'·'} players pick one when they start.`
-                : `No event running ${'·'} scores go to all-time only.`}
+                : `No event running ${'·'} players can play for an approved school on All-Time.`}
         </span>
       </div>
       <p class="adv-admin-hint">
-        A device joins the running event by itself, but you can 
+        A device joins the running event by itself, but you can
         override it here when more than one event is running at once.
       </p>
+      ${creator.sessions ? sessionCreatorHtml() : singleCreatorHtml()}
+    `
+
+    el.querySelector('#active-event-select').addEventListener('change', async (e) => {
+      const v = e.target.value
+      setActiveEventId(v || null)
+      // A pick holds even when several events run; None goes back to auto.
+      setPinnedEventId(v || null)
+      clearPlayMode()
+      await renderActiveEvent()
+      await renderRoster()
+    })
+
+    if (creator.sessions) bindSessionCreator(el)
+    else bindSingleCreator(el)
+  }
+
+  function singleCreatorHtml() {
+    return `
       <div class="adv-admin-event-creator-row">
-        <input class="adv-admin-input" id="new-event-name" placeholder="Event name (e.g. FFA Day Spring)" maxlength="60" />
+        <div class="adv-admin-event-name-col">
+          <input class="adv-admin-input" id="new-event-name" placeholder="Event name (e.g. FFA Day Spring)"
+            maxlength="60" value="${escapeHtml(creator.name)}" />
+          <button type="button" class="adv-admin-split-link" data-act="split">+ Split into sessions</button>
+        </div>
         <label class="adv-admin-radio">
           <input type="radio" name="when" value="now" checked />
           <span>Start now</span>
@@ -180,23 +210,59 @@ export function createAdvancedAdminScreen() {
           <span>Schedule for</span>
         </label>
         <input class="adv-admin-input adv-admin-datetime" type="datetime-local" id="new-event-when" />
-        <input class="adv-admin-input adv-admin-group-input" id="new-event-group" maxlength="60"
-          placeholder="Group (optional, e.g. Soil Health Day)" autocomplete="off" spellcheck="false" />
         <button class="adv-admin-btn-create" id="start-event-btn">Create event</button>
       </div>
+      <p class="adv-admin-create-error" role="alert"></p>
+    `
+  }
+
+  function sessionCreatorHtml() {
+    const rows = creator.sessions.map((s, i) => `
+      <div class="adv-admin-session-row" data-i="${i}">
+        <input class="adv-admin-input adv-admin-session-event" data-f="name" placeholder="Event name"
+          maxlength="60" value="${escapeHtml(creator.name)}" aria-label="Event name" />
+        <input class="adv-admin-input adv-admin-session-name" data-f="session" placeholder="Session (e.g. Morning)"
+          maxlength="40" value="${escapeHtml(s.session)}" aria-label="Session name" />
+        <label class="adv-admin-endsat">Starts
+          <input type="datetime-local" class="adv-admin-input adv-admin-datetime" data-f="start" value="${s.start}" />
+        </label>
+        <label class="adv-admin-endsat">Ends
+          <input type="datetime-local" class="adv-admin-input adv-admin-datetime" data-f="end" value="${s.end}" />
+        </label>
+        <button type="button" class="adv-admin-session-remove" data-act="remove-session"
+          aria-label="Remove session" title="Remove session">${'✕'}</button>
+      </div>
+    `).join('')
+    return `
+      <div class="adv-admin-event-creator-row adv-admin-session-creator">
+        <div class="adv-admin-session-list">${rows}</div>
+        <div class="adv-admin-session-footer">
+          <button type="button" class="adv-admin-split-link" data-act="add-session">+ Add session</button>
+          <button type="button" class="adv-admin-split-link adv-admin-split-link-muted" data-act="unsplit">Remove split</button>
+          <button class="adv-admin-btn-create" id="start-event-btn">Create sessions</button>
+        </div>
+      </div>
+      <p class="adv-admin-create-error" role="alert"></p>
       <p class="adv-admin-hint">
-        Events with the same group (a morning and an afternoon session, for example) get a
-        combined Day leaderboard.
+        Sessions with the same event name on the same day share a Day leaderboard. Leave
+        Starts blank to open a session now. A blank Ends closes a session when the next one starts.
       </p>
     `
-    attachGroupCombobox(el.querySelector('#new-event-group'), allEvents)
+  }
 
-    el.querySelector('#active-event-select').addEventListener('change', async (e) => {
-      const v = e.target.value
-      setActiveEventId(v || null)
-      clearPlayMode()
-      await renderActiveEvent()
-      await renderRoster()
+  /** Why a create was refused, shown under the creator. '' clears it. */
+  function setCreateError(el, text) {
+    const err = el.querySelector('.adv-admin-create-error')
+    if (err) err.textContent = text || ''
+  }
+
+  function bindSingleCreator(el) {
+    const nameInput = el.querySelector('#new-event-name')
+    nameInput.addEventListener('input', () => { creator.name = nameInput.value })
+    onTap(el.querySelector('[data-act="split"]'), () => {
+      creator.name = nameInput.value
+      creator.sessions = [blankSession(), blankSession()]
+      renderActiveEvent()
     })
 
     // Typing a date implies scheduling — flip the radio so the UI matches what
@@ -210,9 +276,11 @@ export function createAdvancedAdminScreen() {
       const input = el.querySelector('#new-event-name')
       const name = input.value.trim()
       if (!name) {
+        setCreateError(el, 'Enter an event name.')
         input.focus()
         return
       }
+      setCreateError(el, '')
       const when = el.querySelector('input[name="when"]:checked').value
       const dtRaw = el.querySelector('#new-event-when').value
       const dtTs = dtRaw ? new Date(dtRaw).getTime() : null
@@ -226,24 +294,156 @@ export function createAdvancedAdminScreen() {
       } else if (when === 'scheduled') {
         // "Schedule for" chosen but no valid future time given — a blank or
         // past date can't schedule, so point the organizer back at the field.
+        setCreateError(el, 'Pick a future date and time to schedule the event.')
         el.querySelector('#new-event-when').focus()
         return
       }
-      const group = el.querySelector('#new-event-group').value.trim() || null
-      const ev = await startEvent(name, { scheduledStart, group })
+      if (creatingEvent) return
+      creatingEvent = true
+      let ev
+      try {
+        ev = await startEvent(name, { scheduledStart })
+      } catch (err) {
+        console.error('create event failed', err)
+        setCreateError(el, 'Could not create the event. Try again.')
+        return
+      } finally {
+        creatingEvent = false
+      }
       // Auto-activate only if starting now
       if (!scheduledStart) {
         setActiveEventId(ev.id)
         clearPlayMode()
       }
-      input.value = ''
-      el.querySelector('#new-event-when').value = ''
-      el.querySelector('#new-event-group').value = ''
-      el.querySelector('input[name="when"][value="now"]').checked = true
+      creator.name = ''
       await renderActiveEvent()
       await renderEvents()
       flashMessage(scheduledStart ? `Event scheduled for ${formatDate(scheduledStart)}` : 'Event started')
     })
+  }
+
+  function bindSessionCreator(el) {
+    const rowsEl = [...el.querySelectorAll('.adv-admin-session-row')]
+    rowsEl.forEach(row => {
+      const i = Number(row.dataset.i)
+      const s = creator.sessions[i]
+      row.querySelectorAll('[data-f]').forEach(input => {
+        input.addEventListener('input', () => {
+          const f = input.dataset.f
+          if (f === 'name') {
+            // One event name for every session: typing in any row fills the rest.
+            creator.name = input.value
+            el.querySelectorAll('[data-f="name"]').forEach(other => {
+              if (other !== input) other.value = input.value
+            })
+          } else {
+            s[f] = input.value
+          }
+        })
+      })
+      onTap(row.querySelector('[data-act="remove-session"]'), () => {
+        // Down to one row is allowed: a single session can join an existing Day.
+        if (creator.sessions.length <= 1) return
+        creator.sessions.splice(i, 1)
+        renderActiveEvent()
+      })
+    })
+    onTap(el.querySelector('[data-act="add-session"]'), () => {
+      creator.sessions.push(blankSession())
+      renderActiveEvent()
+    })
+    onTap(el.querySelector('[data-act="unsplit"]'), () => {
+      creator.sessions = null
+      renderActiveEvent()
+    })
+    onTap(el.querySelector('#start-event-btn'), async () => {
+      if (creatingEvent) return
+      creatingEvent = true
+      try {
+        await createSessions(el)
+      } finally {
+        creatingEvent = false
+      }
+    })
+  }
+
+  /**
+   * Validate the session rows and create one event per session. A blank (or
+   * past) start opens now. A blank end closes a session when the next one
+   * starts. Sessions may overlap: separate sessions or events can run at once.
+   */
+  async function createSessions(el) {
+    const name = creator.name.trim()
+    const focusRow = (i, f) => el.querySelector(`.adv-admin-session-row[data-i="${i}"] [data-f="${f}"]`)?.focus()
+    const refuse = (text, i, f) => {
+      setCreateError(el, text)
+      if (i != null) focusRow(i, f)
+    }
+    if (!name) {
+      refuse('Enter an event name.', 0, 'name')
+      return
+    }
+    const now = Date.now()
+    const parsed = []
+    const seen = new Set()
+    for (let i = 0; i < creator.sessions.length; i++) {
+      const s = creator.sessions[i]
+      const session = s.session.trim()
+      if (!session) {
+        refuse('Give every session a name.', i, 'session')
+        return
+      }
+      const key = session.toLowerCase()
+      if (seen.has(key)) {
+        refuse('Session names must be different.', i, 'session')
+        return
+      }
+      seen.add(key)
+      const startTs = s.start ? new Date(s.start).getTime() : NaN
+      const endTs = s.end ? new Date(s.end).getTime() : null
+      const startsNow = Number.isNaN(startTs) || startTs <= now
+      parsed.push({ i, session, startsNow, start: startsNow ? now : startTs, end: endTs })
+    }
+    parsed.sort((a, b) => a.start - b.start)
+    for (let k = 0; k < parsed.length; k++) {
+      const p = parsed[k]
+      const next = parsed.slice(k + 1).find(n => n.start > p.start)
+      if (p.end == null && next) p.end = next.start
+      if (p.end != null && p.end <= p.start) {
+        refuse(`${p.session} must end after it starts.`, p.i, 'end')
+        return
+      }
+    }
+    setCreateError(el, '')
+    // With several sessions opening now, leave the pointer alone: devices
+    // then ask players which one they're at.
+    const soleNow = parsed.filter(p => p.startsNow).length === 1
+    try {
+      for (const p of parsed) {
+        const ev = await startEvent(name, {
+          scheduledStart: p.startsNow ? null : p.start,
+          endsAt: p.end,
+          session: p.session,
+        })
+        // Point this device at a session that opens now right away, so a
+        // later failure can't leave it running with no device pointed at it.
+        if (p.startsNow && soleNow) {
+          setActiveEventId(ev.id)
+          clearPlayMode()
+        }
+      }
+    } catch (err) {
+      console.error('create sessions failed', err)
+      flashMessage('Could not create every session. Check the Events list.')
+      await renderActiveEvent()
+      await renderEvents()
+      return
+    }
+    creator.name = ''
+    creator.sessions = null
+    await renderActiveEvent()
+    await renderEvents()
+    flashMessage(`Created ${parsed.length} ${parsed.length === 1 ? 'session' : 'sessions'}`)
   }
 
   async function renderRoster() {
@@ -266,7 +466,7 @@ export function createAdvancedAdminScreen() {
       <ul class="adv-admin-list">
         ${roster.map(r => `
           <li class="adv-admin-row" data-id="${r.teamId}">
-            <span class="adv-admin-row-name">${escapeHtml(r.label)}</span>
+            <span class="adv-admin-row-name">${rosterNameHtml(r)}</span>
             ${rosterStatusPill(r.rosterStatus, 'Event')}
             ${rosterStatusPill(r.teamStatus, 'Statewide')}
             <span class="adv-admin-row-actions">
@@ -343,11 +543,10 @@ export function createAdvancedAdminScreen() {
         await deleteTeam(id)
         await renderPending(); await renderTeams(); await renderRoster(); await renderScores()
       })
-      row.querySelector('[data-act="rename"]').addEventListener('click', async () => {
-        const cur = row.querySelector('.adv-admin-row-name').textContent
-        const next = window.prompt('Rename team to (merges if name matches another team):', cur)
-        if (next && next.trim()) {
-          await renameTeam(id, next.trim())
+      onTap(row.querySelector('[data-act="rename"]'), async () => {
+        const next = await openRenamePrompt('team', teams.find(t => t.id === id)?.name || '')
+        if (next) {
+          await renameTeam(id, next)
           await renderPending(); await renderTeams(); await renderRoster(); await renderScores()
         }
       })
@@ -380,7 +579,7 @@ export function createAdvancedAdminScreen() {
       if (ds !== 'open' && ds !== 'scheduled') continue
       for (const r of (ev.roster || [])) {
         const arr = membershipsByTeam.get(r.teamId) || []
-        arr.push({ eventName: ev.name, rosterStatus: r.status })
+        arr.push({ eventName: eventLabel(ev), rosterStatus: r.status })
         membershipsByTeam.set(r.teamId, arr)
       }
     }
@@ -413,11 +612,10 @@ export function createAdvancedAdminScreen() {
         onTap(row.querySelector('[data-act="approve"]'), async () => {
           await approveTeam(id); await renderTeams(); await renderPending(); await renderRoster(); await renderScores()
         })
-        row.querySelector('[data-act="rename"]')?.addEventListener('click', async () => {
-          const cur = row.querySelector('.adv-admin-row-name').textContent
-          const next = window.prompt('Rename team to (merges if name matches another team):', cur)
-          if (next && next.trim()) {
-            await renameTeam(id, next.trim())
+        onTap(row.querySelector('[data-act="rename"]'), async () => {
+          const next = await openRenamePrompt('team', teams.find(t => t.id === id)?.name || '')
+          if (next) {
+            await renameTeam(id, next)
             await renderTeams(); await renderPending(); await renderRoster(); await renderScores()
           }
         })
@@ -508,20 +706,22 @@ export function createAdvancedAdminScreen() {
     const rowFor = (sc) => {
       const n = teamCount.get(sc.id) || 0
       const others = sorted.filter(o => o.id !== sc.id && o.status !== 'hidden')
+      const c = getTeamColors(sc)
       return `
         <li class="adv-admin-row" data-id="${sc.id}">
+          <span class="adv-admin-row-color" style="background: linear-gradient(135deg, ${c.color1}, ${c.color2})"></span>
           <span class="adv-admin-row-name">${escapeHtml(sc.name)}</span>
-          ${scopePill(sc.status, 'school')}
+          <span class="adv-admin-row-status adv-admin-status-${sc.status}">${sc.status}</span>
           <span class="adv-admin-row-meta">${n} ${n === 1 ? 'team' : 'teams'}</span>
           <span class="adv-admin-row-actions">
             ${sc.status !== 'approved' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="approve">Approve</button>` : ''}
+            <button class="adv-admin-btn" data-act="colors">Colors</button>
             <button class="adv-admin-btn" data-act="rename">Rename</button>
             ${others.length ? `
               <select class="adv-admin-select adv-admin-merge-select" data-act="merge" aria-label="Merge ${escapeHtml(sc.name)} into another school">
                 <option value="">Merge into…</option>
                 ${others.map(o => `<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('')}
               </select>` : ''}
-            ${sc.status !== 'hidden' ? `<button class="adv-admin-btn adv-admin-btn-warn" data-act="hide">Hide</button>` : ''}
             <button class="adv-admin-btn adv-admin-btn-danger" data-act="delete">Delete</button>
           </span>
         </li>
@@ -587,16 +787,16 @@ export function createAdvancedAdminScreen() {
           await approveSchool(id)
           await refresh()
         })
-        onTap(row.querySelector('[data-act="hide"]'), async () => {
-          await hideSchool(id)
-          await refresh()
+        onTap(row.querySelector('[data-act="colors"]'), () => {
+          openColorPopover(getTeamColors(school), async ({ color1, color2 }) => {
+            await setSchoolColors(id, color1, color2)
+            await renderSchools()
+          }, { title: 'School colors' })
         })
-        // `click`, not `pointerdown`: mobile browsers suppress prompt/confirm
-        // called from pointerdown.
-        row.querySelector('[data-act="rename"]')?.addEventListener('click', async () => {
-          const next = window.prompt('Rename school to (merges if the name matches another school):', school.name)
-          if (next && next.trim()) {
-            await renameSchool(id, next.trim())
+        onTap(row.querySelector('[data-act="rename"]'), async () => {
+          const next = await openRenamePrompt('school', school.name)
+          if (next) {
+            await renameSchool(id, next)
             await refresh()
           }
         })
@@ -620,30 +820,6 @@ export function createAdvancedAdminScreen() {
     }
   }
 
-  /** Free-text group field with the existing group names as dropdown options. */
-  function attachGroupCombobox(input, events) {
-    const groups = [...new Set(events.map(e => (e.group || '').trim()).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b))
-    attachCombobox(input, {
-      getOptions: () => groups.map(g => ({ value: g, label: g })),
-      emptyText: 'No groups yet. Type a new one.',
-      onSelect: (option) => {
-        input.value = option.label
-        input.dispatchEvent(new Event('change', { bubbles: true }))
-      },
-    })
-    // Enter commits a typed group (the combobox handles Enter first when a
-    // row is highlighted). The create-event field commits with its button.
-    if (input.id !== 'new-event-group') {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault()
-          input.blur()
-        }
-      })
-    }
-  }
-
   async function renderEvents() {
     const el = screen.querySelector('#sec-events')
     const events = await listEvents()
@@ -656,32 +832,38 @@ export function createAdvancedAdminScreen() {
     // really over once its endsAt lapses. Showing the raw field would lie.
     const now = Date.now()
     const pillClass = (s) => s === 'open' ? 'approved' : s === 'scheduled' ? 'pending' : 'hidden'
+    // Row order: name, status, Starts, Ends, then End / Open now / Reopen,
+    // Manage Teams, and Delete. Ended events show their dates as text instead
+    // of the two editable times.
     el.innerHTML = `
       <ul class="adv-admin-list">
         ${events.map(e => {
           const ds = derivedEventStatus(e, now)
           const agedOut = ds === 'ended' && !e.endedAt
           const ends = eventEndsAt(e)
+          const starts = eventStartsAt(e)
           return `
-          <li class="adv-admin-row" data-id="${e.id}">
-            <span class="adv-admin-row-name">${escapeHtml(e.name)}</span>
-            <span class="adv-admin-row-meta">${eventMeta(e, ds, ends)}</span>
-            <label class="adv-admin-group" title="Events in the same group share a Day leaderboard">Group
-              <input class="adv-admin-input adv-admin-group-input" data-act="group" maxlength="60"
-                value="${escapeHtml(e.group || '')}" placeholder="None" autocomplete="off" spellcheck="false" />
-            </label>
+          <li class="adv-admin-row adv-admin-event-row" data-id="${e.id}">
+            <span class="adv-admin-row-name">${escapeHtml(eventLabel(e))}</span>
             <span class="adv-admin-row-status adv-admin-status-${pillClass(ds)}"${agedOut ? ' title="No one ended this event — it closed itself at its end time."' : ''}>${ds}${agedOut ? ' (auto)' : ''}</span>
+            ${ds === 'ended' ? `<span class="adv-admin-row-meta">${eventMeta(e, ends)}</span>` : ''}
             <span class="adv-admin-row-actions">
+              ${ds !== 'ended' && starts
+                ? `<label class="adv-admin-endsat" title="When this event opens">Starts
+                     <input type="datetime-local" class="adv-admin-input adv-admin-datetime" data-act="startsat"
+                       value="${toLocalInputValue(starts)}" />
+                   </label>`
+                : ''}
               ${ds !== 'ended' && ends
                 ? `<label class="adv-admin-endsat" title="When this event closes itself">Ends
                      <input type="datetime-local" class="adv-admin-input adv-admin-datetime" data-act="endsat"
                        value="${toLocalInputValue(ends)}" min="${toLocalInputValue(endsAtFloor(e, now))}" />
                    </label>`
                 : ''}
-              ${ds === 'scheduled' ? `<button class="adv-admin-btn" data-act="precreate">Manage Teams</button>` : ''}
               ${ds === 'scheduled' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="open-now">Open now</button>` : ''}
               ${ds === 'open' ? `<button class="adv-admin-btn adv-admin-btn-warn" data-act="end">End</button>` : ''}
               ${ds === 'ended' ? `<button class="adv-admin-btn adv-admin-btn-good" data-act="reopen">Reopen</button>` : ''}
+              <button class="adv-admin-btn" data-act="precreate">Manage Teams</button>
               <button class="adv-admin-btn adv-admin-btn-danger" data-act="delete">Delete</button>
             </span>
           </li>
@@ -695,19 +877,9 @@ export function createAdvancedAdminScreen() {
     `
     el.querySelectorAll('.adv-admin-row').forEach(row => {
       const id = row.dataset.id
-      const groupInput = row.querySelector('[data-act="group"]')
-      attachGroupCombobox(groupInput, events)
-      groupInput.addEventListener('change', async () => {
-        const ev = events.find(x => x.id === id)
-        const next = groupInput.value.trim()
-        if (next === (ev?.group || '')) return
-        await setEventGroup(id, next || null)
-        flashMessage(next ? `Group set to ${next}` : 'Group cleared')
-        await renderEvents()
-      })
       onTap(row.querySelector('[data-act="precreate"]'), () => {
         const ev = events.find(x => x.id === id)
-        openRosterModal(id, ev ? ev.name : 'Event')
+        openRosterModal(id, ev ? eventLabel(ev) : 'Event')
       })
       onTap(row.querySelector('[data-act="open-now"]'), async () => {
         await openScheduledEvent(id)
@@ -720,6 +892,20 @@ export function createAdvancedAdminScreen() {
       onTap(row.querySelector('[data-act="reopen"]'), async () => {
         await reopenEvent(id)
         await renderEvents(); await renderActiveEvent()
+      })
+      row.querySelector('[data-act="startsat"]')?.addEventListener('change', async (e) => {
+        const ts = new Date(e.target.value).getTime()
+        if (Number.isNaN(ts)) return
+        const ev = events.find(x => x.id === id)
+        const ends = eventEndsAt(ev)
+        if (ends != null && ts >= ends) {
+          flashMessage('Start time must be before the end time')
+          await renderEvents()
+          return
+        }
+        await setEventStart(id, ts)
+        await renderEvents(); await renderActiveEvent()
+        flashMessage('Start time updated')
       })
       row.querySelector('[data-act="endsat"]')?.addEventListener('change', async (e) => {
         const ts = new Date(e.target.value).getTime()
@@ -746,20 +932,30 @@ export function createAdvancedAdminScreen() {
     })
   }
 
+  /** When an event opens (or opened): its scheduled start, else when it started. */
+  function eventStartsAt(e) {
+    if (!e) return null
+    if (e.status === 'scheduled' && typeof e.scheduledStart === 'number') return e.scheduledStart
+    return typeof e.startedAt === 'number' ? e.startedAt : null
+  }
+
   /**
    * Earliest sane auto-end for an event: never before it starts, never in the
    * past. A scheduled event's floor is its scheduledStart, not `now`.
    */
   function endsAtFloor(e, now) {
     if (!e) return now
-    return Math.max(now, typeof e.scheduledStart === 'number' ? e.scheduledStart : 0)
+    // Only a still-scheduled event has a future start to respect; one opened
+    // early keeps its old scheduledStart, which must not pin the floor.
+    const scheduled = derivedEventStatus(e, now) === 'scheduled'
+    return Math.max(now, scheduled && typeof e.scheduledStart === 'number' ? e.scheduledStart : 0)
   }
 
-  function eventMeta(e, ds, ends) {
-    if (ds === 'scheduled' && e.scheduledStart) return `starts ${formatDate(e.scheduledStart)}`
+  /** Dates for an ended event's row. */
+  function eventMeta(e, ends) {
     const started = formatDate(e.startedAt)
     if (e.endedAt) return `${started} ${'→'} ${formatDate(e.endedAt)}`
-    if (ds === 'ended' && ends) return `${started} ${'→'} auto-ended ${formatDate(ends)}`
+    if (ends) return `${started} ${'→'} auto-ended ${formatDate(ends)}`
     return started
   }
 
@@ -816,15 +1012,18 @@ export function createAdvancedAdminScreen() {
     const schoolPicker = createSchoolPicker({ inputClass: 'adv-admin-input' })
     overlay.querySelector('[data-host="school"]').appendChild(schoolPicker.el)
 
-    // Approved teams from any event, so a returning team gets picked (with its
-    // school link, approved or not) instead of created again.
+    // Teams approved statewide or for any event, so a returning team gets
+    // picked (with its school link, approved or not) instead of created again.
     let knownTeams = []
-    Promise.all([listApprovedTeams(), listAllSchools()]).then(([teams, schools]) => {
-      const approved = new Map(schools.filter(sc => sc.status === 'approved').map(sc => [sc.id, sc]))
-      knownTeams = teams
-        .map(t => ({ team: t, school: approved.get(t.schoolId) || null, label: teamLabel(t, approved) }))
-        .sort((a, b) => a.label.localeCompare(b.label))
-    }).catch(err => console.error('team list failed', err))
+    function loadKnownTeams() {
+      return Promise.all([listAllTeams(), listEvents(), listAllSchools()]).then(([teams, events, schools]) => {
+        const approved = new Map(schools.filter(sc => sc.status === 'approved').map(sc => [sc.id, sc]))
+        knownTeams = selectableTeams(teams, events)
+          .map(t => ({ team: t, school: approved.get(t.schoolId) || null, label: teamLabel(t, approved) }))
+          .sort((a, b) => a.label.localeCompare(b.label))
+      }).catch(err => console.error('team list failed', err))
+    }
+    loadKnownTeams()
 
     const teamCombo = attachCombobox(nameInput, {
       getOptions: () => knownTeams.map(k => ({
@@ -833,7 +1032,7 @@ export function createAdvancedAdminScreen() {
         sublabel: k.school ? k.school.name : '',
         known: k,
       })),
-      emptyText: 'No saved teams yet. Type a new name.',
+      emptyText: 'No approved teams yet. Type a new name.',
       onSelect: (option) => {
         nameInput.value = option.label
         const { team, school } = option.known
@@ -842,6 +1041,7 @@ export function createAdvancedAdminScreen() {
             : team.schoolId ? { id: team.schoolId, pending: true }
             : null
         )
+        mountColorPicker(getTeamColors(team))
       },
     })
 
@@ -855,10 +1055,11 @@ export function createAdvancedAdminScreen() {
 
     // Inline swatch picker for the team being added, seeded with a fresh random
     // pair each time so consecutive teams get distinct colors unless picked.
+    // Picking a saved team passes its colors instead.
     let colorPicker = null
-    function mountColorPicker() {
+    function mountColorPicker(colors) {
       colorsHost.innerHTML = ''
-      colorPicker = createColorSwatchPicker(deriveTeamColors(`${Date.now()}_${Math.random()}`))
+      colorPicker = createColorSwatchPicker(colors || deriveTeamColors(`${Date.now()}_${Math.random()}`))
       colorsHost.appendChild(colorPicker.el)
     }
     mountColorPicker()
@@ -879,7 +1080,7 @@ export function createAdvancedAdminScreen() {
           ${roster.map(r => `
             <li class="adv-admin-row" data-id="${r.teamId}">
               <span class="adv-admin-row-color" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>
-              <span class="adv-admin-row-name">${escapeHtml(r.label)}</span>
+              <span class="adv-admin-row-name">${rosterNameHtml(r)}</span>
               ${rosterStatusPill(r.rosterStatus, 'Event')}
               ${rosterStatusPill(r.teamStatus, 'Statewide')}
               <span class="adv-admin-row-actions">
@@ -950,6 +1151,7 @@ export function createAdvancedAdminScreen() {
         nameInput.value = ''
         schoolPicker.reset()
         mountColorPicker()
+        loadKnownTeams()
         await paintList()
         setFeedback(`Added ${'"'}${name}${'"'} — approved for this event.`, 'ok')
       } catch (err) {
@@ -984,7 +1186,8 @@ export function createAdvancedAdminScreen() {
 
   async function renderScores() {
     const el = screen.querySelector('#sec-scores')
-    const [scores, teams, events] = await Promise.all([listRecentScores(50), listAllTeams(), listEvents()])
+    const [scores, teams, events, schools] = await Promise.all([listRecentScores(50), listAllTeams(), listEvents(), listAllSchools()])
+    const schoolNames = new Map(schools.map(sc => [sc.id, sc.name]))
     const teamMap = new Map(teams.map(t => [t.id, t]))
     const eventMap = new Map(events.map(e => [e.id, e]))
     if (scores.length === 0) {
@@ -995,7 +1198,10 @@ export function createAdvancedAdminScreen() {
       <ul class="adv-admin-list">
         ${scores.map(s => {
           const team = s.teamId ? teamMap.get(s.teamId) : null
-          const teamName = s.teamId ? (team?.name || '(deleted team)') : '(no team)'
+          // School-play scores (no event) have a school instead of a team.
+          const teamName = s.teamId ? (team?.name || '(deleted team)')
+            : s.schoolId ? `${schoolNames.get(s.schoolId) || '(deleted school)'} (school play)`
+            : '(no team)'
           // Show a status badge while the team isn't approved (pending/hidden) so
           // an organizer can see this score won't appear on the public board yet.
           // Read live from the team doc, so a rename/approve here reflects after
@@ -1003,7 +1209,7 @@ export function createAdvancedAdminScreen() {
           const statusTag = team && team.status !== 'approved'
             ? ` <span class="adv-admin-row-status adv-admin-status-${team.status}">${team.status}</span>`
             : ''
-          const evName = s.eventId ? (eventMap.get(s.eventId)?.name || '(deleted event)') : ''
+          const evName = s.eventId ? (eventMap.has(s.eventId) ? eventLabel(eventMap.get(s.eventId)) : '(deleted event)') : ''
           return `
             <li class="adv-admin-row" data-id="${s.id}">
               <span class="adv-admin-row-name">${escapeHtml(teamName)}${statusTag} ${'·'} <span class="adv-admin-row-faint">${escapeHtml(s.playerName)}</span></span>
@@ -1031,7 +1237,13 @@ export function createAdvancedAdminScreen() {
     const flash = document.createElement('div')
     flash.className = 'adv-admin-flash'
     flash.textContent = text
-    screen.appendChild(flash)
+    // On <body>, not the admin screen: the screen is a transformed scroll
+    // container, so a fixed child there scrolls away with the page and a
+    // message shown while scrolled down lands out of view.
+    const app = document.getElementById('app')
+    flash.dataset.mode = app?.dataset.mode || 'advanced'
+    if (app?.dataset.theme) flash.dataset.theme = app.dataset.theme
+    document.body.appendChild(flash)
     requestAnimationFrame(() => flash.classList.add('adv-admin-flash-show'))
     setTimeout(() => {
       flash.classList.remove('adv-admin-flash-show')
@@ -1294,12 +1506,82 @@ function rosterStatusPill(status, scope) {
   return `<span class="adv-admin-row-status adv-admin-status-${status}" title="${title}">${mark} ${scope}</span>`
 }
 
+/**
+ * Styled rename dialog (replaces window.prompt). Resolves to the trimmed new
+ * name, or null when cancelled or unchanged. Mounts on <body> with the app's
+ * mode/theme copied over, like the color popover it shares its look with.
+ * @param {'team'|'school'} kind
+ * @param {string} current
+ * @returns {Promise<string|null>}
+ */
+function openRenamePrompt(kind, current) {
+  return new Promise(resolve => {
+    document.querySelector('.adv-rename-overlay')?.remove()
+    const overlay = document.createElement('div')
+    overlay.className = 'adv-color-overlay adv-rename-overlay'
+    const app = document.getElementById('app')
+    if (app) {
+      overlay.dataset.mode = app.dataset.mode || 'advanced'
+      if (app.dataset.theme) overlay.dataset.theme = app.dataset.theme
+    }
+    overlay.innerHTML = `
+      <form class="adv-color-card adv-rename-card" role="dialog" aria-modal="true" aria-label="Rename ${kind}">
+        <h4 class="adv-color-card-title">Rename ${kind}</h4>
+        <input class="adv-admin-input adv-rename-input" maxlength="40" spellcheck="false" autocomplete="off"
+          value="${escapeHtml(current)}" aria-label="New ${kind} name" />
+        <p class="adv-rename-hint">If another ${kind} already has this name, the two merge.</p>
+        <div class="adv-color-actions">
+          <button type="button" class="adv-admin-btn" data-act="cancel">Cancel</button>
+          <button type="submit" class="adv-admin-btn adv-admin-btn-primary">Save</button>
+        </div>
+      </form>
+    `
+    const form = overlay.querySelector('form')
+    const input = overlay.querySelector('input')
+    let settled = false
+    const finish = (value) => {
+      if (settled) return
+      settled = true
+      document.removeEventListener('keydown', onKey)
+      overlay.classList.remove('adv-color-show')
+      setTimeout(() => overlay.remove(), 200)
+      resolve(value)
+    }
+    const onKey = (e) => { if (e.key === 'Escape') finish(null) }
+    form.addEventListener('submit', (e) => {
+      e.preventDefault()
+      const next = input.value.trim()
+      if (!next) {
+        input.focus()
+        return
+      }
+      finish(next === current.trim() ? null : next)
+    })
+    onTap(overlay.querySelector('[data-act="cancel"]'), (e) => {
+      e.stopPropagation()
+      finish(null)
+    })
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) finish(null) })
+    document.addEventListener('keydown', onKey)
+    document.body.appendChild(overlay)
+    requestAnimationFrame(() => overlay.classList.add('adv-color-show'))
+    setTimeout(() => input.select(), 50)
+  })
+}
+
+// Roster row name: "Team · School", with a pending pill after a school that
+// is still awaiting approval.
+function rosterNameHtml(r) {
+  if (!r.pendingSchoolName) return escapeHtml(r.label)
+  return `${escapeHtml(r.teamName)} ${'·'} ${escapeHtml(r.pendingSchoolName)} <span class="adv-school-pending-pill" title="School awaiting approval">pending</span>`
+}
+
 // Full-word status pill labelled with its scope — "pending · statewide",
 // "approved · FFA Day". Used in the All-teams list so a bare "pending" can't be
 // mistaken for the wrong kind of approval. `scopeLabel` may be a user-entered
 // event name, so it's escaped.
 function scopePill(status, scopeLabel) {
-  return `<span class="adv-admin-row-status adv-admin-status-${status}" title="${status} (${scopeLabel})">${status} ${'·'} ${escapeHtml(scopeLabel)}</span>`
+  return `<span class="adv-admin-row-status adv-admin-status-${status}" title="${escapeHtml(status)} (${escapeHtml(scopeLabel)})">${status} ${'·'} ${escapeHtml(scopeLabel)}</span>`
 }
 
 function escapeHtml(s) {

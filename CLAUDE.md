@@ -48,7 +48,7 @@ Hash-based SPA router with mode-aware prefixes:
 #kid/game/{gameId}/{level}      → Kid in-game
 #advanced/game-select           → Advanced game grid
 #advanced/game/{gameId}/{level} → Advanced in-game
-#advanced/play-mode             → Team-vs-casual prompt (only when an event is active and no session choice yet)
+#advanced/play-mode             → Team-vs-casual prompt (on each fresh entry, event or not)
 #advanced/roster                → Event roster setup (team-play only; redirects to game-select otherwise)
 #advanced/admin                 → Leaderboard admin panel (idle timer off)
 ```
@@ -305,13 +305,17 @@ A team/school competition system layered on Advanced Mode. **All phases are live
 
 ```
 Intro → Advanced Mode
-  ├── active event + no session play-mode → #advanced/play-mode
-  │     ├── Team play  → #advanced/roster → #advanced/game-select
-  │     └── Casual     → #advanced/game-select  (teamId stays null on scores)
-  └── no active event → #advanced/game-select directly
+  └── no session play-mode → #advanced/play-mode (event or not)
+        ├── Team play (event running)  → #advanced/roster → #advanced/game-select
+        ├── Earn points for your school (no event) → #advanced/roster (school chooser) → #advanced/game-select
+        └── Casual     → #advanced/game-select  (teamId stays null on scores)
 ```
 
 Session play-mode lives in `sessionStorage['sdshc-lb-play-mode']`. Returning to `#intro` clears it so each fresh entry re-prompts.
+
+**School play (no event running):** the first play-mode button becomes "Earn Points for Your School" (play mode `school`). The roster route then shows a single chooser of **approved schools only** (no adding, no teams; `createSchoolChoiceScreen` in [advanced-roster.js](src/screens/advanced-roster.js)), saved in `sdshc-lb-session-school`. Game intros show player rows with a "Playing for …" notice, and [score-save-status.js](src/utils/score-save-status.js) tags each teamless entry with that `schoolId`, so the games need no changes. These scores count only on the All-Time (and month) **school** board. A school session ignores events that open later, so a classroom playing on its own never lands in an event it didn't choose.
+
+**Event changes mid-session:** Team Play records which event it joined (`sdshc-lb-play-event`). Each return to game select checks it (`sessionEventEnded` in [main.js](src/main.js)); if that event is no longer open, the session goes back to the play-mode prompt, which joins whatever is running now. An unreadable or cold-cache event list never triggers this.
 
 ### Data layer
 
@@ -322,8 +326,11 @@ Session play-mode lives in `sessionStorage['sdshc-lb-play-mode']`. Returning to 
 **Per-kiosk / session keys (used in both modes):**
 ```
 sdshc-lb-active-event  eventId|null (per-kiosk, localStorage)
+sdshc-lb-pinned-event  eventId|null (per-kiosk, localStorage: admin "Set kiosk to" pick; holds while that event is open, even with several running; "None (auto)" clears it)
 sdshc-lb-kiosk-id      stable UUID (per-kiosk, localStorage)
 sdshc-lb-play-mode     "team" | "casual" (sessionStorage, see above)
+sdshc-lb-play-event    eventId | "" (sessionStorage: event a Team Play session joined, "" = none)
+sdshc-lb-session-school {id, name} (sessionStorage: the school a 'school' session plays for)
 ```
 
 **localStorage mode only** (`USE_FIRESTORE = false`) additionally stores the full dataset under `sdshc-lb-teams` / `sdshc-lb-schools` / `sdshc-lb-events` / `sdshc-lb-scores` (`{ schemaVersion, … }`). In Firestore mode those are superseded by the collections above.
@@ -337,7 +344,8 @@ sdshc-lb-play-mode     "team" | "casual" (sessionStorage, see above)
 
 ### Schools
 
-- **Schools** (`/schools`): `{ name, normalized, status: pending | approved | hidden }`. Admin-added schools are approved immediately; schools added from a kiosk ("Add new school" in the picker) are pending and never appear on leaderboards or in kiosk search until approved.
+- **Schools** (`/schools`): `{ name, normalized, status: pending | approved, color1?, color2? }`. Admin-added schools are approved immediately; schools added from a kiosk ("Add new school" in the picker) are pending and never appear on leaderboards or in kiosk search until approved. Roster lists show a pending school's name with a pending pill; the game-intro dropdown never does. Admin sets a school's leaderboard colors with its Colors button (same `getTeamColors` fallback as teams). There is no Hide for schools; delete one instead (the code still treats a legacy `hidden` status as invisible).
+- **Team suggestions:** the kiosk roster screen and the game-intro dropdown list teams approved for **this event or another session of its Day** (`dayApprovedTeamIds`; game intros mark the Day extras `listed`). Approval stays per session: picking a Day team adds it to this session as pending. The admin Manage Teams modal lists more broadly (approved statewide or on any event, `selectableTeams`) so admins can pre-register returning teams. Picking a team fills in its school and colors.
 - **Team identity is name + school** (`team.schoolId`, optional). "Team 1" at two schools is two teams. `renameTeam` and `setTeamSchool` merge only on a same-name, same-school collision. Shared logic lives in [leaderboard-shared.js](src/utils/leaderboard-shared.js) (`resolveTeamIdentity`).
 - **How a team gets its school:**
   - Roster screen and admin Manage Teams modal: the school picker ([school-picker.js](src/utils/school-picker.js)) starts on None, fuzzy-suggests a school as the team name is typed ([school-match.js](src/utils/school-match.js)), and stops suggesting once someone picks by hand. What it shows is saved (`getOrCreateTeam(name, colors, { schoolId })`).
@@ -345,29 +353,31 @@ sdshc-lb-play-mode     "team" | "casual" (sessionStorage, see above)
   - Approving or creating a school links an unlinked team with exactly that name.
   - Admin can set any team's school from the team rows.
 
-### Event groups (Day board)
+### Sessions (Day board)
 
-Events carry an optional `group` string (set on create or edited per event row in admin). Events whose normalized group matches form one **Day**; `getLeaderboard({ scope: 'group', eventId })` aggregates them, checking each score against its own event's roster. An event with no group makes the Day scope equal the Session scope.
+An event can be split into **sessions** from the admin event creator ("+ Split into sessions"). Each session is its own event doc (`{ name, session, … }`) for joining, rosters, and the Session board, and displays as "Event · Session" (`eventLabel`). Sessions whose normalized event name **and** local start date match form one **Day** (`eventDayKey` / `dayEventIds` in [leaderboard-shared.js](src/utils/leaderboard-shared.js)); the date keeps a yearly event that reuses its name separate. `getLeaderboard({ scope: 'day', eventId })` aggregates the Day, checking each score against its own session's roster. An event with no session is a Day of one. Creating a single session later with the same name on the same day joins that Day. The Day date reads `scheduledStart` first, so "Open now" on a session scheduled for tomorrow keeps it in tomorrow's Day.
+
+Session creator rules: a blank (or past) Starts opens the session now; a blank Ends closes a session when the next later-starting one starts; sessions may overlap (concurrent sessions or events are allowed, and devices then ask players which one they're at). Refusals (missing names, duplicate session names, an end before its start) show inline under the creator.
 
 ### Leaderboard modal
 
-Tabs: active event (Session), its group (Day, only when the event has a group), All-Time. A **Teams / Schools** toggle sits under the tabs. It starts at the first tab's default (Teams for Session and Day, Schools for All-Time); until someone flips it, switching tabs moves it to that tab's default, and once flipped the choice carries across tabs. Closing the modal resets it.
+Tabs: active event (Session, labeled with its session name), its Day (labeled with the event name, only when the event has a session), All-Time. A **Teams / Schools** toggle sits in the header, left of the close button. It starts at the first tab's default (Teams for Session and Day, Schools for All-Time); until someone flips it, switching tabs moves it to that tab's default, and once flipped the choice carries across tabs. Closing the modal resets it.
 
 ### Scoring (Phase 2 — par-normalized)
 
 Headline ranking metric is **normalized par × 100**, summed across all runs. For each score record: `displayed = max(0, raw) ÷ par × 100`. A "par" run scores ~100; great runs go higher. Negative runs floor at 0.
 
-Both columns are shown — **Score** (normalized, sorted) and **Raw** (actual points, muted). The **school** board sums the same normalized points across a school's approved teams (same team visibility as the team board for that scope, so a school total equals the sum of its visible team rows) and adds unranked **Teams** and **Avg / team** columns. All 6 games count (the "official games subset" idea from the original sketch was dropped — normalization handles fairness). Computed at read time inside `getLeaderboard()`, not on write, so changing a `par` recomputes the entire history instantly.
+Both columns are shown — **Score** (normalized, sorted) and **Raw** (actual points, muted). The **school** board sums the same normalized points across a school's approved teams (same team visibility as the team board for that scope, so a school total equals the sum of its visible team rows) and adds unranked **Teams** and **Avg / team** columns. On All-Time (and month) a school also collects its school-play points, so there its total is its team rows plus school play, and Avg / team divides team points only (shown as a dash when a school has no teams). **Ties share a rank** (1, 1, 3) on the displayed score; raw points only order tied rows. All 6 games count (the "official games subset" idea from the original sketch was dropped — normalization handles fairness). Computed at read time inside `getLeaderboard()`, not on write, so changing a `par` recomputes the entire history instantly.
 
 ### Admin (`#advanced/admin`)
 
-Sections: active event (create with optional group), pending teams, all teams (with per-team school dropdown), schools (add / approve / rename / merge / hide / delete), events (start / schedule / end / reopen / delete / group), recent scores (with per-row delete), per-event roster moderation, team color picker, offline cache warm-up. Idle timer is force-disabled here. In Firestore mode the panel sits behind a **Firebase-Auth sign-in gate** (password only; the screen signs in as `ADMIN_EMAIL` under the hood and requires an `/admins/{uid}` doc per `firestore.rules`); session persists via `browserLocalPersistence`. In localStorage mode the panel renders with no auth.
+Sections: active event (create, optionally split into sessions), pending teams, all teams (with per-team school dropdown), schools (add / approve / colors / rename / merge / delete), events (editable Starts and Ends, end / open now / reopen, Manage Teams for any event, delete), recent scores (with per-row delete), per-event roster moderation, team color picker, offline cache warm-up. Renames use a styled dialog (`openRenamePrompt`), not `window.prompt`. Admin text is selectable for copying; the rest of the site keeps `user-select: none` so touchscreen long-presses don't select text. Idle timer is force-disabled here. In Firestore mode the panel sits behind a **Firebase-Auth sign-in gate** (password only; the screen signs in as `ADMIN_EMAIL` under the hood and requires an `/admins/{uid}` doc per `firestore.rules`); session persists via `browserLocalPersistence`. In localStorage mode the panel renders with no auth.
 
 Firestore rules deploy from the CLI: `firebase deploy --only firestore:rules` ([firebase.json](firebase.json) targets `sdshc-games-hub`).
 
 ### Game-side integration
 
-Every advanced game's intro renders player rows via `team-input.js`. In team mode, each row pairs a player-name input with a school/team dropdown sourced from the event's approved roster (free-typing a new name adds it as pending). In casual mode the team line is hidden and `teamId` stays null. On results, the game calls `recordScoresWithStatus({ gameId, runId, entries, eventId: getScoreEventId() })` ([src/utils/score-save-status.js](src/utils/score-save-status.js)) — a wrapper around `recordScores` that shows a small non-blocking save-status pill (saving / saved / saved-offline / failed) so players get feedback, with a per-run UUID for idempotency.
+Every advanced game's intro renders player rows via `team-input.js`. In team mode, each row pairs a player-name input with a school/team dropdown sourced from the event's approved roster, or with no event, this session's teams plus statewide-approved teams (free-typing a new name adds it as pending). The dropdown list grows wider than its field when a "Team · School" label needs it. In casual mode the team line is hidden and `teamId` stays null. On results, the game calls `recordScoresWithStatus({ gameId, runId, entries, eventId: getScoreEventId() })` ([src/utils/score-save-status.js](src/utils/score-save-status.js)) — a wrapper around `recordScores` that shows a small non-blocking save-status pill (saving / saved / saved-offline / failed) so players get feedback, with a per-run UUID for idempotency.
 
 ## Responsive Layout
 

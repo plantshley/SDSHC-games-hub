@@ -3,12 +3,12 @@
  *
  * Renders a small trophy button to drop next to the theme toggle. Tapping
  * opens a modal with up to three scope tabs:
- *   - Session: the active event (labelled with its own name; omitted when no
- *     event is active)
- *   - Day: every event in the active event's group (labelled with the group
- *     name; omitted when the active event has no group)
+ *   - Session: the active event (labelled with its session name, or the event
+ *     name when it has no session; omitted when no event is active)
+ *   - Day: every session of the active event's Day (labelled with the event
+ *     name; omitted when the active event has no session)
  *   - All-Time
- * A Teams/Schools toggle sits under the tabs. It starts at the first tab's
+ * A Teams/Schools toggle sits in the header. It starts at the first tab's
  * default (Teams for Session and Day, Schools for All-Time). Until someone
  * flips it, switching tabs moves it to that tab's default; once flipped, the
  * choice carries across tabs. Reopening the modal resets it.
@@ -69,9 +69,9 @@ async function showLeaderboardModal() {
   // scan a long list).
   const tabs = []
   if (activeEvent) {
-    tabs.push({ key: 'event', label: activeEvent.name, scope: 'event', style: 'combo', groupBy: 'team' })
-    const group = String(activeEvent.group || '').trim()
-    if (group) tabs.push({ key: 'group', label: group, scope: 'group', style: 'combo', groupBy: 'team' })
+    const session = String(activeEvent.session || '').trim()
+    tabs.push({ key: 'event', label: session || activeEvent.name, scope: 'event', style: 'combo', groupBy: 'team' })
+    if (session) tabs.push({ key: 'day', label: activeEvent.name, scope: 'day', style: 'combo', groupBy: 'team' })
   }
   tabs.push({ key: 'all', label: 'All-Time', scope: 'all', style: 'bars', groupBy: 'school' })
 
@@ -85,16 +85,18 @@ async function showLeaderboardModal() {
     <div class="adv-lb-card">
       <div class="adv-lb-header">
         <h3 class="adv-lb-title">${'\u{1F3C6}\u{FE0E}'} Leaderboard</h3>
-        <button class="adv-lb-close" aria-label="Close">${'✕'}</button>
+        <div class="adv-lb-header-right">
+          <div class="adv-lb-groupby" role="radiogroup" aria-label="Rank by">
+            <button class="adv-lb-groupby-btn" role="radio" data-groupby="team">Teams</button>
+            <button class="adv-lb-groupby-btn" role="radio" data-groupby="school">Schools</button>
+          </div>
+          <button class="adv-lb-close" aria-label="Close">${'✕'}</button>
+        </div>
       </div>
       <div class="adv-lb-tabs" role="tablist">
         ${tabs.map((t, i) => `
           <button class="adv-lb-tab ${i === 0 ? 'adv-lb-tab-active' : ''}" data-tab="${t.key}">${escapeHtml(t.label)}</button>
         `).join('')}
-      </div>
-      <div class="adv-lb-groupby" role="radiogroup" aria-label="Rank by">
-        <button class="adv-lb-groupby-btn" role="radio" data-groupby="team">Teams</button>
-        <button class="adv-lb-groupby-btn" role="radio" data-groupby="school">Schools</button>
       </div>
       <div class="adv-lb-body" id="adv-lb-body">
         <div class="adv-lb-loading">Loading…</div>
@@ -244,18 +246,21 @@ function rowCells(r, kind) {
     <td class="adv-lb-col-pts">${r.normPoints}</td>
     ${kind === 'school' ? `
     <td class="adv-lb-col-teams">${r.teamCount}</td>
-    <td class="adv-lb-col-avg">${r.avgPerTeam}</td>` : ''}
+    <td class="adv-lb-col-avg">${r.avgPerTeam ?? '—'}</td>` : ''}
     <td class="adv-lb-col-raw">${r.points}</td>
     <td class="adv-lb-col-games">${r.gamesPlayed}</td>
   `
 }
 
-// Secondary line for bars and podium cards.
-function metaText(r, kind) {
+// Secondary line for bars and podium cards. The podium card is narrow, so it
+// leaves out the school average (the table and bars still show it).
+function metaText(r, kind, { avg = true } = {}) {
   const games = `${r.gamesPlayed} ${r.gamesPlayed === 1 ? 'game' : 'games'}`
   if (kind === 'school') {
     const teams = `${r.teamCount} ${r.teamCount === 1 ? 'team' : 'teams'}`
-    return `${teams} ${'·'} avg ${r.avgPerTeam} ${'·'} ${r.points} raw`
+    return avg && r.avgPerTeam != null
+      ? `${teams} ${'·'} avg ${r.avgPerTeam} ${'·'} ${r.points} raw`
+      : `${teams} ${'·'} ${r.points} raw`
   }
   return `${r.points} raw ${'·'} ${games}`
 }
@@ -267,7 +272,7 @@ function renderPlainTable(rows, kind) {
       <tbody>
         ${rows.map((r, i) => `
           <tr>
-            <td class="adv-lb-col-rank">${i + 1}</td>
+            <td class="adv-lb-col-rank">${r.rank}</td>
             <td class="adv-lb-col-team">${nameHtml(r, kind)}</td>
             ${rowCells(r, kind)}
           </tr>
@@ -285,7 +290,7 @@ function renderColoredTable(rows, kind) {
       <tbody>
         ${rows.map((r, i) => `
           <tr style="--team-c1: ${r.color1}; --team-c2: ${r.color2}">
-            <td class="adv-lb-col-rank">${i + 1}</td>
+            <td class="adv-lb-col-rank">${r.rank}</td>
             <td class="adv-lb-col-team"><span class="adv-lb-team-dot" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>${nameHtml(r, kind)}</td>
             ${rowCells(r, kind)}
           </tr>
@@ -304,7 +309,7 @@ function renderBars(rows, kind) {
         const pct = Math.max(2, Math.round((r.normPoints / max) * 100))
         return `
           <div class="adv-lb-bar-row">
-            <span class="adv-lb-bar-rank" style="color: ${r.color1}">${i + 1}</span>
+            <span class="adv-lb-bar-rank" style="color: ${r.color1}">${r.rank}</span>
             <div class="adv-lb-bar-main">
               <div class="adv-lb-bar-labels">
                 <span class="adv-lb-bar-team">${nameHtml(r, kind)}</span>
@@ -331,14 +336,15 @@ function renderPodium(rows, kind) {
       ${order.map(idx => {
         const r = top[idx]
         if (!r) return ''
-        const place = idx + 1
+        // Tied rows share a place, so the label and height follow the rank.
+        const place = Math.min(r.rank, 3)
         return `
           <div class="adv-lb-podium-col adv-lb-podium-${place}" style="--team-c1: ${r.color1}; --team-c2: ${r.color2}">
             <div class="adv-lb-podium-card">
               <span class="adv-lb-podium-team">${escapeHtml(r.name)}</span>
               ${kind === 'team' && r.schoolName ? `<span class="adv-lb-podium-school">${escapeHtml(r.schoolName)}</span>` : ''}
               <span class="adv-lb-podium-score">${r.normPoints}</span>
-              <span class="adv-lb-podium-raw">${metaText(r, kind)}</span>
+              <span class="adv-lb-podium-raw">${metaText(r, kind, { avg: false })}</span>
             </div>
             <div class="adv-lb-podium-base">${place}</div>
           </div>
@@ -357,7 +363,7 @@ function renderRestTable(rows, startRank, tinted, kind) {
       <tbody>
         ${rows.map((r, i) => `
           <tr ${tinted ? `style="--team-c1: ${r.color1}; --team-c2: ${r.color2}"` : ''}>
-            <td class="adv-lb-col-rank">${startRank + i}</td>
+            <td class="adv-lb-col-rank">${r.rank}</td>
             <td class="adv-lb-col-team">${tinted ? `<span class="adv-lb-team-dot" style="background: linear-gradient(135deg, ${r.color1}, ${r.color2})"></span>` : ''}${nameHtml(r, kind)}</td>
             ${rowCells(r, kind)}
           </tr>

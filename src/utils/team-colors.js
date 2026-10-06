@@ -27,12 +27,20 @@ export const TEAM_PALETTE = [
   '#6bd968', // green
   '#4d96ff', // blue
   '#ff9f43', // orange
-  '#eaeaea', // white
+  '#ffffff', // white (outlined in light mode, see leaderboard.css)
   '#141414', // black
   '#787878', // grey
   '#835915', // brown
 
 ]
+
+// Palette values that were later changed, mapped to their replacement so teams
+// saved with the old value still match a swatch.
+const RETIRED_COLORS = { '#eaeaea': '#ffffff' }
+
+function currentColor(c) {
+  return RETIRED_COLORS[String(c).toLowerCase()] || c
+}
 
 function hashString(s) {
   let h = 0
@@ -62,7 +70,7 @@ export function deriveTeamColors(seed) {
  */
 export function getTeamColors(team) {
   if (team && team.color1 && team.color2) {
-    return { color1: team.color1, color2: team.color2 }
+    return { color1: currentColor(team.color1), color2: currentColor(team.color2) }
   }
   return deriveTeamColors(team ? team.id || team.name : '')
 }
@@ -139,8 +147,9 @@ export function createColorSwatchPicker(initial, onChange) {
  *
  * @param {{ color1: string, color2: string }} initial
  * @param {(colors: { color1: string, color2: string }) => void} onSave
+ * @param {{ title?: string }} [opts]
  */
-export function openColorPopover(initial, onSave) {
+export function openColorPopover(initial, onSave, { title = 'Team colors' } = {}) {
   const existing = document.querySelector('.adv-color-overlay')
   if (existing) existing.remove()
 
@@ -154,7 +163,10 @@ export function openColorPopover(initial, onSave) {
 
   const card = document.createElement('div')
   card.className = 'adv-color-card'
-  card.innerHTML = `<h4 class="adv-color-card-title">Team colors</h4>`
+  const heading = document.createElement('h4')
+  heading.className = 'adv-color-card-title'
+  heading.textContent = title
+  card.appendChild(heading)
 
   const picker = createColorSwatchPicker(initial)
   card.appendChild(picker.el)

@@ -44,7 +44,7 @@ export function createSchoolPicker({ inputClass = 'adv-roster-input', onChange }
   el.className = 'adv-school-picker'
   el.innerHTML = `
     <input class="${inputClass} adv-school-input" maxlength="40" spellcheck="false"
-      autocomplete="off" placeholder="None" aria-label="School" />
+      autocomplete="off" placeholder="None (type to search or add a new school)" aria-label="School" />
     <p class="adv-school-note" aria-live="polite"></p>
   `
   const input = el.querySelector('input')

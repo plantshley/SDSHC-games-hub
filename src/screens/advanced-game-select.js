@@ -11,7 +11,7 @@ import { addGradientBackground } from '../utils/gradient-bg.js'
 import { getTheme, setTheme, createThemeToggle } from '../utils/theme-toggle.js'
 import { createLeaderboardButton } from '../utils/leaderboard-modal.js'
 import { getPlayMode } from './advanced-play-mode.js'
-import { getActiveEventId, warmLeaderboardCache } from '../utils/leaderboard-api.js'
+import { warmLeaderboardCache } from '../utils/leaderboard-api.js'
 
 const BURST_COLORS = ['#38cebc', '#b8e84a', '#ff71ce', '#01cdfe', '#b967ff']
 
@@ -51,7 +51,6 @@ export function createAdvancedGameSelectScreen() {
   const games = getAllAdvancedGames()
 
   const playMode = getPlayMode()
-  const activeEventId = getActiveEventId()
 
   screen.innerHTML = `
     <div class="adv-header">
@@ -81,10 +80,10 @@ export function createAdvancedGameSelectScreen() {
   // toggle.
   const headerRight = document.createElement('div')
   headerRight.className = 'adv-header-right'
-  if (playMode === 'team' && activeEventId) {
+  if (playMode === 'team' || playMode === 'school') {
     const rosterBtn = document.createElement('button')
     rosterBtn.className = 'adv-game-select-banner-btn'
-    rosterBtn.textContent = 'Manage roster'
+    rosterBtn.textContent = playMode === 'school' ? 'Change school' : 'Manage roster'
     onTap(rosterBtn, () => {
       // Mark roster's Back as returning to game-select rather than play-mode
       sessionStorage.setItem('sdshc-roster-return', 'game-select')

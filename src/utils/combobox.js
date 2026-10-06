@@ -20,6 +20,9 @@
 
 let comboSeq = 0
 
+const LIST_MAX_WIDTH = 520 // px; the list may outgrow its field up to this
+const EDGE = 8             // px kept clear of the viewport edges
+
 /**
  * @param {HTMLInputElement} input
  * @param {Object} opts
@@ -131,9 +134,16 @@ export function attachCombobox(input, opts) {
     const natural = Math.min(list.scrollHeight || 280, 280)
     const flipUp = below < Math.min(natural, 160) && above > below
     const maxH = Math.max(88, Math.min(280, flipUp ? above : below))
-    list.style.left = `${Math.round(r.left)}px`
-    list.style.width = `${Math.round(r.width)}px`
+    // At least as wide as the field, wider when a label needs it ("Team 1 ·
+    // Brookings High School" in a narrow game-intro field), within the viewport.
+    const vw = window.innerWidth
+    const maxW = Math.max(r.width, Math.min(LIST_MAX_WIDTH, vw - 2 * EDGE))
+    list.style.minWidth = `${Math.round(r.width)}px`
+    list.style.maxWidth = `${Math.round(maxW)}px`
+    list.style.width = 'max-content'
     list.style.maxHeight = `${Math.round(maxH)}px`
+    const w = list.offsetWidth || r.width
+    list.style.left = `${Math.round(Math.max(EDGE, Math.min(r.left, vw - w - EDGE)))}px`
     if (flipUp) {
       list.style.top = ''
       list.style.bottom = `${Math.round(vh - r.top + gap)}px`
