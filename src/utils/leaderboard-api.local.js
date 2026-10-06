@@ -521,12 +521,13 @@ export async function getEventById(id) {
  * @param {number|null} [options.endsAt] - overrides the default 24h window.
  *   A multi-day event needs this, or it ages out overnight.
  * @param {string|null} [options.session] - session name (e.g. "Morning").
- *   Sessions sharing an event name and start date roll up into one Day
- *   leaderboard (see eventDayKey in leaderboard-shared.js).
+ * @param {string|null} [options.dayId] - shared by sessions created together;
+ *   they roll up into one Day leaderboard (see eventDayKey in
+ *   leaderboard-shared.js).
  */
 export async function startEvent(name, options = {}) {
   const cleaned = String(name || '').trim() || 'Untitled Event'
-  const { scheduledStart = null, endsAt = null, session = null } = options
+  const { scheduledStart = null, endsAt = null, session = null, dayId = null } = options
   const data = getEventsRaw()
   const now = Date.now()
   const startedAt = scheduledStart || now
@@ -534,6 +535,7 @@ export async function startEvent(name, options = {}) {
     id: genId(),
     name: cleaned,
     session: String(session || '').trim() || null,
+    dayId: dayId || null,
     startedAt,
     scheduledStart: scheduledStart || null,
     endedAt: null,

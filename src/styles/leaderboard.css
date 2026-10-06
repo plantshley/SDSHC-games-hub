@@ -1812,23 +1812,28 @@
 
 /* ─── Leaderboard: podium ─── */
 
+/* Columns come from the inline grid-template-columns (one per podium spot).
+   Row 1 holds every card, so tied or not, the cards share one height; row 2
+   holds the bases. Each col is display: contents and places its card and base
+   by --podium-col. */
 .adv-lb-podium {
-  display: flex;
-  align-items: flex-end;
+  display: grid;
+  grid-template-rows: auto auto;
   justify-content: center;
-  gap: 10px;
+  gap: 0 10px;
   padding: 22px 16px 4px;
 }
 
 .adv-lb-podium-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1 1 0;
-  max-width: 165px;
+  display: contents;
+}
+
+.adv-lb-podium-col > * {
+  grid-column: var(--podium-col);
 }
 
 .adv-lb-podium-card {
+  grid-row: 1;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -1877,6 +1882,8 @@
 }
 
 .adv-lb-podium-base {
+  grid-row: 2;
+  align-self: start;
   width: 100%;
   display: flex;
   align-items: center;
@@ -1892,6 +1899,10 @@
 .adv-lb-podium-1 .adv-lb-podium-base { height: 72px; }
 .adv-lb-podium-2 .adv-lb-podium-base { height: 54px; }
 .adv-lb-podium-3 .adv-lb-podium-base { height: 40px; }
+/* Drop 2nd and 3rd (card and base together) by what their base is shorter
+   than 1st's, so every base meets the floor. */
+.adv-lb-podium-2 > * { transform: translateY(18px); }
+.adv-lb-podium-3 > * { transform: translateY(32px); }
 
 /* ─── Admin Panel: phone-adaptive layout (≤600px) ───
    Admin is the only page intended to be opened on a personal device, so this
@@ -2652,12 +2663,12 @@
     flex-wrap: wrap;
     gap: 4px 8px;
   }
-  /* Podium — keep the 3-up 2·1·3 row (not stacked). The cols are flex:1 1 0,
-     so they shrink to share the narrower modal width; just tighten the gap and
-     side padding so all three fit and stay centered. Team names already
-     ellipsize. */
+  /* Podium — keep the 3-up 2·1·3 row (not stacked). The grid tracks are
+     minmax(0, 165px), so they shrink to share the narrower modal width;
+     just tighten the gap and side padding so all three fit and stay
+     centered. Team names already ellipsize. */
   .adv-lb-podium {
-    gap: 6px;
+    column-gap: 6px;
     padding: 18px 6px 4px;
   }
   .adv-lb-podium-team {

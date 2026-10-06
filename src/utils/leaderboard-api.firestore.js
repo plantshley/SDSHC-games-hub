@@ -536,18 +536,19 @@ export async function getEventById(id) {
  * is created "scheduled"; otherwise it opens immediately. `options.endsAt`
  * overrides the default 24h window (a multi-day event needs this, or it would
  * age out overnight). `options.session` names a session (e.g. "Morning");
- * sessions sharing an event name and start date roll up into one Day
+ * sessions created together share `options.dayId` and roll up into one Day
  * leaderboard (see eventDayKey in leaderboard-shared.js).
  */
 export async function startEvent(name, options = {}) {
   const cleaned = String(name || '').trim() || 'Untitled Event'
-  const { scheduledStart = null, endsAt = null, session = null } = options
+  const { scheduledStart = null, endsAt = null, session = null, dayId = null } = options
   const now = Date.now()
   const id = genId()
   const startedAt = scheduledStart || now
   const event = {
     name: cleaned,
     session: String(session || '').trim() || null,
+    dayId: dayId || null,
     startedAt,
     scheduledStart: scheduledStart || null,
     endedAt: null,

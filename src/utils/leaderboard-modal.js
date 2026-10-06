@@ -327,19 +327,21 @@ function renderBars(rows, kind) {
   `
 }
 
-// Top-3 podium. Visual order 2 · 1 · 3, with first place tallest.
+// Top-3 podium. Visual order 2 · 1 · 3, with first place tallest. A grid row
+// holds every card so they share one height (a card without a school line
+// would otherwise sit lower); the CSS drops each place to its base height.
 function renderPodium(rows, kind) {
   const top = rows.slice(0, 3)
   const order = top.length === 1 ? [0] : top.length === 2 ? [1, 0] : [1, 0, 2]
   return `
-    <div class="adv-lb-podium">
-      ${order.map(idx => {
+    <div class="adv-lb-podium" style="grid-template-columns: repeat(${order.length}, minmax(0, 165px))">
+      ${order.map((idx, col) => {
         const r = top[idx]
         if (!r) return ''
         // Tied rows share a place, so the label and height follow the rank.
         const place = Math.min(r.rank, 3)
         return `
-          <div class="adv-lb-podium-col adv-lb-podium-${place}" style="--team-c1: ${r.color1}; --team-c2: ${r.color2}">
+          <div class="adv-lb-podium-col adv-lb-podium-${place}" style="--team-c1: ${r.color1}; --team-c2: ${r.color2}; --podium-col: ${col + 1}">
             <div class="adv-lb-podium-card">
               <span class="adv-lb-podium-team">${escapeHtml(r.name)}</span>
               ${kind === 'team' && r.schoolName ? `<span class="adv-lb-podium-school">${escapeHtml(r.schoolName)}</span>` : ''}

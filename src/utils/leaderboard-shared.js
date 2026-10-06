@@ -120,14 +120,15 @@ export function resolveTeamIdentity({ name, teams = [], schools = [], schoolId =
 }
 
 /**
- * Which Day a session belongs to: its normalized event name plus the local
- * calendar date it starts. The date keeps a yearly event that reuses its name
- * from merging with last year's. The scheduled date wins over the actual one,
- * so opening a session early ("Open now") doesn't move it to another Day.
- * Null for an event with no session.
+ * Which Day a session belongs to. Sessions made in one "Create sessions" share
+ * a `dayId`, so their start dates, "Open now", and Starts edits never split
+ * them. Older sessions without one fall back to the normalized event name plus
+ * the local calendar date they start (scheduled date first). Null for an event
+ * with no session.
  */
 export function eventDayKey(ev) {
   if (!ev || !String(ev.session || '').trim()) return null
+  if (ev.dayId) return `id|${ev.dayId}`
   const start = typeof ev.scheduledStart === 'number' ? ev.scheduledStart : ev.startedAt
   if (typeof start !== 'number') return null
   const d = new Date(start)

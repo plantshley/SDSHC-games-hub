@@ -244,8 +244,8 @@ export function createAdvancedAdminScreen() {
       </div>
       <p class="adv-admin-create-error" role="alert"></p>
       <p class="adv-admin-hint">
-        Sessions with the same event name on the same day share a Day leaderboard. Leave
-        Starts blank to open a session now. A blank Ends closes a session when the next one starts.
+        Events with split sessions will have three leaderboards: one for the session, one for the overall event that
+        combines the sessions, and the All-Time board.
       </p>
     `
   }
@@ -418,12 +418,17 @@ export function createAdvancedAdminScreen() {
     // With several sessions opening now, leave the pointer alone: devices
     // then ask players which one they're at.
     const soleNow = parsed.filter(p => p.startsNow).length === 1
+    // Sessions created together form one Day, whatever their start dates.
+    const dayId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
     try {
       for (const p of parsed) {
         const ev = await startEvent(name, {
           scheduledStart: p.startsNow ? null : p.start,
           endsAt: p.end,
           session: p.session,
+          dayId,
         })
         // Point this device at a session that opens now right away, so a
         // later failure can't leave it running with no device pointed at it.
