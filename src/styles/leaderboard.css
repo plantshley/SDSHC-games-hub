@@ -295,7 +295,7 @@
 
 .adv-pm-sub {
   font-family: var(--font-body), monospace;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--adv-text);
   margin: 0;
 }
