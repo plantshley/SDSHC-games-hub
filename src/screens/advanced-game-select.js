@@ -5,6 +5,7 @@
  */
 
 import { navigateRaw, navigate } from '../router.js'
+import { toCss } from '../utils/app-zoom.js'
 import { getAllAdvancedGames } from '../data/advanced-game-registry.js'
 import { onTap } from '../utils/tap.js'
 import { addGradientBackground } from '../utils/gradient-bg.js'
@@ -120,7 +121,7 @@ export function createAdvancedGameSelectScreen() {
       card.classList.add('tapped')
       const rect = card.getBoundingClientRect()
       const screenRect = screen.getBoundingClientRect()
-      spawnBurstParticles(screen, rect.left - screenRect.left + rect.width / 2, rect.top - screenRect.top + rect.height / 2)
+      spawnBurstParticles(screen, toCss(rect.left - screenRect.left + rect.width / 2), toCss(rect.top - screenRect.top + rect.height / 2))
       const gameId = card.dataset.game
       setTimeout(() => {
         navigate(`game/${gameId}/0`)

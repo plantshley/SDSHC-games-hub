@@ -2,6 +2,7 @@ import { navigate } from '../router.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/planting-sim.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
 import { onTap } from '../utils/tap.js'
+import { toCss } from '../utils/app-zoom.js'
 
 /**
  * Planting Simulation Game
@@ -196,16 +197,16 @@ function createThreeSisters(level, levelIdx) {
       dragging = true
       clone = item.querySelector('img').cloneNode()
       clone.className = 'ps-drag-clone'
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
       document.body.appendChild(clone)
       item.setPointerCapture(e.pointerId)
     })
 
     item.addEventListener('pointermove', (e) => {
       if (!dragging || !clone) return
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
     })
 
     item.addEventListener('pointerup', (e) => {
@@ -381,8 +382,8 @@ function createPollinatorGarden(level, levelIdx) {
       if (srcImg) {
         clone.appendChild(srcImg.cloneNode())
       }
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
       document.body.appendChild(clone)
       placedEl.style.opacity = '0.35'
       placedEl.setPointerCapture(e.pointerId)
@@ -390,8 +391,8 @@ function createPollinatorGarden(level, levelIdx) {
 
     placedEl.addEventListener('pointermove', (e) => {
       if (!dragging || !clone) return
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
     })
 
     placedEl.addEventListener('pointerup', (e) => {
@@ -424,16 +425,16 @@ function createPollinatorGarden(level, levelIdx) {
       img.src = itemData.asset
       img.draggable = false
       clone.appendChild(img)
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
       document.body.appendChild(clone)
       item.setPointerCapture(e.pointerId)
     })
 
     item.addEventListener('pointermove', (e) => {
       if (!dragging || !clone) return
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
     })
 
     item.addEventListener('pointerup', (e) => {
@@ -720,16 +721,16 @@ function createYearInBloom(level, levelIdx) {
       img.src = flowerData.asset
       img.draggable = false
       clone.appendChild(img)
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
       document.body.appendChild(clone)
       item.setPointerCapture(e.pointerId)
     })
 
     item.addEventListener('pointermove', (e) => {
       if (!dragging || !clone) return
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
     })
 
     item.addEventListener('pointerup', (e) => {

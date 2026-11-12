@@ -16,7 +16,7 @@ Educational game hub for South Dakota Soil Health Coalition (SDSHC) events. Runs
 - **No external API calls for gameplay** — everything game-related runs offline. Sole exception: Google Analytics 4 telemetry (fire-and-forget, fails silently when blocked/offline; see [src/utils/analytics.js](src/utils/analytics.js), measurement ID `G-P08D60FD2Y`).
 - **All assets local** — fonts bundled, no CDN
 - **Touch-first** — no hover-only interactions, all targets minimum 44px. Glow/hover effects must also trigger on tap.
-- **Primary target display** — 1920×1080 kiosk, no scrolling, no overflow at that size. Smaller viewports (laptops, tablets, phones) are supported via responsive overrides; see the Responsive Layout section. Kiosk view is preserved by construction — every responsive rule sits inside `@media (max-width: …)` blocks.
+- **Design size** — layouts are tuned at **1536×738 CSS px** (a 1920×1080 laptop at 125% Windows scaling, browser window with toolbars) and must not scroll or overflow at that size. The kiosk runs Windows at 125%, so it is 1536×864. Bigger viewports (e.g. a 1920 monitor at 100%) are zoomed up to the design size by [app-zoom.js](src/utils/app-zoom.js); smaller ones use responsive overrides. See the Responsive Layout section.
 - **Kid Mode auto-reset** — 120s idle returns to intro screen, 10s warning at 110s
 - **Advanced Mode auto-reset** — 600s (10 min) idle returns to intro screen
 - **Admin panel disables idle timer** — `#advanced/admin` keeps the timer off so an admin typing/picking colors isn't kicked back to intro mid-task
@@ -131,6 +131,7 @@ src/
     game-helpers.js      # shuffleArray + transitionTo, shared by advanced games
     analytics.js         # GA4 wrapper (trackEvent + named helpers); fails silently
     narrow-gate.js       # CSS-driven "screen too narrow" overlay mounted by game screens
+    app-zoom.js          # zooms <body> on viewports bigger than the 1536×738 design size; toCss/cssRect helpers
     leaderboard-api.js   # leaderboard data layer (Promise-returning; localStorage today, Firestore-ready)
     leaderboard-modal.js # createLeaderboardButton() trophy + modal with tabs
     team-input.js        # shared player+team input rows for advanced game intros
@@ -383,9 +384,28 @@ Every advanced game's intro renders player rows via `team-input.js`. In team mod
 
 Hub was originally kiosk-only; Advanced Mode now needs to work on classroom laptops, tablets, and landscape phones too. Full design in [.claude/plans/jaunty-bouncing-sparrow.md](../../.claude/plans/jaunty-bouncing-sparrow.md). 
 
-### Kiosk safety rule
+### Design size and app zoom
 
-Every responsive rule lives inside a `@media (max-width: …)` block. At 1920×1080 nothing in any media query fires, so the kiosk view is pixel-identical to pre-responsive. **Never** add unconditional rules that change a kiosk-visible style; if you do, append a media-query override instead of mutating the base rule.
+**The design size is 1536×738.** Check every layout change at that size (Firefox: F12, Ctrl+Shift+M, set 1536 × 738). That is what the kiosk (Windows at 125%) and a 125% laptop show, and what bigger screens get scaled to.
+
+**Bigger screens are zoomed, not re-laid-out.** [src/utils/app-zoom.js](src/utils/app-zoom.js) sets CSS `zoom` on `<body>`:
+
+```
+zoom = max(1, min(innerWidth / 1536, innerHeight / 738))
+```
+
+A 1920×1080 monitor at 100% gets zoom 1.25 and lays out at 1536×864, the same as the kiosk, drawn 1.25× larger. The height term stops short or ultrawide windows from squeezing the layout below 738px tall. At or below the design size, zoom is 1 and nothing changes.
+
+**This replaces the old kiosk safety rule** ("never change base styles; only add `@media (max-width: …)` overrides"). That rule kept the 1920×1080 base layout pixel-identical for a kiosk running at 100%. The kiosk now runs at 125%, and zoom gives 1920 monitors the same layout, so no device shows the base-only 1920 layout anymore. Base styles and the "below 1920" overrides can both be edited freely; what matters is how the result looks at the design size. Phones and tablets keep their `max-width` override blocks as before.
+
+**CSS rules that follow from the zoom:**
+- `<body>` is a size container named `viewport` (base.css). Use `cqw` / `cqh` / `cqmin` / `cqmax` instead of `vw` / `vh` / `vmin` / `vmax`: a zoomed element multiplies viewport units, so `100vh` would overflow by the zoom factor. At zoom 1 the container units equal the viewport units.
+- Blocks that must see the zoomed width use `@container viewport (…)`, not `@media`. Today that is every `max-width: 1919px` block. `@media` width queries see the real window, so they are only safe for thresholds at or below 1279px, where zoom is always 1.
+- Don't style `<body>` or `#app` with viewport units; body is pinned with `position: fixed; inset: 0` and #app fills it.
+
+**JS rules that follow from the zoom.** Event `clientX` / `clientY`, `getBoundingClientRect()`, and `innerWidth` / `innerHeight` are screen px. `style.left` / `top` / `width`, `offsetWidth`, `clientWidth`, and `ResizeObserver` sizes are CSS px (screen px ÷ zoom). Convert with `toCss()`, `cssRect()`, or `cssViewport()` from app-zoom.js whenever a screen-px number is written into a style or mixed with a CSS-px number. Ratios (`canvas.width / rect.width`, percentages) need no conversion. Overlays appended to `document.body` are inside the zoom, so they scale automatically.
+
+Firefox has supported CSS `zoom` since version 126; on older browsers app-zoom.js stays at 1.
 
 ### Breakpoints
 
@@ -427,11 +447,11 @@ The orientation-aware split is `@media (max-width: 899px) and (orientation: port
 
 ### Canvas-based games
 
-Canvas dimensions can't be media-query'd. Use a `ResizeObserver` on the canvas's container and recompute on resize. [src/games/advanced/spin-wheel.js](src/games/advanced/spin-wheel.js) is the reference: `applyCanvasSize(size)` floors at 220, caps at 700, and `drawWheel()` is called from the observer. The `WHEEL_CSS_SIZE = 420` default keeps the kiosk render identical until the observer fires.
+Canvas dimensions can't be media-query'd. Use a `ResizeObserver` on the canvas's container and recompute on resize. [src/games/advanced/spin-wheel.js](src/games/advanced/spin-wheel.js) is the reference: `applyCanvasSize(size)` floors at 220, caps at 700, and `drawWheel()` is called from the observer. The `WHEEL_CSS_SIZE = 420` default keeps the kiosk render identical until the observer fires. Size canvas buffers with `devicePixelRatio * getZoom()` so they stay sharp when body is zoomed.
 
 ### CSS organization
 
-Media-query blocks live at the **bottom** of the existing CSS file that owns the affected styles (matches the precedent in [leaderboard.css](src/styles/leaderboard.css)). Easy to audit kiosk-safety by checking nothing outside `@media` blocks changed.
+Media-query and container-query blocks live at the **bottom** of the existing CSS file that owns the affected styles (matches the precedent in [leaderboard.css](src/styles/leaderboard.css)).
 
 ## Asset References
 

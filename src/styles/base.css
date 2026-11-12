@@ -108,6 +108,19 @@ body {
   color: var(--color-text);
   background: #1a1a2e;
   image-rendering: pixelated;
+  /* Body is the zoom root and the "viewport" for all layout (see
+     src/utils/app-zoom.js). Pinned to the window box rather than sized with
+     100vw/100vh, because a zoomed element multiplies its own viewport units.
+     As a size container it gives descendants `cqw`/`cqh` units and
+     `@container viewport (…)` queries that measure the zoomed layout size;
+     its layout containment also makes it the containing block for
+     `position: fixed` descendants, which is the same box as the window. */
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  container-type: size;
+  container-name: viewport;
 }
 
 img {
@@ -127,8 +140,8 @@ button {
 
 /* === APP CONTAINER === */
 #app {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   position: relative;
   overflow: hidden;
 }
@@ -285,8 +298,11 @@ button {
      to scroll into — content is simply cut off and unreachable. `100dvh`
      tracks the currently-visible area, so screens fit (or overflow-scroll)
      correctly in-browser. In the installed PWA / kiosk there's no dynamic
-     chrome, so `dvh == vh` and nothing changes. */
-  #app {
+     chrome, so `dvh == vh` and nothing changes. Set on body (which #app
+     fills) because body is the pinned zoom root; zoom is always 1 at this
+     width, so body's own `dvh` is the real dynamic viewport. */
+  body {
+    bottom: auto;
     height: 100dvh;
   }
   .screen {
@@ -324,7 +340,7 @@ button {
    block and demotes fixed → absolute, breaking the fixed-topbar pinning on
    laptops between 1280–1919px. Animations still fire correctly — will-change
    is just a GPU-layer hint, not a requirement for the transform to apply. */
-@media (max-width: 1919px) {
+@container viewport (max-width: 1919px) {
   .screen {
     will-change: opacity;
   }

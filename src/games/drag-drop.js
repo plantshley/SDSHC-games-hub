@@ -2,6 +2,7 @@ import { navigate } from '../router.js'
 import { onTap } from '../utils/tap.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/drag-drop.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { toCss } from '../utils/app-zoom.js'
 
 /**
  * Game 8: Drag & Drop Match — Meadow Makers
@@ -22,6 +23,7 @@ const LEVEL_ICONS = [
 
 // ─── PARTICLES ───
 
+// x, y: offsets inside `container` in screen px (from getBoundingClientRect)
 function spawnParticles(container, x, y, count = 12) {
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div')
@@ -31,8 +33,8 @@ function spawnParticles(container, x, y, count = 12) {
     p.style.setProperty('--dx', Math.cos(angle) * dist + 'px')
     p.style.setProperty('--dy', Math.sin(angle) * dist + 'px')
     p.style.backgroundColor = `hsl(${Math.round(Math.random() * 60 + 290)} 70% 65%)`
-    p.style.left = x + 'px'
-    p.style.top = y + 'px'
+    p.style.left = toCss(x) + 'px'
+    p.style.top = toCss(y) + 'px'
     container.appendChild(p)
     p.addEventListener('animationend', () => p.remove())
   }
@@ -264,16 +266,16 @@ function createWordToImageScreen(level, levelIdx) {
       clone = document.createElement('div')
       clone.className = 'dd-drag-clone'
       clone.textContent = wordEl.querySelector('.dd-word-label').textContent
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
       document.body.appendChild(clone)
       wordEl.setPointerCapture(e.pointerId)
     })
 
     wordEl.addEventListener('pointermove', (e) => {
       if (!dragging || !clone) return
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
     })
 
     function cleanupDrag() {
@@ -482,16 +484,16 @@ function createWordToPositionScreen(level, levelIdx) {
       clone = document.createElement('div')
       clone.className = 'dd-drag-clone'
       clone.textContent = wordEl.querySelector('.dd-word-label').textContent
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
       document.body.appendChild(clone)
       wordEl.setPointerCapture(e.pointerId)
     })
 
     wordEl.addEventListener('pointermove', (e) => {
       if (!dragging || !clone) return
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
     })
 
     function cleanupDrag() {

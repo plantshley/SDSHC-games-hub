@@ -5,6 +5,7 @@ import {
   PLAYER_NAMES, PLAYER_COLORS, INSTRUCTIONS,
 } from '../data/content/spin-wheel.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { toCss, getZoom } from '../utils/app-zoom.js'
 
 /**
  * Spin the Soil Wheel
@@ -276,7 +277,8 @@ function createGameplayScreen(players) {
 
   // ── Canvas DPR scaling for crisp rendering ──
   const WHEEL_CSS_SIZE = 420
-  const dpr = window.devicePixelRatio || 1
+  // × zoom so the buffer matches screen pixels when body is zoomed (app-zoom.js)
+  const dpr = (window.devicePixelRatio || 1) * getZoom()
   canvas.width = WHEEL_CSS_SIZE * dpr
   canvas.height = WHEEL_CSS_SIZE * dpr
   canvas.style.width = WHEEL_CSS_SIZE + 'px'
@@ -650,7 +652,7 @@ function createGameplayScreen(players) {
       const panelRect = canvasPanel.getBoundingClientRect()
       const cx = rect.left - panelRect.left + rect.width / 2
       const cy = rect.top - panelRect.top + rect.height / 2
-      spawnWinParticles(cx, cy)
+      spawnWinParticles(toCss(cx), toCss(cy))
     }
 
     // Delay then show completion

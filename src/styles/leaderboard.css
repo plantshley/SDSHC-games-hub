@@ -72,8 +72,8 @@
 }
 
 .adv-lb-card {
-  width: min(720px, 92vw);
-  max-height: 80vh;
+  width: min(720px, 92cqw);
+  max-height: 80cqh;
   display: flex;
   flex-direction: column;
   background: var(--adv-surface);
@@ -418,12 +418,12 @@
   border: 1px solid var(--adv-border);
   border-radius: 20px;
   box-shadow: 0 0 30px var(--adv-glow);
-  width: min(640px, 90vw);
+  width: min(640px, 90cqw);
   /* Header pins to the top; auto block margins center the card below it. */
   margin: auto 0;
   /* Never exceed the viewport (header + screen padding allowance) — the team
      list inside flexes and scrolls instead of the card overflowing the screen. */
-  max-height: calc(100vh - 220px);
+  max-height: calc(100cqh - 220px);
   min-height: 0;
   overflow: hidden;
 }
@@ -1067,7 +1067,7 @@
   /* Wide enough that a row's name + Event/Statewide pills + action buttons all
      sit on one line instead of the pills wrapping below. */
   width: min(750px, 100%);
-  max-height: min(80vh, 640px);
+  max-height: min(80cqh, 640px);
   padding: 24px 24px 20px;
   background: var(--adv-surface);
   border: 1px solid var(--adv-border);
@@ -1663,7 +1663,7 @@
   /* Size to the picker's intrinsic width (two swatch rows + preview) so the
      swatches never run off the card; capped to the viewport on small screens. */
   width: fit-content;
-  max-width: 94vw;
+  max-width: 94cqw;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -2081,7 +2081,7 @@
        which assumed swatches don't wrap. On phones we let swatches wrap, so
        size the card to the available width instead. */
     width: 100%;
-    max-width: 94vw;
+    max-width: 94cqw;
     box-sizing: border-box;
   }
 
@@ -2529,7 +2529,7 @@
 
 /* Rename dialog (shares the color popover's overlay and card). */
 .adv-rename-card {
-  width: min(420px, 94vw);
+  width: min(420px, 94cqw);
 }
 
 .adv-rename-input {
@@ -2621,7 +2621,7 @@
   }
   .adv-roster-card {
     padding: 24px 20px;
-    width: min(640px, 96vw);
+    width: min(640px, 96cqw);
   }
   .adv-roster-add {
     flex-direction: column;
@@ -2695,7 +2695,7 @@
    internally so the admin footer link is reachable. */
 @media (max-height: 500px) {
   .adv-lb-card {
-    max-height: 94vh;
+    max-height: 94cqh;
   }
   .adv-lb-body {
     max-height: none;
@@ -2737,7 +2737,7 @@
     gap: 10px;
   }
   .adv-roster-card {
-    max-height: calc(100vh - 56px);
+    max-height: calc(100cqh - 56px);
     padding: 12px 16px;
     gap: 6px;
     overflow-y: auto;
@@ -2803,8 +2803,8 @@
 @media (max-width: 599px) {
   .adv-lb-card {
     padding: 18px 14px;
-    width: min(94vw, 620px);
-    max-height: 92vh;
+    width: min(94cqw, 620px);
+    max-height: 92cqh;
   }
   .adv-lb-title {
     font-size: 1.1rem;
@@ -2825,7 +2825,7 @@
   }
   .adv-pm-card {
     padding: 22px 16px;
-    width: min(94vw, 480px);
+    width: min(94cqw, 480px);
   }
   .adv-pm-heading {
     font-size: 1.15rem;
@@ -2853,7 +2853,7 @@
    header so section cards don't show through as they scroll under it. Scoped
    to ≤1919 so the 1920px kiosk view is untouched. The matching horizontal
    pad values mirror .adv-game-select .adv-header: 20 / 16 / 14. */
-@media (max-width: 1919px) {
+@container viewport (max-width: 1919px) {
   .adv-admin {
     padding: 0 20px 80px;
   }
@@ -2883,7 +2883,7 @@
    stretch is essential — the containers are align-items: center, which would
    otherwise size the header to its content and break space-between. Kiosk
    (1920) is untouched. */
-@media (max-width: 1919px) {
+@container viewport (max-width: 1919px) {
   .adv-play-mode .adv-header,
   .adv-roster .adv-header {
     position: static;
@@ -2933,7 +2933,7 @@
    cascade. (Uses min-aspect-ratio rather than `orientation: landscape` because
    the orientation media feature is unreliable in dev tooling / some browsers —
    aspect-ratio tracks the real viewport width/height.) */
-@media (min-aspect-ratio: 1/1) and (max-width: 1919px) {
+@container viewport (min-aspect-ratio: 1/1) and (max-width: 1919px) {
   .adv-play-mode .adv-header,
   .adv-roster .adv-header {
     position: fixed;
@@ -2986,7 +2986,7 @@
    `orientation: portrait`) because the orientation media feature is unreliable in
    dev tooling / some browsers; aspect-ratio tracks the real viewport. Kiosk
    (1920×1080, ratio > 1) is excluded by min-aspect-ratio not matching here. */
-@media (max-aspect-ratio: 1/1) and (max-width: 1919px) {
+@container viewport (max-aspect-ratio: 1/1) and (max-width: 1919px) {
   .adv-play-mode,
   .adv-roster {
     justify-content: flex-start;  /* header stays pinned to the top */

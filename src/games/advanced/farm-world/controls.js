@@ -10,6 +10,8 @@
  * player is actively using wins.
  */
 
+import { toCss } from '../../../utils/app-zoom.js'
+
 /**
  * Build the joystick element. Caller appends `el` to the HUD; pointer events
  * are self-contained (capture on the base). Writes into `state`.
@@ -42,7 +44,8 @@ export function createJoystick(state) {
       dx = (dx / d) * maxR
       dy = (dy / d) * maxR
     }
-    thumb.style.transform = `translate(${dx}px, ${dy}px)`
+    // dx/dy are screen px; the transform is CSS px (see app-zoom.js)
+    thumb.style.transform = `translate(${toCss(dx)}px, ${toCss(dy)}px)`
     state.x = dx / maxR
     state.y = dy / maxR
   }

@@ -301,21 +301,21 @@
 
 @keyframes walkRight {
   from { transform: translateX(-150px); }
-  to { transform: translateX(calc(100vw + 150px)); }
+  to { transform: translateX(calc(100cqw + 150px)); }
 }
 
 @keyframes walkRightFlipped {
   from { transform: translateX(-150px) scaleX(-1); }
-  to { transform: translateX(calc(100vw + 150px)) scaleX(-1); }
+  to { transform: translateX(calc(100cqw + 150px)) scaleX(-1); }
 }
 
 @keyframes walkLeft {
-  from { transform: translateX(calc(100vw + 150px)); }
+  from { transform: translateX(calc(100cqw + 150px)); }
   to { transform: translateX(-150px); }
 }
 
 @keyframes walkLeftFlipped {
-  from { transform: translateX(calc(100vw + 150px)) scaleX(-1); }
+  from { transform: translateX(calc(100cqw + 150px)) scaleX(-1); }
   to { transform: translateX(-150px) scaleX(-1); }
 }
 
@@ -686,10 +686,10 @@
 /* ─── Laptop / tablet landscape ─── */
 @media (max-width: 1279px) {
   .splash-title {
-    font-size: clamp(2.5rem, 8vw, 96px);
+    font-size: clamp(2.5rem, 8cqw, 96px);
   }
   .splash-subtitle {
-    font-size: clamp(1.2rem, 3vw, 36px);
+    font-size: clamp(1.2rem, 3cqw, 36px);
   }
   .grade-content {
     margin-bottom: 120px;
@@ -733,7 +733,7 @@
     gap: 16px;
   }
   .game-select-title {
-    font-size: clamp(1.4rem, 5vw, 40px);
+    font-size: clamp(1.4rem, 5cqw, 40px);
     /* Hard nowrap + ellipsis so the typing animation always advances on a
        single row instead of wrapping mid-type and then snapping back. */
     min-width: 0;
@@ -752,7 +752,7 @@
    (no transform containing-block trap). Without this, the absolute-inset
    bg sticks to the element box but the element box scrolls, revealing the
    dark page color below. */
-@media (max-width: 1919px) {
+@container viewport (max-width: 1919px) {
   .splash-bg {
     position: fixed;
   }
@@ -819,7 +819,7 @@
     height: 44px;
   }
   .game-select-title {
-    font-size: clamp(1.4rem, 8vw, 2rem);
+    font-size: clamp(1.4rem, 8cqw, 2rem);
   }
 }
 
@@ -830,10 +830,10 @@
     padding: 24px 16px;
   }
   .splash-title {
-    font-size: clamp(2rem, 9vw, 4rem);
+    font-size: clamp(2rem, 9cqw, 4rem);
   }
   .splash-subtitle {
-    font-size: clamp(1rem, 4vw, 1.6rem);
+    font-size: clamp(1rem, 4cqw, 1.6rem);
   }
   .grade-content {
     margin-bottom: 60px;
@@ -855,7 +855,7 @@
     gap: 16px;
   }
   .tier-btn {
-    width: min(320px, 90vw);
+    width: min(320px, 90cqw);
   }
   .tier-btn-inner {
     padding: 18px 16px 14px;
@@ -979,7 +979,7 @@
   .speech-bubble {
     bottom: 160px;
     padding: 12px 18px;
-    max-width: 86vw;
+    max-width: 86cqw;
     white-space: normal;
     text-align: center;
   }
@@ -990,7 +990,7 @@
     margin-bottom: 200px;
   }
   .splash-title {
-    font-size: clamp(1.8rem, 10vw, 3rem);
+    font-size: clamp(1.8rem, 10cqw, 3rem);
   }
 }
 
@@ -1079,7 +1079,7 @@
    the bottom. When the content is taller than the viewport, auto margins
    collapse to 0 and the screen scrolls from the top as before. Phones and
    landscape phones keep their own layouts. */
-@media (min-width: 600px) and (max-width: 1919px) and (min-height: 501px) {
+@container viewport (min-width: 600px) and (max-width: 1919px) and (min-height: 501px) {
   .grade-screen {
     justify-content: flex-start !important;
   }

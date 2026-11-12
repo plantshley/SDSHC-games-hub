@@ -4,6 +4,7 @@
  */
 
 import { navigateRaw } from '../router.js'
+import { toCss } from '../utils/app-zoom.js'
 import { trackModeSelect } from '../utils/analytics.js'
 
 const PARTICLE_COUNT = 80
@@ -169,7 +170,7 @@ export function createIntroScreen() {
 
       // Particle burst at tap position
       const rect = screen.getBoundingClientRect()
-      spawnBurstParticles(screen, e.clientX - rect.left, e.clientY - rect.top)
+      spawnBurstParticles(screen, toCss(e.clientX - rect.left), toCss(e.clientY - rect.top))
 
       // Navigate after a brief delay for the burst effect
       const mode = btn.dataset.mode

@@ -7,6 +7,8 @@ import './styles/theme.css'
 import './styles/advanced.css'
 import './styles/leaderboard.css'
 
+import { initAppZoom } from './utils/app-zoom.js'
+
 import { initRouter, onRoute, navigate, navigateRaw } from './router.js'
 import { initIdleTimer, clearProgress, setIdleTimeout, disableIdleTimer, enableIdleTimer } from './idle-timer.js'
 import { trackIdleTimeout, trackGameStart } from './utils/analytics.js'
@@ -32,6 +34,9 @@ import { getActiveEventId, setActiveEventId, listEventsWithSource } from './util
 import { chooseEvent, effectivelyOpen } from './utils/event-status.js'
 import { warmOfflineCache, isWarmedForBuild } from './utils/offline-warmup.js'
 import { USE_FIRESTORE } from './firebase/config.js'
+
+// Before any screen renders, so the first paint is already at the right size.
+initAppZoom()
 
 const app = document.getElementById('app')
 let currentScreen = null

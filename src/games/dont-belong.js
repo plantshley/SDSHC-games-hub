@@ -2,6 +2,7 @@ import { navigate } from '../router.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/dont-belong.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
 import { onTap } from '../utils/tap.js'
+import { toCss } from '../utils/app-zoom.js'
 
 /**
  * Game 3: Things That Don't Belong — Little Sprouts
@@ -227,7 +228,7 @@ function createGameplayScreen(levelIdx) {
         // Particles from the correct card
         const cr = card.getBoundingClientRect()
         const pr = canvasPanel.getBoundingClientRect()
-        spawnParticles(canvasPanel, cr.left - pr.left + cr.width / 2, cr.top - pr.top + cr.height / 2, 15)
+        spawnParticles(canvasPanel, toCss(cr.left - pr.left + cr.width / 2), toCss(cr.top - pr.top + cr.height / 2), 15)
 
         // Show category reveal
         revealText.textContent = level.categoryReveal

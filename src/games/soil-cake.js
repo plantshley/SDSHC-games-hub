@@ -2,6 +2,7 @@ import { navigate } from '../router.js'
 import { HORIZONS, INSTRUCTIONS } from '../data/content/soil-cake.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
 import { onTap } from '../utils/tap.js'
+import { toCss, cssRect } from '../utils/app-zoom.js'
 
 /**
  * Soil Cake Game
@@ -227,7 +228,7 @@ function initCake(container) {
     // reserved space shrinks on small screens — the fixed kiosk reserves
     // (175/150) ate almost the whole panel on mobile, leaving a tiny cake.
     const panel = container.querySelector('.sc-canvas-panel')
-    const pr = panel.getBoundingClientRect()
+    const pr = cssRect(panel) // CSS px: the cake size below is a CSS size
     const small = window.matchMedia('(max-width: 899px)').matches
     const reserveW = small ? 64 : 175 // room for layer labels on left
     const reserveH = small ? 56 : 150 // room for overlay at bottom
@@ -364,16 +365,16 @@ function initDecorations(container) {
       clone = document.createElement('div')
       clone.className = 'sc-drag-clone'
       clone.textContent = item.dataset.emoji
-      clone.style.left = (t.clientX - ox) + 'px'
-      clone.style.top = (t.clientY - oy) + 'px'
+      clone.style.left = toCss(t.clientX - ox) + 'px'
+      clone.style.top = toCss(t.clientY - oy) + 'px'
       document.body.appendChild(clone)
       item.setPointerCapture(e.pointerId)
     })
 
     item.addEventListener('pointermove', (e) => {
       if (!dragging || !clone) return
-      clone.style.left = (e.clientX - ox) + 'px'
-      clone.style.top = (e.clientY - oy) + 'px'
+      clone.style.left = toCss(e.clientX - ox) + 'px'
+      clone.style.top = toCss(e.clientY - oy) + 'px'
     })
 
     item.addEventListener('pointerup', (e) => {
@@ -390,8 +391,8 @@ function initDecorations(container) {
         const em = document.createElement('span')
         em.className = 'sc-placed-deco'
         em.textContent = item.dataset.emoji
-        em.style.left = (e.clientX - cr.left) + 'px'
-        em.style.top = (e.clientY - cr.top) + 'px'
+        em.style.left = toCss(e.clientX - cr.left) + 'px'
+        em.style.top = toCss(e.clientY - cr.top) + 'px'
         dropped.appendChild(em)
         makePlacedDecoDraggable(em)
       }
@@ -417,8 +418,8 @@ function makePlacedDecoDraggable(el) {
 
   el.addEventListener('pointermove', (e) => {
     if (!dragging) return
-    el.style.left = (origX + e.clientX - startX) + 'px'
-    el.style.top = (origY + e.clientY - startY) + 'px'
+    el.style.left = (origX + toCss(e.clientX - startX)) + 'px'
+    el.style.top = (origY + toCss(e.clientY - startY)) + 'px'
   })
 
   el.addEventListener('pointerup', (e) => {

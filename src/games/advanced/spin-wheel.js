@@ -6,6 +6,7 @@
 
 import { navigate } from '../../router.js'
 import { onTap } from '../../utils/tap.js'
+import { toCss, getZoom } from '../../utils/app-zoom.js'
 import {
   CATEGORIES, WHEEL_SLICES, WIN_THRESHOLD,
   PLAYER_COLORS, INSTRUCTIONS, IMPACT_MESSAGES, RULES,
@@ -245,9 +246,12 @@ function createGameplayScreen(players) {
   // wheel area and redraw whenever the area resizes (orientation change,
   // sidebar collapse, etc).
   let WHEEL_CSS_SIZE = 420
-  const dpr = window.devicePixelRatio || 1
+  let dpr = 1
 
   function applyCanvasSize(size) {
+    // × zoom so the buffer matches screen pixels when body is zoomed
+    // (app-zoom.js). Read on every resize so a zoom change takes effect.
+    dpr = (window.devicePixelRatio || 1) * getZoom()
     // Floor 220, cap 700. The kiosk wheel-area has no explicit width override
     // (the responsive width:100% rule only fires ≤899px), so the area
     // content-sizes to the canvas itself on kiosk — meaning the observed
@@ -999,7 +1003,7 @@ function createGameplayScreen(players) {
     if (state.phase !== 'ready') return
     const rect = el.querySelector('.adv-sw-wheel-wrap').getBoundingClientRect()
     const elRect = el.getBoundingClientRect()
-    spawnBurstParticles(el, rect.left - elRect.left + rect.width / 2, rect.top - elRect.top + rect.height / 2)
+    spawnBurstParticles(el, toCss(rect.left - elRect.left + rect.width / 2), toCss(rect.top - elRect.top + rect.height / 2))
     spinWheel()
   })
 

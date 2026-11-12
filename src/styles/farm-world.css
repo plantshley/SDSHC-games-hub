@@ -491,7 +491,7 @@
   position: relative;
   width: 100%;
   max-width: 620px;
-  max-height: 86vh;
+  max-height: 86cqh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -819,7 +819,7 @@
    only tappable part). Lift the meter above the topbar so the whole card stays
    tappable. At exactly 1920 (kiosk) this never fires: the topbar keeps
    pointer-events:none there, so the whole card already works and z-index stays 5. */
-@media (max-width: 1919px) {
+@container viewport (max-width: 1919px) {
   .adv-fw-meter {
     z-index: 101;
   }

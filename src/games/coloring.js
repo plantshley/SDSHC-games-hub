@@ -2,6 +2,7 @@ import { navigate } from '../router.js'
 import { PAGES, PALETTE, DECORATIONS, INSTRUCTIONS } from '../data/content/coloring.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
 import { onTap } from '../utils/tap.js'
+import { getZoom, toCss } from '../utils/app-zoom.js'
 
 /**
  * Soil Critter Coloring Game
@@ -415,8 +416,9 @@ function loadPage(container, pageIndex) {
     if (!container.parentNode) return // screen was navigated away
     const panel = container.querySelector('.cc-canvas-panel')
     const pr = panel.getBoundingClientRect()
-    const maxW = pr.width - 40
-    const maxH = pr.height - 90
+    // pr is in screen px; the display size below is a CSS size (see app-zoom.js)
+    const maxW = pr.width / getZoom() - 40
+    const maxH = pr.height / getZoom() - 90
 
     // Internal canvas at native res (capped at 2000px)
     const natW = img.naturalWidth, natH = img.naturalHeight
@@ -642,7 +644,7 @@ function initFillMode(container) {
     const did = floodFill(ctx, x, y, selectedColor)
     if (did) {
       const panelRect = container.querySelector('#cc-canvas-panel').getBoundingClientRect()
-      spawnFillParticles(container, e.clientX - panelRect.left, e.clientY - panelRect.top)
+      spawnFillParticles(container, toCss(e.clientX - panelRect.left), toCss(e.clientY - panelRect.top))
       container.querySelector('#cc-instruction-text').textContent = 'Nice! Keep coloring!'
     } else {
       // Remove the undo entry if fill didn't actually change anything
@@ -849,16 +851,16 @@ function initDecorations(container) {
       clone = document.createElement('div')
       clone.className = 'cc-drag-clone'
       clone.textContent = item.dataset.emoji
-      clone.style.left = (e.clientX - ox) + 'px'
-      clone.style.top = (e.clientY - oy) + 'px'
+      clone.style.left = toCss(e.clientX - ox) + 'px'
+      clone.style.top = toCss(e.clientY - oy) + 'px'
       document.body.appendChild(clone)
       item.setPointerCapture(e.pointerId)
     })
 
     item.addEventListener('pointermove', (e) => {
       if (!dragging || !clone) return
-      clone.style.left = (e.clientX - ox) + 'px'
-      clone.style.top = (e.clientY - oy) + 'px'
+      clone.style.left = toCss(e.clientX - ox) + 'px'
+      clone.style.top = toCss(e.clientY - oy) + 'px'
     })
 
     item.addEventListener('pointerup', (e) => {
@@ -873,8 +875,8 @@ function initDecorations(container) {
         const em = document.createElement('span')
         em.className = 'cc-placed-deco'
         em.textContent = item.dataset.emoji
-        em.style.left = (e.clientX - cr.left) + 'px'
-        em.style.top = (e.clientY - cr.top) + 'px'
+        em.style.left = toCss(e.clientX - cr.left) + 'px'
+        em.style.top = toCss(e.clientY - cr.top) + 'px'
         dropped.appendChild(em)
         makePlacedDecoDraggable(em)
       }
@@ -900,8 +902,8 @@ function makePlacedDecoDraggable(el) {
 
   el.addEventListener('pointermove', (e) => {
     if (!dragging) return
-    el.style.left = (origX + e.clientX - startX) + 'px'
-    el.style.top = (origY + e.clientY - startY) + 'px'
+    el.style.left = (origX + toCss(e.clientX - startX)) + 'px'
+    el.style.top = (origY + toCss(e.clientY - startY)) + 'px'
   })
 
   el.addEventListener('pointerup', (e) => {

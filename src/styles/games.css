@@ -1365,34 +1365,34 @@
   left: 0;
   top: 0;
   transform: translate(-50%, -100%);
-  width: 8vmin;
-  height: 8vmin;
+  width: 8cqmin;
+  height: 8cqmin;
   background-color: var(--fl-l);
-  filter: blur(10vmin);
+  filter: blur(10cqmin);
 }
 
 .yib-fl-petal {
   position: absolute;
   bottom: 0;
   left: 50%;
-  width: 8vmin;
-  height: 11vmin;
+  width: 8cqmin;
+  height: 11cqmin;
   border-radius: 51% 49% 47% 53% / 44% 45% 55% 69%;
   background-color: var(--fl-c);
   background-image: linear-gradient(to top, var(--fl-d), var(--fl-l));
   transform-origin: bottom center;
   opacity: 0.9;
-  box-shadow: inset 0 0 2vmin rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 0 2cqmin rgba(255, 255, 255, 0.5);
 }
 
 .yib-fl-petal--1 { transform: translate(-10%, 1%) rotateY(40deg) rotateX(-50deg); }
 .yib-fl-petal--2 { transform: translate(-50%, -4%) rotateX(40deg); }
 .yib-fl-petal--3 { transform: translate(-90%, 0%) rotateY(45deg) rotateX(50deg); }
 .yib-fl-petal--4 {
-  width: 8vmin;
-  height: 8vmin;
+  width: 8cqmin;
+  height: 8cqmin;
   transform-origin: bottom left;
-  border-radius: 4vmin 10vmin 4vmin 4vmin;
+  border-radius: 4cqmin 10cqmin 4cqmin 4cqmin;
   transform: translate(0%, 18%) rotateX(70deg) rotate(-43deg);
   background-image: linear-gradient(to top, var(--fl-c), var(--fl-l));
   z-index: 1;
@@ -1402,10 +1402,10 @@
 /* White circle center */
 .yib-fl-center {
   position: absolute;
-  left: -3.5vmin;
-  top: -3vmin;
-  width: 9vmin;
-  height: 4vmin;
+  left: -3.5cqmin;
+  top: -3cqmin;
+  width: 9cqmin;
+  height: 4cqmin;
   border-radius: 50%;
   background-color: #fff;
 }
@@ -1425,30 +1425,30 @@
 /* Light particles */
 .yib-fl-spark {
   position: absolute;
-  bottom: 0vmin;
-  width: 1.5vmin;
-  height: 1.5vmin;
+  bottom: 0cqmin;
+  width: 1.5cqmin;
+  height: 1.5cqmin;
   background-color: #fffb00;
   border-radius: 50%;
-  filter: blur(0.15vmin);
-  box-shadow: 0 0 3vmin 1vmin rgba(255, 251, 0, 0.6);
+  filter: blur(0.15cqmin);
+  box-shadow: 0 0 3cqmin 1cqmin rgba(255, 251, 0, 0.6);
   animation: yib-fl-light 4s linear infinite backwards;
 }
 
-.yib-fl-spark:nth-child(odd) { background-color: #fff; box-shadow: 0 0 3vmin 1vmin rgba(255, 255, 255, 0.5); }
-.yib-fl-spark--1 { left: -2vmin; animation-delay: 1s; }
-.yib-fl-spark--2 { left: 3vmin; animation-delay: 0.5s; }
-.yib-fl-spark--3 { left: -6vmin; animation-delay: 0.3s; }
-.yib-fl-spark--4 { left: 6vmin; animation-delay: 0.9s; }
-.yib-fl-spark--5 { left: -1vmin; animation-delay: 1.5s; }
-.yib-fl-spark--6 { left: -4vmin; animation-delay: 3s; }
-.yib-fl-spark--7 { left: 3vmin; animation-delay: 2s; }
-.yib-fl-spark--8 { left: -6vmin; animation-delay: 3.5s; }
+.yib-fl-spark:nth-child(odd) { background-color: #fff; box-shadow: 0 0 3cqmin 1cqmin rgba(255, 255, 255, 0.5); }
+.yib-fl-spark--1 { left: -2cqmin; animation-delay: 1s; }
+.yib-fl-spark--2 { left: 3cqmin; animation-delay: 0.5s; }
+.yib-fl-spark--3 { left: -6cqmin; animation-delay: 0.3s; }
+.yib-fl-spark--4 { left: 6cqmin; animation-delay: 0.9s; }
+.yib-fl-spark--5 { left: -1cqmin; animation-delay: 1.5s; }
+.yib-fl-spark--6 { left: -4cqmin; animation-delay: 3s; }
+.yib-fl-spark--7 { left: 3cqmin; animation-delay: 2s; }
+.yib-fl-spark--8 { left: -6cqmin; animation-delay: 3.5s; }
 
 /* Stem */
 .yib-fl-stem {
-  height: 70vmin;
-  width: 1.5vmin;
+  height: 70cqmin;
+  width: 1.5cqmin;
   background-image:
     linear-gradient(to left, rgba(0,0,0,0.2), transparent, rgba(255,255,255,0.2)),
     linear-gradient(to top, transparent 10%, var(--fl-c), var(--fl-l));
@@ -1459,8 +1459,8 @@
 
 /* Stem leaves */
 .yib-fl-stem-leaf {
-  --w: 7vmin;
-  --h: calc(var(--w) + 2vmin);
+  --w: 7cqmin;
+  --h: calc(var(--w) + 2cqmin);
   position: absolute;
   top: 20%;
   left: 90%;
@@ -1521,10 +1521,10 @@
 /* Grass foliage around the flower base */
 .yib-fl-grass {
   --gc: var(--fl-c);
-  --line-w: 1.5vmin;
+  --line-w: 1.5cqmin;
   position: absolute;
-  bottom: 12vmin;
-  left: -7vmin;
+  bottom: 12cqmin;
+  left: -7cqmin;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1535,8 +1535,8 @@
 }
 
 .yib-fl-grass--2 {
-  left: 2vmin;
-  bottom: 12vmin;
+  left: 2cqmin;
+  bottom: 12cqmin;
   transform: rotate(75deg) rotateX(10deg) rotateY(-200deg);
   opacity: 0.9;
   z-index: 0;
@@ -1544,8 +1544,8 @@
 }
 
 .yib-fl-grass-top {
-  width: 7vmin;
-  height: 10vmin;
+  width: 7cqmin;
+  height: 10cqmin;
   border-top-right-radius: 100%;
   border-right: var(--line-w) solid var(--gc);
   transform-origin: bottom center;
@@ -1555,12 +1555,12 @@
 .yib-fl-grass-bottom {
   margin-top: -2px;
   width: var(--line-w);
-  height: 25vmin;
+  height: 25cqmin;
   background-image: linear-gradient(to top, transparent, var(--gc));
 }
 
 .yib-fl-grass-leaf {
-  --size: 10vmin;
+  --size: 10cqmin;
   position: absolute;
   width: calc(var(--size) * 2.1);
   height: var(--size);
@@ -1570,12 +1570,12 @@
   z-index: 100;
 }
 
-.yib-fl-grass-leaf--1 { top: -6%; left: 30%; --size: 6vmin; transform: rotate(-20deg); animation: yib-fl-grass-grow 2s 2.6s backwards; }
-.yib-fl-grass-leaf--2 { top: -5%; left: -110%; --size: 6vmin; transform: rotate(10deg); animation: yib-fl-grass-grow 2s 2.4s backwards; }
-.yib-fl-grass-leaf--3 { top: 5%; left: 60%; --size: 8vmin; transform: rotate(-18deg) rotateX(-20deg); animation: yib-fl-grass-grow 2s 2.2s backwards; }
-.yib-fl-grass-leaf--4 { top: 6%; left: -135%; --size: 8vmin; transform: rotate(2deg); animation: yib-fl-grass-grow 2s 2s backwards; }
-.yib-fl-grass-leaf--5 { top: 20%; left: 60%; --size: 10vmin; transform: rotate(-24deg) rotateX(-20deg); animation: yib-fl-grass-grow 2s 1.8s backwards; }
-.yib-fl-grass-leaf--6 { top: 22%; left: -180%; --size: 10vmin; transform: rotate(10deg); animation: yib-fl-grass-grow 2s 1.6s backwards; }
+.yib-fl-grass-leaf--1 { top: -6%; left: 30%; --size: 6cqmin; transform: rotate(-20deg); animation: yib-fl-grass-grow 2s 2.6s backwards; }
+.yib-fl-grass-leaf--2 { top: -5%; left: -110%; --size: 6cqmin; transform: rotate(10deg); animation: yib-fl-grass-grow 2s 2.4s backwards; }
+.yib-fl-grass-leaf--3 { top: 5%; left: 60%; --size: 8cqmin; transform: rotate(-18deg) rotateX(-20deg); animation: yib-fl-grass-grow 2s 2.2s backwards; }
+.yib-fl-grass-leaf--4 { top: 6%; left: -135%; --size: 8cqmin; transform: rotate(2deg); animation: yib-fl-grass-grow 2s 2s backwards; }
+.yib-fl-grass-leaf--5 { top: 20%; left: 60%; --size: 10cqmin; transform: rotate(-24deg) rotateX(-20deg); animation: yib-fl-grass-grow 2s 1.8s backwards; }
+.yib-fl-grass-leaf--6 { top: 22%; left: -180%; --size: 10cqmin; transform: rotate(10deg); animation: yib-fl-grass-grow 2s 1.6s backwards; }
 
 /* --- Bloom keyframes --- */
 
@@ -1589,7 +1589,7 @@
 }
 
 @keyframes yib-fl-grow-stem {
-  0% { height: 0; border-radius: 1vmin; }
+  0% { height: 0; border-radius: 1cqmin; }
 }
 
 @keyframes yib-fl-leaf-right {
@@ -1601,11 +1601,11 @@
 }
 
 @keyframes yib-fl-light {
-  0% { opacity: 0; transform: translateY(0vmin); }
-  25% { opacity: 1; transform: translateY(-5vmin) translateX(-2vmin); }
-  50% { opacity: 1; transform: translateY(-15vmin) translateX(2vmin); filter: blur(0.2vmin); }
-  75% { transform: translateY(-20vmin) translateX(-2vmin); filter: blur(0.2vmin); }
-  100% { transform: translateY(-30vmin); opacity: 0; filter: blur(1vmin); }
+  0% { opacity: 0; transform: translateY(0cqmin); }
+  25% { opacity: 1; transform: translateY(-5cqmin) translateX(-2cqmin); }
+  50% { opacity: 1; transform: translateY(-15cqmin) translateX(2cqmin); filter: blur(0.2cqmin); }
+  75% { transform: translateY(-20cqmin) translateX(-2cqmin); filter: blur(0.2cqmin); }
+  100% { transform: translateY(-30cqmin); opacity: 0; filter: blur(1cqmin); }
 }
 
 @keyframes yib-fl-grass-sway {
@@ -7325,13 +7325,13 @@
     gap: 12px;
   }
   [class*="-intro-title"] {
-    font-size: clamp(1.4rem, 5vw, 2.5rem) !important;
+    font-size: clamp(1.4rem, 5cqw, 2.5rem) !important;
   }
   /* Speech bubbles + character figures */
   [class*="-speech-bubble"],
   [class*="-speech-text"] {
     font-size: 0.95rem;
-    max-width: 86vw;
+    max-width: 86cqw;
   }
   [class*="-intro-character"] {
     height: 96px !important;
@@ -7364,7 +7364,7 @@
     padding: 10px 12px !important;
   }
   [class*="-intro-title"] {
-    font-size: clamp(1.2rem, 6vw, 1.8rem) !important;
+    font-size: clamp(1.2rem, 6cqw, 1.8rem) !important;
   }
   [class*="-intro-character"] {
     height: 80px !important;
@@ -7416,7 +7416,7 @@
  * drops .screen's will-change to opacity-only at ≤1919 (no transform
  * containing-block trap).
  * ================================================================ */
-@media (max-width: 1919px) {
+@container viewport (max-width: 1919px) {
   [class*="-intro-bg"],
   [class*="-game-bg"] {
     position: fixed !important;
@@ -7437,7 +7437,7 @@
     gap: 8px;
   }
   [class*="-intro-title"] {
-    font-size: clamp(1rem, 3.5vw, 1.4rem) !important;
+    font-size: clamp(1rem, 3.5cqw, 1.4rem) !important;
   }
   [class*="-intro-body"],
   [class*="-intro-center"] {
@@ -7451,7 +7451,7 @@
   [class*="-speech-text"] {
     font-size: 0.78rem !important;
     padding: 8px 12px !important;
-    max-width: 60vw;
+    max-width: 60cqw;
     /* Base bubbles hardcode min-height (140–200px) so they're far taller than
        the text — collapse to fit the content on the short landscape viewport. */
     min-height: 0 !important;
@@ -7515,7 +7515,7 @@
   [class*="-result-modal"],
   [class*="-celebration"] {
     padding: 14px 16px !important;
-    max-width: 86vw !important;
+    max-width: 86cqw !important;
     font-size: 0.85rem;
   }
   [class*="-complete-title"],
@@ -7530,7 +7530,7 @@
   [class*="-tip"] {
     font-size: 0.75rem !important;
     padding: 6px 10px !important;
-    max-width: 80vw !important;
+    max-width: 80cqw !important;
   }
 }
 
@@ -8370,8 +8370,8 @@
      the container instead keeps it inside; the canvas fills it and the centered
      SPIN button + top pointer (both positioned at 50%) scale with it. */
   .sw-wheel-container {
-    width: min(46vh, 360px) !important;
-    height: min(46vh, 360px) !important;
+    width: min(46cqh, 360px) !important;
+    height: min(46cqh, 360px) !important;
   }
   #sw-wheel-canvas {
     width: 100% !important;
@@ -8508,8 +8508,8 @@
   .fm-explanation,
   .fm-educational-modal,
   .fm-result-card {
-    max-height: 80vh !important;
-    max-width: 86vw !important;
+    max-height: 80cqh !important;
+    max-width: 86cqw !important;
     overflow-y: auto !important;
     padding: 10px 12px !important;
     font-size: 0.7rem !important;
@@ -8531,7 +8531,7 @@
   }
   /* Intro speech bubbles tighter cap so they don't push character off-screen. */
   [class*="-speech-bubble"] {
-    max-width: 48vw !important;
+    max-width: 48cqw !important;
   }
   /* Intro characters — keep visible at narrow widths. */
   [class*="-intro-character"] {
@@ -8560,11 +8560,11 @@
     align-items: center !important;
   }
   [class*="-speech-bubble"] {
-    max-width: 86vw !important;
+    max-width: 86cqw !important;
   }
   [class*="-intro-character"] {
     height: 90px !important;
-    max-width: 80vw !important;
+    max-width: 80cqw !important;
     width: auto !important;
   }
   /* Level cards/buttons: 2-column grid that wraps nicely on phone portrait. */
@@ -8574,7 +8574,7 @@
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
-    max-width: 90vw !important;
+    max-width: 90cqw !important;
   }
   [class*="-level-card"],
   [class*="-level-btn"] {
@@ -8605,7 +8605,7 @@
  * Cake is fixed pixel size; at narrower-than-kiosk widths it sat tiny in a
  * vast canvas. Scale up so the cake fills the right side properly.
  * ================================================================ */
-@media (min-width: 900px) and (max-width: 1919px) {
+@container viewport (min-width: 900px) and (max-width: 1919px) {
   .sc-cake-wrapper {
     margin-right: 40px !important;
     transform: scale(1.2);
@@ -8624,8 +8624,8 @@
   [class*="-end-content"],
   [class*="-result-content"],
   [class*="-celebration-content"] {
-    max-width: 86vw !important;
-    max-height: 80vh !important;
+    max-width: 86cqw !important;
+    max-height: 80cqh !important;
     overflow-y: auto !important;
     padding: 14px 16px !important;
     font-size: 0.85rem !important;

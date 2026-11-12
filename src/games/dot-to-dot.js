@@ -2,6 +2,7 @@ import { navigate } from '../router.js'
 import { LEVELS } from '../data/content/dot-to-dot.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
 import { onTap } from '../utils/tap.js'
+import { toCss, getZoom } from '../utils/app-zoom.js'
 
 /**
  * Dot-to-Dot ("What Does Soil Make?") — Little Sprouts
@@ -208,7 +209,8 @@ function createGameScreen() {
   const labelEl = el.querySelector('#dtd-reveal-label')
 
   function sizeCanvas() {
-    const dpr = window.devicePixelRatio || 1
+    // × zoom so the buffer matches screen pixels when body is zoomed (app-zoom.js)
+    const dpr = (window.devicePixelRatio || 1) * getZoom()
     const w = area.clientWidth
     const h = area.clientHeight
     canvas.width = w * dpr
@@ -497,8 +499,9 @@ function createGameScreen() {
   onTap(overlay, e => {
     if (completed) return
     const rect = overlay.getBoundingClientRect()
-    const px = e.clientX - rect.left
-    const py = e.clientY - rect.top
+    // Dot positions are CSS px (from area.clientWidth); the tap is screen px.
+    const px = toCss(e.clientX - rect.left)
+    const py = toCss(e.clientY - rect.top)
 
     let nearest = null
     let nearestDist = Infinity

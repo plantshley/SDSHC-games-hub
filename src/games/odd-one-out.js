@@ -2,6 +2,7 @@ import { navigate } from '../router.js'
 import { onTap } from '../utils/tap.js'
 import { LEVELS, ROUND_TIME, INSTRUCTIONS } from '../data/content/odd-one-out.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { toCss } from '../utils/app-zoom.js'
 
 /**
  * Game 7: Odd One Out — Meadow Makers
@@ -292,7 +293,7 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
     setTimeout(() => {
       if (!el.parentNode) return
       const r = canvasPanel.getBoundingClientRect()
-      spawnParticles(canvasPanel, r.width / 2, r.height / 2, 20)
+      spawnParticles(canvasPanel, toCss(r.width / 2), toCss(r.height / 2), 20)
     }, 300)
   }
 
@@ -338,7 +339,7 @@ function createGameplayScreen(levelIdx, roundIdx, totalScore) {
         // Particles
         const cr = card.getBoundingClientRect()
         const pr = canvasPanel.getBoundingClientRect()
-        spawnParticles(canvasPanel, cr.left - pr.left + cr.width / 2, cr.top - pr.top + cr.height / 2, 12)
+        spawnParticles(canvasPanel, toCss(cr.left - pr.left + cr.width / 2), toCss(cr.top - pr.top + cr.height / 2), 12)
 
         setTimeout(() => showExplanation(), 800)
       } else {

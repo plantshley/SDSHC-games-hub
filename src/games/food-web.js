@@ -2,6 +2,7 @@ import { navigate } from '../router.js'
 import { onTap } from '../utils/tap.js'
 import { ORGANISMS, QUIZ_QUESTIONS, INSTRUCTIONS } from '../data/content/food-web.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { toCss, cssRect } from '../utils/app-zoom.js'
 
 /**
  * Game 11: Soil Food Web Builder — Harvest Guardians
@@ -29,6 +30,7 @@ function transitionTo(oldEl, newEl) {
 
 // ─── PARTICLES ───
 
+// x, y: offsets inside `container` in screen px (from getBoundingClientRect)
 function spawnParticles(container, x, y, count = 14) {
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div')
@@ -38,8 +40,8 @@ function spawnParticles(container, x, y, count = 14) {
     p.style.setProperty('--dx', Math.cos(angle) * dist + 'px')
     p.style.setProperty('--dy', Math.sin(angle) * dist + 'px')
     p.style.backgroundColor = `hsl(${Math.round(Math.random() * 120 + 80)} 70% 55%)`
-    p.style.left = x + 'px'
-    p.style.top = y + 'px'
+    p.style.left = toCss(x) + 'px'
+    p.style.top = toCss(y) + 'px'
     container.appendChild(p)
     p.addEventListener('animationend', () => p.remove())
   }
@@ -290,8 +292,9 @@ function createGameScreen() {
     hintBubble.textContent = `💡 ${org.zoneHint}`
 
     // Above the zone, or below it when there's no room; clamped to the panel.
-    const pr = canvasPanel.getBoundingClientRect()
-    const zr = zone.getBoundingClientRect()
+    // CSS px throughout: offsetWidth is CSS px, so convert the rects to match.
+    const pr = cssRect(canvasPanel)
+    const zr = cssRect(zone)
     const bw = hintBubble.offsetWidth
     const bh = hintBubble.offsetHeight
     const gap = 10
@@ -333,16 +336,16 @@ function createGameScreen() {
       img.src = ORGANISMS.find(o => o.id === item.dataset.orgId).asset
       img.draggable = false
       clone.appendChild(img)
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
       document.body.appendChild(clone)
       item.setPointerCapture(e.pointerId)
     })
 
     item.addEventListener('pointermove', (e) => {
       if (!dragging || !clone) return
-      clone.style.left = e.clientX + 'px'
-      clone.style.top = e.clientY + 'px'
+      clone.style.left = toCss(e.clientX) + 'px'
+      clone.style.top = toCss(e.clientY) + 'px'
     })
 
     function cleanupDrag() {

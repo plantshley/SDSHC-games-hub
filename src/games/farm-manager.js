@@ -2,6 +2,7 @@ import { navigate } from '../router.js'
 import { onTap } from '../utils/tap.js'
 import { LEVELS, INSTRUCTIONS } from '../data/content/farm-manager.js'
 import { mountNarrowGate } from '../utils/narrow-gate.js'
+import { toCss } from '../utils/app-zoom.js'
 
 /**
  * Game 9: Farm Manager Simulator — Harvest Guardians
@@ -240,7 +241,7 @@ function createGameplayScreen(levelIdx) {
     if (isLastLevel) {
       requestAnimationFrame(() => completionOverlay.classList.add('fm-show'))
       const r = canvasPanel.getBoundingClientRect()
-      spawnParticles(canvasPanel, r.width / 2, r.height / 2, 20)
+      spawnParticles(canvasPanel, toCss(r.width / 2), toCss(r.height / 2), 20)
     } else {
       transitionTo(el, createGameplayScreen(levelIdx + 1))
     }

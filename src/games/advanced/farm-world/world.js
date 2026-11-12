@@ -16,6 +16,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { createCritterFx } from './critter-fx.js'
 import { createLightStrings, ring } from './lights-fx.js'
 import { NPCS } from '../../../data/content/advanced/farm-world-npcs.js'
+import { getZoom } from '../../../utils/app-zoom.js'
 
 // ─── Palette ───
 
@@ -1947,7 +1948,8 @@ const easeOutBack = t => {
 export function createFarmWorld({ host, stationIds, getInput, onNearTarget, onDisposed }) {
   // ── Renderer / scene / camera ──
   const renderer = new THREE.WebGLRenderer({ antialias: true })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75))
+  // × zoom: the canvas is drawn larger than its CSS size when body is zoomed (app-zoom.js)
+  renderer.setPixelRatio(Math.min((window.devicePixelRatio || 1) * getZoom(), 1.75))
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   host.appendChild(renderer.domElement)

@@ -12,8 +12,8 @@
   top: 22%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 15vmin;
-  height: 15vmin;
+  width: 15cqmin;
+  height: 15cqmin;
   object-fit: contain;
   z-index: 0;
   opacity: 0.12;
@@ -40,8 +40,8 @@
 }
 
 .intro-sphere-1 {
-  width: 40vw;
-  height: 40vw;
+  width: 40cqw;
+  height: 40cqw;
   background: linear-gradient(40deg, rgba(0, 180, 160, 0.8), rgba(56, 206, 188, 0.4));
   top: -10%;
   left: -10%;
@@ -49,8 +49,8 @@
 }
 
 .intro-sphere-2 {
-  width: 45vw;
-  height: 45vw;
+  width: 45cqw;
+  height: 45cqw;
   background: linear-gradient(240deg, rgba(0, 100, 80, 0.8), rgba(56, 206, 188, 0.4));
   bottom: -20%;
   right: -10%;
@@ -58,8 +58,8 @@
 }
 
 .intro-sphere-3 {
-  width: 30vw;
-  height: 30vw;
+  width: 30cqw;
+  height: 30cqw;
   background: linear-gradient(120deg, rgba(100, 180, 60, 0.5), rgba(184, 232, 74, 0.3));
   top: 60%;
   left: 20%;
@@ -113,8 +113,8 @@
 
 .intro-glow {
   position: absolute;
-  width: 40vw;
-  height: 40vh;
+  width: 40cqw;
+  height: 40cqh;
   background: radial-gradient(circle, rgba(0, 100, 80, 0.15), transparent 70%);
   top: 50%;
   left: 50%;
@@ -320,7 +320,7 @@
 /* Tablet / smaller laptop — gentle compaction. */
 @media (max-width: 1279px) {
   .intro-title {
-    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-size: clamp(2.4rem, 5cqw, 4rem);
   }
   .intro-buttons {
     gap: 60px;
@@ -334,7 +334,7 @@
     padding: 32px 16px;
   }
   .intro-title {
-    font-size: clamp(2rem, 7vw, 3rem);
+    font-size: clamp(2rem, 7cqw, 3rem);
     letter-spacing: 1px;
   }
   .intro-subtitle {
@@ -369,7 +369,7 @@
     align-items: center;
   }
   .intro-mode-btn {
-    width: min(320px, 90vw);
+    width: min(320px, 90cqw);
     min-width: 0;
     padding: 18px 16px;
   }
@@ -377,6 +377,6 @@
     font-size: 1.2rem;
   }
   .intro-title {
-    font-size: clamp(1.8rem, 9vw, 2.4rem);
+    font-size: clamp(1.8rem, 9cqw, 2.4rem);
   }
 }

@@ -18,6 +18,8 @@
  * Free text stays allowed: picking an option is a shortcut, never required.
  */
 
+import { cssRect, cssViewport } from './app-zoom.js'
+
 let comboSeq = 0
 
 const LIST_MAX_WIDTH = 520 // px; the list may outgrow its field up to this
@@ -126,8 +128,10 @@ export function attachCombobox(input, opts) {
   }
 
   function position() {
-    const r = wrap.getBoundingClientRect()
-    const vh = window.innerHeight
+    // All CSS px: the list is a fixed child of the (possibly zoomed) body, so
+    // its left/top/size are CSS px, not screen px (see app-zoom.js).
+    const r = cssRect(wrap)
+    const { width: vw, height: vh } = cssViewport()
     const gap = 4
     const below = vh - r.bottom - gap - 8
     const above = r.top - gap - 8
@@ -136,7 +140,6 @@ export function attachCombobox(input, opts) {
     const maxH = Math.max(88, Math.min(280, flipUp ? above : below))
     // At least as wide as the field, wider when a label needs it ("Team 1 ·
     // Brookings High School" in a narrow game-intro field), within the viewport.
-    const vw = window.innerWidth
     const maxW = Math.max(r.width, Math.min(LIST_MAX_WIDTH, vw - 2 * EDGE))
     list.style.minWidth = `${Math.round(r.width)}px`
     list.style.maxWidth = `${Math.round(maxW)}px`
