@@ -144,3 +144,6 @@ dev-dist
 
 # Scratch / test artifacts
 .tmp/
+
+# fairy polish editor change files (local only)
+.fairy-polish/

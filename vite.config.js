@@ -3,6 +3,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { readdirSync, statSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
+// Local-only visual editor (Alt+Shift+E). The import fails on CI and other
+// machines, so the plugin entry is undefined there and Vite drops it.
+const fairyPolish = await import('file:///C:/Users/ashle/Documents/GitHub/fairy-polish/vite-plugin/index.js').then((m) => m.default).catch(() => null)
+
 const BASE = '/SDSHC-games-hub/'
 
 // Stamp each build so the client can tell when the deployed assets changed and
@@ -78,6 +82,7 @@ export default defineConfig({
   plugins: [
     rewriteAssetUrls,
     emitAssetManifest,
+    fairyPolish?.(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'script',

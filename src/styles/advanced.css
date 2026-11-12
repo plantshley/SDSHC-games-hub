@@ -681,6 +681,11 @@
 
 .adv-sw-name-input {
   flex: 1;
+  /* Without this an <input> can't shrink below its default ~20-character
+     width, so in the 550px Connections / Field Guide card (2 columns at
+     3-4 players) team-mode rows push the name box past their row. A no-op
+     wherever the input already fits. */
+  min-width: 0;
   padding: 8px 12px;
   border: 2px solid var(--adv-border);
   border-radius: 8px;

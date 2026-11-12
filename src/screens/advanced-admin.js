@@ -1356,7 +1356,11 @@ export function createAdvancedAdminScreen() {
         signOutBtn = document.createElement('button')
         signOutBtn.className = 'adv-admin-signout-btn'
         signOutBtn.textContent = 'Sign out'
-        onTap(signOutBtn, () => adminSignOut())
+        // `click`, not onTap: onTap fires on pointerup, sign-out then removes
+        // this button and shifts the header, and the touchscreen's trailing
+        // click lands on the doc link that slid under the finger (opening the
+        // cheat sheet). `click` is the gesture's last event, so nothing trails.
+        signOutBtn.addEventListener('click', () => adminSignOut())
         headerRight.prepend(signOutBtn)
       }
       if (!rendered) {
