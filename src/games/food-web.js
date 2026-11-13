@@ -124,6 +124,9 @@ function createGameScreen() {
   let quizStarted = false
   let quizScore = 0
 
+  // Spot type: entries sharing a kind (the two bacteria) fit each other's spots
+  const kindOf = org => org.kind || org.id
+
   // Build organism sidebar items
   const itemsHtml = ORGANISMS.map(org => `
     <div class="fw-organism-item" data-org-id="${org.id}" title="${org.name.replace(/\n/g, ' ')}">
@@ -136,7 +139,7 @@ function createGameScreen() {
   const zonesHtml = ORGANISMS.map(org => {
     const zoneSize = Math.round(org.displaySize * 0.55)
     return `
-    <div class="fw-drop-zone" data-accepts-id="${org.id}" data-display-size="${org.displaySize}"
+    <div class="fw-drop-zone" data-accepts-id="${org.id}" data-kind="${kindOf(org)}" data-display-size="${org.displaySize}"
          style="left:${org.snapX}%;top:${org.snapY}%;width:${zoneSize}px;height:${zoneSize}px;">
       <span class="fw-zone-label">?</span>
     </div>
@@ -375,9 +378,10 @@ function createGameScreen() {
       if (!targetZone) return
       if (targetZone.classList.contains('fw-zone-filled')) return
 
-      const acceptsId = targetZone.dataset.acceptsId
+      // The spot's own entry: for a shared kind its fact can differ from the card's
+      const zoneOrg = ORGANISMS.find(o => o.id === targetZone.dataset.acceptsId)
 
-      if (orgId === acceptsId) {
+      if (kindOf(org) === targetZone.dataset.kind) {
         // Correct placement
         placedSet.add(orgId)
         item.classList.add('fw-item-done')
@@ -412,11 +416,11 @@ function createGameScreen() {
         // Show fact — for the last organism, transition to quiz after dismiss
         if (placedSet.size === ORGANISMS.length && !quizStarted) {
           quizStarted = true
-          showFact(org, () => {
+          showFact(zoneOrg, () => {
             setTimeout(() => startQuizPhase(), 800)
           })
         } else {
-          showFact(org)
+          showFact(zoneOrg)
         }
       } else {
         // Wrong placement — shake + hint
@@ -472,9 +476,9 @@ function createGameScreen() {
 
     // Highlight organisms on diagram
     clearHighlights()
-    q.highlightOrganisms.forEach(orgId => {
-      const zone = diagram.querySelector(`.fw-drop-zone[data-accepts-id="${orgId}"]`)
-      if (zone) zone.classList.add('fw-zone-highlight')
+    q.highlightOrganisms.forEach(kind => {
+      diagram.querySelectorAll(`.fw-drop-zone[data-kind="${kind}"]`)
+        .forEach(zone => zone.classList.add('fw-zone-highlight'))
     })
 
     const quizPanel = el.querySelector('#fw-quiz-panel')

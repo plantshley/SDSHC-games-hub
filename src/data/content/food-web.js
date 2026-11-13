@@ -1,8 +1,12 @@
 /**
  * Soil Food Web Builder — content data
  *
- * 12 organisms to place on the arrows-only diagram.
+ * 13 spots to fill on the arrows-only diagram (12 organisms; bacteria
+ * appear twice).
  *
+ * `kind` (optional, defaults to `id`) lets several entries share a spot type:
+ * either bacteria card fits either bacteria spot. Quiz `highlightOrganisms`
+ * lists kinds, so 'bacteria' highlights both spots.
  * `hint` shows after a wrong drop (describes the dragged organism).
  * `zoneHint` shows when a player taps an empty (?) spot (describes what
  * belongs there without naming it).
@@ -22,7 +26,7 @@ export const ORGANISMS = [
     id: 'organic-matter',
     name: 'Organic Matter',
     asset: '/assets/svg/organic matter.svg',
-    snapX: 22, snapY: 56, displaySize: 136,
+    snapX: 24, snapY: 55, displaySize: 99,
     fact: 'Organic matter is dead plant and animal material. It is the primary food source for decomposers like bacteria and fungi.',
     hint: 'This is not alive — it is what remains after organisms die and decay.',
     zoneHint: 'This one isn\'t alive. It\'s dead plant and animal material that decomposers feed on.',
@@ -31,19 +35,31 @@ export const ORGANISMS = [
     id: 'earthworms',
     name: 'Earthworms',
     asset: '/assets/svg/worm-food-web.svg',
-    snapX: 16, snapY: 71, displaySize: 188,
+    snapX: 15, snapY: 73, displaySize: 154,
     fact: 'Earthworms mix and aerate soil as they burrow, creating channels for water and roots. They can eat their body weight in organic matter each day.',
     hint: 'These tunnel through soil and break down dead material at the bottom of the web.',
     zoneHint: 'A tunneler goes here. It burrows through soil and eats dead plant material.',
   },
   {
     id: 'bacteria',
+    kind: 'bacteria',
     name: 'Bacteria',
     asset: '/assets/svg/bacteria2.svg',
     snapX: 42, snapY: 76, displaySize: 107,
     fact: 'A single teaspoon of healthy soil contains up to 1 billion bacteria. They decompose organic matter and convert nitrogen into forms plants can use.',
     hint: 'These are microscopic decomposers that some nematodes, protozoa, and arthropods eat.',
     zoneHint: 'Something microscopic goes here. A teaspoon of healthy soil holds up to a billion of them!',
+  },
+  {
+    // Second bacteria spot: fed by plant roots (arrow from Plants)
+    id: 'bacteria-roots',
+    kind: 'bacteria',
+    name: 'Bacteria',
+    asset: '/assets/svg/bacteria1.svg',
+    snapX: 12, snapY: 61, displaySize: 100,
+    fact: 'Plant roots leak sugars called root exudates. Bacteria and fungi crowd around roots to feed on them, so the soil right next to a root is packed with life.',
+    hint: 'These are microscopic organisms. Many of them feed on sugars that plant roots release.',
+    zoneHint: 'Something microscopic goes here. It feeds on sugars that leak out of plant roots.',
   },
   {
     id: 'protozoa',
