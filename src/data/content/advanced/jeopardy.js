@@ -12,7 +12,7 @@ export const CATEGORIES = [
       { points: 100, text: 'This form of nitrogen (NH₄⁺) carries a positive charge and is held by soil particles.', answer: 'Ammonium', choices: ['Nitrate', 'Ammonium', 'Nitrite', 'Urea'], correct: 1 },
       { points: 200, text: 'The microbial process that converts ammonium to nitrate in two steps.', answer: 'Nitrification', choices: ['Denitrification', 'Mineralization', 'Nitrification', 'Volatilization'], correct: 2 },
       { points: 300, text: 'This enzyme, found only in nitrogen-fixing organisms, catalyzes the conversion of N₂ to NH₃.', answer: 'Nitrogenase', choices: ['Urease', 'Nitrogenase', 'Nitrate reductase', 'Cellulase'], correct: 1 },
-      { points: 400, text: 'Denitrification converts nitrate back to atmospheric N₂. This process requires these specific soil conditions.', answer: 'Anaerobic (waterlogged) with available carbon', choices: ['Dry, well-aerated soil', 'Frozen soil with high pH', 'Anaerobic (waterlogged) with available carbon', 'Sandy soil with low organic matter'], correct: 2 },
+      { points: 400, text: 'Denitrification converts nitrate back to atmospheric N₂. This process requires these specific soil conditions.', answer: 'Anaerobic (waterlogged or compacted) with available carbon', choices: ['Dry, well-aerated soil', 'Frozen soil with high pH', 'Anaerobic (waterlogged or compacted) with available carbon', 'Sandy soil with low organic matter'], correct: 2 },
       { points: 500, text: 'When surface-applied urea fertilizer breaks down on warm, moist soil without incorporation, nitrogen is lost as this gas.', answer: 'Ammonia (NH₃)', choices: ['Nitrous oxide (N₂O)', 'Carbon dioxide (CO₂)', 'Ammonia (NH₃)', 'Methane (CH₄)'], correct: 2 },
     ],
   },

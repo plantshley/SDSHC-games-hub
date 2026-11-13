@@ -261,7 +261,7 @@ export const ROUNDS = [
       },
       {
         text: 'Denitrification returns nitrogen to the atmosphere. Under what conditions does this process predominantly occur?',
-        choices: ['Well-aerated, sandy soils', 'Waterlogged, anaerobic soils with available carbon', 'Frozen soils during winter', 'Extremely acidic conditions (pH < 3)'],
+        choices: ['Well-aerated, sandy soils', 'Anaerobic (waterlogged or compacted) soils with available carbon', 'Frozen soils during winter', 'Extremely acidic conditions (pH < 3)'],
         correct: 1,
       },
       {

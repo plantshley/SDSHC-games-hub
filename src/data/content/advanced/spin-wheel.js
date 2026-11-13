@@ -394,7 +394,7 @@ export const CATEGORIES = [
       },
       {
         text: 'Denitrification — the conversion of nitrate to nitrogen gas — occurs under what soil conditions?',
-        choices: ['Well-aerated, dry soils', 'Waterlogged, anaerobic conditions', 'Frozen soils only', 'Very acidic soils exclusively'],
+        choices: ['Well-aerated, dry soils', 'Anaerobic (waterlogged or compacted) conditions', 'Frozen soils only', 'Very acidic soils exclusively'],
         correct: 1,
       },
       {
